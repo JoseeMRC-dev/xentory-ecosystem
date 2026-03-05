@@ -62,7 +62,7 @@ export function BlogPage() {
             key={key}
             onClick={() => setActiveCategory(key)}
             style={{
-              padding: '0.4rem 1rem', borderRadius: 100, border: 'none', cursor: 'pointer',
+              padding: '0.4rem 1rem', borderRadius: 100, cursor: 'pointer',
               background: activeCategory === key ? `${cat.color}20` : 'var(--card2)',
               color: activeCategory === key ? cat.color : 'var(--muted)',
               fontFamily: 'Urbanist', fontWeight: 600, fontSize: '0.8rem',
