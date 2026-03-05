@@ -90,7 +90,7 @@ export function MatchAnalysisPage() {
     </div>
   );
 
-  const sport = SPORT_CONFIG[match.sport];
+  const sport = SPORT_CONFIG[match.sport as keyof typeof SPORT_CONFIG];
 
   return (
     <div className="animate-fadeUp" style={{ maxWidth: 1000 }}>
