@@ -20,7 +20,7 @@ function StatCard({ title, value, sub, color, icon }: { title: string; value: st
     <div className="glass" style={{ borderRadius: 14, padding: '1.4rem', position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', top: '1rem', right: '1rem', fontSize: '1.5rem', opacity: 0.5 }}>{icon}</div>
       <div style={{ fontSize: '0.75rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>{title}</div>
-      <div style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: '1.8rem', letterSpacing: '-0.03em', color: color ?? 'var(--text)' }}>{value}</div>
+      <div style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '1.8rem', letterSpacing: '-0.03em', color: color ?? 'var(--text)' }}>{value}</div>
       {sub && <div style={{ fontSize: '0.78rem', color: 'var(--muted)', marginTop: '0.3rem' }}>{sub}</div>}
     </div>
   );
@@ -50,7 +50,7 @@ function AssetRow({ asset, onClick }: { asset: Asset; onClick: () => void }) {
           background: `linear-gradient(135deg, ${asset.category === 'crypto' ? '#c9a84c' : asset.category === 'stocks' ? '#00d4ff' : '#00ff88'}30, transparent)`,
           border: '1px solid var(--border2)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: 'Syne', fontWeight: 700, fontSize: '0.7rem', color: 'var(--text2)',
+          fontFamily: 'Urbanist', fontWeight: 700, fontSize: '0.7rem', color: 'var(--text2)',
         }}>
           {asset.symbol.slice(0, 2)}
         </div>
@@ -59,7 +59,7 @@ function AssetRow({ asset, onClick }: { asset: Asset; onClick: () => void }) {
           <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>{asset.name}</div>
         </div>
       </div>
-      <div style={{ fontFamily: 'Syne', fontWeight: 600, fontSize: '0.95rem' }}>
+      <div style={{ fontFamily: 'Urbanist', fontWeight: 600, fontSize: '0.95rem' }}>
         {formatPrice(asset.price, asset.category)}
       </div>
       <div style={{ color: isUp ? 'var(--green)' : 'var(--red)', fontWeight: 500, fontSize: '0.88rem' }}>
@@ -236,7 +236,7 @@ export function DashboardPage() {
           }}
         >
           <div>
-            <div style={{ fontFamily: 'Syne', fontWeight: 700, marginBottom: '0.2rem' }}>
+            <div style={{ fontFamily: 'Urbanist', fontWeight: 700, marginBottom: '0.2rem' }}>
               🚀 Activa el Plan Pro — Análisis IA profundo con Google Grounding
             </div>
             <div style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>

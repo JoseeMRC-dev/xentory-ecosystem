@@ -16,7 +16,7 @@ function StatCard({ icon, value, label, color }: { icon: string; value: string; 
     <div className="glass" style={{ borderRadius: 14, padding: '1.4rem', position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', top: '1rem', right: '1rem', fontSize: '1.4rem', opacity: 0.4 }}>{icon}</div>
       <div style={{ fontSize: '0.72rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.4rem' }}>{label}</div>
-      <div style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: '2rem', color, letterSpacing: '-0.04em' }}>{value}</div>
+      <div style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '2rem', color, letterSpacing: '-0.04em' }}>{value}</div>
     </div>
   );
 }
@@ -86,7 +86,7 @@ export function DashboardPage() {
                   <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>{pick.competition} · {pick.market}</div>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: '0.88rem', color: confidenceColor(pick.confidence) }}>
+                  <div style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '0.88rem', color: confidenceColor(pick.confidence) }}>
                     {pick.confidence}%
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--gold)' }}>@{pick.odds}</div>
@@ -177,7 +177,7 @@ export function DashboardPage() {
           }}
         >
           <div>
-            <div style={{ fontFamily: 'Syne', fontWeight: 700, marginBottom: '0.2rem' }}>
+            <div style={{ fontFamily: 'Urbanist', fontWeight: 700, marginBottom: '0.2rem' }}>
               🚀 Activa el Plan Pro — Análisis completo con todos los mercados
             </div>
             <div style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>

@@ -46,7 +46,7 @@ function PlatformCard({
           padding: '0.2rem 0.6rem', borderRadius: 100, fontSize: '0.68rem',
           background: `${PLAN_COLORS[plan]}15`, color: PLAN_COLORS[plan],
           border: `1px solid ${PLAN_COLORS[plan]}30`,
-          fontFamily: 'Syne', fontWeight: 600,
+          fontFamily: 'Urbanist', fontWeight: 600,
         }}>
           {PLAN_LABELS[plan]}
         </span>
@@ -162,7 +162,7 @@ export function DashboardPage() {
                   <span>{stat.icon}</span>
                   <span style={{ fontSize: '0.85rem', color: 'var(--text2)' }}>{stat.label}</span>
                 </div>
-                <span style={{ fontFamily: 'Syne', fontWeight: 700, color: stat.color, fontSize: '1.1rem' }}>{stat.value}</span>
+                <span style={{ fontFamily: 'Urbanist', fontWeight: 700, color: stat.color, fontSize: '1.1rem' }}>{stat.value}</span>
               </div>
             ))}
           </div>
@@ -228,7 +228,7 @@ export function DashboardPage() {
               onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.4)')}
               onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.2)')}
             >
-              <div style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.3rem' }}>
+              <div style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.3rem' }}>
                 💎 Bundle Total — Ahorra 9€/mes
               </div>
               <div style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>

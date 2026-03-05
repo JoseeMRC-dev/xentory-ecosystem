@@ -30,7 +30,7 @@ export function TelegramPage() {
         ].map(item => (
           <div key={item.label} className="glass" style={{ borderRadius: 14, padding: '1.2rem' }}>
             <div style={{ fontSize: '0.7rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.4rem' }}>{item.label}</div>
-            <div style={{ fontFamily: 'Syne', fontWeight: 700, color: item.color }}>{item.value}</div>
+            <div style={{ fontFamily: 'Urbanist', fontWeight: 700, color: item.color }}>{item.value}</div>
           </div>
         ))}
       </div>
@@ -79,7 +79,7 @@ export function TelegramPage() {
                 { step: '04', title: 'Acceso al canal', desc: 'El bot te añadirá automáticamente al canal según tu plan', done: false },
               ].map(item => (
                 <div key={item.step} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', padding: '0.9rem', background: 'var(--card2)', borderRadius: 10 }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 8, background: item.done ? 'var(--green-dim)' : 'var(--card)', border: `1px solid ${item.done ? 'rgba(0,255,136,0.2)' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'Syne', fontWeight: 700, fontSize: '0.75rem', color: item.done ? 'var(--green)' : 'var(--muted)' }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: item.done ? 'var(--green-dim)' : 'var(--card)', border: `1px solid ${item.done ? 'rgba(0,255,136,0.2)' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'Urbanist', fontWeight: 700, fontSize: '0.75rem', color: item.done ? 'var(--green)' : 'var(--muted)' }}>
                     {item.done ? '✓' : item.step}
                   </div>
                   <div>
@@ -111,7 +111,7 @@ export function TelegramPage() {
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontFamily: 'Syne', fontWeight: 700, color: '#00ff88', fontSize: '0.9rem' }}>{signal.confidence}%</div>
+                  <div style={{ fontFamily: 'Urbanist', fontWeight: 700, color: '#00ff88', fontSize: '0.9rem' }}>{signal.confidence}%</div>
                   <div style={{ fontSize: '0.72rem', color: 'var(--gold)' }}>@{signal.odds}</div>
                 </div>
                 <div style={{ fontSize: '0.72rem', color: 'var(--muted)', flexShrink: 0 }}>{signal.time}</div>
@@ -171,7 +171,7 @@ export function HistoryPage() {
         ].map(s => (
           <div key={s.label} className="glass" style={{ borderRadius: 14, padding: '1.2rem' }}>
             <div style={{ fontSize: '0.7rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.4rem' }}>{s.label}</div>
-            <div style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: '1.8rem', color: s.color }}>{s.value}</div>
+            <div style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '1.8rem', color: s.color }}>{s.value}</div>
           </div>
         ))}
       </div>
@@ -187,7 +187,7 @@ export function HistoryPage() {
               <span style={{ fontSize: '0.85rem' }}>{h.match}</span>
             </div>
             <span style={{ fontSize: '0.85rem', color: 'var(--text2)' }}>{h.pick}</span>
-            <span style={{ fontFamily: 'Syne', fontWeight: 700, color: h.confidence >= 70 ? 'var(--green)' : 'var(--gold)', fontSize: '0.88rem' }}>{h.confidence}%</span>
+            <span style={{ fontFamily: 'Urbanist', fontWeight: 700, color: h.confidence >= 70 ? 'var(--green)' : 'var(--gold)', fontSize: '0.88rem' }}>{h.confidence}%</span>
             <span style={{ color: 'var(--gold)', fontSize: '0.85rem' }}>@{h.odds}</span>
             <span style={{ padding: '0.2rem 0.6rem', borderRadius: 100, fontSize: '0.72rem', fontWeight: 600, background: h.result === 'win' ? 'rgba(0,255,136,0.12)' : 'rgba(255,68,85,0.12)', color: h.result === 'win' ? 'var(--green)' : 'var(--red)', border: `1px solid ${h.result === 'win' ? 'rgba(0,255,136,0.25)' : 'rgba(255,68,85,0.25)'}`, display: 'inline-block' }}>
               {h.result === 'win' ? '✓ Acierto' : '✗ Fallo'}

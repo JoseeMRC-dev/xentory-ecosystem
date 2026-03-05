@@ -32,7 +32,7 @@ export function MetodologiaPage() {
         <div style={{ display: 'inline-block', padding: '0.3rem 0.9rem', borderRadius: 100, background: 'var(--gold-dim)', border: '1px solid rgba(201,168,76,0.2)', color: 'var(--gold)', fontSize: '0.72rem', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '1rem' }}>
           Transparencia total
         </div>
-        <h1 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 'clamp(2rem,5vw,3rem)', letterSpacing: '-0.03em', marginBottom: '1rem' }}>
+        <h1 style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: 'clamp(2rem,5vw,3rem)', letterSpacing: '-0.03em', marginBottom: '1rem' }}>
           Metodología y resultados verificados
         </h1>
         <p style={{ color: 'var(--text2)', maxWidth: 580, margin: '0 auto', lineHeight: 1.8, fontSize: '0.95rem' }}>
@@ -49,7 +49,7 @@ export function MetodologiaPage() {
           { value: '>65%',      label: 'Confianza mínima para enviar señal', color: 'var(--text)' },
         ].map(s => (
           <div key={s.label} className="glass" style={{ borderRadius: 14, padding: '1.3rem', textAlign: 'center' }}>
-            <div style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: '2rem', color: s.color, letterSpacing: '-0.03em', marginBottom: '0.4rem' }}>{s.value}</div>
+            <div style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '2rem', color: s.color, letterSpacing: '-0.03em', marginBottom: '0.4rem' }}>{s.value}</div>
             <div style={{ fontSize: '0.72rem', color: 'var(--muted)', lineHeight: 1.4 }}>{s.label}</div>
           </div>
         ))}
@@ -57,7 +57,7 @@ export function MetodologiaPage() {
 
       {/* How the AI works */}
       <div className="glass" style={{ borderRadius: 18, padding: 'clamp(1.5rem,4vw,2.5rem)', marginBottom: '2rem' }}>
-        <h2 style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: '1.3rem', marginBottom: '1.5rem', paddingBottom: '0.8rem', borderBottom: '1px solid var(--border)' }}>
+        <h2 style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '1.3rem', marginBottom: '1.5rem', paddingBottom: '0.8rem', borderBottom: '1px solid var(--border)' }}>
           🧠 Cómo funciona el motor de IA
         </h2>
 
@@ -82,7 +82,7 @@ export function MetodologiaPage() {
             <div key={block.title}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.8rem' }}>
                 <span style={{ fontSize: '1.2rem' }}>{block.icon}</span>
-                <h3 style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: '0.95rem' }}>{block.title}</h3>
+                <h3 style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '0.95rem' }}>{block.title}</h3>
               </div>
               {block.items.map((item, i) => (
                 <div key={i} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.4rem', fontSize: '0.82rem' }}>
@@ -98,7 +98,7 @@ export function MetodologiaPage() {
       {/* Recent signals log */}
       <div className="glass" style={{ borderRadius: 18, padding: 'clamp(1.5rem,4vw,2.5rem)', marginBottom: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-          <h2 style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: '1.3rem' }}>📊 Historial de señales recientes</h2>
+          <h2 style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '1.3rem' }}>📊 Historial de señales recientes</h2>
           <span style={{ fontSize: '0.72rem', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
             <span className="live-dot" /> Actualizado manualmente cada semana
           </span>
@@ -148,7 +148,7 @@ export function MetodologiaPage() {
 
       {/* Limitations — honesty section */}
       <div className="glass" style={{ borderRadius: 18, padding: 'clamp(1.5rem,4vw,2.5rem)', marginBottom: '2rem', borderLeft: '3px solid var(--orange)' }}>
-        <h2 style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: '1.1rem', marginBottom: '1rem' }}>⚠️ Lo que la IA no puede hacer (honestidad total)</h2>
+        <h2 style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '1.1rem', marginBottom: '1rem' }}>⚠️ Lo que la IA no puede hacer (honestidad total)</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: '0.6rem' }}>
           {[
             'No predice eventos imprevisibles (lesiones de última hora, decisiones arbitrales)',
@@ -166,7 +166,7 @@ export function MetodologiaPage() {
 
       {/* CTA */}
       <div style={{ textAlign: 'center', padding: '2rem 0' }}>
-        <h3 style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: '1.3rem', marginBottom: '0.8rem' }}>¿Te convence la metodología?</h3>
+        <h3 style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '1.3rem', marginBottom: '0.8rem' }}>¿Te convence la metodología?</h3>
         <p style={{ color: 'var(--text2)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>Prueba el Plan Pro 7 días gratis y comprueba el rendimiento real por ti mismo.</p>
         <div style={{ display: 'flex', gap: '0.8rem', justifyContent: 'center', flexWrap: 'wrap' }}>
           <button onClick={() => navigate('/register')} className="btn btn-gold btn-lg">Empezar prueba gratuita →</button>

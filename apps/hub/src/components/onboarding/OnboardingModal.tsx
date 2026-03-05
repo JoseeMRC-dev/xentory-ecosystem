@@ -126,7 +126,7 @@ export function OnboardingModal({ onComplete }: OnboardingProps) {
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '1.8rem' }}>
           <div style={{ fontSize: '2.5rem', marginBottom: '0.8rem' }}>{currentStep.emoji}</div>
-          <h2 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 'clamp(1.2rem, 3vw, 1.5rem)', marginBottom: '0.5rem', letterSpacing: '-0.02em' }}>
+          <h2 style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: 'clamp(1.2rem, 3vw, 1.5rem)', marginBottom: '0.5rem', letterSpacing: '-0.02em' }}>
             {currentStep.title}
           </h2>
           <p style={{ color: 'var(--muted)', fontSize: '0.85rem', lineHeight: 1.6 }}>{currentStep.subtitle}</p>

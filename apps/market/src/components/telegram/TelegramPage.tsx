@@ -56,10 +56,10 @@ export function TelegramPage() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {/* Plan status */}
-            <div style={{ display: 'flex', justify: 'space-between', alignItems: 'center', padding: '0.9rem 1rem', background: 'var(--card2)', borderRadius: 10 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.9rem 1rem', background: 'var(--card2)', borderRadius: 10 }}>
               <div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginBottom: '0.2rem' }}>Plan activo</div>
-                <div style={{ fontFamily: 'Syne', fontWeight: 700, color: isPaid ? 'var(--gold)' : 'var(--muted)' }}>
+                <div style={{ fontFamily: 'Urbanist', fontWeight: 700, color: isPaid ? 'var(--gold)' : 'var(--muted)' }}>
                   {user?.plan === 'free' ? 'Explorador (Sin acceso)' : user?.plan === 'pro' ? 'Pro ✓' : 'Elite ✓'}
                 </div>
               </div>
@@ -70,7 +70,7 @@ export function TelegramPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.9rem 1rem', background: 'var(--card2)', borderRadius: 10 }}>
               <div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginBottom: '0.2rem' }}>Cuenta Telegram</div>
-                <div style={{ fontFamily: 'Syne', fontWeight: 700, color: linked ? 'var(--green)' : 'var(--muted)' }}>
+                <div style={{ fontFamily: 'Urbanist', fontWeight: 700, color: linked ? 'var(--green)' : 'var(--muted)' }}>
                   {linked ? '@tu_usuario vinculado' : 'Sin vincular'}
                 </div>
               </div>
@@ -81,7 +81,7 @@ export function TelegramPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.9rem 1rem', background: 'var(--card2)', borderRadius: 10 }}>
               <div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginBottom: '0.2rem' }}>Acceso al canal</div>
-                <div style={{ fontFamily: 'Syne', fontWeight: 700, color: linked && isPaid ? 'var(--green)' : 'var(--muted)' }}>
+                <div style={{ fontFamily: 'Urbanist', fontWeight: 700, color: linked && isPaid ? 'var(--green)' : 'var(--muted)' }}>
                   {linked && isPaid ? 'Activo' : 'Inactivo'}
                 </div>
               </div>
@@ -121,7 +121,7 @@ export function TelegramPage() {
                   width: 32, height: 32, borderRadius: '50%',
                   background: 'var(--gold-dim)', border: '1px solid rgba(201,168,76,0.2)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontFamily: 'Syne', fontWeight: 700, fontSize: '0.7rem',
+                  fontFamily: 'Urbanist', fontWeight: 700, fontSize: '0.7rem',
                   color: 'var(--gold)', flexShrink: 0,
                 }}>
                   {step.num}
@@ -138,7 +138,7 @@ export function TelegramPage() {
           <div style={{ marginTop: '1.5rem', padding: '0.9rem 1rem', background: 'var(--card2)', borderRadius: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginBottom: '0.2rem' }}>Nuestro bot</div>
-              <div style={{ fontFamily: 'Syne', fontWeight: 600, color: 'var(--cyan)', fontSize: '0.9rem' }}>@Xentory MarketBot</div>
+              <div style={{ fontFamily: 'Urbanist', fontWeight: 600, color: 'var(--cyan)', fontSize: '0.9rem' }}>@Xentory MarketBot</div>
             </div>
             <button
               onClick={() => handleCopy(botLink)}
@@ -181,7 +181,7 @@ export function TelegramPage() {
             >
               <div style={{ fontSize: '1.2rem', flexShrink: 0 }}>{sig.icon}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: '0.75rem', letterSpacing: '0.05em', color: TYPE_COLORS[sig.type], marginBottom: '0.3rem' }}>
+                <div style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '0.75rem', letterSpacing: '0.05em', color: TYPE_COLORS[sig.type], marginBottom: '0.3rem' }}>
                   {sig.ticker}
                 </div>
                 <div style={{ fontSize: '0.83rem', lineHeight: 1.5, color: 'var(--text2)' }}>{sig.message}</div>

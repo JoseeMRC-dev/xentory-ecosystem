@@ -164,7 +164,7 @@ export function PlansPage() {
 
               {/* Plan info */}
               <div style={{ marginBottom: '1.5rem' }}>
-                <div style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: '1.15rem', marginBottom: '0.2rem', color: plan.color }}>
+                <div style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '1.15rem', marginBottom: '0.2rem', color: plan.color }}>
                   {plan.name}
                 </div>
                 <div style={{ color: 'var(--muted)', fontSize: '0.82rem' }}>{plan.description}</div>
@@ -172,7 +172,7 @@ export function PlansPage() {
 
               {/* Price */}
               <div style={{ marginBottom: '1.5rem' }}>
-                <div style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: '2.8rem', letterSpacing: '-0.04em', lineHeight: 1 }}>
+                <div style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '2.8rem', letterSpacing: '-0.04em', lineHeight: 1 }}>
                   {plan.price === 0 ? (
                     <span>Gratis</span>
                   ) : (

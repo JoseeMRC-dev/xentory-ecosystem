@@ -31,11 +31,12 @@ export function WatchlistPage() {
       // Flash animation for changed prices
       const newFlashes: Record<string, 'up' | 'down'> = {};
       Object.entries(updates).forEach(([id, price]) => {
+        if (price === undefined) return;
         const prev = prevPrices.current[id];
         if (prev !== undefined && price !== prev) {
-          newFlashes[id] = price > prev ? 'up' : 'down';
+          newFlashes[id] = (price as number) > prev ? 'up' : 'down';
         }
-        prevPrices.current[id] = price;
+        prevPrices.current[id] = price as number;
       });
       if (Object.keys(newFlashes).length > 0) {
         setFlashed(f => ({ ...f, ...newFlashes }));
@@ -104,7 +105,7 @@ export function WatchlistPage() {
                   onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                 >
                   <div>
-                    <span style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: '0.9rem' }}>{a.symbol}</span>
+                    <span style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '0.9rem' }}>{a.symbol}</span>
                     <span style={{ color: 'var(--muted)', fontSize: '0.8rem', marginLeft: '0.5rem' }}>{a.name}</span>
                   </div>
                   <span style={{ color: watchlist.includes(a.id) ? 'var(--gold)' : 'var(--muted)', fontSize: '0.8rem' }}>
@@ -145,11 +146,11 @@ export function WatchlistPage() {
               >
                 <div style={{ flex: 1 }} onClick={() => navigate(`/market/${asset.id}`)}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                    <div style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: '1rem' }}>{asset.symbol}</div>
+                    <div style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '1rem' }}>{asset.symbol}</div>
                     <span style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>{asset.name}</span>
                   </div>
                 </div>
-                <div style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: '1.1rem' }} onClick={() => navigate(`/market/${asset.id}`)}>
+                <div style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '1.1rem' }} onClick={() => navigate(`/market/${asset.id}`)}>
                   {formatPrice(asset.price, asset.category)}
                 </div>
                 <div style={{ color: isUp ? 'var(--green)' : 'var(--red)', fontWeight: 500, minWidth: 70, textAlign: 'right' }} onClick={() => navigate(`/market/${asset.id}`)}>
@@ -224,7 +225,7 @@ export function AlertsPage() {
                   {alert.condition === 'above' ? '📈' : '📉'}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontFamily: 'Syne', fontWeight: 700 }}>{alert.symbol}</div>
+                  <div style={{ fontFamily: 'Urbanist', fontWeight: 700 }}>{alert.symbol}</div>
                   <div style={{ color: 'var(--muted)', fontSize: '0.82rem' }}>
                     Alerta cuando el precio {alert.condition === 'above' ? 'supere' : 'baje de'} <strong style={{ color: 'var(--text)' }}>${alert.target.toLocaleString()}</strong>
                   </div>
@@ -267,12 +268,12 @@ export function AnalysisPage() {
               onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'translateY(0)'; }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.6rem' }}>
-                <div style={{ fontFamily: 'Syne', fontWeight: 700 }}>{asset.symbol}</div>
+                <div style={{ fontFamily: 'Urbanist', fontWeight: 700 }}>{asset.symbol}</div>
                 <span style={{ color: isUp ? 'var(--green)' : 'var(--red)', fontSize: '0.8rem', fontWeight: 500 }}>
                   {isUp ? '▲' : '▼'} {Math.abs(asset.changePercent24h).toFixed(2)}%
                 </span>
               </div>
-              <div style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.2rem' }}>
+              <div style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.2rem' }}>
                 {formatPrice(asset.price, asset.category)}
               </div>
               <div style={{ color: 'var(--muted)', fontSize: '0.72rem' }}>{asset.name} · {asset.category}</div>

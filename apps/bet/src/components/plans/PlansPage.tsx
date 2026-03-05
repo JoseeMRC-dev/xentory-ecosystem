@@ -85,9 +85,9 @@ export function PlansPage() {
                 </div>
               )}
 
-              <div style={{ fontFamily: 'Syne', fontWeight: 700, fontSize: '1.1rem', color: plan.color, marginBottom: '0.2rem' }}>{plan.name}</div>
+              <div style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '1.1rem', color: plan.color, marginBottom: '0.2rem' }}>{plan.name}</div>
 
-              <div style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: '2.6rem', letterSpacing: '-0.04em', margin: '0.8rem 0 0.2rem', lineHeight: 1 }}>
+              <div style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '2.6rem', letterSpacing: '-0.04em', margin: '0.8rem 0 0.2rem', lineHeight: 1 }}>
                 {plan.price === 0 ? 'Gratis' : <><sup style={{ fontSize: '1rem', fontWeight: 400 }}>€</sup>{price}</>}
               </div>
               <div style={{ color: 'var(--muted)', fontSize: '0.78rem', marginBottom: '1.3rem' }}>
