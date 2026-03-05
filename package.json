@@ -1,0 +1,29 @@
+{
+  "name": "xentory-ecosystem",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NexusHub + NexusMarket + NexusBet — Monorepo",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev":          "concurrently -n HUB,MARKET,BET -c cyan,yellow,green \"npm run dev --workspace=apps/hub\" \"npm run dev --workspace=apps/market\" \"npm run dev --workspace=apps/bet\"",
+    "dev:hub":      "npm run dev --workspace=apps/hub",
+    "dev:market":   "npm run dev --workspace=apps/market",
+    "dev:bet":      "npm run dev --workspace=apps/bet",
+    "build":        "npm run build --workspace=apps/hub && npm run build --workspace=apps/market && npm run build --workspace=apps/bet",
+    "build:hub":    "npm run build --workspace=apps/hub",
+    "build:market": "npm run build --workspace=apps/market",
+    "build:bet":    "npm run build --workspace=apps/bet",
+    "clean":        "npx rimraf apps/*/node_modules apps/*/dist packages/*/node_modules node_modules"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0",
+    "rimraf": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

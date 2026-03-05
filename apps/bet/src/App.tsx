@@ -1,0 +1,56 @@
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './hooks/useAuth';
+import { AppLayout } from './components/layout/AppLayout';
+import { DashboardPage } from './components/dashboard/DashboardPage';
+import { MatchesPage } from './components/matches/MatchesPage';
+import { MatchAnalysisPage, AnalysisPage } from './components/analysis/AnalysisPage';
+import { PlansPage } from './components/plans/PlansPage';
+import { TelegramPage, HistoryPage } from './components/telegram/TelegramPage';
+import './styles/global.css';
+import { ThemeProvider } from './context/ThemeContext';
+import { LanguageProvider } from './context/LanguageContext';
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  if (!user) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
+function AppRoutes() {
+  const { user } = useAuth();
+
+  return (
+    <Routes>
+      {/* Toda autenticación ocurre en Xentory */}
+      <Route path="/login" element={<Navigate to="/dashboard" replace />} />
+
+      {/* Rutas protegidas */}
+      <Route path="/" element={<ProtectedRoute><AppLayout><Navigate to="/dashboard" replace /></AppLayout></ProtectedRoute>} />
+      <Route path="/dashboard" element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/matches" element={<ProtectedRoute><AppLayout><MatchesPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/matches/:id" element={<ProtectedRoute><AppLayout><MatchAnalysisPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/analysis" element={<ProtectedRoute><AppLayout><AnalysisPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/history" element={<ProtectedRoute><AppLayout><HistoryPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/telegram" element={<ProtectedRoute><AppLayout><TelegramPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/plans" element={<ProtectedRoute><AppLayout><PlansPage /></AppLayout></ProtectedRoute>} />
+
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <LanguageProvider>
+      <BrowserRouter>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </BrowserRouter>
+      </LanguageProvider>
+    </ThemeProvider>
+  );
+}
