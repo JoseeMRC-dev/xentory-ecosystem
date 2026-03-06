@@ -210,8 +210,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const launchPlatform = useCallback((platform: 'market' | 'bets') => {
     if (!user) return;
     try {
-      const t = generateSSOToken(platform);
-      const url = `${PLATFORM_URLS[platform]}?sso=${t.token}&uid=${encodeURIComponent(t.userId)}`;
+      // Encode the full user payload in the URL so cross-domain SSO works
+      // without relying on shared localStorage (different domains can't share it)
+      const payload = {
+        id:            user.id,
+        email:         user.email,
+        name:          user.name,
+        subscriptions: user.subscriptions,
+        telegramLinked: user.telegramLinked,
+        createdAt:     user.createdAt,
+        exp:           Date.now() + 5 * 60_000, // 5 min expiry
+      };
+      const encoded = btoa(encodeURIComponent(JSON.stringify(payload)));
+      const url = `${PLATFORM_URLS[platform]}?xsso=${encoded}`;
       window.open(url, '_blank', 'noopener,noreferrer');
     } catch {
       window.open(PLATFORM_URLS[platform], '_blank', 'noopener,noreferrer');

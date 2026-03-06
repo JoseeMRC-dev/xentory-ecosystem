@@ -1,11 +1,7 @@
 /**
  * useAuth — Xentory Market
- *
- * SEGURIDAD:
- * - Solo acepta sesiones que vengan del Hub via SSO token
- * - El SSO token tiene TTL de 5 minutos y solo se usa una vez
- * - Sin token válido del Hub → redirige al Hub para login
- * - No se puede acceder a ninguna ruta protegida solo con la URL
+ * SSO via URL param ?xsso=<base64 encoded user payload>
+ * Cross-domain safe — no shared localStorage needed
  */
 
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
@@ -20,70 +16,42 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const USER_KEY = 'nexus_market_user'; // clave específica de market
-const SSO_KEY  = 'xentory_sso_token';
-const HUB_URL  = (import.meta as any).env?.VITE_HUB_URL ?? 'http://localhost:4000';
+const USER_KEY = 'xentory_market_user';
+const HUB_URL  = (import.meta as any).env?.VITE_HUB_URL ?? 'https://x-eight-beryl.vercel.app';
 
 function redirectToHub() {
   window.location.href = HUB_URL + '?redirect=market';
 }
 
 function validateAndLoadUser(): User | null {
-  // ── 1. SSO token en la URL (viene del Hub) ─────────────────────────────
   try {
-    const params   = new URLSearchParams(window.location.search);
-    const ssoParam = params.get('sso');
-    const uid      = params.get('uid');
+    const params = new URLSearchParams(window.location.search);
+    const xsso   = params.get('xsso');
 
-    if (ssoParam && uid) {
-      const stored = localStorage.getItem(SSO_KEY);
-      if (stored) {
-        const ssoToken = JSON.parse(stored);
-        if (
-          ssoToken.token === ssoParam &&
-          ssoToken.userId === decodeURIComponent(uid) &&
-          new Date(ssoToken.expiresAt) > new Date() &&
-          (ssoToken.platform === 'market' || ssoToken.platform === 'both')
-        ) {
-          const hubUser = localStorage.getItem('xentory_user');
-          if (hubUser) {
-            const hu = JSON.parse(hubUser);
-            const u: User = {
-              id:            hu.id,
-              email:         hu.email,
-              name:          hu.name,
-              plan:          hu.subscriptions?.market ?? 'free',
-              telegramLinked: hu.telegramLinked ?? false,
-              createdAt:     hu.createdAt,
-            };
-            localStorage.setItem(USER_KEY, JSON.stringify(u));
-            localStorage.removeItem(SSO_KEY); // token de un solo uso
-            window.history.replaceState({}, '', window.location.pathname);
-            return u;
-          }
-        }
+    if (xsso) {
+      // New cross-domain SSO: full user payload encoded in URL
+      const payload = JSON.parse(decodeURIComponent(atob(xsso)));
+      if (payload.exp && payload.exp > Date.now()) {
+        const u: User = {
+          id:             payload.id,
+          email:          payload.email,
+          name:           payload.name,
+          plan:           payload.subscriptions?.market ?? 'free',
+          telegramLinked: payload.telegramLinked ?? false,
+          createdAt:      payload.createdAt,
+        };
+        localStorage.setItem(USER_KEY, JSON.stringify(u));
+        window.history.replaceState({}, '', window.location.pathname);
+        return u;
       }
       window.history.replaceState({}, '', window.location.pathname);
     }
   } catch { /* */ }
 
-  // ── 2. Sesión existente ────────────────────────────────────────────────
+  // Existing session
   try {
-    const marketUser = localStorage.getItem(USER_KEY);
-    const hubUser    = localStorage.getItem('xentory_user');
-
-    if (!hubUser) {
-      localStorage.removeItem(USER_KEY);
-      return null;
-    }
-
-    if (marketUser) {
-      const u = JSON.parse(marketUser);
-      const h = JSON.parse(hubUser);
-      if (u.id === h.id) return u;
-      localStorage.removeItem(USER_KEY);
-      return null;
-    }
+    const stored = localStorage.getItem(USER_KEY);
+    if (stored) return JSON.parse(stored);
   } catch { /* */ }
 
   return null;
@@ -108,7 +76,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     setUser(null);
     localStorage.removeItem(USER_KEY);
-    localStorage.removeItem('xentory_user');
     window.location.href = HUB_URL;
   }, []);
 
@@ -116,14 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(u => {
       if (!u) return u;
       const updated = { ...u, plan };
-      try {
-        const h = localStorage.getItem('xentory_user');
-        if (h) {
-          const hu = JSON.parse(h);
-          hu.subscriptions = { ...hu.subscriptions, market: plan };
-          localStorage.setItem('xentory_user', JSON.stringify(hu));
-        }
-      } catch { /* */ }
+      localStorage.setItem(USER_KEY, JSON.stringify(updated));
       return updated;
     });
   }, []);
