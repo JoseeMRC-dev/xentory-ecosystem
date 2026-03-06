@@ -52,6 +52,10 @@ export function Navbar() {
   const [scrolled, setScrolled]     = useState(false);
   const [userMenu, setUserMenu]     = useState(false);
   const [mob, setMob]               = useState(false);
+  const [tickerOn, setTickerOn]     = useState(() => {
+    try { return localStorage.getItem('xentory_ticker') !== 'off'; }
+    catch { return true; }
+  });
   const drawerRef                   = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -59,6 +63,11 @@ export function Navbar() {
     window.addEventListener('scroll', fn, { passive: true });
     return () => window.removeEventListener('scroll', fn);
   }, []);
+
+  useEffect(() => {
+    try { localStorage.setItem('xentory_ticker', tickerOn ? 'on' : 'off'); } catch { /**/ }
+    document.documentElement.classList.toggle('ticker-hidden', !tickerOn);
+  }, [tickerOn]);
 
   // Block body scroll when drawer is open
   useEffect(() => {
@@ -91,9 +100,38 @@ export function Navbar() {
     { to: '/metodologia', label: t('nav.methodology') },
   ];
 
+  // ── iOS-style ticker toggle ──
+  const TickerToggle = () => (
+    <button
+      onClick={() => setTickerOn(v => !v)}
+      title={tickerOn ? 'Ocultar ticker' : 'Mostrar ticker'}
+      style={{
+        width: 40, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer',
+        background: tickerOn ? 'var(--green)' : 'var(--border2)',
+        position: 'relative', transition: 'background 0.22s',
+        flexShrink: 0, padding: 0,
+        boxShadow: tickerOn ? '0 0 8px rgba(0,204,106,0.35)' : 'none',
+      }}
+      aria-label="Toggle live ticker"
+    >
+      <span style={{
+        position: 'absolute', top: 3, left: tickerOn ? 19 : 3,
+        width: 18, height: 18, borderRadius: '50%',
+        background: 'white', transition: 'left 0.22s cubic-bezier(0.34,1.56,0.64,1)',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+        display: 'block',
+      }} />
+    </button>
+  );
+
   // ── Quick controls (theme + lang + currency) ──
   const QuickControls = () => (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+      {/* Ticker toggle — only on mobile (hidden on desktop via CSS) */}
+      <span className="nav-ticker-toggle" style={{ display: 'none', alignItems: 'center', gap: '0.3rem' }}>
+        <span style={{ fontSize: '0.6rem', color: 'var(--muted)' }}>📊</span>
+        <TickerToggle />
+      </span>
       {/* Currency */}
       <div style={{ display: 'flex', background: 'var(--card2)', borderRadius: 7, padding: 3, border: '1px solid var(--border)', gap: 2 }}>
         {(['USD', 'EUR'] as Currency[]).map(c => (
@@ -137,7 +175,7 @@ export function Navbar() {
         <Link to="/" style={{ textDecoration: 'none', flexShrink: 0 }}>
           <span style={{ fontFamily: 'Urbanist', fontWeight: 900, fontSize: 'clamp(1.2rem,3vw,1.4rem)', letterSpacing: '-0.03em' }}>
             <span className="text-gradient-gold">Xen</span>
-            <span style={{ color: 'var(--cyan)' }}>tory</span>
+            <span style={{ color: '#4d9fff' }}>tory</span>
           </span>
         </Link>
 

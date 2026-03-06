@@ -96,7 +96,7 @@ function LogoBlock() {
       {/* Logo */}
       <div style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 800, fontSize: '1.35rem', letterSpacing: '-0.02em', marginBottom: '0.25rem' }}>
         <span className="text-gradient-gold">Xentory</span>
-        <span style={{ color: 'var(--cyan)' }}>Market</span>
+        <span style={{ color: '#4d9fff' }}>Market</span>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.9rem' }}>
         <span className="live-dot" />
@@ -135,7 +135,7 @@ export function Sidebar() {
       }} className="market-sidebar-mob">
         <div style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 800, fontSize: '1.15rem', letterSpacing: '-0.02em' }}>
           <span className="text-gradient-gold">Xentory</span>
-          <span style={{ color: 'var(--cyan)' }}>Market</span>
+          <span style={{ color: '#4d9fff' }}>Market</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <CurrencyToggle />
