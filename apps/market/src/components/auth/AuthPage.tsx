@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-const HUB_URL = (import.meta as any).env?.VITE_HUB_URL ?? 'http://localhost:4000';
+const HUB_URL = (import.meta as any).env?.VITE_HUB_URL ?? 'https://x-eight-beryl.vercel.app';
 
 export function AuthPage() {
   useEffect(() => {

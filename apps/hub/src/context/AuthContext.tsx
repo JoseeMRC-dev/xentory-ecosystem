@@ -229,6 +229,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user, generateSSOToken]);
 
+  // Handle ?redirect=market/bet after login
+  useEffect(() => {
+    if (!user || isLoading) return;
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get('redirect');
+    if (redirect === 'market' || redirect === 'bets' || redirect === 'bet') {
+      const platform = redirect === 'market' ? 'market' : 'bets';
+      window.history.replaceState({}, '', window.location.pathname);
+      setTimeout(() => launchPlatform(platform), 500);
+    }
+  }, [user, isLoading]);
+
   return (
     <AuthContext.Provider value={{
       user, isLoading, ssoToken,
