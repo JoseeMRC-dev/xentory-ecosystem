@@ -207,27 +207,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return token;
   }, [user]);
 
-  const launchPlatform = useCallback((platform: 'market' | 'bets') => {
+  const launchPlatform = useCallback(async (platform: 'market' | 'bets') => {
     if (!user) return;
     try {
-      // Encode the full user payload in the URL so cross-domain SSO works
-      // without relying on shared localStorage (different domains can't share it)
-      const payload = {
-        id:            user.id,
-        email:         user.email,
-        name:          user.name,
-        subscriptions: user.subscriptions,
-        telegramLinked: user.telegramLinked,
-        createdAt:     user.createdAt,
-        exp:           Date.now() + 5 * 60_000, // 5 min expiry
-      };
-      const encoded = btoa(encodeURIComponent(JSON.stringify(payload)));
-      const url = `${PLATFORM_URLS[platform]}?xsso=${encoded}`;
-      window.open(url, '_blank', 'noopener,noreferrer');
+      const sb = await getSupabase();
+      if (sb) {
+        // Get the live Supabase session — access_token is a short JWT (~500 chars)
+        const { data: { session } } = await sb.auth.getSession();
+        if (session?.access_token) {
+          const url = `${PLATFORM_URLS[platform]}?sb_access=${session.access_token}&sb_refresh=${session.refresh_token}`;
+          window.open(url, '_blank', 'noopener,noreferrer');
+          return;
+        }
+      }
+      // Fallback: open without token (will redirect to hub for login)
+      window.open(PLATFORM_URLS[platform], '_blank', 'noopener,noreferrer');
     } catch {
       window.open(PLATFORM_URLS[platform], '_blank', 'noopener,noreferrer');
     }
-  }, [user, generateSSOToken]);
+  }, [user]);
 
   // Handle ?redirect=market/bet after login
   useEffect(() => {
