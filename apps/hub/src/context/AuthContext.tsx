@@ -24,6 +24,7 @@ interface AuthContextType {
   loginWithGoogle:  () => Promise<void>;
   register:         (email: string, password: string, name: string) => Promise<void>;
   sendMagicLink:    (email: string) => Promise<void>;
+  resetPassword:    (email: string) => Promise<void>;
   logout:           () => Promise<void>;
   upgradeMarket:    (plan: Plan) => void;
   upgradeBets:      (plan: Plan) => void;
