@@ -60,6 +60,16 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', fn);
   }, []);
 
+  // Block body scroll when drawer is open
+  useEffect(() => {
+    if (mob) {
+      document.body.classList.add('menu-open');
+    } else {
+      document.body.classList.remove('menu-open');
+    }
+    return () => { document.body.classList.remove('menu-open'); };
+  }, [mob]);
+
   // Close drawer on route change
   useEffect(() => { setMob(false); }, [location.pathname]);
 
@@ -207,6 +217,7 @@ export function Navbar() {
             onClick={() => setMob(o => !o)}
             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.3rem', display: 'flex', flexDirection: 'column', gap: 5 }}
             aria-label="Menu"
+            onMouseDown={e => e.stopPropagation()}
           >
             <span style={{ display: 'block', width: 22, height: 2, background: 'var(--text)', borderRadius: 2, transition: 'all 0.25s', transformOrigin: 'center', transform: mob ? 'rotate(45deg) translate(5px,5px)' : 'none' }} />
             <span style={{ display: 'block', width: 22, height: 2, background: 'var(--text)', borderRadius: 2, transition: 'all 0.25s', opacity: mob ? 0 : 1 }} />
@@ -217,11 +228,11 @@ export function Navbar() {
 
       {/* Mobile drawer — solo links y auth */}
       {mob && (
-        <div ref={drawerRef} className="glass-2" style={{
+        <div ref={drawerRef} className="glass-2 mobile-drawer" style={{
           position: 'fixed', top: 'var(--nav-h)', left: 0, right: 0, zIndex: 99,
           padding: '1rem 1.5rem 1.5rem', borderBottom: '1px solid var(--border)',
           display: 'flex', flexDirection: 'column', gap: '0.75rem',
-          animation: 'fadeUp 0.18s ease both',
+          animation: 'fadeIn 0.18s ease both',
         }}>
           {navLinks.map(({ to, label }) => (
             <Link key={to} to={to} onClick={() => setMob(false)} style={{
