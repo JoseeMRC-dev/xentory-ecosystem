@@ -12,13 +12,28 @@ import { LanguageProvider } from './context/LanguageContext';
 import { CurrencyProvider } from './context/CurrencyContext';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+  if (isLoading) return (
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '1.4rem', marginBottom: '1rem' }}>
+          <span style={{ color: '#c9a84c' }}>Xentory</span>
+          <span style={{ color: '#4d9fff', marginLeft: '0.1rem' }}>{'Market'}</span>
+        </div>
+        <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center' }}>
+          {[0,1,2].map(i => (
+            <span key={i} style={{ width: 7, height: 7, borderRadius: '50%', background: '#c9a84c', display: 'inline-block', opacity: 0.6, animation: `pulse 1.2s ease-in-out ${i*0.2}s infinite` }} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
   if (!user) return <Navigate to="/login" replace />;
   return <AppLayout>{children}</AppLayout>;
 }
 
 function AppRoutes() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
 
   return (
     <Routes>
