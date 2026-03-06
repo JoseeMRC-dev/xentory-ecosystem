@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-type Tab = 'login' | 'register' | 'magic';
+type Tab = 'login' | 'register' | 'magic' | 'forgot';
 
 const GoogleIcon = () => (
   <svg width="17" height="17" viewBox="0 0 24 24">
@@ -48,12 +48,13 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
   const [showPw, setShowPw]       = useState(false);
   const [name, setName]           = useState('');
   const [terms, setTerms]         = useState(false);
-  const [magicSent, setMagicSent] = useState(false);
+  const [magicSent, setMagicSent]   = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
   const [confirmEmail, setConfirm]= useState(false);
   const [error, setError]         = useState('');
   const [googleLoading, setGl]    = useState(false);
 
-  const { login, loginWithGoogle, register, sendMagicLink, isLoading } = useAuth();
+  const { login, loginWithGoogle, register, sendMagicLink, resetPassword, isLoading } = useAuth();
   const navigate = useNavigate();
 
   const strength = tab === 'register' ? pwStrength(password) : null;
@@ -78,6 +79,9 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
         await register(email, password, name.trim());
         navigate('/dashboard');
 
+      } else if (tab === 'forgot') {
+        await resetPassword(email);
+        setForgotSent(true);
       } else {
         await sendMagicLink(email);
         setMagicSent(true);
@@ -110,7 +114,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
     }
   };
 
-  const changeTab = (t: Tab) => { setTab(t); setError(''); setMagicSent(false); setConfirm(false); };
+  const changeTab = (t: Tab) => { setTab(t); setError(''); setMagicSent(false); setConfirm(false); setForgotSent(false); };
 
   // ── Confirm email screen ─────────────────────────────────────────────
   if (confirmEmail) return (
@@ -125,6 +129,27 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
         </p>
         <button onClick={() => { setConfirm(false); changeTab('login'); }} className="btn btn-outline" style={{ justifyContent: 'center', width: '100%' }}>
           Ya confirmé → Iniciar sesión
+        </button>
+      </div>
+    </PageWrapper>
+  );
+
+  // ── Forgot password sent screen ──────────────────────────────────────────
+  if (forgotSent) return (
+    <PageWrapper>
+      <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📬</div>
+        <h2 style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '1.4rem', marginBottom: '0.8rem' }}>Revisa tu email</h2>
+        <p style={{ color: 'var(--text2)', lineHeight: 1.75, fontSize: '0.9rem', marginBottom: '0.5rem' }}>
+          Hemos enviado un enlace de recuperación a<br />
+          <strong style={{ color: 'var(--text)' }}>{email}</strong>
+        </p>
+        <p style={{ color: 'var(--muted)', fontSize: '0.8rem', lineHeight: 1.7, marginBottom: '1.5rem' }}>
+          El enlace es de un solo uso y expira en 1 hora.<br />
+          Por seguridad, no lo compartas con nadie.
+        </p>
+        <button onClick={() => { setForgotSent(false); changeTab('login'); }} className="btn btn-outline" style={{ justifyContent: 'center', width: '100%' }}>
+          Volver al login
         </button>
       </div>
     </PageWrapper>
@@ -199,7 +224,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
           <Field label={<>
             Contraseña
             {tab === 'login' && (
-              <button type="button" onClick={() => changeTab('magic')}
+              <button type="button" onClick={() => changeTab('forgot')}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gold)', fontSize: '0.75rem', padding: 0 }}>
                 ¿Olvidaste tu contraseña?
               </button>
@@ -263,6 +288,13 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
           </div>
         )}
 
+        {/* Forgot password info */}
+        {tab === 'forgot' && (
+          <div style={{ padding: '0.7rem 0.9rem', borderRadius: 8, background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.2)', fontSize: '0.8rem', color: 'var(--text2)', lineHeight: 1.65 }}>
+            🔐 Te enviaremos un enlace seguro para restablecer tu contraseña. Expira en 1 hora y solo funciona una vez.
+          </div>
+        )}
+
         {error && (
           <div style={{ padding: '0.7rem 0.9rem', background: 'rgba(255,68,85,0.08)', border: '1px solid rgba(255,68,85,0.2)', borderRadius: 8, color: 'var(--red)', fontSize: '0.82rem', lineHeight: 1.5 }}>
             {error}
@@ -273,7 +305,8 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
           style={{ justifyContent: 'center', marginTop: '0.2rem', opacity: isLoading ? 0.7 : 1 }}>
           {isLoading ? <Spinner /> : (
             tab === 'login' ? 'Acceder al ecosistema →' :
-            tab === 'register' ? 'Crear cuenta →' : 'Enviar Magic Link →'
+            tab === 'register' ? 'Crear cuenta →' :
+            tab === 'forgot' ? 'Enviar enlace de recuperación →' : 'Enviar Magic Link →'
           )}
         </button>
       </form>
@@ -281,9 +314,11 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
       {/* Footer links */}
       <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.75rem', color: 'var(--muted)' }}>
         {tab === 'login'
-          ? <>¿No tienes cuenta? <Link to="/register" style={{ color: 'var(--gold)', textDecoration: 'none' }}>Regístrate gratis</Link></>
+          ? <>¿No tienes cuenta? <Link to="/register" style={{ color: 'var(--gold)', textDecoration: 'none' }}>Regístrate gratis →</Link></>
           : tab === 'register'
           ? <>¿Ya tienes cuenta? <Link to="/login" style={{ color: 'var(--gold)', textDecoration: 'none' }}>Inicia sesión</Link></>
+          : tab === 'forgot'
+          ? <><button onClick={() => changeTab('login')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gold)', fontSize: '0.75rem', padding: 0 }}>← Volver al login</button></>
           : <>Recuerda: el enlace solo funciona una vez · <button onClick={() => changeTab('login')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gold)', fontSize: '0.75rem', padding: 0 }}>Volver al login</button></>
         }
       </p>

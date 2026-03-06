@@ -161,6 +161,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // ── Magic Link ─────────────────────────────────────────────────────────
+  const resetPassword = useCallback(async (email: string) => {
+    const sb = await getSupabase();
+    if (!sb) throw new Error('No Supabase');
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
+    });
+    if (error) throw error;
+  }, []);
+
   const sendMagicLink = useCallback(async (email: string) => {
     setLoading(true);
     try {
@@ -242,7 +251,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider value={{
       user, isLoading, ssoToken,
-      login, loginWithGoogle, register, sendMagicLink, logout,
+      login, loginWithGoogle, register, sendMagicLink, resetPassword, logout,
       upgradeMarket, upgradeBets, generateSSOToken, launchPlatform,
     }}>
       {children}
