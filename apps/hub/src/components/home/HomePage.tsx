@@ -229,7 +229,7 @@ export function HomePage() {
       <section style={{
         minHeight: '100vh', display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center', textAlign: 'center',
-        padding: 'calc(var(--nav-h) + 36px + 4rem) clamp(1rem,5vw,2rem) 5rem',
+        padding: 'calc(var(--bar-h) + 2.5rem) clamp(1rem,5vw,2rem) 5rem',
         background: 'radial-gradient(ellipse at 25% 40%,rgba(201,168,76,0.06) 0%,transparent 55%),radial-gradient(ellipse at 75% 30%,rgba(0,212,255,0.05) 0%,transparent 50%)',
       }}>
         <div className="animate-fadeUp" style={{
@@ -273,7 +273,7 @@ export function HomePage() {
             onClick={() => navigate(user ? '/dashboard' : '/register')}
             className="btn btn-gold btn-xl"
           >
-            {user ? 'Ir al dashboard →' : 'Empieza gratis — sin tarjeta →'}
+            {user ? t('home.hero.cta.user') : t('home.hero.cta.guest')}
           </button>
           <button
             onClick={() => document.getElementById('how')?.scrollIntoView({ behavior: 'smooth' })}
@@ -450,7 +450,7 @@ export function HomePage() {
           </p>
           <div style={{ display: 'flex', gap: '0.8rem', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
             <button onClick={() => navigate(user ? '/dashboard' : '/register')} className="btn btn-gold btn-xl">
-              {user ? 'Ir al dashboard →' : 'Crear cuenta gratis →'}
+              {user ? t('home.hero.cta.user') : t('home.cta.create')}
             </button>
             <button onClick={() => navigate('/pricing')} className="btn btn-outline btn-xl">
               Ver planes

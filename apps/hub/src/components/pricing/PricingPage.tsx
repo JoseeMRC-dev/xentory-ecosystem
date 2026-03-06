@@ -46,7 +46,7 @@ export function PricingPage() {
     user ? (plt === 'market' ? user.subscriptions.market : user.subscriptions.bets) : 'free';
 
   return (
-    <div style={{ paddingTop: 'calc(var(--nav-h) + 38px)', minHeight: '100vh' }}>
+    <div style={{ paddingTop: 'calc(var(--bar-h) + 38px)', minHeight: '100vh' }}>
 
       {/* Header */}
       <div style={{ textAlign: 'center', padding: '4rem 2rem 3rem', background: 'radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.06), transparent 60%)' }}>
@@ -153,7 +153,7 @@ export function PricingPage() {
           </div>
         ) : (
           /* ── PLANS GRID ── */
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.2rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: 'clamp(0.8rem, 3vw, 1.2rem)' }}>
             {plans.map(plan => {
               const plt = platform as 'market' | 'bets';
               const current = currentPlan(plt);

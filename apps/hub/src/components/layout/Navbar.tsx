@@ -20,7 +20,6 @@ const FlagEN = () => (
     <path d="M10 0 V14 M0 7 H20" stroke="#c8102e" strokeWidth="2"/>
   </svg>
 );
-
 const SunIcon = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
     <circle cx="12" cy="12" r="4.5"/>
@@ -44,20 +43,16 @@ const IB: CSSProperties = {
 };
 
 export function Navbar() {
-  const { user, logout }          = useAuth();
-  const { currency, setCurrency } = useCurrency();
-  const { theme, toggleTheme }    = useTheme();
-  const { lang, toggleLang, t, ti } = useLang();
-  const navigate                  = useNavigate();
-  const location                  = useLocation();
-  const [scrolled, setScrolled]   = useState(false);
-  const [userMenu, setUserMenu]   = useState(false);
-  const [mob, setMob]             = useState(false);
-  const [tickerOn, setTickerOn]   = useState(() => {
-    try { return localStorage.getItem('nexus_ticker') !== 'off'; }
-    catch { return true; }
-  });
-  const drawerRef                 = useRef<HTMLDivElement>(null);
+  const { user, logout }            = useAuth();
+  const { currency, setCurrency }   = useCurrency();
+  const { theme, toggleTheme }      = useTheme();
+  const { lang, toggleLang, t }     = useLang();
+  const navigate                    = useNavigate();
+  const location                    = useLocation();
+  const [scrolled, setScrolled]     = useState(false);
+  const [userMenu, setUserMenu]     = useState(false);
+  const [mob, setMob]               = useState(false);
+  const drawerRef                   = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 40);
@@ -65,13 +60,10 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', fn);
   }, []);
 
+  // Close drawer on route change
   useEffect(() => { setMob(false); }, [location.pathname]);
 
-  useEffect(() => {
-    try { localStorage.setItem('nexus_ticker', tickerOn ? 'on' : 'off'); } catch { /**/ }
-    document.documentElement.classList.toggle('ticker-hidden', !tickerOn);
-  }, [tickerOn]);
-
+  // Close drawer on outside click
   useEffect(() => {
     if (!mob) return;
     const fn = (e: MouseEvent) => {
@@ -89,9 +81,9 @@ export function Navbar() {
     { to: '/metodologia', label: t('nav.methodology') },
   ];
 
-  const Controls = ({ col = false }: { col?: boolean }) => (
-    <div style={{ display: 'flex', flexDirection: col ? 'column' : 'row', alignItems: col ? 'flex-start' : 'center', gap: col ? '0.6rem' : '0.4rem' }}>
-
+  // ── Quick controls (theme + lang + currency) ──
+  const QuickControls = () => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
       {/* Currency */}
       <div style={{ display: 'flex', background: 'var(--card2)', borderRadius: 7, padding: 3, border: '1px solid var(--border)', gap: 2 }}>
         {(['USD', 'EUR'] as Currency[]).map(c => (
@@ -100,10 +92,9 @@ export function Navbar() {
             fontSize: '0.68rem', fontWeight: 700, fontFamily: 'Urbanist', transition: 'all 0.18s',
             background: currency === c ? 'linear-gradient(135deg,var(--gold),var(--gold-l))' : 'transparent',
             color: currency === c ? 'var(--bg)' : 'var(--muted)',
-          }}>{c === 'USD' ? '$ USD' : '€ EUR'}</button>
+          }}>{c === 'USD' ? '$' : '€'}</button>
         ))}
       </div>
-
       {/* Theme */}
       <button onClick={toggleTheme} style={IB} title={theme === 'dark' ? t('nav.lightmode') : t('nav.darkmode')}
         onMouseEnter={e=>{e.currentTarget.style.borderColor='var(--gold)';e.currentTarget.style.color='var(--gold)'}}
@@ -111,7 +102,6 @@ export function Navbar() {
       >
         {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
       </button>
-
       {/* Language */}
       <button onClick={toggleLang} style={{ ...IB, overflow: 'hidden', padding: 0 }} title={lang === 'es' ? 'English' : 'Español'}>
         {lang === 'es' ? <FlagEN /> : <FlagES />}
@@ -126,10 +116,10 @@ export function Navbar() {
         height: 'var(--nav-h)', zIndex: 100,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0 clamp(1rem, 4vw, 2.5rem)',
-        background: scrolled ? 'var(--nav-bg)' : 'transparent',
-        borderBottom: scrolled ? '1px solid var(--border)' : '1px solid transparent',
-        backdropFilter: scrolled ? 'blur(24px)' : 'none',
-        WebkitBackdropFilter: scrolled ? 'blur(24px)' : 'none',
+        background: (scrolled || mob) ? 'var(--nav-bg)' : 'transparent',
+        borderBottom: (scrolled || mob) ? '1px solid var(--border)' : '1px solid transparent',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
         transition: 'all 0.3s',
       }}>
 
@@ -141,7 +131,7 @@ export function Navbar() {
           </span>
         </Link>
 
-        {/* Desktop links */}
+        {/* Desktop nav links */}
         <div className="nav-links" style={{ display: 'flex', alignItems: 'center', gap: '1.6rem' }}>
           {navLinks.map(({ to, label }) => (
             <Link key={to} to={to} style={{
@@ -157,7 +147,7 @@ export function Navbar() {
 
         {/* Desktop right */}
         <div className="nav-links" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Controls />
+          <QuickControls />
           {user ? (
             <>
               <Link to="/dashboard" className="btn btn-ghost btn-sm">{t('nav.dashboard')}</Link>
@@ -209,17 +199,23 @@ export function Navbar() {
           )}
         </div>
 
-        {/* Hamburger */}
-        <button className="nav-mobile-menu" onClick={() => setMob(o => !o)}
-          style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer', padding: '0.3rem', flexDirection: 'column', gap: 5 }}
-        >
-          <span style={{ display: 'block', width: 22, height: 2, background: 'var(--text)', borderRadius: 2, transition: 'all 0.25s', transformOrigin: 'center', transform: mob ? 'rotate(45deg) translate(5px,5px)' : 'none' }} />
-          <span style={{ display: 'block', width: 22, height: 2, background: 'var(--text)', borderRadius: 2, transition: 'all 0.25s', opacity: mob ? 0 : 1 }} />
-          <span style={{ display: 'block', width: 22, height: 2, background: 'var(--text)', borderRadius: 2, transition: 'all 0.25s', transformOrigin: 'center', transform: mob ? 'rotate(-45deg) translate(5px,-5px)' : 'none' }} />
-        </button>
+        {/* Mobile right — QuickControls + Hamburger */}
+        <div className="nav-mobile-menu" style={{ display: 'none', alignItems: 'center', gap: '0.5rem' }}>
+          <QuickControls />
+          {/* Hamburger button */}
+          <button
+            onClick={() => setMob(o => !o)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.3rem', display: 'flex', flexDirection: 'column', gap: 5 }}
+            aria-label="Menu"
+          >
+            <span style={{ display: 'block', width: 22, height: 2, background: 'var(--text)', borderRadius: 2, transition: 'all 0.25s', transformOrigin: 'center', transform: mob ? 'rotate(45deg) translate(5px,5px)' : 'none' }} />
+            <span style={{ display: 'block', width: 22, height: 2, background: 'var(--text)', borderRadius: 2, transition: 'all 0.25s', opacity: mob ? 0 : 1 }} />
+            <span style={{ display: 'block', width: 22, height: 2, background: 'var(--text)', borderRadius: 2, transition: 'all 0.25s', transformOrigin: 'center', transform: mob ? 'rotate(-45deg) translate(5px,-5px)' : 'none' }} />
+          </button>
+        </div>
       </nav>
 
-      {/* Mobile drawer */}
+      {/* Mobile drawer — solo links y auth */}
       {mob && (
         <div ref={drawerRef} className="glass-2" style={{
           position: 'fixed', top: 'var(--nav-h)', left: 0, right: 0, zIndex: 99,
@@ -228,45 +224,18 @@ export function Navbar() {
           animation: 'fadeUp 0.18s ease both',
         }}>
           {navLinks.map(({ to, label }) => (
-            <Link key={to} to={to} style={{
+            <Link key={to} to={to} onClick={() => setMob(false)} style={{
               textDecoration: 'none', padding: '0.55rem 0',
               borderBottom: '1px solid var(--border)', fontSize: '1rem',
               color: isActive(to) ? 'var(--gold)' : 'var(--text)', fontWeight: isActive(to) ? 600 : 400,
             }}>{label}</Link>
           ))}
 
-          <div style={{ paddingTop: '0.25rem' }}><Controls col /></div>
-
-          {/* Ticker toggle — mobile only */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.6rem 0', borderBottom: '1px solid var(--border)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '0.82rem', color: 'var(--text2)' }}>📊</span>
-              <span style={{ fontSize: '0.82rem', color: 'var(--text2)' }}>{ti('Ticker en vivo', 'Live ticker')}</span>
-            </div>
-            <button
-              onClick={() => setTickerOn(v => !v)}
-              style={{
-                width: 42, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer',
-                background: tickerOn ? 'var(--green)' : 'var(--border2)',
-                position: 'relative', transition: 'background 0.2s', flexShrink: 0,
-                boxShadow: tickerOn ? '0 0 8px rgba(0,204,106,0.4)' : 'none',
-              }}
-              aria-label="Toggle live ticker"
-            >
-              <span style={{
-                position: 'absolute', top: 3, left: tickerOn ? 21 : 3,
-                width: 18, height: 18, borderRadius: '50%',
-                background: 'white', transition: 'left 0.2s',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-              }} />
-            </button>
-          </div>
-
           <div style={{ paddingTop: '0.25rem', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {user ? (
               <>
                 <div style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>{user.email}</div>
-                <Link to="/dashboard" className="btn btn-ghost btn-sm" style={{ justifyContent: 'center' }}>{t('nav.dashboard')}</Link>
+                <Link to="/dashboard" onClick={() => setMob(false)} className="btn btn-ghost btn-sm" style={{ justifyContent: 'center' }}>{t('nav.dashboard')}</Link>
                 <button onClick={() => { logout(); navigate('/'); setMob(false); }}
                   className="btn btn-sm"
                   style={{ background: 'rgba(255,68,85,0.08)', color: 'var(--red)', border: '1px solid rgba(255,68,85,0.2)', justifyContent: 'center' }}
@@ -274,8 +243,8 @@ export function Navbar() {
               </>
             ) : (
               <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <Link to="/login"    className="btn btn-outline btn-sm" style={{ flex: 1, justifyContent: 'center' }}>{t('nav.signin')}</Link>
-                <Link to="/register" className="btn btn-gold btn-sm"    style={{ flex: 1, justifyContent: 'center' }}>{t('nav.signup')}</Link>
+                <Link to="/login"    onClick={() => setMob(false)} className="btn btn-outline btn-sm" style={{ flex: 1, justifyContent: 'center' }}>{t('nav.signin')}</Link>
+                <Link to="/register" onClick={() => setMob(false)} className="btn btn-gold btn-sm"    style={{ flex: 1, justifyContent: 'center' }}>{t('nav.signup')}</Link>
               </div>
             )}
           </div>

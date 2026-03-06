@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 
 export function TermsPage() {
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: 'calc(var(--nav-h) + 3rem) 1.5rem 5rem' }}>
+    <div style={{ maxWidth: 800, margin: '0 auto', padding: 'calc(var(--bar-h) + 3rem) 1.5rem 5rem' }}>
       <h1 style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: 'clamp(1.8rem,4vw,2.4rem)', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>
         Términos de Uso
       </h1>

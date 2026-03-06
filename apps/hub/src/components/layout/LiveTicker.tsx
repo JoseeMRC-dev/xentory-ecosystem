@@ -8,6 +8,7 @@
  */
 
 import { useEffect, useRef, memo, type MutableRefObject } from 'react';
+import { useLang } from '../../context/LanguageContext';
 import { useCurrency } from '../../context/CurrencyContext';
 
 const CRYPTO = [
@@ -174,6 +175,7 @@ function runEngine(
 
 export const LiveTicker = memo(() => {
   const { currency, rate } = useCurrency();
+  const { t } = useLang();
   const curRef   = useRef({ currency, rate });
   curRef.current = { currency, rate };
 
@@ -200,7 +202,7 @@ export const LiveTicker = memo(() => {
     <div className="ticker-wrap">
       <div className="ticker-badge">
         <span className="ticker-dot" />
-        <span className="ticker-label">en vivo</span>
+        <span className="ticker-label">{t('home.hero.live')}</span>
       </div>
       <div className="ticker-mask">
         <div className="ticker-track" ref={trackRef} />

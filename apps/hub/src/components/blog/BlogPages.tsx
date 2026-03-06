@@ -17,7 +17,7 @@ export function BlogPage() {
   const rest = filtered.filter(p => !p.featured);
 
   return (
-    <div style={{ paddingTop: 'calc(var(--nav-h) + 38px)', minHeight: '100vh' }}>
+    <div style={{ paddingTop: 'calc(var(--bar-h) + 38px)', minHeight: '100vh' }}>
 
       {/* Header */}
       <div style={{ textAlign: 'center', padding: '4rem 2rem 2rem', background: 'radial-gradient(ellipse at 50% 0%, rgba(0,212,255,0.04), transparent 55%)' }}>
@@ -85,14 +85,14 @@ export function BlogPage() {
           <>
             {/* Featured */}
             {featured.length > 0 && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.2rem', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '1.2rem', marginBottom: '1.5rem' }}>
                 {featured.map(post => <BlogCard key={post.id} post={post} large />)}
               </div>
             )}
 
             {/* Rest */}
             {rest.length > 0 && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '1rem' }}>
                 {rest.map(post => <BlogCard key={post.id} post={post} />)}
               </div>
             )}
@@ -142,7 +142,7 @@ export function BlogPostPage() {
   const post = BLOG_POSTS.find(p => p.slug === slug);
 
   if (!post) return (
-    <div style={{ paddingTop: 'calc(var(--nav-h) + 38px + 4rem)', textAlign: 'center', color: 'var(--muted)', minHeight: '100vh' }}>
+    <div style={{ paddingTop: 'calc(var(--bar-h) + 38px + 4rem)', textAlign: 'center', color: 'var(--muted)', minHeight: '100vh' }}>
       <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🔍</div>
       <h2>Artículo no encontrado</h2>
       <button onClick={() => navigate('/blog')} className="btn btn-outline" style={{ marginTop: '1.5rem' }}>← Volver al blog</button>
@@ -153,7 +153,7 @@ export function BlogPostPage() {
   const related = BLOG_POSTS.filter(p => p.id !== post.id && p.category === post.category).slice(0, 3);
 
   return (
-    <div style={{ paddingTop: 'calc(var(--nav-h) + 38px)', minHeight: '100vh' }}>
+    <div style={{ paddingTop: 'calc(var(--bar-h) + 38px)', minHeight: '100vh' }}>
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '3rem 2rem 5rem' }}>
 
         {/* Back */}

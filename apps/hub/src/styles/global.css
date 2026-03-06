@@ -22,6 +22,8 @@
   --card2:     rgba(255,255,255,0.042);
   --nav-bg:    rgba(5,8,16,0.97);
   --nav-h:     64px;
+  --ticker-h:  34px;
+  --bar-h:     calc(var(--nav-h) + var(--ticker-h));
   --shadow:    0 4px 24px rgba(0,0,0,0.4);
   --bg-hard:   #050810;
   --nav-bg-solid: rgba(5,8,16,0.97);
@@ -208,17 +210,27 @@ h1, h2, h3, h4, h5, h6 {
 .onboarding-overlay { position: fixed; inset: 0; z-index: 9998; background: rgba(0,0,0,0.75); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; padding: 1rem; animation: fadeIn 0.35s ease; }
 img { display: block; max-width: 100%; }
 
+/* ══ VIEWPORT LOCK ═════════════════════════════════════════════ */
+html { min-width: 320px; }
+html { min-width: 360px; }
+body { min-width: 360px; overflow-x: clip; width: 100%; }
+
+/* Prevent browser zoom from shrinking layout */
+@viewport { width: device-width; min-zoom: 1; }
+
 /* ══ NAVBAR ════════════════════════════════════════════════════ */
-.nav-mobile-menu { display: none !important; }
+.nav-mobile-menu { display: none; }
 
 /* ══ TICKER v7 ═════════════════════════════════════════════════ */
 .ticker-wrap {
   position: fixed; top: var(--nav-h); left: 0; right: 0; z-index: 90;
-  height: 34px; display: flex; align-items: center;
+  height: var(--ticker-h);
+  display: flex; align-items: center;
   background: var(--nav-bg);
   border-bottom: 1px solid var(--border);
   backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   overflow: hidden;
+  transform: translateZ(0);
 }
 .ticker-badge {
   flex-shrink: 0; display: flex; align-items: center; gap: 0.4rem;
@@ -264,13 +276,14 @@ img { display: block; max-width: 100%; }
 /* Tablet */
 @media (max-width: 900px) {
   .nav-links        { display: none !important; }
-  .nav-mobile-menu  { display: flex !important; }
-  :root { --nav-h: 58px; }
+  .nav-mobile-menu  { display: flex !important; align-items: center; gap: 0.5rem; }
+  :root { --nav-h: 58px; --ticker-h: 30px; }
 }
 
 /* Mobile */
 /* Ticker hidden via toggle (mobile) */
 html.ticker-hidden .ticker-wrap { display: none !important; }
+html.ticker-hidden { --ticker-h: 0px; }
 
 @media (max-width: 640px) {
   /* Ticker visible by default on mobile — user can hide via drawer toggle */
@@ -283,7 +296,7 @@ html.ticker-hidden .ticker-wrap { display: none !important; }
 
 /* Very small */
 @media (max-width: 380px) {
-  :root { --nav-h: 52px; }
+  :root { --nav-h: 52px; --ticker-h: 28px; }
   .btn-gold.btn-sm { padding: 0.3rem 0.7rem; font-size: 0.75rem; }
 }
 
@@ -350,4 +363,14 @@ html.ticker-hidden .ticker-wrap { display: none !important; }
 [data-theme="light"] .plan-card {
   background: rgba(255,255,255,0.85);
   border-color: var(--border);
+}
+
+/* ══ MOBILE NAV ALWAYS SOLID ═══════════════════════════════════ */
+@media (max-width: 900px) {
+  nav[style] {
+    background: var(--nav-bg) !important;
+    border-bottom: 1px solid var(--border) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+  }
 }

@@ -119,6 +119,14 @@ export const translations = {
   'footer.legal':     { es: 'Legal',       en: 'Legal' },
   'footer.copy':      { es: '© 2025 Xentory. Todos los derechos reservados.', en: '© 2025 Xentory. All rights reserved.' },
   'footer.risk':      { es: 'Trading y apuestas conllevan riesgo. Invierte solo lo que puedas permitirte perder.', en: 'Trading and betting involve risk. Only invest what you can afford to lose.' },
+
+  // ── HOME — EXTRA CTA ───────────────────────────────────────────
+  'home.hero.cta.user':   { es: 'Ir al dashboard →',         en: 'Go to dashboard →' },
+  'home.hero.cta.guest':  { es: 'Empieza gratis — sin tarjeta →', en: 'Start free — no card →' },
+  'home.cta.create':      { es: 'Crear cuenta gratis →',      en: 'Create free account →' },
+  'home.platforms.m.open':{ es: 'Abrir Xentory Market →',     en: 'Open Xentory Market →' },
+  'home.platforms.b.open':{ es: 'Abrir Xentory Bet →',        en: 'Open Xentory Bet →' },
+  'nav.ticker':           { es: 'Ticker en vivo',             en: 'Live ticker' },
 } as const;
 
 export type TKey = keyof typeof translations;
