@@ -159,14 +159,28 @@ export function Sidebar() {
 
       {/* Mobile drawer */}
       {isMobile && open && (
-        <div style={{
-          position: 'fixed', top: 52, left: 0, right: 0, bottom: 0, zIndex: 49,
-          background: 'var(--nav-bg)', display: 'flex', flexDirection: 'column',
-          overflowY: 'auto', borderTop: '1px solid var(--border)',
-          animation: 'fadeUp 0.18s ease both',
-        }}>
-          <NavContent onNav={() => setOpen(false)} />
-        </div>
+        <>
+          <div
+            onClick={() => setOpen(false)}
+            style={{
+              position: 'fixed', inset: 0, top: 52, zIndex: 48,
+              background: 'rgba(5,8,16,0.6)',
+              backdropFilter: 'blur(3px)',
+              WebkitBackdropFilter: 'blur(3px)',
+            }}
+          />
+          <div style={{
+            position: 'fixed', top: 52, left: 0, right: 0, bottom: 0, zIndex: 49,
+            background: '#080d1a',
+            borderTop: '1px solid var(--border)',
+            display: 'flex', flexDirection: 'column',
+            overflowY: 'auto',
+            animation: 'fadeUp 0.18s ease both',
+            boxShadow: '0 10px 40px rgba(0,0,0,0.6)',
+          }}>
+            <NavContent onNav={() => setOpen(false)} />
+          </div>
+        </>
       )}
 
       <style>{`
