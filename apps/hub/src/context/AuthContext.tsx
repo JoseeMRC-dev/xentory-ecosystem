@@ -220,27 +220,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const launchPlatform = useCallback(async (platform: 'market' | 'bets') => {
     if (!user) { console.warn('[launch] no user'); return; }
 
-    try {
-      const sb = await getSupabase();
-      const { data: { session } } = await sb.auth.getSession();
-      if (!session?.access_token) {
-        console.warn('[launch] no session');
-        return;
-      }
-
-      // Navigate same tab with ?xsso= query param — reliable, no popup blocking
-      const payload = btoa(JSON.stringify({
-        a: session.access_token,
-        r: session.refresh_token ?? '',
-      }));
-      const url = `${PLATFORM_URLS[platform]}?xsso=${encodeURIComponent(payload)}`;
-      console.log('[launch] navigating to:', PLATFORM_URLS[platform]);
-      window.location.href = url;
-
-    } catch (e) {
-      console.error('[launch] error:', e);
-      window.location.href = PLATFORM_URLS[platform];
-    }
+    // Pass user data directly — no Supabase token exchange needed
+    // Signed with timestamp to prevent replay attacks
+    const payload = btoa(JSON.stringify({
+      id:        user.id,
+      email:     user.email,
+      name:      user.name,
+      plan:      platform === 'market'
+                   ? (user.subscriptions?.market ?? 'free')
+                   : (user.subscriptions?.bets   ?? 'free'),
+      ts:        Date.now(),
+    }));
+    const url = `${PLATFORM_URLS[platform]}?xsso=${encodeURIComponent(payload)}`;
+    console.log('[launch] navigating with user payload to', PLATFORM_URLS[platform]);
+    window.location.href = url;
   }, [user]);
 
   // NOTE: ?redirect= param intentionally removed — caused infinite loop

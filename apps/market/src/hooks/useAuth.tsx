@@ -1,9 +1,9 @@
 /**
  * useAuth — Xentory Market
- * SSO via URL hash: #xsso=<base64({"a":access,"r":refresh})>
+ * SSO: Hub passes user as ?xsso=<base64(JSON)>
+ * No Supabase token exchange needed.
  */
 import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
-import { supabase } from '../lib/supabase';
 import type { User, Plan } from '../types';
 
 interface AuthContextType {
@@ -16,17 +16,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 const HUB_URL  = (import.meta as any).env?.VITE_HUB_URL ?? 'https://x-eight-beryl.vercel.app';
 const USER_KEY = 'xentory_market_user';
-
-function sbUserToNexus(sbUser: any): User {
-  return {
-    id:             sbUser.id,
-    email:          sbUser.email ?? '',
-    name:           sbUser.user_metadata?.full_name ?? sbUser.user_metadata?.name ?? sbUser.email?.split('@')[0] ?? 'Usuario',
-    plan:           'free' as Plan,
-    telegramLinked: false,
-    createdAt:      sbUser.created_at ?? new Date().toISOString(),
-  };
-}
+const MAX_AGE  = 5 * 60 * 1000; // 5 min — SSO payload TTL
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user,      setUser]    = useState<User | null>(null);
@@ -37,103 +27,77 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (didInit.current) return;
     didInit.current = true;
 
-    async function init() {
-      try {
-        // ── 1. SSO token from Hub via query param ─────────────────
-        const _qp = new URLSearchParams(window.location.search);
-        const _sso = _qp.get('xsso');
-        if (_sso) {
-          // Remove param from URL immediately
-          window.history.replaceState({}, '', window.location.pathname);
-          try {
-            const { a: accessToken, r: refreshToken } = JSON.parse(atob(_sso));
-            console.log('[Market] SSO param found, calling setSession...');
-            const { data, error } = await supabase.auth.setSession({
-              access_token:  accessToken,
-              refresh_token: refreshToken,
-            });
-            console.log('[Market] setSession:', data.session?.user?.email ?? null, '| error:', error?.message ?? null);
-            if (data.session?.user) {
-              const u = sbUserToNexus(data.session.user);
-              localStorage.setItem(USER_KEY, JSON.stringify(u));
-              setUser(u);
-              setLoading(false);
-              return;
-            }
-          } catch (e) {
-            console.error('[Market] hash SSO parse error:', e);
+    function init() {
+      // ── 1. SSO payload from Hub (?xsso=) ───────────────────────
+      const qp  = new URLSearchParams(window.location.search);
+      const sso = qp.get('xsso');
+
+      if (sso) {
+        window.history.replaceState({}, '', window.location.pathname);
+        try {
+          const data = JSON.parse(atob(decodeURIComponent(sso)));
+          const age  = Date.now() - (data.ts ?? 0);
+          console.log('[Market] SSO payload:', data.email, '| age:', Math.round(age/1000) + 's');
+
+          if (age < MAX_AGE && data.id && data.email) {
+            const u: User = {
+              id:             data.id,
+              email:          data.email,
+              name:           data.name ?? data.email.split('@')[0],
+              plan:           data.plan ?? 'free',
+              telegramLinked: false,
+              createdAt:      new Date().toISOString(),
+            };
+            localStorage.setItem(USER_KEY, JSON.stringify({ ...u, savedAt: Date.now() }));
+            setUser(u);
+            setLoading(false);
+            return;
           }
+          console.warn('[Market] SSO payload expired or invalid');
+        } catch (e) {
+          console.error('[Market] SSO parse error:', e);
         }
+      }
 
-        // ── 2. Existing Supabase session ────────────────────────────
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log('[Market] existing session:', session?.user?.email ?? null);
-        if (session?.user) {
-          const u = sbUserToNexus(session.user);
-          localStorage.setItem(USER_KEY, JSON.stringify(u));
-          setUser(u);
-          setLoading(false);
-          return;
-        }
-
-        // ── 3. Cached user (valid repeat visit) ────────────────────
+      // ── 2. Cached session (returning user) ─────────────────────
+      try {
         const stored = localStorage.getItem(USER_KEY);
         if (stored) {
-          try {
-            const parsed = JSON.parse(stored);
-            if (parsed?.id && parsed?.email) {
-              console.log('[Market] cached user:', parsed.email);
-              // Verify session is still alive
-              const { data: { session: s2 } } = await supabase.auth.getSession();
-              if (s2?.user) {
-                setUser(parsed);
-                setLoading(false);
-                return;
-              }
-              // Session expired — clear cache
-              localStorage.removeItem(USER_KEY);
-            }
-          } catch { /**/ }
+          const parsed = JSON.parse(stored);
+          const age    = Date.now() - (parsed.savedAt ?? 0);
+          // Cache valid for 24h
+          if (age < 24 * 60 * 60 * 1000 && parsed.id && parsed.email) {
+            console.log('[Market] cached user:', parsed.email);
+            setUser(parsed);
+            setLoading(false);
+            return;
+          }
+          localStorage.removeItem(USER_KEY);
         }
+      } catch { /**/ }
 
-        // ── 4. No auth → back to Hub ────────────────────────────────
-        console.warn('[Market] no auth, redirecting to Hub');
-        setLoading(false);
-        window.location.href = HUB_URL;
-
-      } catch (e) {
-        console.error('[Market] init error:', e);
-        setLoading(false);
-        window.location.href = HUB_URL;
-      }
+      // ── 3. No auth → Hub ────────────────────────────────────────
+      console.warn('[Market] no auth, going to Hub');
+      setLoading(false);
+      window.location.href = HUB_URL;
     }
 
     init();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('[Market] auth event:', event);
-      if (event === 'SIGNED_OUT') {
-        localStorage.removeItem(USER_KEY);
-        setUser(null);
-      } else if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
-        const u = sbUserToNexus(session.user);
-        localStorage.setItem(USER_KEY, JSON.stringify(u));
-        setUser(u);
-      }
-    });
-
-    return () => subscription.unsubscribe();
   }, []);
 
-  const logout = useCallback(async () => {
-    await supabase.auth.signOut();
+  const logout = useCallback(() => {
     localStorage.removeItem(USER_KEY);
     setUser(null);
     window.location.href = HUB_URL;
   }, []);
 
   const upgradePlan = useCallback((plan: Plan) => {
-    setUser(u => u ? { ...u, plan } : u);
+    setUser(u => {
+      if (!u) return u;
+      const updated = { ...u, plan };
+      localStorage.setItem(USER_KEY, JSON.stringify({ ...updated, savedAt: Date.now() }));
+      return updated;
+    });
   }, []);
 
   return (
