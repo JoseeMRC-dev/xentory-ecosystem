@@ -39,15 +39,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     async function init() {
       try {
-        // ── 1. Hash SSO from Hub: #xsso=<base64> ──────────────────
-        const hash = window.location.hash;
-        const match = hash.match(/[#&]xsso=([^&]+)/);
-        if (match) {
-          // Clean hash immediately so it's not reused on refresh
+        // ── 1. SSO token from Hub via query param ─────────────────
+        const _qp = new URLSearchParams(window.location.search);
+        const _sso = _qp.get('xsso');
+        if (_sso) {
+          // Remove param from URL immediately
           window.history.replaceState({}, '', window.location.pathname);
           try {
-            const { a: accessToken, r: refreshToken } = JSON.parse(atob(match[1]));
-            console.log('[Bet] hash SSO found, calling setSession...');
+            const { a: accessToken, r: refreshToken } = JSON.parse(atob(_sso));
+            console.log('[Bet] SSO param found, calling setSession...');
             const { data, error } = await supabase.auth.setSession({
               access_token:  accessToken,
               refresh_token: refreshToken,

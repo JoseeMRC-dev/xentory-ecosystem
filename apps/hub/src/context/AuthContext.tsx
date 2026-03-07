@@ -228,18 +228,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Encode tokens as base64 in URL hash — cross-domain, not blocked by Chrome
+      // Navigate same tab with ?xsso= query param — reliable, no popup blocking
       const payload = btoa(JSON.stringify({
         a: session.access_token,
         r: session.refresh_token ?? '',
       }));
-      const url = `${PLATFORM_URLS[platform]}#xsso=${payload}`;
-      console.log('[launch] opening with hash SSO');
-      window.open(url, '_blank');
+      const url = `${PLATFORM_URLS[platform]}?xsso=${encodeURIComponent(payload)}`;
+      console.log('[launch] navigating to:', PLATFORM_URLS[platform]);
+      window.location.href = url;
 
     } catch (e) {
       console.error('[launch] error:', e);
-      window.open(PLATFORM_URLS[platform], '_blank');
+      window.location.href = PLATFORM_URLS[platform];
     }
   }, [user]);
 
