@@ -1,8 +1,8 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useRef, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-type Tab = 'login' | 'register' | 'magic' | 'forgot';
+type Tab = 'login' | 'register' | 'magic';
 
 const GoogleIcon = () => (
   <svg width="17" height="17" viewBox="0 0 24 24">
@@ -48,14 +48,18 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
   const [showPw, setShowPw]       = useState(false);
   const [name, setName]           = useState('');
   const [terms, setTerms]         = useState(false);
-  const [magicSent, setMagicSent]   = useState(false);
-  const [forgotSent, setForgotSent] = useState(false);
+  const [magicSent, setMagicSent]    = useState(false);
+  const [showForgot, setShowForgot]  = useState(false);
+  const [forgotEmail, setForgotEmail]= useState('');
+  const [forgotSent,  setForgotSent] = useState(false);
+  const [forgotLoading, setForgotL]  = useState(false);
+  const [forgotError, setForgotErr]  = useState('');
   const [confirmEmail, setConfirm]= useState(false);
   const [error, setError]         = useState('');
   const [googleLoading, setGl]    = useState(false);
 
   const { login, loginWithGoogle, register, sendMagicLink, resetPassword, isLoading } = useAuth();
-  const navigate = useNavigate();
+  const navigate   = useNavigate();
 
   const strength = tab === 'register' ? pwStrength(password) : null;
 
@@ -79,9 +83,6 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
         await register(email, password, name.trim());
         navigate('/dashboard');
 
-      } else if (tab === 'forgot') {
-        await resetPassword(email);
-        setForgotSent(true);
       } else {
         await sendMagicLink(email);
         setMagicSent(true);
@@ -114,7 +115,27 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
     }
   };
 
-  const changeTab = (t: Tab) => { setTab(t); setError(''); setMagicSent(false); setConfirm(false); setForgotSent(false); };
+  const changeTab = (t: Tab) => {
+    if (t === 'register') { navigate('/register'); return; }
+    if (t === 'login')    { navigate('/login');    return; }
+    setTab(t); setError(''); setMagicSent(false); setConfirm(false);
+  };
+
+  const handleForgot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail.trim()) { setForgotErr('Introduce tu email.'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail)) { setForgotErr('Email no válido.'); return; }
+    setForgotL(true);
+    setForgotErr('');
+    try {
+      await resetPassword(forgotEmail);
+      setForgotSent(true);
+    } catch {
+      setForgotErr('No se pudo enviar el correo. Inténtalo de nuevo.');
+    } finally {
+      setForgotL(false);
+    }
+  };
 
   // ── Confirm email screen ─────────────────────────────────────────────
   if (confirmEmail) return (
@@ -129,27 +150,6 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
         </p>
         <button onClick={() => { setConfirm(false); changeTab('login'); }} className="btn btn-outline" style={{ justifyContent: 'center', width: '100%' }}>
           Ya confirmé → Iniciar sesión
-        </button>
-      </div>
-    </PageWrapper>
-  );
-
-  // ── Forgot password sent screen ──────────────────────────────────────────
-  if (forgotSent) return (
-    <PageWrapper>
-      <div style={{ textAlign: 'center', padding: '1rem 0' }}>
-        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📬</div>
-        <h2 style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '1.4rem', marginBottom: '0.8rem' }}>Revisa tu email</h2>
-        <p style={{ color: 'var(--text2)', lineHeight: 1.75, fontSize: '0.9rem', marginBottom: '0.5rem' }}>
-          Hemos enviado un enlace de recuperación a<br />
-          <strong style={{ color: 'var(--text)' }}>{email}</strong>
-        </p>
-        <p style={{ color: 'var(--muted)', fontSize: '0.8rem', lineHeight: 1.7, marginBottom: '1.5rem' }}>
-          El enlace es de un solo uso y expira en 1 hora.<br />
-          Por seguridad, no lo compartas con nadie.
-        </p>
-        <button onClick={() => { setForgotSent(false); changeTab('login'); }} className="btn btn-outline" style={{ justifyContent: 'center', width: '100%' }}>
-          Volver al login
         </button>
       </div>
     </PageWrapper>
@@ -180,7 +180,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
     <PageWrapper>
       {/* Tabs */}
       <div style={{ display: 'flex', background: 'var(--card2)', borderRadius: 10, padding: '0.25rem', marginBottom: '1.5rem', gap: '0.1rem' }}>
-        {([['login', 'Iniciar sesión'], ['register', 'Registrarse'], ['magic', '✉ Magic Link']] as [Tab, string][]).map(([t, label]) => (
+        {(['login', 'register', 'magic'] as Tab[]).map(t => { const label = t === 'login' ? 'Iniciar sesión' : t === 'register' ? 'Registrarse' : '✉ Magic Link'; return (
           <button key={t} onClick={() => changeTab(t)} style={{
             flex: 1, padding: '0.5rem 0.3rem', borderRadius: 8, border: 'none', cursor: 'pointer',
             fontSize: '0.78rem', fontWeight: 500, transition: 'all 0.2s',
@@ -188,7 +188,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
             color: tab === t ? 'var(--text)' : 'var(--muted)',
             borderBottom: tab === t ? '1px solid var(--gold)' : '1px solid transparent',
           }}>{label}</button>
-        ))}
+        ); })}
       </div>
 
       {/* Google OAuth */}
@@ -224,7 +224,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
           <Field label={<>
             Contraseña
             {tab === 'login' && (
-              <button type="button" onClick={() => changeTab('forgot')}
+              <button type="button" onClick={() => { setShowForgot(true); setForgotEmail(email); setForgotSent(false); setForgotErr(''); }}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gold)', fontSize: '0.75rem', padding: 0 }}>
                 ¿Olvidaste tu contraseña?
               </button>
@@ -288,12 +288,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
           </div>
         )}
 
-        {/* Forgot password info */}
-        {tab === 'forgot' && (
-          <div style={{ padding: '0.7rem 0.9rem', borderRadius: 8, background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.2)', fontSize: '0.8rem', color: 'var(--text2)', lineHeight: 1.65 }}>
-            🔐 Te enviaremos un enlace seguro para restablecer tu contraseña. Expira en 1 hora y solo funciona una vez.
-          </div>
-        )}
+
 
         {error && (
           <div style={{ padding: '0.7rem 0.9rem', background: 'rgba(255,68,85,0.08)', border: '1px solid rgba(255,68,85,0.2)', borderRadius: 8, color: 'var(--red)', fontSize: '0.82rem', lineHeight: 1.5 }}>
@@ -306,7 +301,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
           {isLoading ? <Spinner /> : (
             tab === 'login' ? 'Acceder al ecosistema →' :
             tab === 'register' ? 'Crear cuenta →' :
-            tab === 'forgot' ? 'Enviar enlace de recuperación →' : 'Enviar Magic Link →'
+'Enviar Magic Link →'
           )}
         </button>
       </form>
@@ -317,11 +312,86 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
           ? <>¿No tienes cuenta? <Link to="/register" style={{ color: 'var(--gold)', textDecoration: 'none' }}>Regístrate gratis →</Link></>
           : tab === 'register'
           ? <>¿Ya tienes cuenta? <Link to="/login" style={{ color: 'var(--gold)', textDecoration: 'none' }}>Inicia sesión</Link></>
-          : tab === 'forgot'
-          ? <><button onClick={() => changeTab('login')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gold)', fontSize: '0.75rem', padding: 0 }}>← Volver al login</button></>
           : <>Recuerda: el enlace solo funciona una vez · <button onClick={() => changeTab('login')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gold)', fontSize: '0.75rem', padding: 0 }}>Volver al login</button></>
         }
       </p>
+
+      {/* ── Forgot password modal ─────────────────────────────── */}
+      {showForgot && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 1000,
+          background: 'rgba(5,8,16,0.85)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem',
+        }} onClick={() => setShowForgot(false)}>
+          <div
+            className="glass"
+            onClick={e => e.stopPropagation()}
+            style={{ width: '100%', maxWidth: 400, borderRadius: 18, padding: '2rem', position: 'relative', animation: 'fadeUp 0.2s ease' }}
+          >
+            {/* Close */}
+            <button onClick={() => setShowForgot(false)} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: '1.2rem', lineHeight: 1, padding: '0.2rem 0.4rem', borderRadius: 6, transition: 'color 0.2s' }}
+              onMouseEnter={e => (e.currentTarget.style.color = 'var(--text)')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'var(--muted)')}>
+              ✕
+            </button>
+
+            {forgotSent ? (
+              <div style={{ textAlign: 'center', padding: '0.5rem 0' }}>
+                <div style={{ fontSize: '2.5rem', marginBottom: '0.8rem' }}>📬</div>
+                <h3 style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '1.2rem', marginBottom: '0.6rem' }}>
+                  Revisa tu email
+                </h3>
+                <p style={{ color: 'var(--text2)', fontSize: '0.85rem', lineHeight: 1.7, marginBottom: '0.5rem' }}>
+                  Hemos enviado un enlace de recuperación a<br />
+                  <strong style={{ color: 'var(--text)' }}>{forgotEmail}</strong>
+                </p>
+                <p style={{ color: 'var(--muted)', fontSize: '0.75rem', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+                  El enlace expira en 1 hora y es de un solo uso.
+                </p>
+                <button onClick={() => { setShowForgot(false); }} className="btn btn-gold" style={{ width: '100%', justifyContent: 'center' }}>
+                  Entendido
+                </button>
+                <button onClick={() => { setShowForgot(false); changeTab('login'); }} style={{ marginTop: '0.8rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gold)', fontSize: '0.78rem', width: '100%', padding: '0.4rem' }}>
+                  Ir al login →
+                </button>
+              </div>
+            ) : (
+              <>
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <div style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>🔐</div>
+                  <h3 style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '1.2rem', marginBottom: '0.4rem' }}>
+                    Recuperar contraseña
+                  </h3>
+                  <p style={{ color: 'var(--muted)', fontSize: '0.82rem', lineHeight: 1.6 }}>
+                    Te enviaremos un enlace seguro de un solo uso. Expira en 1 hora.
+                  </p>
+                </div>
+                <form onSubmit={handleForgot} style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+                  <div>
+                    <label style={{ fontSize: '0.78rem', color: 'var(--muted)', display: 'block', marginBottom: '0.4rem' }}>Email</label>
+                    <input className="input" type="email" placeholder="tu@email.com"
+                      value={forgotEmail} onChange={e => setForgotEmail(e.target.value)}
+                      autoComplete="email" />
+                  </div>
+                  {forgotError && (
+                    <div style={{ padding: '0.6rem 0.8rem', background: 'rgba(255,68,85,0.08)', border: '1px solid rgba(255,68,85,0.2)', borderRadius: 8, color: 'var(--red)', fontSize: '0.8rem' }}>
+                      {forgotError}
+                    </div>
+                  )}
+                  <button type="submit" disabled={forgotLoading} className="btn btn-gold btn-lg" style={{ justifyContent: 'center', opacity: forgotLoading ? 0.7 : 1 }}>
+                    {forgotLoading
+                      ? <span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid rgba(0,0,0,0.3)', borderTopColor: '#000', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+                      : 'Enviar enlace →'}
+                  </button>
+                  <button type="button" onClick={() => setShowForgot(false)} className="btn btn-ghost" style={{ justifyContent: 'center' }}>
+                    Iniciar sesión
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* AI disclaimer at bottom */}
       <div style={{ marginTop: '1.5rem', padding: '0.8rem', borderRadius: 8, background: 'var(--card2)', border: '1px solid var(--border)', fontSize: '0.72rem', color: 'var(--muted)', lineHeight: 1.65, textAlign: 'center' }}>

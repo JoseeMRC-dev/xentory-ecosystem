@@ -93,6 +93,7 @@ export function Navbar() {
   }, [mob]);
 
   const isActive = (p: string) => location.pathname === p;
+  const isHome    = location.pathname === '/';
 
   const navLinks = [
     { to: '/pricing',     label: t('nav.pricing') },
@@ -128,10 +129,10 @@ export function Navbar() {
   const QuickControls = () => (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
       {/* Ticker toggle — only on mobile (hidden on desktop via CSS) */}
-      <span className="nav-ticker-toggle" style={{ display: 'none', alignItems: 'center', gap: '0.3rem' }}>
+      {isHome && <span className="nav-ticker-toggle" style={{ display: 'none', alignItems: 'center', gap: '0.3rem' }}>
         <span style={{ fontSize: '0.6rem', color: 'var(--muted)' }}>📊</span>
         <TickerToggle />
-      </span>
+      </span>}
       {/* Currency */}
       <div style={{ display: 'flex', background: 'var(--card2)', borderRadius: 7, padding: 3, border: '1px solid var(--border)', gap: 2 }}>
         {(['USD', 'EUR'] as Currency[]).map(c => (

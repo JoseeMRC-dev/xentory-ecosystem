@@ -29,7 +29,7 @@ interface AuthContextType {
   upgradeMarket:    (plan: Plan) => void;
   upgradeBets:      (plan: Plan) => void;
   generateSSOToken: (platform: 'market' | 'bets') => SSOToken;
-  launchPlatform:   (platform: 'market' | 'bets') => void;
+  launchPlatform:   (platform: 'market' | 'bets') => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -218,22 +218,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   const launchPlatform = useCallback(async (platform: 'market' | 'bets') => {
-    if (!user) return;
+    if (!user) { console.warn('[launch] no user'); return; }
+
+    // Open window synchronously so mobile doesn't block the popup
+    const newWin = window.open('about:blank', '_blank');
+
     try {
       const sb = await getSupabase();
-      if (sb) {
-        // Get the live Supabase session — access_token is a short JWT (~500 chars)
-        const { data: { session } } = await sb.auth.getSession();
-        if (session?.access_token) {
-          const url = `${PLATFORM_URLS[platform]}?sb_access=${session.access_token}&sb_refresh=${session.refresh_token}`;
-          window.open(url, '_blank', 'noopener,noreferrer');
-          return;
-        }
+      console.log('[launch] supabase client:', !!sb);
+
+      const { data: { session }, error } = await sb.auth.getSession();
+      console.log('[launch] session:', !!session, '| error:', error?.message);
+
+      if (session?.access_token) {
+        const url = `${PLATFORM_URLS[platform]}?sb_access=${encodeURIComponent(session.access_token)}&sb_refresh=${encodeURIComponent(session.refresh_token ?? '')}`;
+        console.log('[launch] opening:', PLATFORM_URLS[platform]);
+        if (newWin) { newWin.location.href = url; }
+        else { window.location.href = url; } // mobile fallback: same tab
+        return;
       }
-      // Fallback: open without token (will redirect to hub for login)
-      window.open(PLATFORM_URLS[platform], '_blank', 'noopener,noreferrer');
-    } catch {
-      window.open(PLATFORM_URLS[platform], '_blank', 'noopener,noreferrer');
+
+      // No session — try re-login flow
+      console.warn('[launch] no session, redirecting to hub login');
+      if (newWin) newWin.close();
+      window.location.href = `${PLATFORM_URLS[platform]}?redirect=${platform}`;
+    } catch (e) {
+      console.error('[launch] error:', e);
+      if (newWin) newWin.location.href = PLATFORM_URLS[platform];
     }
   }, [user]);
 

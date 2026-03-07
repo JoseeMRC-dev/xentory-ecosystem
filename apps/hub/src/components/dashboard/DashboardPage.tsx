@@ -154,13 +154,13 @@ export function DashboardPage() {
         <PlatformCard
           emoji="📈" name="Xentory Market" planKey="market"
           plan={user.subscriptions.market} color="var(--gold)"
-          onLaunch={() => launchPlatform('market')}
+          onLaunch={() => { launchPlatform('market').catch(console.error); }}
           onUpgrade={() => navigate('/pricing#market')}
         />
         <PlatformCard
           emoji="⚽" name="Xentory Bet" planKey="bets"
           plan={user.subscriptions.bets} color="var(--cyan)"
-          onLaunch={() => launchPlatform('bets')}
+          onLaunch={() => { launchPlatform('bets').catch(console.error); }}
           onUpgrade={() => navigate('/pricing#bets')}
         />
       </div>

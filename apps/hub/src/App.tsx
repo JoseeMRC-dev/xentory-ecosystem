@@ -56,8 +56,8 @@ function AppRoutes() {
       <Route path="/metodologia" element={<Layout><MetodologiaPage /></Layout>} />
       <Route path="/blog"        element={<Layout><BlogPage /></Layout>} />
       <Route path="/blog/:slug"  element={<Layout><BlogPostPage /></Layout>} />
-      <Route path="/login"       element={user ? <Navigate to="/dashboard" replace /> : <Layout hideFooter><AuthPage defaultTab="login" /></Layout>} />
-      <Route path="/register"    element={user ? <Navigate to="/dashboard" replace /> : <Layout hideFooter><AuthPage defaultTab="register" /></Layout>} />
+      <Route path="/login"       element={user ? <Navigate to="/dashboard" replace /> : <Layout hideFooter><AuthPage key="login" defaultTab="login" /></Layout>} />
+      <Route path="/register"    element={user ? <Navigate to="/dashboard" replace /> : <Layout hideFooter><AuthPage key="register" defaultTab="register" /></Layout>} />
       <Route path="/dashboard"   element={<ProtectedRoute><Layout><DashboardPage /></Layout></ProtectedRoute>} />
       <Route path="/auth/callback"   element={<AuthCallbackPage />} />
       <Route path="/reset-password"  element={<ResetPasswordPage />} />
