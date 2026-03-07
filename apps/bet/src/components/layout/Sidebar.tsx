@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { SPORT_CONFIG } from '../../constants';
@@ -81,11 +81,9 @@ function NavContent({ onNav }: { onNav?: () => void }) {
   );
 }
 
-// ── Logo block ─────────────────────────────────────────────────────────────
 function LogoBlock() {
   return (
     <div style={{ padding: '1.2rem 1.2rem 0' }}>
-      {/* Logo */}
       <div style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 800, fontSize: '1.35rem', letterSpacing: '-0.02em', marginBottom: '0.25rem' }}>
         <span className="text-gradient-gold">Xentory</span>
         <span style={{ color: '#4d9fff' }}>Bet</span>
@@ -94,9 +92,7 @@ function LogoBlock() {
         <span className="live-dot" />
         <span style={{ fontSize: '0.6rem', color: 'var(--muted)', letterSpacing: '0.06em' }}>EN VIVO</span>
       </div>
-      {/* QuickBar DEBAJO del logo */}
       <QuickBar />
-      {/* Divider */}
       <div style={{ height: 1, background: 'var(--border)', marginTop: '1rem' }} />
     </div>
   );
@@ -104,62 +100,70 @@ function LogoBlock() {
 
 export function Sidebar() {
   const [open, setOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   return (
     <>
-      {/* ── Desktop sidebar ── */}
-      <aside style={{
-        position: 'fixed', top: 0, left: 0, bottom: 0, width: 'var(--sidebar-w)',
-        background: 'var(--nav-bg)', borderRight: '1px solid var(--border)',
-        backdropFilter: 'blur(20px)', display: 'flex', flexDirection: 'column',
-        zIndex: 50,
-      }} className="bet-sidebar-desk">
-        <LogoBlock />
-        <NavContent />
-      </aside>
+      {/* Desktop sidebar */}
+      {!isMobile && (
+        <aside style={{
+          position: 'fixed', top: 0, left: 0, bottom: 0, width: 'var(--sidebar-w)',
+          background: 'var(--nav-bg)', borderRight: '1px solid var(--border)',
+          backdropFilter: 'blur(20px)', display: 'flex', flexDirection: 'column',
+          zIndex: 50,
+        }}>
+          <LogoBlock />
+          <NavContent />
+        </aside>
+      )}
 
-      {/* ── Mobile topbar ── */}
-      <div style={{
-        position: 'fixed', top: 0, left: 0, right: 0, height: 52, zIndex: 50,
-        background: 'var(--nav-bg)', borderBottom: '1px solid var(--border)',
-        backdropFilter: 'blur(20px)', alignItems: 'center',
-        justifyContent: 'space-between', padding: '0 1rem',
-      }} className="bet-sidebar-mob">
-        {/* Logo inline para mobile */}
-        <div style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 800, fontSize: '1.15rem', letterSpacing: '-0.02em' }}>
-          <span className="text-gradient-gold">Xentory</span>
-          <span style={{ color: '#4d9fff' }}>Bet</span>
+      {/* Mobile topbar */}
+      {isMobile && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, height: 52, zIndex: 50,
+          background: 'var(--nav-bg)', borderBottom: '1px solid var(--border)',
+          backdropFilter: 'blur(20px)', display: 'flex', alignItems: 'center',
+          justifyContent: 'space-between', padding: '0 1rem',
+        }}>
+          <div style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 800, fontSize: '1.15rem', letterSpacing: '-0.02em' }}>
+            <span className="text-gradient-gold">Xentory</span>
+            <span style={{ color: '#4d9fff' }}>Bet</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <QuickBar />
+            <button
+              onClick={() => setOpen(o => !o)}
+              aria-label="Menu"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.4rem', display: 'flex', flexDirection: 'column', gap: 5 }}
+            >
+              <span style={{ display: 'block', width: 22, height: 2, background: 'var(--text)', borderRadius: 2, transition: 'all 0.25s', transform: open ? 'rotate(45deg) translate(5px,5px)' : 'none' }} />
+              <span style={{ display: 'block', width: 22, height: 2, background: 'var(--text)', borderRadius: 2, transition: 'all 0.25s', opacity: open ? 0 : 1 }} />
+              <span style={{ display: 'block', width: 22, height: 2, background: 'var(--text)', borderRadius: 2, transition: 'all 0.25s', transform: open ? 'rotate(-45deg) translate(5px,-5px)' : 'none' }} />
+            </button>
+          </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <QuickBar />
-          <button onClick={() => setOpen(o => !o)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.3rem', display: 'flex', flexDirection: 'column', gap: 5 }}>
-            <span style={{ display: 'block', width: 20, height: 2, background: 'var(--text)', borderRadius: 2, transition: 'transform 0.22s', transform: open ? 'rotate(45deg) translate(5px,5px)' : 'none' }} />
-            <span style={{ display: 'block', width: 20, height: 2, background: 'var(--text)', borderRadius: 2, transition: 'opacity 0.22s', opacity: open ? 0 : 1 }} />
-            <span style={{ display: 'block', width: 20, height: 2, background: 'var(--text)', borderRadius: 2, transition: 'transform 0.22s', transform: open ? 'rotate(-45deg) translate(5px,-5px)' : 'none' }} />
-          </button>
-        </div>
-      </div>
+      )}
 
-      {/* ── Mobile drawer ── */}
-      {open && (
+      {/* Mobile drawer */}
+      {isMobile && open && (
         <div style={{
           position: 'fixed', top: 52, left: 0, right: 0, bottom: 0, zIndex: 49,
           background: 'var(--nav-bg)', display: 'flex', flexDirection: 'column',
-          overflowY: 'auto', animation: 'fadeUp 0.18s ease both',
-          borderTop: '1px solid var(--border)',
-        }} className="bet-sidebar-drawer">
+          overflowY: 'auto', borderTop: '1px solid var(--border)',
+          animation: 'fadeUp 0.18s ease both',
+        }}>
           <NavContent onNav={() => setOpen(false)} />
         </div>
       )}
 
       <style>{`
-        .bet-sidebar-desk   { display: flex !important; }
-        .bet-sidebar-mob    { display: none !important; }
-        .bet-sidebar-drawer { display: flex !important; }
-        @media (max-width: 768px) {
-          .bet-sidebar-desk { display: none !important; }
-          .bet-sidebar-mob  { display: flex !important; }
-        }
         @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
       `}</style>
     </>

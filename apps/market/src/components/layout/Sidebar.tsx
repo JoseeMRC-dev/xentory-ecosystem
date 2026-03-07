@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { QuickBar } from './QuickBar';
@@ -17,7 +17,6 @@ const NAV_ITEMS = [
 const PLAN_COLORS: Record<string, string> = { free: '#6b7294', pro: '#c9a84c', elite: '#00d4ff' };
 const PLAN_LABELS: Record<string, string> = { free: 'Básico', pro: 'Pro', elite: 'Elite' };
 
-// ── Currency toggle ────────────────────────────────────────────────────────
 function CurrencyToggle() {
   const { currency, setCurrency } = useCurrency();
   return (
@@ -40,7 +39,6 @@ function CurrencyToggle() {
   );
 }
 
-// ── Nav content ────────────────────────────────────────────────────────────
 function NavContent({ onNav }: { onNav?: () => void }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -66,7 +64,6 @@ function NavContent({ onNav }: { onNav?: () => void }) {
         ))}
       </nav>
 
-      {/* Plan + user */}
       {user && (
         <div style={{ padding: '1rem 1.2rem', borderTop: '1px solid var(--border)' }}>
           <div onClick={() => navigate('/plans')} style={{ padding: '0.7rem 1rem', borderRadius: 10, background: 'var(--card2)', border: `1px solid ${PLAN_COLORS[user.plan]}30`, cursor: 'pointer', marginBottom: '0.7rem' }}>
@@ -89,11 +86,9 @@ function NavContent({ onNav }: { onNav?: () => void }) {
   );
 }
 
-// ── Logo block con QuickBar y currency DEBAJO ──────────────────────────────
 function LogoBlock() {
   return (
     <div style={{ padding: '1.2rem 1.2rem 0' }}>
-      {/* Logo */}
       <div style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 800, fontSize: '1.35rem', letterSpacing: '-0.02em', marginBottom: '0.25rem' }}>
         <span className="text-gradient-gold">Xentory</span>
         <span style={{ color: '#4d9fff' }}>Market</span>
@@ -102,9 +97,7 @@ function LogoBlock() {
         <span className="live-dot" />
         <span style={{ fontSize: '0.6rem', color: 'var(--muted)', letterSpacing: '0.06em' }}>MERCADOS EN VIVO</span>
       </div>
-      {/* QuickBar DEBAJO del logo */}
       <QuickBar extra={<CurrencyToggle />} />
-      {/* Divider */}
       <div style={{ height: 1, background: 'var(--border)', marginTop: '1rem' }} />
     </div>
   );
@@ -112,62 +105,71 @@ function LogoBlock() {
 
 export function Sidebar() {
   const [open, setOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   return (
     <>
-      {/* ── Desktop sidebar ── */}
-      <aside style={{
-        position: 'fixed', top: 0, left: 0, bottom: 0, width: 'var(--sidebar-w)',
-        background: 'var(--nav-bg)', borderRight: '1px solid var(--border)',
-        backdropFilter: 'blur(20px)', display: 'flex', flexDirection: 'column',
-        zIndex: 50,
-      }} className="market-sidebar-desk">
-        <LogoBlock />
-        <NavContent />
-      </aside>
+      {/* Desktop sidebar */}
+      {!isMobile && (
+        <aside style={{
+          position: 'fixed', top: 0, left: 0, bottom: 0, width: 'var(--sidebar-w)',
+          background: 'var(--nav-bg)', borderRight: '1px solid var(--border)',
+          backdropFilter: 'blur(20px)', display: 'flex', flexDirection: 'column',
+          zIndex: 50,
+        }}>
+          <LogoBlock />
+          <NavContent />
+        </aside>
+      )}
 
-      {/* ── Mobile topbar ── */}
-      <div style={{
-        position: 'fixed', top: 0, left: 0, right: 0, height: 52, zIndex: 50,
-        background: 'var(--nav-bg)', borderBottom: '1px solid var(--border)',
-        backdropFilter: 'blur(20px)', alignItems: 'center',
-        justifyContent: 'space-between', padding: '0 1rem',
-      }} className="market-sidebar-mob">
-        <div style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 800, fontSize: '1.15rem', letterSpacing: '-0.02em' }}>
-          <span className="text-gradient-gold">Xentory</span>
-          <span style={{ color: '#4d9fff' }}>Market</span>
+      {/* Mobile topbar */}
+      {isMobile && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, height: 52, zIndex: 50,
+          background: 'var(--nav-bg)', borderBottom: '1px solid var(--border)',
+          backdropFilter: 'blur(20px)', display: 'flex', alignItems: 'center',
+          justifyContent: 'space-between', padding: '0 1rem',
+        }}>
+          <div style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 800, fontSize: '1.15rem', letterSpacing: '-0.02em' }}>
+            <span className="text-gradient-gold">Xentory</span>
+            <span style={{ color: '#4d9fff' }}>Market</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <CurrencyToggle />
+            <QuickBar />
+            <button
+              onClick={() => setOpen(o => !o)}
+              aria-label="Menu"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.4rem', display: 'flex', flexDirection: 'column', gap: 5 }}
+            >
+              <span style={{ display: 'block', width: 22, height: 2, background: 'var(--text)', borderRadius: 2, transition: 'all 0.25s', transform: open ? 'rotate(45deg) translate(5px,5px)' : 'none' }} />
+              <span style={{ display: 'block', width: 22, height: 2, background: 'var(--text)', borderRadius: 2, transition: 'all 0.25s', opacity: open ? 0 : 1 }} />
+              <span style={{ display: 'block', width: 22, height: 2, background: 'var(--text)', borderRadius: 2, transition: 'all 0.25s', transform: open ? 'rotate(-45deg) translate(5px,-5px)' : 'none' }} />
+            </button>
+          </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <CurrencyToggle />
-          <QuickBar />
-          <button onClick={() => setOpen(o => !o)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.3rem', display: 'flex', flexDirection: 'column', gap: 5 }}>
-            <span style={{ display: 'block', width: 20, height: 2, background: 'var(--text)', borderRadius: 2, transition: 'transform 0.22s', transform: open ? 'rotate(45deg) translate(5px,5px)' : 'none' }} />
-            <span style={{ display: 'block', width: 20, height: 2, background: 'var(--text)', borderRadius: 2, transition: 'opacity 0.22s', opacity: open ? 0 : 1 }} />
-            <span style={{ display: 'block', width: 20, height: 2, background: 'var(--text)', borderRadius: 2, transition: 'transform 0.22s', transform: open ? 'rotate(-45deg) translate(5px,-5px)' : 'none' }} />
-          </button>
-        </div>
-      </div>
+      )}
 
-      {/* ── Mobile drawer ── */}
-      {open && (
+      {/* Mobile drawer */}
+      {isMobile && open && (
         <div style={{
           position: 'fixed', top: 52, left: 0, right: 0, bottom: 0, zIndex: 49,
           background: 'var(--nav-bg)', display: 'flex', flexDirection: 'column',
-          overflowY: 'auto', animation: 'fadeUp 0.18s ease both',
-          borderTop: '1px solid var(--border)',
-        }} className="market-sidebar-drawer">
+          overflowY: 'auto', borderTop: '1px solid var(--border)',
+          animation: 'fadeUp 0.18s ease both',
+        }}>
           <NavContent onNav={() => setOpen(false)} />
         </div>
       )}
 
       <style>{`
-        .market-sidebar-desk   { display: flex !important; }
-        .market-sidebar-mob    { display: none !important; }
-        .market-sidebar-drawer { display: flex !important; }
-        @media (max-width: 768px) {
-          .market-sidebar-desk { display: none !important; }
-          .market-sidebar-mob  { display: flex !important; }
-        }
         @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
       `}</style>
     </>

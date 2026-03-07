@@ -180,8 +180,11 @@ export function Navbar() {
           </span>
         </Link>
 
-        {/* Desktop nav links */}
-        <div className="nav-links" style={{ display: 'flex', alignItems: 'center', gap: '1.6rem' }}>
+        {/* Desktop nav links — centered absolutely */}
+        <div className="nav-links" style={{
+          position: 'absolute', left: '50%', transform: 'translateX(-50%)',
+          display: 'flex', alignItems: 'center', gap: '1.6rem',
+        }}>
           {navLinks.map(({ to, label }) => (
             <Link key={to} to={to} style={{
               textDecoration: 'none', fontSize: '0.86rem',
