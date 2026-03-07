@@ -80,7 +80,7 @@ export function AssetDetailPage() {
   const chartData = history.map(p => ({ time: p.timestamp, price: p.close, volume: p.volume }));
 
   return (
-    <div className="animate-fadeUp" style={{ maxWidth: 1200 }}>
+    <div className="animate-fadeUp" style={{ maxWidth: 1200, width: '100%' }}>
 
       {/* Back + header */}
       <div style={{ marginBottom: '1.5rem' }}>
@@ -117,7 +117,7 @@ export function AssetDetailPage() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.6rem' }}>
+          <div className="mkt-detail-actions" style={{ display: 'flex', gap: '0.6rem' }}>
             <button
               onClick={() => setInWatchlist(w => !w)}
               className={`btn ${inWatchlist ? 'btn-gold' : 'btn-outline'}`}
@@ -207,7 +207,7 @@ export function AssetDetailPage() {
       </div>
 
       {/* Indicators + Analysis Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+      <div className="mkt-detail-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
 
         {/* Technical Indicators */}
         {indicators && (

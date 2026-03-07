@@ -1,4 +1,3 @@
-// v2
 /**
  * AuthContext — autenticación real con Supabase
  *
@@ -205,7 +204,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // ── SSO for sub-apps ───────────────────────────────────────────────────
   const generateSSOToken = useCallback((platform: 'market' | 'bets'): SSOToken => {
-    if (!user) throw new Error('Not authenticated...');
+    if (!user) throw new Error('Not authenticated');
     const rnd = crypto.getRandomValues(new Uint32Array(2));
     const token: SSOToken = {
       token:     `sso_${Date.now()}_${rnd[0].toString(36)}${rnd[1].toString(36)}`,

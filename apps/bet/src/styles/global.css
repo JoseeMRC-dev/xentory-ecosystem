@@ -121,3 +121,110 @@ h1, h2, h3, h4 {
   height: 100%; border-radius: 100px;
   transition: width 0.6s ease;
 }
+
+/* ═══════════════════════════════════════════════
+   MOBILE RESPONSIVE — MAX 768px
+   ═══════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  html, body { overflow-x: hidden; }
+
+  .bet-main {
+    margin-left: 0 !important;
+    padding: 1rem !important;
+    padding-top: calc(52px + 1rem) !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  .animate-fadeUp { max-width: 100% !important; }
+
+  /* Stats: 4 → 2x2 */
+  .bet-stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* Dashboard picks+matches: 2 → 1 */
+  .bet-dash-main-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Deportes: 5 → 3 */
+  .bet-sports-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+
+  /* Upgrade banner: row → col */
+  .bet-upgrade-banner {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 1rem !important;
+  }
+  .bet-upgrade-banner .btn {
+    width: 100% !important;
+    justify-content: center !important;
+    margin-left: 0 !important;
+  }
+
+  /* Planes: 3 → 1 */
+  .bet-plans-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Telegram status cards: 3 → 1 */
+  .bet-tg-status-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* History stats: 4 → 2 */
+  .bet-history-stats {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* Markets grid: 2 → 1 */
+  .bet-markets-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Team form: 2 → 1 */
+  .bet-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Key factors+risks: 2 → 1 */
+  .bet-factors-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Match hero: grid 3 → stack */
+  .bet-match-hero-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.8rem !important;
+  }
+
+  /* History table: hide extra cols */
+  .bet-history-row {
+    grid-template-columns: 2fr 1.5fr 1fr !important;
+  }
+  .bet-history-row > span:nth-child(3),
+  .bet-history-row > span:nth-child(4) { display: none !important; }
+  .bet-history-header {
+    grid-template-columns: 2fr 1.5fr 1fr !important;
+  }
+  .bet-history-header > span:nth-child(3),
+  .bet-history-header > span:nth-child(4) { display: none !important; }
+
+  /* Best bet: row → col */
+  .bet-best-bet-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.8rem !important;
+  }
+
+  /* Headings */
+  h1 { font-size: 1.3rem !important; }
+  h2 { font-size: 1rem !important; }
+
+  .glass { overflow: hidden; }
+}

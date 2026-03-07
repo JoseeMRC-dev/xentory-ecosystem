@@ -223,7 +223,7 @@ export function MatchesPage() {
   const setComp  = (comp: string)  => setSearchParams({ sport: activeSport, comp });
 
   return (
-    <div className="animate-fadeUp" style={{ maxWidth: 1100 }}>
+    <div className="animate-fadeUp" style={{ maxWidth: 1100, width: '100%' }}>
 
       {/* ── HEADER ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.8rem' }}>

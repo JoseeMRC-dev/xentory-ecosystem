@@ -65,8 +65,8 @@ export function WatchlistPage() {
   };
 
   return (
-    <div className="animate-fadeUp" style={{ maxWidth: 900 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+    <div className="animate-fadeUp" style={{ maxWidth: 900, width: '100%' }}>
+      <div className="mkt-watchlist-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
           <h1 style={{ fontSize: '1.6rem', marginBottom: '0.3rem' }}>⭐ Mi Watchlist</h1>
           <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>
@@ -76,7 +76,7 @@ export function WatchlistPage() {
         <div style={{ position: 'relative' }}>
           <input
             className="input"
-            style={{ width: 240, paddingRight: '2.5rem' }}
+            style={{ width: '100%', paddingRight: '2.5rem' }}
             placeholder="Buscar activo..."
             value={searchQ}
             onChange={e => setSearchQ(e.target.value)}
@@ -197,7 +197,7 @@ export function AlertsPage() {
   const isPaid = user?.plan !== 'free';
 
   return (
-    <div className="animate-fadeUp" style={{ maxWidth: 800 }}>
+    <div className="animate-fadeUp" style={{ maxWidth: 800, width: '100%' }}>
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ fontSize: '1.6rem', marginBottom: '0.3rem' }}>🔔 Alertas de precio</h1>
         <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>Recibe una notificación cuando un activo alcance tu precio objetivo.</p>
@@ -249,13 +249,13 @@ export function AnalysisPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="animate-fadeUp" style={{ maxWidth: 1000 }}>
+    <div className="animate-fadeUp" style={{ maxWidth: 1000, width: '100%' }}>
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ fontSize: '1.6rem', marginBottom: '0.3rem' }}>🧠 Análisis IA</h1>
         <p style={{ color: 'var(--muted)' }}>Selecciona un activo para generar un análisis profundo.</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.8rem' }}>
+      <div className="mkt-analysis-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.8rem' }}>
         {MOCK_ASSETS.map(asset => {
           const isUp = asset.changePercent24h >= 0;
           return (

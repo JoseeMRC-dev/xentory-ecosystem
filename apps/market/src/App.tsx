@@ -12,25 +12,14 @@ import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { CurrencyProvider } from './context/CurrencyContext';
 
-const HUB_URL = (import.meta as any).env?.VITE_HUB_URL ?? 'https://x-eight-beryl.vercel.app';
-
-// ProtectedRoute: waits for auth init, redirects to Hub (NOT /login)
-// /login was intercepting the URL before useAuth could read the SSO params
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth();
-
-  useEffect(() => {
-    if (!isLoading && !user) {
-      window.location.href = HUB_URL;
-    }
-  }, [isLoading, user]);
-
   if (isLoading) return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '1.4rem', marginBottom: '1rem' }}>
           <span style={{ color: '#c9a84c' }}>Xentory</span>
-          <span style={{ color: '#4d9fff', marginLeft: '0.1rem' }}>Market</span>
+          <span style={{ color: '#4d9fff', marginLeft: '0.1rem' }}>{'Market'}</span>
         </div>
         <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center' }}>
           {[0,1,2].map(i => (
@@ -40,16 +29,24 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
       </div>
     </div>
   );
-
-  if (!user) return null;
-
+  if (!user) return <Navigate to="/login" replace />;
   return <AppLayout>{children}</AppLayout>;
 }
 
+
+function RedirectToHub() {
+  const HUB = (import.meta as any).env?.VITE_HUB_URL ?? 'https://x-eight-beryl.vercel.app';
+  useEffect(() => { window.location.href = HUB; }, []);
+  return null;
+}
 function AppRoutes() {
+  const { user, isLoading } = useAuth();
+
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/login" element={<RedirectToHub />} />
+      <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />
+
       <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
       <Route path="/market" element={<ProtectedRoute><AnalysisPage /></ProtectedRoute>} />
       <Route path="/market/:id" element={<ProtectedRoute><AssetDetailPage /></ProtectedRoute>} />
@@ -67,13 +64,13 @@ export default function App() {
   return (
     <ThemeProvider>
       <LanguageProvider>
-        <CurrencyProvider>
-          <BrowserRouter>
-            <AuthProvider>
-              <AppRoutes />
-            </AuthProvider>
-          </BrowserRouter>
-        </CurrencyProvider>
+      <CurrencyProvider>
+      <BrowserRouter>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </BrowserRouter>
+      </CurrencyProvider>
       </LanguageProvider>
     </ThemeProvider>
   );

@@ -15,14 +15,14 @@ export function TelegramPage() {
   ];
 
   return (
-    <div className="animate-fadeUp" style={{ maxWidth: 900 }}>
+    <div className="animate-fadeUp" style={{ maxWidth: 900, width: '100%' }}>
       <div style={{ marginBottom: '1.5rem' }}>
         <h1 style={{ fontSize: '1.5rem', marginBottom: '0.3rem' }}>✈️ Canal Telegram</h1>
         <p style={{ color: 'var(--muted)', fontSize: '0.88rem' }}>Señales automáticas directamente en tu Telegram cuando se genera un análisis de alta confianza.</p>
       </div>
 
       {/* Status cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+      <div className="bet-tg-status-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
         {[
           { label: 'Plan activo', value: user?.plan === 'free' ? 'Fanático (Gratis)' : user?.plan === 'pro' ? 'Pro' : 'Elite', color: user?.plan === 'free' ? 'var(--muted)' : 'var(--gold)' },
           { label: 'Canal asignado', value: isPaid ? (user?.plan === 'elite' ? 'Xentory Bet ELITE' : 'Xentory Bet PRO') : 'No incluido', color: isPaid ? 'var(--cyan)' : 'var(--muted)' },
@@ -139,7 +139,7 @@ export function HistoryPage() {
   ];
 
   if (!isPaid) return (
-    <div className="animate-fadeUp" style={{ maxWidth: 900 }}>
+    <div className="animate-fadeUp" style={{ maxWidth: 900, width: '100%' }}>
       <h1 style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>📊 Historial de predicciones</h1>
       <div className="glass" style={{ borderRadius: 16, padding: '4rem', textAlign: 'center' }}>
         <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📊</div>
@@ -156,13 +156,13 @@ export function HistoryPage() {
   const pct = Math.round((wins / MOCK_HISTORY.length) * 100);
 
   return (
-    <div className="animate-fadeUp" style={{ maxWidth: 900 }}>
+    <div className="animate-fadeUp" style={{ maxWidth: 900, width: '100%' }}>
       <div style={{ marginBottom: '1.5rem' }}>
         <h1 style={{ fontSize: '1.5rem', marginBottom: '0.3rem' }}>📊 Historial de predicciones</h1>
         <p style={{ color: 'var(--muted)', fontSize: '0.88rem' }}>Últimas predicciones generadas y su resultado.</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+      <div className="bet-history-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
         {[
           { label: 'Total predicciones', value: MOCK_HISTORY.length.toString(), color: 'var(--text)' },
           { label: 'Aciertos', value: wins.toString(), color: 'var(--green)' },
@@ -177,11 +177,11 @@ export function HistoryPage() {
       </div>
 
       <div className="glass" style={{ borderRadius: 16, overflow: 'hidden' }}>
-        <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid var(--border)', display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr 1fr', gap: '1rem', fontSize: '0.72rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+        <div className="bet-history-header" style={{ padding: '1rem 1.5rem', borderBottom: '1px solid var(--border)', display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr 1fr', gap: '1rem', fontSize: '0.72rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
           <span>Partido</span><span>Predicción</span><span>Confianza</span><span>Cuota</span><span>Resultado</span>
         </div>
         {MOCK_HISTORY.map((h, i) => (
-          <div key={i} style={{ padding: '0.9rem 1.5rem', borderBottom: i < MOCK_HISTORY.length - 1 ? '1px solid var(--border)' : 'none', display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr 1fr', gap: '1rem', alignItems: 'center' }}>
+          <div key={i} className="bet-history-row" style={{ padding: '0.9rem 1.5rem', borderBottom: i < MOCK_HISTORY.length - 1 ? '1px solid var(--border)' : 'none', display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr 1fr', gap: '1rem', alignItems: 'center' }}>
             <div>
               <span style={{ marginRight: '0.4rem' }}>{h.sport}</span>
               <span style={{ fontSize: '0.85rem' }}>{h.match}</span>

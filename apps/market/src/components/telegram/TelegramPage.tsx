@@ -41,14 +41,14 @@ export function TelegramPage() {
   };
 
   return (
-    <div className="animate-fadeUp" style={{ maxWidth: 900 }}>
+    <div className="animate-fadeUp" style={{ maxWidth: 900, width: '100%' }}>
 
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ fontSize: '1.6rem', marginBottom: '0.3rem' }}>✈️ Canal de Telegram</h1>
         <p style={{ color: 'var(--muted)' }}>Señales premium directo a tu Telegram. Acceso automático según tu plan.</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
+      <div className="mkt-telegram-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
 
         {/* Status */}
         <div className="glass" style={{ borderRadius: 16, padding: '1.8rem' }}>

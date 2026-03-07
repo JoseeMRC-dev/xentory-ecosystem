@@ -93,7 +93,7 @@ export function MatchAnalysisPage() {
   const sport = SPORT_CONFIG[match.sport as keyof typeof SPORT_CONFIG];
 
   return (
-    <div className="animate-fadeUp" style={{ maxWidth: 1000 }}>
+    <div className="animate-fadeUp" style={{ maxWidth: 1000, width: '100%' }}>
 
       {/* Back */}
       <button onClick={() => navigate('/matches')} className="btn btn-ghost btn-sm" style={{ marginBottom: '1.2rem' }}>
@@ -112,7 +112,7 @@ export function MatchAnalysisPage() {
           {match.round && <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>· {match.round}</span>}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: '1.5rem', textAlign: 'center' }}>
+        <div className="bet-match-hero-grid" style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: '1.5rem', textAlign: 'center' }}>
           <div>
             <div style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '1.6rem', marginBottom: '0.3rem' }}>
               {match.homeTeam.name}
@@ -219,7 +219,7 @@ export function MatchAnalysisPage() {
           </div>
 
           {/* Markets */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
+          <div className="bet-markets-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
 
             {/* 1X2 */}
             <div className="glass" style={{ borderRadius: 16, padding: '1.5rem' }}>
@@ -273,7 +273,7 @@ export function MatchAnalysisPage() {
           {/* Team form comparison */}
           <div className="glass" style={{ borderRadius: 16, padding: '1.5rem' }}>
             <h3 style={{ fontSize: '0.9rem', marginBottom: '1.2rem' }}>📋 Forma reciente (últimos {analysis.homeStats.form.length} partidos)</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+            <div className="bet-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
               {[
                 { stats: analysis.homeStats, team: match.homeTeam },
                 { stats: analysis.awayStats, team: match.awayTeam },
@@ -302,7 +302,7 @@ export function MatchAnalysisPage() {
           </div>
 
           {/* Key factors + Risks */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
+          <div className="bet-markets-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
             <div className="glass" style={{ borderRadius: 16, padding: '1.5rem' }}>
               <h3 style={{ fontSize: '0.9rem', marginBottom: '1rem' }}>🔑 Factores clave</h3>
               {analysis.keyFactors.map((f, i) => (
@@ -338,7 +338,7 @@ export function MatchAnalysisPage() {
 export function AnalysisPage() {
   const navigate = useNavigate();
   return (
-    <div className="animate-fadeUp" style={{ maxWidth: 1100 }}>
+    <div className="animate-fadeUp" style={{ maxWidth: 1100, width: '100%' }}>
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ fontSize: '1.5rem', marginBottom: '0.3rem' }}>🧠 Análisis IA</h1>
         <p style={{ color: 'var(--muted)', fontSize: '0.88rem' }}>Selecciona un partido desde la sección de Partidos para generar el análisis completo.</p>

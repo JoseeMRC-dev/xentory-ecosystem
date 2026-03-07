@@ -23,7 +23,7 @@ export function PlansPage() {
   };
 
   return (
-    <div className="animate-fadeUp" style={{ maxWidth: 1000 }}>
+    <div className="animate-fadeUp" style={{ maxWidth: 1000, width: '100%' }}>
 
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
@@ -57,7 +57,7 @@ export function PlansPage() {
       )}
 
       {/* Plans */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.2rem', marginBottom: '2.5rem' }}>
+      <div className="bet-plans-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.2rem', marginBottom: '2.5rem' }}>
         {PLANS.map(plan => {
           const isCurrent = user?.plan === plan.id;
           const isBusy    = loading === plan.id;

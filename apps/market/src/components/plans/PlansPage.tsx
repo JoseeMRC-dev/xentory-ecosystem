@@ -41,7 +41,7 @@ export function PlansPage() {
   };
 
   return (
-    <div className="animate-fadeUp" style={{ maxWidth: 1100 }}>
+    <div className="animate-fadeUp" style={{ maxWidth: 1100, width: '100%' }}>
 
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
@@ -108,7 +108,7 @@ export function PlansPage() {
       )}
 
       {/* Plans grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
+      <div className="mkt-plans-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
         {PLANS.map(plan => {
           const isCurrentPlan = user?.plan === plan.id;
           const price = yearly && plan.price > 0 ? Math.round(plan.price * 12 * 0.8) : plan.price;
@@ -248,7 +248,7 @@ export function PlansPage() {
       {/* FAQ */}
       <div style={{ marginTop: '4rem' }}>
         <h2 style={{ fontSize: '1.3rem', textAlign: 'center', marginBottom: '2rem' }}>Preguntas frecuentes</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        <div className="mkt-faq-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
           {[
             { q: '¿Puedo cancelar en cualquier momento?', a: 'Sí. Sin permanencia. Tu acceso se mantiene hasta el final del período pagado.' },
             { q: '¿Cómo funciona el acceso a Telegram?', a: 'Al activar tu plan, el bot te añade automáticamente al canal correspondiente. Al cancelar, te retira el acceso.' },

@@ -11,51 +11,39 @@ import './styles/global.css';
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
 
-const HUB_URL = (import.meta as any).env?.VITE_HUB_URL ?? 'https://x-eight-beryl.vercel.app';
-
-// ProtectedRoute: waits for auth init, redirects to Hub (NOT /login)
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth();
-
-  useEffect(() => {
-    if (!isLoading && !user) {
-      window.location.href = HUB_URL;
-    }
-  }, [isLoading, user]);
-
-  if (isLoading) return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '1.4rem', marginBottom: '1rem' }}>
-          <span style={{ color: '#c9a84c' }}>Xentory</span>
-          <span style={{ color: '#4d9fff', marginLeft: '0.1rem' }}>Bet</span>
-        </div>
-        <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center' }}>
-          {[0,1,2].map(i => (
-            <span key={i} style={{ width: 7, height: 7, borderRadius: '50%', background: '#c9a84c', display: 'inline-block', opacity: 0.6, animation: `pulse 1.2s ease-in-out ${i*0.2}s infinite` }} />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
-  if (!user) return null;
-
-  return <AppLayout>{children}</AppLayout>;
+  if (isLoading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  return <>{children}</>;
 }
 
+
+function RedirectToHub() {
+  const HUB = (import.meta as any).env?.VITE_HUB_URL ?? 'https://x-eight-beryl.vercel.app';
+  useEffect(() => { window.location.href = HUB; }, []);
+  return null;
+}
 function AppRoutes() {
+  const { user, isLoading } = useAuth();
+
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-      <Route path="/matches" element={<ProtectedRoute><MatchesPage /></ProtectedRoute>} />
-      <Route path="/matches/:id" element={<ProtectedRoute><MatchAnalysisPage /></ProtectedRoute>} />
-      <Route path="/analysis" element={<ProtectedRoute><AnalysisPage /></ProtectedRoute>} />
-      <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
-      <Route path="/telegram" element={<ProtectedRoute><TelegramPage /></ProtectedRoute>} />
-      <Route path="/plans" element={<ProtectedRoute><PlansPage /></ProtectedRoute>} />
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* Toda autenticación ocurre en Xentory */}
+      <Route path="/login" element={<RedirectToHub />} />
+
+      {/* Rutas protegidas */}
+      <Route path="/" element={<ProtectedRoute><AppLayout><Navigate to="/dashboard" replace /></AppLayout></ProtectedRoute>} />
+      <Route path="/dashboard" element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/matches" element={<ProtectedRoute><AppLayout><MatchesPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/matches/:id" element={<ProtectedRoute><AppLayout><MatchAnalysisPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/analysis" element={<ProtectedRoute><AppLayout><AnalysisPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/history" element={<ProtectedRoute><AppLayout><HistoryPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/telegram" element={<ProtectedRoute><AppLayout><TelegramPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/plans" element={<ProtectedRoute><AppLayout><PlansPage /></AppLayout></ProtectedRoute>} />
+
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
 }
@@ -64,11 +52,11 @@ export default function App() {
   return (
     <ThemeProvider>
       <LanguageProvider>
-        <BrowserRouter>
-          <AuthProvider>
-            <AppRoutes />
-          </AuthProvider>
-        </BrowserRouter>
+      <BrowserRouter>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </BrowserRouter>
       </LanguageProvider>
     </ThemeProvider>
   );

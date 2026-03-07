@@ -194,3 +194,134 @@ h1, h2, h3, h4 { font-family: 'Syne', sans-serif; font-weight: 700; letter-spaci
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
+/* ═══════════════════════════════════════════════
+   MOBILE RESPONSIVE — MAX 768px
+   Elimina scroll lateral y adapta grids/cards
+   ═══════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* ── Layout principal ── */
+  html, body { overflow-x: hidden; }
+
+  .mkt-content { margin-left: 0 !important; }
+
+  .mkt-main {
+    margin-top: calc(52px + 64px) !important;
+    padding: 1rem !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  /* ── Contenedor máximo al 100% ── */
+  .animate-fadeUp { max-width: 100% !important; }
+
+  /* ── Stats: 4 cols → 2x2 ── */
+  .mkt-stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* ── Planes: 3 cols → 1 col ── */
+  .mkt-plans-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── FAQ: 2 cols → 1 col ── */
+  .mkt-faq-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Telegram: 2 cols → 1 col ── */
+  .mkt-telegram-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Analysis asset grid: 3 cols → 2 cols ── */
+  .mkt-analysis-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* ── Indicators / AI: 2 cols → 1 col ── */
+  .mkt-detail-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Plan upgrade banner: row → col ── */
+  .mkt-upgrade-banner {
+    flex-direction: column !important;
+    gap: 1rem !important;
+    align-items: flex-start !important;
+  }
+  .mkt-upgrade-banner .btn {
+    width: 100% !important;
+    justify-content: center !important;
+    margin-left: 0 !important;
+  }
+
+  /* ── Watchlist search: ancho libre ── */
+  .mkt-watchlist-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.8rem !important;
+  }
+  .mkt-watchlist-header > div { position: static !important; }
+  .mkt-watchlist-header input { width: 100% !important; }
+
+  /* ── Asset detail header: stack ── */
+  .mkt-detail-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+  .mkt-detail-actions {
+    width: 100% !important;
+    justify-content: stretch !important;
+  }
+  .mkt-detail-actions .btn { flex: 1 !important; justify-content: center !important; }
+
+  /* ── Topbar ticker: ocultar texto extra en móvil ── */
+  .mkt-topbar { left: 0 !important; top: 52px !important; }
+
+  /* ── Tabla de mercados: columnas reducidas ── */
+  .mkt-table-row {
+    grid-template-columns: 2fr 1.2fr 1fr !important;
+  }
+  .mkt-table-row > div:nth-child(4),
+  .mkt-table-row > div:nth-child(5) {
+    display: none !important;
+  }
+  .mkt-col-headers {
+    grid-template-columns: 2fr 1.2fr 1fr !important;
+  }
+  .mkt-col-headers > div:nth-child(4),
+  .mkt-col-headers > div:nth-child(5) {
+    display: none !important;
+  }
+
+  /* ── Price hero timeframes: scroll horizontal controlado ── */
+  .mkt-timeframes {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+  }
+
+  /* ── Category filter tabs: scroll horizontal ── */
+  .mkt-cat-filter {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ── Cards globales ── */
+  .glass { overflow: hidden; }
+
+  /* ── Botones en el hero: responsivos ── */
+  h1 { font-size: 1.3rem !important; }
+  h2 { font-size: 1rem !important; }
+
+  /* ── Watchlist card: flex col en móvil ── */
+  .mkt-watchlist-card {
+    flex-wrap: wrap !important;
+  }
+}

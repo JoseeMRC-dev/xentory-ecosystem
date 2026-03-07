@@ -36,7 +36,7 @@ export function DashboardPage() {
   const greeting = hour < 12 ? 'Buenos días' : hour < 18 ? 'Buenas tardes' : 'Buenas noches';
 
   return (
-    <div className="animate-fadeUp" style={{ maxWidth: 1100 }}>
+    <div className="animate-fadeUp" style={{ maxWidth: 1100, width: '100%' }}>
 
       {/* Header */}
       <div style={{ marginBottom: '2rem' }}>
@@ -47,7 +47,7 @@ export function DashboardPage() {
       </div>
 
       {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
+      <div className="bet-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
         <StatCard icon="🎯" value="3" label="Picks del día" color="var(--gold)" />
         <StatCard icon="✅" value="68%" label="Acierto semanal" color="var(--green)" />
         <StatCard icon="⚽🏀🎾" value="5" label="Deportes activos" color="var(--cyan)" />
@@ -55,7 +55,7 @@ export function DashboardPage() {
       </div>
 
       {/* Best bets of the day */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+      <div className="bet-dash-main-grid" style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
 
         <div className="glass" style={{ borderRadius: 16, padding: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
@@ -145,7 +145,7 @@ export function DashboardPage() {
       {/* Sport quick access */}
       <div className="glass" style={{ borderRadius: 16, padding: '1.5rem' }}>
         <h2 style={{ fontSize: '1rem', marginBottom: '1.2rem' }}>🏆 Acceso rápido por deporte</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.8rem' }}>
+        <div className="bet-sports-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.8rem' }}>
           {Object.entries(SPORT_CONFIG).map(([key, cfg]) => (
             <div
               key={key}
@@ -169,6 +169,7 @@ export function DashboardPage() {
       {user?.plan === 'free' && (
         <div
           onClick={() => navigate('/plans')}
+          className="bet-upgrade-banner"
           style={{
             marginTop: '1.5rem', padding: '1.2rem 1.5rem',
             background: 'linear-gradient(135deg, rgba(201,168,76,0.08), rgba(0,255,136,0.05))',
