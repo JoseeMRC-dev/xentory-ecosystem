@@ -1,7 +1,6 @@
 /**
  * useAuth — Xentory Market
- * SSO: Hub passes user as ?xsso=<base64(JSON)>
- * No Supabase token exchange needed.
+ * SSO via plain query params from Hub: ?uid=&uemail=&uname=&uplan=&uts=
  */
 import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import type { User, Plan } from '../types';
@@ -13,10 +12,11 @@ interface AuthContextType {
   upgradePlan: (plan: Plan) => void;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
-const HUB_URL  = (import.meta as any).env?.VITE_HUB_URL ?? 'https://x-eight-beryl.vercel.app';
-const USER_KEY = 'xentory_bet_user';
-const MAX_AGE  = 5 * 60 * 1000; // 5 min — SSO payload TTL
+const AuthContext  = createContext<AuthContextType | null>(null);
+const HUB_URL      = (import.meta as any).env?.VITE_HUB_URL ?? 'https://x-eight-beryl.vercel.app';
+const USER_KEY     = 'xentory_bet_user';
+const SSO_MAX_AGE  = 5 * 60 * 1000;   // 5 min
+const CACHE_MAX_AGE = 24 * 60 * 60 * 1000; // 24h
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user,      setUser]    = useState<User | null>(null);
@@ -28,48 +28,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     didInit.current = true;
 
     function init() {
-      // ── 1. SSO payload from Hub (?xsso=) ───────────────────────
-      const qp  = new URLSearchParams(window.location.search);
-      const sso = qp.get('xsso');
+      const qp = new URLSearchParams(window.location.search);
+      const uid    = qp.get('uid');
+      const uemail = qp.get('uemail');
+      const uname  = qp.get('uname');
+      const uplan  = qp.get('uplan');
+      const uts    = qp.get('uts');
 
-      if (sso) {
+      console.log('[Bet] params:', { uid, uemail, uplan, uts });
+
+      // ── 1. SSO from Hub ─────────────────────────────────────────
+      if (uid && uemail) {
+        // Clean URL
         window.history.replaceState({}, '', window.location.pathname);
-        try {
-          // Decode URL-safe base64 back to standard base64
-          const b64 = sso.replace(/-/g, '+').replace(/_/g, '/');
-          const padded = b64 + '=='.slice(0, (4 - b64.length % 4) % 4);
-          const data = JSON.parse(decodeURIComponent(escape(atob(padded))));
-          const age  = Date.now() - (data.ts ?? 0);
-          console.log('[Bet] SSO payload:', data.email, '| age:', Math.round(age/1000) + 's');
 
-          if (age < MAX_AGE && data.id && data.email) {
-            const u: User = {
-              id:             data.id,
-              email:          data.email,
-              name:           data.name ?? data.email.split('@')[0],
-              plan:           data.plan ?? 'free',
-              telegramLinked: false,
-              createdAt:      new Date().toISOString(),
-            };
-            localStorage.setItem(USER_KEY, JSON.stringify({ ...u, savedAt: Date.now() }));
-            setUser(u);
-            setLoading(false);
-            return;
-          }
-          console.warn('[Bet] SSO payload expired or invalid');
-        } catch (e) {
-          console.error('[Bet] SSO parse error:', e);
+        const age = Date.now() - Number(uts ?? 0);
+        console.log('[Bet] SSO age:', Math.round(age / 1000) + 's');
+
+        if (age < SSO_MAX_AGE) {
+          const u: User = {
+            id:             uid,
+            email:          uemail,
+            name:           uname ?? uemail.split('@')[0],
+            plan:           (uplan as Plan) ?? 'free',
+            telegramLinked: false,
+            createdAt:      new Date().toISOString(),
+          };
+          localStorage.setItem(USER_KEY, JSON.stringify({ ...u, savedAt: Date.now() }));
+          console.log('[Bet] SSO OK:', u.email);
+          setUser(u);
+          setLoading(false);
+          return;
         }
+        console.warn('[Bet] SSO expired');
       }
 
-      // ── 2. Cached session (returning user) ─────────────────────
+      // ── 2. Cached user ───────────────────────────────────────────
       try {
         const stored = localStorage.getItem(USER_KEY);
         if (stored) {
           const parsed = JSON.parse(stored);
           const age    = Date.now() - (parsed.savedAt ?? 0);
-          // Cache valid for 24h
-          if (age < 24 * 60 * 60 * 1000 && parsed.id && parsed.email) {
+          if (age < CACHE_MAX_AGE && parsed.id && parsed.email) {
             console.log('[Bet] cached user:', parsed.email);
             setUser(parsed);
             setLoading(false);
@@ -79,8 +79,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch { /**/ }
 
-      // ── 3. No auth → Hub ────────────────────────────────────────
-      console.warn('[Bet] no auth, going to Hub');
+      // ── 3. No auth → Hub ─────────────────────────────────────────
+      console.warn('[Bet] no auth → Hub');
       setLoading(false);
       window.location.href = HUB_URL;
     }

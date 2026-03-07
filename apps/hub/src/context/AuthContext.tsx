@@ -220,20 +220,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const launchPlatform = useCallback(async (platform: 'market' | 'bets') => {
     if (!user) { console.warn('[launch] no user'); return; }
 
-    // Pass user data — URL-safe base64 (no +/= to corrupt the URL)
-    const json = JSON.stringify({
-      id:    user.id,
-      email: user.email,
-      name:  user.name,
-      plan:  platform === 'market'
-               ? (user.subscriptions?.market ?? 'free')
-               : (user.subscriptions?.bets   ?? 'free'),
-      ts:    Date.now(),
+    // Pass user as plain query params — no encoding issues
+    const plan = platform === 'market'
+      ? (user.subscriptions?.market ?? 'free')
+      : (user.subscriptions?.bets   ?? 'free');
+    const params = new URLSearchParams({
+      uid:   user.id,
+      uemail: user.email,
+      uname: user.name ?? '',
+      uplan: plan,
+      uts:   String(Date.now()),
     });
-    const b64 = btoa(unescape(encodeURIComponent(json)));
-    const payload = b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-    const url = `${PLATFORM_URLS[platform]}?xsso=${payload}`;
-    console.log('[launch] →', url.substring(0, 80) + '...');
+    const url = `${PLATFORM_URLS[platform]}?${params.toString()}`;
+    console.log('[launch] navigating to', PLATFORM_URLS[platform]);
     window.location.href = url;
   }, [user]);
 
