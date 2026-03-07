@@ -1,3 +1,4 @@
+// v2
 /**
  * AuthContext — autenticación real con Supabase
  *
