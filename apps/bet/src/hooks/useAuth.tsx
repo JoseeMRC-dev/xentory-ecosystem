@@ -1,5 +1,6 @@
 /**
- * useAuth — Xentory Bet
+ * useAuth — Xentory Market
+ * SSO via URL hash: #xsso=<base64({"a":access,"r":refresh})>
  */
 import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
@@ -38,40 +39,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     async function init() {
       try {
-        const params       = new URLSearchParams(window.location.search);
-        const accessToken  = decodeURIComponent(params.get('sb_access')  ?? '');
-        const refreshToken = decodeURIComponent(params.get('sb_refresh') ?? '');
-
-        // Clean URL immediately
-        if (accessToken) window.history.replaceState({}, '', window.location.pathname);
-
-        // ── 1. Try SSO tokens from Hub ──────────────────────────────
-        if (accessToken && refreshToken) {
-          console.log('[Bet] received SSO tokens, calling setSession...');
-          const { data, error } = await supabase.auth.setSession({
-            access_token:  accessToken,
-            refresh_token: refreshToken,
-          });
-          console.log('[Bet] setSession result — user:', data.session?.user?.email ?? null, '| error:', error?.message ?? null);
-
-          if (data.session?.user) {
-            const u = sbUserToNexus(data.session.user);
-            localStorage.setItem(USER_KEY, JSON.stringify(u));
-            setUser(u);
-            setLoading(false);
-            return;
-          }
-          // setSession failed — try to use the token directly to get user
-          if (accessToken) {
-            const { data: userData, error: userErr } = await supabase.auth.getUser(accessToken);
-            console.log('[Bet] getUser result:', userData.user?.email ?? null, userErr?.message ?? null);
-            if (userData.user) {
-              const u = sbUserToNexus(userData.user);
+        // ── 1. Hash SSO from Hub: #xsso=<base64> ──────────────────
+        const hash = window.location.hash;
+        const match = hash.match(/[#&]xsso=([^&]+)/);
+        if (match) {
+          // Clean hash immediately so it's not reused on refresh
+          window.history.replaceState({}, '', window.location.pathname);
+          try {
+            const { a: accessToken, r: refreshToken } = JSON.parse(atob(match[1]));
+            console.log('[Bet] hash SSO found, calling setSession...');
+            const { data, error } = await supabase.auth.setSession({
+              access_token:  accessToken,
+              refresh_token: refreshToken,
+            });
+            console.log('[Bet] setSession:', data.session?.user?.email ?? null, '| error:', error?.message ?? null);
+            if (data.session?.user) {
+              const u = sbUserToNexus(data.session.user);
               localStorage.setItem(USER_KEY, JSON.stringify(u));
               setUser(u);
               setLoading(false);
               return;
             }
+          } catch (e) {
+            console.error('[Bet] hash SSO parse error:', e);
           }
         }
 
@@ -86,29 +76,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        // ── 3. Cached user in localStorage (avoid redirect loop) ────
-        try {
-          const stored = localStorage.getItem(USER_KEY);
-          if (stored) {
+        // ── 3. Cached user (valid repeat visit) ────────────────────
+        const stored = localStorage.getItem(USER_KEY);
+        if (stored) {
+          try {
             const parsed = JSON.parse(stored);
             if (parsed?.id && parsed?.email) {
-              console.log('[Bet] using cached user:', parsed.email);
-              setUser(parsed);
-              setLoading(false);
-              return;
+              console.log('[Bet] cached user:', parsed.email);
+              // Verify session is still alive
+              const { data: { session: s2 } } = await supabase.auth.getSession();
+              if (s2?.user) {
+                setUser(parsed);
+                setLoading(false);
+                return;
+              }
+              // Session expired — clear cache
+              localStorage.removeItem(USER_KEY);
             }
-          }
-        } catch { /* */ }
+          } catch { /**/ }
+        }
 
-        // ── 4. No auth at all → back to Hub ────────────────────────
-        console.warn('[Bet] no auth found, redirecting to Hub');
+        // ── 4. No auth → back to Hub ────────────────────────────────
+        console.warn('[Bet] no auth, redirecting to Hub');
         setLoading(false);
-        window.location.href = HUB_URL + '?redirect=bet';
+        window.location.href = HUB_URL;
 
       } catch (e) {
-        console.error('[Bet] auth init error:', e);
+        console.error('[Bet] init error:', e);
         setLoading(false);
-        window.location.href = HUB_URL + '?redirect=bet';
+        window.location.href = HUB_URL;
       }
     }
 

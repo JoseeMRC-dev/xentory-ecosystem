@@ -17,13 +17,19 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+
+function RedirectToHub() {
+  const HUB = (import.meta as any).env?.VITE_HUB_URL ?? 'https://x-eight-beryl.vercel.app';
+  useEffect(() => { window.location.href = HUB; }, []);
+  return null;
+}
 function AppRoutes() {
   const { user, isLoading } = useAuth();
 
   return (
     <Routes>
       {/* Toda autenticación ocurre en Xentory */}
-      <Route path="/login" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/login" element={<RedirectToHub />} />
 
       {/* Rutas protegidas */}
       <Route path="/" element={<ProtectedRoute><AppLayout><Navigate to="/dashboard" replace /></AppLayout></ProtectedRoute>} />

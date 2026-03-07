@@ -32,12 +32,18 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <AppLayout>{children}</AppLayout>;
 }
 
+
+function RedirectToHub() {
+  const HUB = (import.meta as any).env?.VITE_HUB_URL ?? 'https://x-eight-beryl.vercel.app';
+  useEffect(() => { window.location.href = HUB; }, []);
+  return null;
+}
 function AppRoutes() {
   const { user, isLoading } = useAuth();
 
   return (
     <Routes>
-      <Route path="/login" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/login" element={<RedirectToHub />} />
       <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />
 
       <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />

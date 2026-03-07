@@ -220,45 +220,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const launchPlatform = useCallback(async (platform: 'market' | 'bets') => {
     if (!user) { console.warn('[launch] no user'); return; }
 
-    // Open window synchronously so mobile doesn't block the popup
-    const newWin = window.open('about:blank', '_blank');
-
     try {
       const sb = await getSupabase();
-      console.log('[launch] supabase client:', !!sb);
-
-      const { data: { session }, error } = await sb.auth.getSession();
-      console.log('[launch] session:', !!session, '| error:', error?.message);
-
-      if (session?.access_token) {
-        const url = `${PLATFORM_URLS[platform]}?sb_access=${encodeURIComponent(session.access_token)}&sb_refresh=${encodeURIComponent(session.refresh_token ?? '')}`;
-        console.log('[launch] opening:', PLATFORM_URLS[platform]);
-        if (newWin) { newWin.location.href = url; }
-        else { window.location.href = url; } // mobile fallback: same tab
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session?.access_token) {
+        console.warn('[launch] no session');
         return;
       }
 
-      // No session — try re-login flow
-      console.warn('[launch] no session, redirecting to hub login');
-      if (newWin) newWin.close();
-      window.location.href = `${PLATFORM_URLS[platform]}?redirect=${platform}`;
+      // Encode tokens as base64 in URL hash — cross-domain, not blocked by Chrome
+      const payload = btoa(JSON.stringify({
+        a: session.access_token,
+        r: session.refresh_token ?? '',
+      }));
+      const url = `${PLATFORM_URLS[platform]}#xsso=${payload}`;
+      console.log('[launch] opening with hash SSO');
+      window.open(url, '_blank');
+
     } catch (e) {
       console.error('[launch] error:', e);
-      if (newWin) newWin.location.href = PLATFORM_URLS[platform];
+      window.open(PLATFORM_URLS[platform], '_blank');
     }
   }, [user]);
 
-  // Handle ?redirect=market/bet after login
-  useEffect(() => {
-    if (!user || isLoading) return;
-    const params = new URLSearchParams(window.location.search);
-    const redirect = params.get('redirect');
-    if (redirect === 'market' || redirect === 'bets' || redirect === 'bet') {
-      const platform = redirect === 'market' ? 'market' : 'bets';
-      window.history.replaceState({}, '', window.location.pathname);
-      setTimeout(() => launchPlatform(platform), 500);
-    }
-  }, [user, isLoading]);
+  // NOTE: ?redirect= param intentionally removed — caused infinite loop
+  // Users must click the platform button again after login
 
   return (
     <AuthContext.Provider value={{
