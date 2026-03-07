@@ -35,7 +35,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (sso) {
         window.history.replaceState({}, '', window.location.pathname);
         try {
-          const data = JSON.parse(atob(decodeURIComponent(sso)));
+          // Decode URL-safe base64 back to standard base64
+          const b64 = sso.replace(/-/g, '+').replace(/_/g, '/');
+          const padded = b64 + '=='.slice(0, (4 - b64.length % 4) % 4);
+          const data = JSON.parse(decodeURIComponent(escape(atob(padded))));
           const age  = Date.now() - (data.ts ?? 0);
           console.log('[Bet] SSO payload:', data.email, '| age:', Math.round(age/1000) + 's');
 

@@ -220,19 +220,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const launchPlatform = useCallback(async (platform: 'market' | 'bets') => {
     if (!user) { console.warn('[launch] no user'); return; }
 
-    // Pass user data directly — no Supabase token exchange needed
-    // Signed with timestamp to prevent replay attacks
-    const payload = btoa(JSON.stringify({
-      id:        user.id,
-      email:     user.email,
-      name:      user.name,
-      plan:      platform === 'market'
-                   ? (user.subscriptions?.market ?? 'free')
-                   : (user.subscriptions?.bets   ?? 'free'),
-      ts:        Date.now(),
-    }));
-    const url = `${PLATFORM_URLS[platform]}?xsso=${encodeURIComponent(payload)}`;
-    console.log('[launch] navigating with user payload to', PLATFORM_URLS[platform]);
+    // Pass user data — URL-safe base64 (no +/= to corrupt the URL)
+    const json = JSON.stringify({
+      id:    user.id,
+      email: user.email,
+      name:  user.name,
+      plan:  platform === 'market'
+               ? (user.subscriptions?.market ?? 'free')
+               : (user.subscriptions?.bets   ?? 'free'),
+      ts:    Date.now(),
+    });
+    const b64 = btoa(unescape(encodeURIComponent(json)));
+    const payload = b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+    const url = `${PLATFORM_URLS[platform]}?xsso=${payload}`;
+    console.log('[launch] →', url.substring(0, 80) + '...');
     window.location.href = url;
   }, [user]);
 
