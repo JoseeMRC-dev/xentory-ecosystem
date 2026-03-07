@@ -42,25 +42,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Clean URL
         window.history.replaceState({}, '', window.location.pathname);
 
-        const age = Date.now() - Number(uts ?? 0);
-        console.log('[Bet] SSO age:', Math.round(age / 1000) + 's');
-
-        if (age < SSO_MAX_AGE) {
-          const u: User = {
-            id:             uid,
-            email:          uemail,
-            name:           uname ?? uemail.split('@')[0],
-            plan:           (uplan as Plan) ?? 'free',
-            telegramLinked: false,
-            createdAt:      new Date().toISOString(),
-          };
-          localStorage.setItem(USER_KEY, JSON.stringify({ ...u, savedAt: Date.now() }));
-          console.log('[Bet] SSO OK:', u.email);
-          setUser(u);
-          setLoading(false);
-          return;
-        }
-        console.warn('[Bet] SSO expired');
+        // Accept if uid+email present — no age check to avoid clock skew issues
+        const u: User = {
+          id:             uid,
+          email:          uemail,
+          name:           uname ?? uemail.split('@')[0],
+          plan:           (uplan as Plan) ?? 'free',
+          telegramLinked: false,
+          createdAt:      new Date().toISOString(),
+        };
+        localStorage.setItem(USER_KEY, JSON.stringify({ ...u, savedAt: Date.now() }));
+        console.log('[Bet] SSO OK:', u.email);
+        setUser(u);
+        setLoading(false);
+        return;
       }
 
       // ── 2. Cached user ───────────────────────────────────────────
