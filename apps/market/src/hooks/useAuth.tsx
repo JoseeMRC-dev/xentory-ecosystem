@@ -1,6 +1,5 @@
 /**
  * useAuth — Xentory Market
- * Auth via Supabase session passed as URL params from Hub
  */
 import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
@@ -14,8 +13,8 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
-const HUB_URL    = (import.meta as any).env?.VITE_HUB_URL ?? 'https://x-eight-beryl.vercel.app';
-const REDIRECT   = 'market';
+const HUB_URL  = (import.meta as any).env?.VITE_HUB_URL ?? 'https://x-eight-beryl.vercel.app';
+const USER_KEY = 'xentory_market_user';
 
 function sbUserToNexus(sbUser: any): User {
   return {
@@ -40,52 +39,90 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async function init() {
       try {
         const params       = new URLSearchParams(window.location.search);
-        const accessToken  = decodeURIComponent(params.get('sb_access') ?? '');
+        const accessToken  = decodeURIComponent(params.get('sb_access')  ?? '');
         const refreshToken = decodeURIComponent(params.get('sb_refresh') ?? '');
 
-        // Clean URL immediately regardless
+        // Clean URL immediately
         if (accessToken) window.history.replaceState({}, '', window.location.pathname);
 
+        // ── 1. Try SSO tokens from Hub ──────────────────────────────
         if (accessToken && refreshToken) {
+          console.log('[Market] received SSO tokens, calling setSession...');
           const { data, error } = await supabase.auth.setSession({
             access_token:  accessToken,
             refresh_token: refreshToken,
           });
+          console.log('[Market] setSession result — user:', data.session?.user?.email ?? null, '| error:', error?.message ?? null);
+
           if (data.session?.user) {
-            console.log('[Xentory Market] SSO OK:', data.session.user.email);
-            setUser(sbUserToNexus(data.session.user));
+            const u = sbUserToNexus(data.session.user);
+            localStorage.setItem(USER_KEY, JSON.stringify(u));
+            setUser(u);
             setLoading(false);
             return;
           }
-          if (error) console.warn('[Xentory Market] setSession error:', error.message);
+          // setSession failed — try to use the token directly to get user
+          if (accessToken) {
+            const { data: userData, error: userErr } = await supabase.auth.getUser(accessToken);
+            console.log('[Market] getUser result:', userData.user?.email ?? null, userErr?.message ?? null);
+            if (userData.user) {
+              const u = sbUserToNexus(userData.user);
+              localStorage.setItem(USER_KEY, JSON.stringify(u));
+              setUser(u);
+              setLoading(false);
+              return;
+            }
+          }
         }
 
-        // Existing session
+        // ── 2. Existing Supabase session ────────────────────────────
         const { data: { session } } = await supabase.auth.getSession();
+        console.log('[Market] existing session:', session?.user?.email ?? null);
         if (session?.user) {
-          setUser(sbUserToNexus(session.user));
+          const u = sbUserToNexus(session.user);
+          localStorage.setItem(USER_KEY, JSON.stringify(u));
+          setUser(u);
           setLoading(false);
           return;
         }
 
-        // No session → back to Hub
+        // ── 3. Cached user in localStorage (avoid redirect loop) ────
+        try {
+          const stored = localStorage.getItem(USER_KEY);
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            if (parsed?.id && parsed?.email) {
+              console.log('[Market] using cached user:', parsed.email);
+              setUser(parsed);
+              setLoading(false);
+              return;
+            }
+          }
+        } catch { /* */ }
+
+        // ── 4. No auth at all → back to Hub ────────────────────────
+        console.warn('[Market] no auth found, redirecting to Hub');
         setLoading(false);
-        window.location.href = HUB_URL + '?redirect=' + REDIRECT;
+        window.location.href = HUB_URL + '?redirect=market';
+
       } catch (e) {
-        console.error('[Xentory Market] auth error:', e);
+        console.error('[Market] auth init error:', e);
         setLoading(false);
-        window.location.href = HUB_URL + '?redirect=' + REDIRECT;
+        window.location.href = HUB_URL + '?redirect=market';
       }
     }
 
     init();
 
-    // Only react to explicit sign-out events, not initial session detection
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('[Market] auth event:', event);
       if (event === 'SIGNED_OUT') {
+        localStorage.removeItem(USER_KEY);
         setUser(null);
-      } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-        setUser(sbUserToNexus(session.user));
+      } else if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
+        const u = sbUserToNexus(session.user);
+        localStorage.setItem(USER_KEY, JSON.stringify(u));
+        setUser(u);
       }
     });
 
@@ -94,6 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     await supabase.auth.signOut();
+    localStorage.removeItem(USER_KEY);
     setUser(null);
     window.location.href = HUB_URL;
   }, []);
