@@ -351,25 +351,26 @@ export function Navbar() {
                       transition: 'all 0.2s',
                     }}
                   >
-                    🏠 {t('nav.dashboard')}
+                    📊 {t('nav.dashboard')}
                   </Link>
 
                   {/* Cerrar sesión */}
                   <button
                     onClick={() => { logout(); navigate('/'); setMob(false); }}
                     style={{
-                      background: 'transparent',
-                      border: '1px solid var(--border)',
+                      background: 'rgba(255,68,85,0.08)',
+                      border: '1px solid rgba(255,68,85,0.35)',
                       borderRadius: 10,
                       padding: '0.65rem 1rem',
                       cursor: 'pointer',
-                      color: 'var(--muted)',
+                      color: 'var(--red)',
                       fontSize: '0.88rem',
+                      fontWeight: 600,
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem',
                       transition: 'all 0.2s',
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,68,85,0.4)'; e.currentTarget.style.color = 'var(--red)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--muted)'; }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,68,85,0.15)'; e.currentTarget.style.borderColor = 'rgba(255,68,85,0.6)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,68,85,0.08)'; e.currentTarget.style.borderColor = 'rgba(255,68,85,0.35)'; }}
                   >
                     {t('nav.signout')}
                   </button>
