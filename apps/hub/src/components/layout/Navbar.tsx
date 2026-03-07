@@ -56,7 +56,7 @@ export function Navbar() {
     try { return localStorage.getItem('xentory_ticker') !== 'off'; }
     catch { return true; }
   });
-  const drawerRef                   = useRef<HTMLDivElement>(null);
+  const drawerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 40);
@@ -69,7 +69,6 @@ export function Navbar() {
     document.documentElement.classList.toggle('ticker-hidden', !tickerOn);
   }, [tickerOn]);
 
-  // Block body scroll when drawer is open
   useEffect(() => {
     if (mob) {
       document.body.classList.add('menu-open');
@@ -79,10 +78,8 @@ export function Navbar() {
     return () => { document.body.classList.remove('menu-open'); };
   }, [mob]);
 
-  // Close drawer on route change
   useEffect(() => { setMob(false); }, [location.pathname]);
 
-  // Close drawer on outside click
   useEffect(() => {
     if (!mob) return;
     const fn = (e: MouseEvent) => {
@@ -93,7 +90,7 @@ export function Navbar() {
   }, [mob]);
 
   const isActive = (p: string) => location.pathname === p;
-  const isHome    = location.pathname === '/';
+  const isHome   = location.pathname === '/';
 
   const navLinks = [
     { to: '/pricing',     label: t('nav.pricing') },
@@ -101,7 +98,6 @@ export function Navbar() {
     { to: '/metodologia', label: t('nav.methodology') },
   ];
 
-  // ── iOS-style ticker toggle ──
   const TickerToggle = () => (
     <button
       onClick={() => setTickerOn(v => !v)}
@@ -119,21 +115,17 @@ export function Navbar() {
         position: 'absolute', top: 3, left: tickerOn ? 19 : 3,
         width: 18, height: 18, borderRadius: '50%',
         background: 'white', transition: 'left 0.22s cubic-bezier(0.34,1.56,0.64,1)',
-        boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
-        display: 'block',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.3)', display: 'block',
       }} />
     </button>
   );
 
-  // ── Quick controls (theme + lang + currency) ──
   const QuickControls = () => (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-      {/* Ticker toggle — only on mobile (hidden on desktop via CSS) */}
       {isHome && <span className="nav-ticker-toggle" style={{ display: 'none', alignItems: 'center', gap: '0.3rem' }}>
         <span style={{ fontSize: '0.6rem', color: 'var(--muted)' }}>📊</span>
         <TickerToggle />
       </span>}
-      {/* Currency */}
       <div style={{ display: 'flex', background: 'var(--card2)', borderRadius: 7, padding: 3, border: '1px solid var(--border)', gap: 2 }}>
         {(['USD', 'EUR'] as Currency[]).map(c => (
           <button key={c} onClick={() => setCurrency(c)} style={{
@@ -144,14 +136,12 @@ export function Navbar() {
           }}>{c === 'USD' ? '$' : '€'}</button>
         ))}
       </div>
-      {/* Theme */}
       <button onClick={toggleTheme} style={IB} title={theme === 'dark' ? t('nav.lightmode') : t('nav.darkmode')}
         onMouseEnter={e=>{e.currentTarget.style.borderColor='var(--gold)';e.currentTarget.style.color='var(--gold)'}}
         onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.color='var(--text2)'}}
       >
         {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
       </button>
-      {/* Language */}
       <button onClick={toggleLang} style={{ ...IB, overflow: 'hidden', padding: 0 }} title={lang === 'es' ? 'English' : 'Español'}>
         {lang === 'es' ? <FlagEN /> : <FlagES />}
       </button>
@@ -167,11 +157,9 @@ export function Navbar() {
         padding: '0 clamp(1rem, 4vw, 2.5rem)',
         background: (scrolled || mob) ? 'var(--nav-bg)' : 'transparent',
         borderBottom: (scrolled || mob) ? '1px solid var(--border)' : '1px solid transparent',
-        backdropFilter: 'blur(24px)',
-        WebkitBackdropFilter: 'blur(24px)',
+        backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
         transition: 'all 0.3s',
       }}>
-
         {/* Logo */}
         <Link to="/" style={{ textDecoration: 'none', flexShrink: 0 }}>
           <span style={{ fontFamily: 'Urbanist', fontWeight: 900, fontSize: 'clamp(1.2rem,3vw,1.4rem)', letterSpacing: '-0.03em' }}>
@@ -180,7 +168,7 @@ export function Navbar() {
           </span>
         </Link>
 
-        {/* Desktop nav links — centered absolutely */}
+        {/* Desktop nav links — centered */}
         <div className="nav-links" style={{
           position: 'absolute', left: '50%', transform: 'translateX(-50%)',
           display: 'flex', alignItems: 'center', gap: '1.6rem',
@@ -254,54 +242,147 @@ export function Navbar() {
         {/* Mobile right — QuickControls + Hamburger */}
         <div className="nav-mobile-menu" style={{ display: 'none', alignItems: 'center', gap: '0.5rem' }}>
           <QuickControls />
-          {/* Hamburger button */}
           <button
             onClick={() => setMob(o => !o)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.3rem', display: 'flex', flexDirection: 'column', gap: 5 }}
+            style={{
+              background: mob ? 'var(--card2)' : 'none',
+              border: mob ? '1px solid var(--border2)' : 'none',
+              borderRadius: 8,
+              cursor: 'pointer', padding: '0.4rem 0.5rem',
+              display: 'flex', flexDirection: 'column', gap: 5,
+              transition: 'all 0.2s',
+            }}
             aria-label="Menu"
             onMouseDown={e => e.stopPropagation()}
           >
-            <span style={{ display: 'block', width: 22, height: 2, background: 'var(--text)', borderRadius: 2, transition: 'all 0.25s', transformOrigin: 'center', transform: mob ? 'rotate(45deg) translate(5px,5px)' : 'none' }} />
-            <span style={{ display: 'block', width: 22, height: 2, background: 'var(--text)', borderRadius: 2, transition: 'all 0.25s', opacity: mob ? 0 : 1 }} />
-            <span style={{ display: 'block', width: 22, height: 2, background: 'var(--text)', borderRadius: 2, transition: 'all 0.25s', transformOrigin: 'center', transform: mob ? 'rotate(-45deg) translate(5px,-5px)' : 'none' }} />
+            <span style={{ display: 'block', width: 22, height: 2, background: mob ? 'var(--gold)' : 'var(--text)', borderRadius: 2, transition: 'all 0.25s', transformOrigin: 'center', transform: mob ? 'rotate(45deg) translate(5px,5px)' : 'none' }} />
+            <span style={{ display: 'block', width: 22, height: 2, background: mob ? 'var(--gold)' : 'var(--text)', borderRadius: 2, transition: 'all 0.25s', opacity: mob ? 0 : 1 }} />
+            <span style={{ display: 'block', width: 22, height: 2, background: mob ? 'var(--gold)' : 'var(--text)', borderRadius: 2, transition: 'all 0.25s', transformOrigin: 'center', transform: mob ? 'rotate(-45deg) translate(5px,-5px)' : 'none' }} />
           </button>
         </div>
       </nav>
 
-      {/* Mobile drawer — solo links y auth */}
+      {/* ── MOBILE DRAWER OVERLAY + PANEL ── */}
       {mob && (
-        <div ref={drawerRef} className="glass-2 mobile-drawer" style={{
-          position: 'fixed', top: 'var(--nav-h)', left: 0, right: 0, zIndex: 99,
-          padding: '1rem 1.5rem 1.5rem', borderBottom: '1px solid var(--border)',
-          display: 'flex', flexDirection: 'column', gap: '0.75rem',
-          animation: 'fadeIn 0.18s ease both',
-        }}>
-          {navLinks.map(({ to, label }) => (
-            <Link key={to} to={to} onClick={() => setMob(false)} style={{
-              textDecoration: 'none', padding: '0.55rem 0',
-              borderBottom: '1px solid var(--border)', fontSize: '1rem',
-              color: isActive(to) ? 'var(--gold)' : 'var(--text)', fontWeight: isActive(to) ? 600 : 400,
-            }}>{label}</Link>
-          ))}
+        <>
+          {/* Dark overlay */}
+          <div
+            style={{
+              position: 'fixed', inset: 0,
+              top: 'var(--nav-h)',
+              background: 'rgba(5,8,16,0.75)',
+              backdropFilter: 'blur(4px)',
+              WebkitBackdropFilter: 'blur(4px)',
+              zIndex: 98,
+              animation: 'fadeIn 0.2s ease both',
+            }}
+            onClick={() => setMob(false)}
+          />
+          {/* Drawer panel */}
+          <div
+            ref={drawerRef}
+            className="mobile-drawer"
+            style={{
+              position: 'fixed',
+              top: 'var(--nav-h)',
+              left: 0, right: 0,
+              zIndex: 199,
+              background: 'var(--bg2)',
+              borderBottom: '1px solid var(--border2)',
+              padding: '1.2rem 1.5rem 1.8rem',
+              display: 'flex', flexDirection: 'column', gap: '0.6rem',
+              animation: 'fadeUp 0.2s ease both',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+            }}
+          >
+            {/* Nav links */}
+            {navLinks.map(({ to, label }) => (
+              <Link key={to} to={to} onClick={() => setMob(false)} style={{
+                textDecoration: 'none',
+                padding: '0.7rem 0',
+                borderBottom: '1px solid var(--border)',
+                fontSize: '1rem',
+                color: isActive(to) ? 'var(--gold)' : 'var(--text)',
+                fontWeight: isActive(to) ? 600 : 400,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              }}>
+                {label}
+                <span style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>→</span>
+              </Link>
+            ))}
 
-          <div style={{ paddingTop: '0.25rem', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {user ? (
-              <>
-                <div style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>{user.email}</div>
-                <Link to="/dashboard" onClick={() => setMob(false)} className="btn btn-ghost btn-sm" style={{ justifyContent: 'center' }}>{t('nav.dashboard')}</Link>
-                <button onClick={() => { logout(); navigate('/'); setMob(false); }}
-                  className="btn btn-sm"
-                  style={{ background: 'rgba(255,68,85,0.08)', color: 'var(--red)', border: '1px solid rgba(255,68,85,0.2)', justifyContent: 'center' }}
-                >{t('nav.signout')}</button>
-              </>
-            ) : (
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <Link to="/login"    onClick={() => setMob(false)} className="btn btn-outline btn-sm" style={{ flex: 1, justifyContent: 'center' }}>{t('nav.signin')}</Link>
-                <Link to="/register" onClick={() => setMob(false)} className="btn btn-gold btn-sm"    style={{ flex: 1, justifyContent: 'center' }}>{t('nav.signup')}</Link>
-              </div>
-            )}
+            {/* Auth section */}
+            <div style={{ paddingTop: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+              {user ? (
+                <>
+                  {/* User info */}
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: '0.7rem',
+                    padding: '0.6rem 0.8rem',
+                    background: 'var(--card2)', borderRadius: 10,
+                    border: '1px solid var(--border)',
+                    marginBottom: '0.2rem',
+                  }}>
+                    <div style={{
+                      width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+                      background: 'linear-gradient(135deg,var(--gold),var(--cyan))',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontFamily: 'Urbanist', fontWeight: 700, fontSize: '0.9rem', color: 'var(--bg)',
+                    }}>{user.name.charAt(0).toUpperCase()}</div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
+                    </div>
+                  </div>
+
+                  {/* Dashboard — botón destacado */}
+                  <Link
+                    to="/dashboard"
+                    onClick={() => setMob(false)}
+                    style={{
+                      textDecoration: 'none',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                      padding: '0.75rem 1rem',
+                      borderRadius: 10,
+                      background: 'linear-gradient(135deg, var(--gold), var(--gold-l))',
+                      color: 'var(--bg)',
+                      fontFamily: 'Urbanist', fontWeight: 700, fontSize: '0.95rem',
+                      boxShadow: '0 4px 20px rgba(201,168,76,0.3)',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    🏠 {t('nav.dashboard')}
+                  </Link>
+
+                  {/* Cerrar sesión */}
+                  <button
+                    onClick={() => { logout(); navigate('/'); setMob(false); }}
+                    style={{
+                      background: 'transparent',
+                      border: '1px solid var(--border)',
+                      borderRadius: 10,
+                      padding: '0.65rem 1rem',
+                      cursor: 'pointer',
+                      color: 'var(--muted)',
+                      fontSize: '0.88rem',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem',
+                      transition: 'all 0.2s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,68,85,0.4)'; e.currentTarget.style.color = 'var(--red)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--muted)'; }}
+                  >
+                    {t('nav.signout')}
+                  </button>
+                </>
+              ) : (
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <Link to="/login"    onClick={() => setMob(false)} className="btn btn-outline btn-sm" style={{ flex: 1, justifyContent: 'center' }}>{t('nav.signin')}</Link>
+                  <Link to="/register" onClick={() => setMob(false)} className="btn btn-gold btn-sm"    style={{ flex: 1, justifyContent: 'center' }}>{t('nav.signup')}</Link>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        </>
       )}
     </>
   );

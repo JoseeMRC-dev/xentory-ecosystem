@@ -159,7 +159,7 @@ export function DashboardPage() {
         />
         <PlatformCard
           emoji="⚽" name="Xentory Bet" planKey="bets"
-          plan={user.subscriptions.bets} color="var(--cyan)"
+          plan={user.subscriptions.bets} color="var(--green)"
           onLaunch={() => { launchPlatform('bets').catch(console.error); }}
           onUpgrade={() => navigate('/pricing#bets')}
         />
