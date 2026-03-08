@@ -159,10 +159,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
-    try { localStorage.removeItem(USER_KEY); } catch { /**/ }
-    try { sessionStorage.removeItem(SESSION_KEY); } catch { /**/ }
+    ['xentory_bet_user','xentory_market_user'].forEach(k => {
+      try { localStorage.removeItem(k); } catch { /**/ }
+    });
+    ['xentory_bet_session','xentory_market_session'].forEach(k => {
+      try { sessionStorage.removeItem(k); } catch { /**/ }
+    });
     setUser(null);
-    window.location.href = HUB_URL;
+    setTimeout(() => { window.location.replace(HUB_URL); }, 50);
   }, []);
 
   const upgradePlan = useCallback((plan: Plan) => {

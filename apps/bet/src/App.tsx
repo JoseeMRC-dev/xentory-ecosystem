@@ -8,12 +8,13 @@ import { MatchAnalysisPage, AnalysisPage } from './components/analysis/AnalysisP
 import { PlansPage } from './components/plans/PlansPage';
 import { TelegramPage, HistoryPage } from './components/telegram/TelegramPage';
 import './styles/global.css';
+import { LoadingScreen } from './components/layout/LoadingScreen';
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth();
-  if (isLoading) return null;
+  if (isLoading) return <LoadingScreen />;
   if (!user) {
     const HUB = (import.meta as any).env?.VITE_HUB_URL ?? 'https://x-eight-beryl.vercel.app';
     window.location.href = HUB;

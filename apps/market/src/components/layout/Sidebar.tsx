@@ -82,7 +82,19 @@ function NavContent({ onNav }: { onNav?: () => void }) {
               <div style={{ fontSize: '0.84rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</div>
               <div style={{ fontSize: '0.68rem', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
             </div>
-            <button onClick={logout} title="Cerrar sesión" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: '1rem', flexShrink: 0 }}>⏏</button>
+            <button
+              onClick={() => {
+                ['xentory_bet_user','xentory_market_user'].forEach(k => {
+                  try { localStorage.removeItem(k); } catch { /**/ }
+                });
+                ['xentory_bet_session','xentory_market_session'].forEach(k => {
+                  try { sessionStorage.removeItem(k); } catch { /**/ }
+                });
+                logout();
+              }}
+              title="Cerrar sesión"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--red)', fontSize: '1rem', flexShrink: 0 }}
+            >⏏</button>
           </div>
         </div>
       )}

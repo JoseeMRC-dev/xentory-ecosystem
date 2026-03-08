@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { getLiveAssets, formatPrice } from '../../services/marketService';
+import { getLiveAssets, dataReady, formatPrice } from '../../services/marketService';
 import { SIGNAL_LABELS, STATUS_CONFIG, CATEGORY_LABELS } from '../../constants';
 import type { Asset } from '../../types';
 
@@ -88,9 +88,13 @@ export function DashboardPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    setAssets(getLiveAssets());
-    const id = setInterval(() => setAssets(getLiveAssets()), 4000);
-    return () => clearInterval(id);
+    let id: ReturnType<typeof setInterval>;
+    // Wait for initial Binance REST prices before first render
+    dataReady.then(() => {
+      setAssets(getLiveAssets());
+      id = setInterval(() => setAssets(getLiveAssets()), 4000);
+    });
+    return () => { if (id) clearInterval(id); };
   }, []);
 
   const filtered = activeCategory === 'all' ? assets : assets.filter(a => a.category === activeCategory);

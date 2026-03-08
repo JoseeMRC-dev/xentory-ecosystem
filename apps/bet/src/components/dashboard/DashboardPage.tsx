@@ -5,6 +5,18 @@ import { fetchUpcomingMatches, getMockMatchesBySport } from '../../services/spor
 import { SPORT_CONFIG, confidenceColor } from '../../constants';
 import type { Match } from '../../types';
 
+// Football competitions for the slider
+const FOOTBALL_COMPETITIONS = [
+  { id: 'champions', emoji: '⭐', name: 'Champions League', shortName: 'UCL', color: '#1a56db' },
+  { id: 'laliga',    emoji: '🇪🇸', name: 'La Liga',          shortName: 'LaLiga', color: '#c9a84c' },
+  { id: 'premier',   emoji: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', name: 'Premier League',  shortName: 'EPL', color: '#3d0099' },
+  { id: 'seriea',    emoji: '🇮🇹', name: 'Serie A',           shortName: 'SerieA', color: '#006dac' },
+  { id: 'bundesliga',emoji: '🇩🇪', name: 'Bundesliga',        shortName: 'BL', color: '#e30613' },
+  { id: 'ligue1',    emoji: '🇫🇷', name: 'Ligue 1',           shortName: 'L1', color: '#0033a0' },
+  { id: 'mls',       emoji: '🇺🇸', name: 'MLS',               shortName: 'MLS', color: '#002b5c' },
+  { id: 'libertadores', emoji: '🌎', name: 'Copa Libertadores', shortName: 'Lib', color: '#00a651' },
+];
+
 const TODAY_PICKS = [
   { sport: '⚽', match: 'Real Madrid vs Barcelona', competition: 'La Liga', pick: 'Real Madrid gana', confidence: 74, odds: 1.85, market: '1X2' },
   { sport: '🏀', match: 'Lakers vs Celtics', competition: 'NBA', pick: 'Over 224.5', confidence: 68, odds: 1.91, market: 'Over/Under' },
@@ -139,6 +151,48 @@ export function DashboardPage() {
                 ))
             }
           </div>
+        </div>
+      </div>
+
+      {/* ── Football competitions slider ─────────────────────── */}
+      <div className="glass" style={{ borderRadius: 16, padding: '1.2rem 1.5rem', marginBottom: '1.5rem' }}>
+        <h2 style={{ fontSize: '0.95rem', marginBottom: '1rem' }}>⚽ Competiciones de fútbol</h2>
+        <div style={{
+          display: 'flex', gap: '0.6rem',
+          overflowX: 'auto', paddingBottom: '0.4rem',
+          scrollbarWidth: 'none', msOverflowStyle: 'none',
+          WebkitOverflowScrolling: 'touch',
+        }}>
+          {FOOTBALL_COMPETITIONS.map(comp => (
+            <button
+              key={comp.id}
+              onClick={() => navigate(`/matches?sport=football&competition=${comp.id}`)}
+              style={{
+                flexShrink: 0,
+                display: 'flex', alignItems: 'center', gap: '0.4rem',
+                padding: '0.45rem 0.85rem',
+                borderRadius: 100,
+                background: 'var(--card2)',
+                border: `1px solid var(--border)`,
+                cursor: 'pointer', transition: 'all 0.18s',
+                fontSize: '0.8rem', color: 'var(--text2)',
+                whiteSpace: 'nowrap',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.borderColor = comp.color;
+                e.currentTarget.style.color = comp.color;
+                e.currentTarget.style.background = `${comp.color}12`;
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.borderColor = 'var(--border)';
+                e.currentTarget.style.color = 'var(--text2)';
+                e.currentTarget.style.background = 'var(--card2)';
+              }}
+            >
+              <span style={{ fontSize: '0.9rem' }}>{comp.emoji}</span>
+              <span>{comp.shortName}</span>
+            </button>
+          ))}
         </div>
       </div>
 

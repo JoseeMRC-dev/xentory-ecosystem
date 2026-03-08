@@ -428,5 +428,5 @@ export function formatVolume(vol: number): string {
   return vol.toString();
 }
 
-// Auto-init on import
-initLiveData().catch(() => startPollingFallback());
+// Auto-init on import — export promise so consumers can await initial data
+export const dataReady: Promise<void> = initLiveData().catch(() => startPollingFallback());
