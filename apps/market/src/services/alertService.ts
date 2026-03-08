@@ -62,8 +62,7 @@ export interface TelegramConnection {
 // WRITES: via /api/alerts Edge Function with user_id in body.
 
 const EF_BASE = `${(import.meta as any).env?.VITE_SUPABASE_URL ?? 'https://mtgatdmrpfysqphdgaue.supabase.co'}/functions/v1`;
-const ANON_KEY = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY
-  ?? 'SUPABASE_KEY_REDACTED.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10Z2F0ZG1ycGZ5c3FwaGRnYXVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2MjA5NjksImV4cCI6MjA4ODE5Njk2OX0.yx_ciyMPr0iiurbIBc8GuhL4gEXkaSjYKTevWqUrPpY';
+const ANON_KEY = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY;
 
 async function callEF(path: string, body: object): Promise<any> {
   const res = await fetch(`${EF_BASE}/${path}`, {
