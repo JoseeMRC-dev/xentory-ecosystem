@@ -332,7 +332,7 @@ export function AlertsPage() {
   const CH_COLORS:  Record<AlertChannel, string> = { telegram: '#2aabee', email: 'var(--gold)', both: 'var(--green)' };
   const CAT_EMOJI:  Record<string, string>        = { crypto: '🪙', stocks: '📊', forex: '💱' };
 
-  const catAssets = newCat === 'all' ? ALL_ASSETS : ALL_ASSETS.filter(a => a.category === newCat);
+  const catAssets = (newCat as string) === 'all' ? ALL_ASSETS : ALL_ASSETS.filter(a => a.category === newCat);
   const filtered  = filterCat === 'all' ? alerts : alerts.filter(a => a.category === filterCat);
 
   return (
