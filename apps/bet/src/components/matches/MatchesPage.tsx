@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { fetchUpcomingMatches, getMockMatchesBySport } from '../../services/sportsService';
+import { fetchUpcomingMatches, getMockMatchesBySport, fetchTennisMatches } from '../../services/sportsService';
 import { SPORT_CONFIG } from '../../constants';
 import type { Match, Sport } from '../../types';
 
@@ -167,6 +167,8 @@ export function MatchesPage() {
         const ids = [2, 3, 140, 141, 39, 135, 78, 61, 94, 128, 262];
         const all = await Promise.all(ids.map(id => fetchUpcomingMatches(id, 5)));
         results = all.flat();
+      } else if (activeSport === 'tennis') {
+        results = await fetchTennisMatches();
       } else {
         results = getMockMatchesBySport(activeSport);
       }

@@ -268,6 +268,87 @@ function getMockTeamStats(teamId: number): TeamStats {
   };
 }
 
+// ══════════════════════════════════════
+// TENNIS API (api-sports.io v1)
+// ══════════════════════════════════════
+const TENNIS_BASE = 'https://v1.tennis.api-sports.io';
+
+async function callTennisAPI(endpoint: string) {
+  if (!API_KEY) return null;
+  try {
+    const res = await fetch(`${TENNIS_BASE}${endpoint}`, {
+      headers: {
+        'x-apisports-key': API_KEY,
+      },
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data?.response ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function formatPlayerName(name: string): string {
+  // "Carlos Alcaraz" → "C. Alcaraz"
+  const parts = name.trim().split(' ');
+  if (parts.length < 2) return name;
+  return `${parts[0][0]}. ${parts.slice(1).join(' ')}`;
+}
+
+export async function fetchTennisMatches(): Promise<Match[]> {
+  // Get today and next 7 days
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  const nextWeek = new Date(today.getTime() + 7 * 86400000);
+  const nextWeekStr = nextWeek.toISOString().split('T')[0];
+
+  const raw = await callTennisAPI(`/games?date=${todayStr}`);
+  const raw2 = await callTennisAPI(`/games?date=${nextWeekStr}`);
+
+  const combined = [...(raw ?? []), ...(raw2 ?? [])];
+  if (!combined.length) return getMockMatchesBySport('tennis');
+
+  const matches: Match[] = combined
+    .filter((g: any) => g?.status?.short === 'NS') // NS = Not Started
+    .slice(0, 12)
+    .map((g: any, idx: number) => {
+      const homePlayer = g.players?.home?.name ?? 'Jugador 1';
+      const awayPlayer = g.players?.away?.name ?? 'Jugador 2';
+      const tournament = g.tournament?.name ?? 'Torneo ATP/WTA';
+      const country = g.country?.name ?? 'Internacional';
+      const isWTA = tournament.toLowerCase().includes('wta') || tournament.toLowerCase().includes('women');
+      return {
+        id: g.id ?? 30000 + idx,
+        sport: 'tennis' as const,
+        competition: {
+          id:      g.tournament?.id ?? idx,
+          name:    tournament,
+          sport:   'tennis',
+          country,
+          logo:    '',
+          emoji:   '🎾',
+        },
+        homeTeam: {
+          id:        g.players?.home?.id ?? 20000 + idx * 2,
+          name:      formatPlayerName(homePlayer),
+          shortName: homePlayer.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 3),
+        },
+        awayTeam: {
+          id:        g.players?.away?.id ?? 20001 + idx * 2,
+          name:      formatPlayerName(awayPlayer),
+          shortName: awayPlayer.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 3),
+        },
+        date:   g.date ?? new Date(Date.now() + 86400000).toISOString(),
+        status: 'scheduled',
+        venue:  g.venue ?? tournament,
+      };
+    });
+
+  return matches.length > 0 ? matches : getMockMatchesBySport('tennis');
+}
+
+
 export function getMockMatchesBySport(sport: string): Match[] {
   const now = Date.now();
   if (sport === 'basketball') return [
