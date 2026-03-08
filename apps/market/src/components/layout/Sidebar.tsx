@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { QuickBar } from './QuickBar';
 import { useCurrency } from '../../context/CurrencyContext';
@@ -106,8 +106,7 @@ function LogoBlock() {
   return (
     <div style={{ padding: '1.2rem 1.2rem 0' }}>
       <div style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 800, fontSize: '1.35rem', letterSpacing: '-0.02em', marginBottom: '0.25rem' }}>
-        <a href={HUB_URL} style={{ textDecoration: 'none' }}><span className="text-gradient-gold">Xentory</span></a>
-        <a href={MKT_URL} style={{ textDecoration: 'none' }}><span style={{ color: '#4d9fff' }}>Market</span></a>
+        <a href={HUB_URL} style={{ textDecoration: 'none' }}><span className="text-gradient-gold">Xentory</span></a><Link to="/dashboard" style={{ textDecoration: 'none' }}><span style={{ color: '#4d9fff' }}>Market</span></Link>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.9rem' }}>
         <span className="live-dot" />
@@ -154,8 +153,7 @@ export function Sidebar() {
           justifyContent: 'space-between', padding: '0 1rem',
         }}>
           <div style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 800, fontSize: '1.15rem', letterSpacing: '-0.02em' }}>
-            <a href={HUB_URL} style={{ textDecoration: 'none' }}><span className="text-gradient-gold">Xentory</span></a>
-            <a href={MKT_URL} style={{ textDecoration: 'none' }}><span style={{ color: '#4d9fff' }}>Market</span></a>
+            <a href={HUB_URL} style={{ textDecoration: 'none' }}><span className="text-gradient-gold">Xentory</span></a><Link to="/dashboard" style={{ textDecoration: 'none' }}><span style={{ color: '#4d9fff' }}>Market</span></Link>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <CurrencyToggle />

@@ -248,7 +248,7 @@ img { display: block; max-width: 100%; }
 }
 .ticker-track {
   display: inline-flex; height: 100%; align-items: center;
-  animation: tickerScroll 48s linear infinite;
+  animation: tickerScroll 20s linear infinite;
   will-change: transform; transform: translateZ(0);
   backface-visibility: hidden; -webkit-backface-visibility: hidden;
 }
@@ -337,7 +337,7 @@ html.ticker-hidden { --ticker-h: 0px; }
 
 /* ══ REDUCED MOTION ════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
-  .ticker-track  { animation-duration: 90s; }
+  .ticker-track  { animation-duration: 45s; }
   .reveal        { transition-duration: 0.15s; }
   .animate-fadeUp, .animate-fadeIn { animation-duration: 0.15s; }
 }
@@ -449,5 +449,140 @@ body.menu-open {
     z-index: 199 !important;
     max-height: calc(100dvh - var(--nav-h) - env(safe-area-inset-top, 0px));
     overflow-y: auto;
+  }
+}
+
+/* ══ SETTINGS MODAL — RESPONSIVE ══════════════════════════════ */
+
+/* Settings modal tabs */
+.hub-settings-tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 1.5rem;
+  background: var(--card2);
+  padding: 0.25rem;
+  border-radius: 10px;
+}
+
+/* Settings field pair */
+.hub-settings-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+/* Mobile drawer account buttons row */
+.hub-mob-acct-btns {
+  display: flex;
+  gap: 0.4rem;
+}
+
+/* Cancel subscription button */
+.hub-mob-cancel-btn {
+  background: rgba(201,168,76,0.06);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  color: var(--gold);
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  transition: all 0.2s;
+}
+
+@media (max-width: 640px) {
+  /* Settings modal: full width on small phones */
+  .hub-settings-modal {
+    width: 94vw !important;
+    padding: 1.4rem !important;
+    border-radius: 16px !important;
+  }
+
+  /* Settings tabs: compress text */
+  .hub-settings-tabs button {
+    font-size: 0.72rem !important;
+    padding: 0.4rem 0.3rem !important;
+  }
+
+  /* Account buttons in drawer: stack on tiny screens */
+  .hub-mob-acct-btns {
+    flex-direction: column !important;
+  }
+  .hub-mob-acct-btns button {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .hub-settings-modal {
+    padding: 1.1rem !important;
+  }
+}
+
+/* ══ BET DASHBOARD — COMPETITIONS SLIDER RESPONSIVE ══════════ */
+.bet-competitions-slider {
+  display: flex;
+  gap: 0.6rem;
+  overflow-x: auto;
+  padding-bottom: 0.4rem;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+.bet-competitions-slider::-webkit-scrollbar { display: none; }
+
+
+/* ══ SETTINGS MODAL INPUTS ═════════════════════════════════════ */
+.hub-settings-modal input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ══ ALERT FORM — SELECT & INPUT MOBILE ══════════════════════ */
+@media (max-width: 768px) {
+  /* Alert form condition buttons: full width stack */
+  .mkt-alert-condition-btns {
+    flex-direction: row !important;
+  }
+
+  /* Alert list card on mobile: slightly tighter */
+  .mkt-alert-card {
+    padding: 0.9rem 1rem !important;
+    gap: 0.7rem !important;
+  }
+
+  /* Hide category badge on very small screens */
+  .mkt-alert-cat-badge {
+    display: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Alert toggle + delete: always visible */
+  .mkt-alert-card .mkt-alert-toggle { flex-shrink: 0; }
+
+  /* Pricing bundle card: stack price */
+  .hub-bundle-price {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.5rem !important;
+  }
+}
+
+/* ══ TABLET (iPad 768–1024) ════════════════════════════════════ */
+@media (min-width: 769px) and (max-width: 1024px) {
+  /* Hub settings modal: slightly narrower */
+  .hub-settings-modal {
+    width: min(85vw, 420px) !important;
+  }
+
+  /* Hub pricing bundle: normal */
+  .hub-bundle-price {
+    align-items: baseline;
   }
 }

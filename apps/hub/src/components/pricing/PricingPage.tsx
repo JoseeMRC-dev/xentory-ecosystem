@@ -121,9 +121,11 @@ export function PricingPage() {
                 </div>
                 <div>
                   <div style={{ fontSize: '0.72rem', color: 'var(--green)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Precio bundle</div>
-                  <div style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '2.5rem', color: 'var(--gold)', letterSpacing: '-0.04em' }}>
-                    {yearly ? `${Math.round(BUNDLE.monthlyPrice * 12 * 0.8)}€<span style="font-size:1rem">/año</span>` : `${BUNDLE.monthlyPrice}€`}
-                    {!yearly && <span style={{ fontSize: '1rem', color: 'var(--muted)', fontWeight: 300 }}>/mes</span>}
+                  <div style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '2.5rem', color: 'var(--gold)', letterSpacing: '-0.04em', display: 'flex', alignItems: 'baseline', gap: '0.2rem' }}>
+                    {yearly
+                      ? <>{Math.round(BUNDLE.monthlyPrice * 12 * 0.8)}€<span style={{ fontSize: '1rem', color: 'var(--muted)', fontWeight: 300 }}>/año</span></>
+                      : <>{BUNDLE.monthlyPrice}€<span style={{ fontSize: '1rem', color: 'var(--muted)', fontWeight: 300 }}>/mes</span></>
+                    }
                   </div>
                 </div>
               </div>

@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { AppLayout } from './components/layout/AppLayout';
@@ -15,7 +15,7 @@ import { CurrencyProvider } from './context/CurrencyContext';
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth();
-  if (isLoading) return <LoadingScreen />;
+  if (isLoading) return null;
   if (!user) {
     // Redirect to Hub instead of /login — preserves clean flow
     const HUB = (import.meta as any).env?.VITE_HUB_URL ?? 'https://x-eight-beryl.vercel.app';
@@ -58,15 +58,20 @@ function AppRoutes() {
 }
 
 export default function App() {
+  const [appReady, setAppReady] = useState(false);
+
   return (
     <ThemeProvider>
       <LanguageProvider>
       <CurrencyProvider>
-      <BrowserRouter>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
-    </BrowserRouter>
+        {!appReady && <LoadingScreen onDone={() => setAppReady(true)} />}
+        {appReady && (
+          <BrowserRouter>
+            <AuthProvider>
+              <AppRoutes />
+            </AuthProvider>
+          </BrowserRouter>
+        )}
       </CurrencyProvider>
       </LanguageProvider>
     </ThemeProvider>

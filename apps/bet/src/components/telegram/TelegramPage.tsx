@@ -1,199 +1,213 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import {
+  getTelegramConnection, upsertVerifyCode, generateVerifyCode,
+  type TelegramConnection,
+} from '../../services/alertService';
 
-// ── TELEGRAM PAGE ──
+const MOCK_PICKS = [
+  { sport: '⚽', match: 'Real Madrid vs Barcelona',  pick: 'Over 2.5 goles',   confidence: 74, odds: 1.72, tier: 'PRO',   time: 'hace 2h' },
+  { sport: '🏀', match: 'Lakers vs Celtics',          pick: 'Lakers +5.5',      confidence: 68, odds: 1.91, tier: 'PRO',   time: 'hace 4h' },
+  { sport: '🎾', match: 'Alcaraz vs Djokovic',        pick: 'Alcaraz gana',     confidence: 71, odds: 1.65, tier: 'ELITE', time: 'hace 6h' },
+  { sport: '⚽', match: 'Man City vs Arsenal',        pick: 'BTTS Sí',          confidence: 69, odds: 1.80, tier: 'PRO',   time: 'ayer'    },
+  { sport: '🏈', match: 'Chiefs vs Eagles',            pick: 'Under 48.5 pts',  confidence: 77, odds: 1.88, tier: 'ELITE', time: 'ayer'    },
+];
+
+const CHANNEL_INFO: Record<string, { name: string; desc: string; color: string }> = {
+  free:  { name: 'Sin acceso',      desc: 'Activa un plan para acceder al canal',             color: 'var(--muted)' },
+  pro:   { name: '@XentoryBetPro',  desc: 'Picks del día + estadísticas pre-partido',         color: 'var(--cyan)'  },
+  elite: { name: '@XentoryBetElite',desc: 'Todo Pro + picks anticipados + análisis en vivo',  color: 'var(--gold)'  },
+};
+
 export function TelegramPage() {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const isPaid = user?.plan !== 'free';
+  const { user }   = useAuth();
+  const navigate   = useNavigate();
 
-  const MOCK_SIGNALS = [
-    { sport: '⚽', match: 'Real Madrid vs Barcelona', pick: 'Over 2.5 goles', confidence: 74, odds: 1.72, channel: 'PRO', time: 'hace 2h' },
-    { sport: '🏀', match: 'Lakers vs Celtics', pick: 'Lakers gana', confidence: 68, odds: 1.91, channel: 'PRO', time: 'hace 4h' },
-    { sport: '🎾', match: 'Alcaraz vs Djokovic', pick: 'Alcaraz gana', confidence: 71, odds: 1.65, channel: 'ELITE', time: 'hace 6h' },
-    { sport: '⚽', match: 'Man City vs Arsenal', pick: 'BTTS Sí', confidence: 69, odds: 1.80, channel: 'PRO', time: 'ayer' },
-  ];
+  const [conn,       setConn]       = useState<TelegramConnection | null>(null);
+  const [loading,    setLoading]    = useState(true);
+  const [connecting, setConnecting] = useState(false);
+  const [verifyCode, setVerifyCode] = useState('');
+  const [copied,     setCopied]     = useState(false);
+
+  const isPaid  = user?.plan === 'pro' || user?.plan === 'elite';
+  const channel = CHANNEL_INFO[user?.plan ?? 'free'];
+
+  useEffect(() => {
+    if (!user?.id) return;
+    const code = generateVerifyCode(user.id, 'bet');
+    setVerifyCode(code);
+    getTelegramConnection(user.id, 'bet').then(c => { setConn(c); setLoading(false); });
+  }, [user?.id]);
+
+  const pollConnection = () => {
+    if (!user?.id) return;
+    let tries = 0;
+    const iv = setInterval(async () => {
+      tries++;
+      const c = await getTelegramConnection(user.id!, 'bet');
+      if (c) { setConn(c); clearInterval(iv); return; }
+      if (tries >= 12) clearInterval(iv);
+    }, 3000);
+  };
+
+  const handleConnect = async () => {
+    if (!isPaid) { navigate('/plans'); return; }
+    if (!user)   return;
+    setConnecting(true);
+    try {
+      await upsertVerifyCode(user.id, user.email, 'bet', user.plan);
+      window.open(`https://t.me/XentoryBot?start=${verifyCode}`, '_blank');
+      pollConnection();
+    } catch (e) { console.error(e); }
+    finally { setConnecting(false); }
+  };
 
   return (
     <div className="animate-fadeUp" style={{ maxWidth: 900, width: '100%' }}>
+
       <div style={{ marginBottom: '1.5rem' }}>
         <h1 style={{ fontSize: '1.5rem', marginBottom: '0.3rem' }}>✈️ Canal Telegram</h1>
-        <p style={{ color: 'var(--muted)', fontSize: '0.88rem' }}>Señales automáticas directamente en tu Telegram cuando se genera un análisis de alta confianza.</p>
+        <p style={{ color: 'var(--muted)', fontSize: '0.88rem' }}>Picks y señales de apuestas directamente en tu Telegram según tu plan.</p>
       </div>
 
-      {/* Status cards */}
+      {/* Status grid */}
       <div className="bet-tg-status-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
         {[
-          { label: 'Plan activo', value: user?.plan === 'free' ? 'Fanático (Gratis)' : user?.plan === 'pro' ? 'Pro' : 'Elite', color: user?.plan === 'free' ? 'var(--muted)' : 'var(--gold)' },
-          { label: 'Canal asignado', value: isPaid ? (user?.plan === 'elite' ? 'Xentory Bet ELITE' : 'Xentory Bet PRO') : 'No incluido', color: isPaid ? 'var(--cyan)' : 'var(--muted)' },
-          { label: 'Estado', value: isPaid ? (user?.telegramLinked ? '● Vinculado' : '● Pendiente') : '● Inactivo', color: isPaid && user?.telegramLinked ? 'var(--green)' : 'var(--muted)' },
+          { label: 'Plan activo',    value: user?.plan === 'free' ? 'Fanático' : user?.plan?.toUpperCase() ?? 'free', color: isPaid ? 'var(--gold)' : 'var(--muted)' },
+          { label: 'Canal asignado', value: isPaid ? channel.name : 'No incluido', color: isPaid ? 'var(--cyan)' : 'var(--muted)' },
+          { label: 'Estado',         value: loading ? '…' : conn ? '● Vinculado' : isPaid ? '● Pendiente' : '● Inactivo', color: conn ? 'var(--green)' : 'var(--muted)' },
         ].map(item => (
-          <div key={item.label} className="glass" style={{ borderRadius: 14, padding: '1.2rem' }}>
-            <div style={{ fontSize: '0.7rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.4rem' }}>{item.label}</div>
-            <div style={{ fontFamily: 'Urbanist', fontWeight: 700, color: item.color }}>{item.value}</div>
+          <div key={item.label} className="glass" style={{ borderRadius: 12, padding: '1.1rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{item.label}</div>
+            <div style={{ fontFamily: 'Urbanist', fontWeight: 700, color: item.color, fontSize: '0.9rem' }}>{item.value}</div>
           </div>
         ))}
       </div>
 
-      {!isPaid ? (
-        /* Upgrade wall */
-        <div className="glass" style={{ borderRadius: 16, padding: '3rem', textAlign: 'center' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✈️</div>
-          <h2 style={{ marginBottom: '0.8rem' }}>Canal Telegram disponible en Plan Pro</h2>
-          <p style={{ color: 'var(--muted)', maxWidth: 400, margin: '0 auto 2rem', lineHeight: 1.7, fontSize: '0.9rem' }}>
-            Recibe señales automáticas cada vez que la IA detecte una predicción con más del 65% de confianza.
-          </p>
-          <button onClick={() => navigate('/plans')} className="btn btn-gold btn-lg">Ver planes →</button>
+      <div className="bet-tg-main-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
 
-          {/* Blurred preview */}
-          <div style={{ marginTop: '2rem', position: 'relative' }}>
-            <div style={{ filter: 'blur(6px)', pointerEvents: 'none', opacity: 0.5 }}>
-              {MOCK_SIGNALS.slice(0, 2).map((s, i) => (
-                <div key={i} style={{ padding: '1rem', background: 'var(--card2)', borderRadius: 10, marginBottom: '0.5rem', textAlign: 'left', display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                  <span style={{ fontSize: '1.3rem' }}>{s.sport}</span>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 500, fontSize: '0.88rem' }}>{s.match}</div>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>{s.pick} · @{s.odds}</div>
-                  </div>
-                  <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#00ff88' }}>{s.confidence}%</div>
+        {/* Connection card */}
+        <div className="glass" style={{ borderRadius: 16, padding: '1.5rem' }}>
+          <h2 style={{ fontSize: '1rem', marginBottom: '1.2rem' }}>Vincular cuenta</h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginBottom: '1.2rem' }}>
+            {[
+              { num: '01', text: `Necesitas Plan Pro o Elite` },
+              { num: '02', text: 'Copia tu código de verificación' },
+              { num: '03', text: 'Pulsa "Vincular" — se abrirá el bot' },
+              { num: '04', text: 'El bot te añade al canal de tu plan' },
+            ].map(s => (
+              <div key={s.num} style={{ display: 'flex', gap: '0.7rem', alignItems: 'flex-start' }}>
+                <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--gold-dim)', border: '1px solid rgba(201,168,76,0.2)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 700, color: 'var(--gold)', flexShrink: 0 }}>
+                  {s.num}
                 </div>
-              ))}
-            </div>
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(5,8,16,0.4)', borderRadius: 10, backdropFilter: 'blur(1px)' }}>
-              <span style={{ padding: '0.5rem 1.2rem', background: 'var(--card2)', borderRadius: 100, fontSize: '0.82rem', border: '1px solid var(--border)' }}>🔒 Señales bloqueadas</span>
-            </div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text2)', paddingTop: '0.3rem' }}>{s.text}</div>
+              </div>
+            ))}
           </div>
-        </div>
-      ) : (
-        /* Setup guide + signals */
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
 
-          {/* Setup */}
-          <div className="glass" style={{ borderRadius: 16, padding: '1.5rem' }}>
-            <h2 style={{ fontSize: '1rem', marginBottom: '1.2rem' }}>🔧 Configuración del canal</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-              {[
-                { step: '01', title: 'Busca el bot en Telegram', desc: 'Abre Telegram y busca @Xentory BetBot', done: false },
-                { step: '02', title: 'Inicia el bot', desc: 'Escribe /start para activar el bot', done: false },
-                { step: '03', title: 'Vincula tu cuenta', desc: 'Usa el comando /link y tu email de Xentory Bet', done: false },
-                { step: '04', title: 'Acceso al canal', desc: 'El bot te añadirá automáticamente al canal según tu plan', done: false },
-              ].map(item => (
-                <div key={item.step} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', padding: '0.9rem', background: 'var(--card2)', borderRadius: 10 }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 8, background: item.done ? 'var(--green-dim)' : 'var(--card)', border: `1px solid ${item.done ? 'rgba(0,255,136,0.2)' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: 'Urbanist', fontWeight: 700, fontSize: '0.75rem', color: item.done ? 'var(--green)' : 'var(--muted)' }}>
-                    {item.done ? '✓' : item.step}
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.88rem', fontWeight: 500, marginBottom: '0.15rem' }}>{item.title}</div>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>{item.desc}</div>
-                  </div>
-                </div>
-              ))}
+          {/* Verify code */}
+          {isPaid && (
+            <div style={{ background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 10, padding: '0.9rem', marginBottom: '1rem' }}>
+              <div style={{ fontSize: '0.7rem', color: 'var(--muted)', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Tu código</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: '1rem', color: 'var(--gold)', letterSpacing: '0.1em' }}>{verifyCode}</span>
+                <button onClick={() => { navigator.clipboard.writeText(verifyCode); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+                  className="btn btn-gold btn-sm">{copied ? '✓ Copiado' : 'Copiar'}</button>
+              </div>
             </div>
-            <button style={{ marginTop: '1rem', width: '100%', padding: '0.8rem', borderRadius: 8, background: 'var(--card2)', border: '1px solid var(--border)', color: 'var(--text2)', cursor: 'pointer', fontSize: '0.88rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-              onClick={() => navigator.clipboard.writeText('@Xentory BetBot')}>
-              📋 Copiar @Xentory BetBot
+          )}
+
+          {/* CTA */}
+          {!isPaid ? (
+            <button onClick={() => navigate('/plans')} className="btn btn-gold" style={{ width: '100%', justifyContent: 'center' }}>
+              💎 Activar plan
             </button>
-          </div>
+          ) : !conn ? (
+            <button onClick={handleConnect} disabled={connecting} className="btn btn-gold" style={{ width: '100%', justifyContent: 'center' }}>
+              {connecting ? '⏳ Abriendo bot…' : '🔗 Vincular Telegram'}
+            </button>
+          ) : (
+            <a href={`https://t.me/${channel.name.replace('@','')}`} target="_blank" rel="noreferrer"
+              className="btn btn-gold" style={{ display: 'flex', width: '100%', justifyContent: 'center', textDecoration: 'none' }}>
+              ✈️ Ir al canal
+            </a>
+          )}
 
-          {/* Recent signals */}
-          <div className="glass" style={{ borderRadius: 16, padding: '1.5rem' }}>
-            <h2 style={{ fontSize: '1rem', marginBottom: '1.2rem' }}>📡 Últimas señales enviadas</h2>
-            {MOCK_SIGNALS.filter(s => user?.plan === 'elite' || s.channel === 'PRO').map((signal, i) => (
-              <div key={i} style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '0.9rem 0', borderBottom: i < MOCK_SIGNALS.length - 1 ? '1px solid var(--border)' : 'none' }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--card2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', flexShrink: 0 }}>{signal.sport}</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 500, fontSize: '0.88rem', marginBottom: '0.15rem' }}>{signal.match}</div>
-                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>{signal.pick}</span>
-                    <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: 4, background: signal.channel === 'ELITE' ? 'var(--cyan-dim)' : 'var(--gold-dim)', color: signal.channel === 'ELITE' ? 'var(--cyan)' : 'var(--gold)' }}>
-                      {signal.channel}
-                    </span>
-                  </div>
+          {conn && (
+            <div style={{ marginTop: '0.8rem', padding: '0.6rem 0.8rem', background: 'rgba(0,255,136,0.08)', border: '1px solid rgba(0,255,136,0.2)', borderRadius: 8, fontSize: '0.78rem', color: 'var(--green)', textAlign: 'center' }}>
+              ✓ Telegram vinculado · {conn.telegram_username ? `@${conn.telegram_username}` : 'Cuenta verificada'}
+            </div>
+          )}
+        </div>
+
+        {/* Channel info */}
+        <div className="glass" style={{ borderRadius: 16, padding: '1.5rem' }}>
+          <h2 style={{ fontSize: '1rem', marginBottom: '1.2rem' }}>Canales disponibles</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+            {[
+              { plan: 'pro',   icon: '📊', name: '@XentoryBetPro',  color: 'var(--cyan)', features: ['Picks del día (todos los deportes)', 'Estadísticas pre-partido', 'Análisis de valor', 'Historial de resultados'] },
+              { plan: 'elite', icon: '👑', name: '@XentoryBetElite', color: 'var(--gold)', features: ['Todo lo de Pro', 'Picks anticipados (24h antes)', 'Análisis en vivo', 'Acceso prioritario'] },
+            ].map(ch => (
+              <div key={ch.plan} style={{ padding: '1rem', borderRadius: 12, background: 'var(--card2)',
+                border: user?.plan === ch.plan ? `1px solid ${ch.color}50` : '1px solid var(--border)',
+                opacity: user?.plan === ch.plan || user?.plan === 'elite' ? 1 : 0.5,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.6rem' }}>
+                  <span style={{ fontSize: '1.1rem' }}>{ch.icon}</span>
+                  <span style={{ fontFamily: 'Urbanist', fontWeight: 700, color: ch.color, fontSize: '0.88rem' }}>{ch.name}</span>
+                  {user?.plan === ch.plan && <span style={{ marginLeft: 'auto', fontSize: '0.68rem', padding: '0.1rem 0.4rem', borderRadius: 100, background: `${ch.color}20`, color: ch.color, border: `1px solid ${ch.color}40` }}>Tu plan</span>}
                 </div>
-                <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontFamily: 'Urbanist', fontWeight: 700, color: '#00ff88', fontSize: '0.9rem' }}>{signal.confidence}%</div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--gold)' }}>@{signal.odds}</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  {ch.features.map(f => (
+                    <div key={f} style={{ fontSize: '0.78rem', color: 'var(--text2)', display: 'flex', gap: '0.4rem' }}>
+                      <span style={{ color: ch.color }}>✓</span>{f}
+                    </div>
+                  ))}
                 </div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--muted)', flexShrink: 0 }}>{signal.time}</div>
               </div>
             ))}
           </div>
         </div>
-      )}
-    </div>
-  );
-}
-
-// ── HISTORY PAGE ──
-export function HistoryPage() {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const isPaid = user?.plan !== 'free';
-
-  const MOCK_HISTORY = [
-    { sport: '⚽', match: 'Real Madrid vs Atletico', pick: 'Real Madrid gana', result: 'win', odds: 1.75, confidence: 78, date: '2025-02-20' },
-    { sport: '🏀', match: 'Celtics vs Heat', pick: 'Over 215.5', result: 'win', odds: 1.90, confidence: 71, date: '2025-02-19' },
-    { sport: '⚽', match: 'Barcelona vs Valencia', pick: 'Over 2.5', result: 'loss', odds: 1.65, confidence: 66, date: '2025-02-18' },
-    { sport: '🎾', match: 'Sinner vs Medvedev', pick: 'Sinner gana', result: 'win', odds: 1.60, confidence: 74, date: '2025-02-17' },
-    { sport: '⚽', match: 'Man City vs Chelsea', pick: 'BTTS Sí', result: 'win', odds: 1.80, confidence: 69, date: '2025-02-16' },
-  ];
-
-  if (!isPaid) return (
-    <div className="animate-fadeUp" style={{ maxWidth: 900, width: '100%' }}>
-      <h1 style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>📊 Historial de predicciones</h1>
-      <div className="glass" style={{ borderRadius: 16, padding: '4rem', textAlign: 'center' }}>
-        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📊</div>
-        <h2 style={{ marginBottom: '0.8rem' }}>Historial disponible en Plan Pro</h2>
-        <p style={{ color: 'var(--muted)', maxWidth: 380, margin: '0 auto 2rem', lineHeight: 1.7, fontSize: '0.9rem' }}>
-          Accede al historial completo de predicciones con aciertos, rachas y estadísticas de rendimiento.
-        </p>
-        <button onClick={() => navigate('/plans')} className="btn btn-gold btn-lg">Activar Plan Pro →</button>
-      </div>
-    </div>
-  );
-
-  const wins = MOCK_HISTORY.filter(h => h.result === 'win').length;
-  const pct = Math.round((wins / MOCK_HISTORY.length) * 100);
-
-  return (
-    <div className="animate-fadeUp" style={{ maxWidth: 900, width: '100%' }}>
-      <div style={{ marginBottom: '1.5rem' }}>
-        <h1 style={{ fontSize: '1.5rem', marginBottom: '0.3rem' }}>📊 Historial de predicciones</h1>
-        <p style={{ color: 'var(--muted)', fontSize: '0.88rem' }}>Últimas predicciones generadas y su resultado.</p>
       </div>
 
-      <div className="bet-history-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
-        {[
-          { label: 'Total predicciones', value: MOCK_HISTORY.length.toString(), color: 'var(--text)' },
-          { label: 'Aciertos', value: wins.toString(), color: 'var(--green)' },
-          { label: '% de acierto', value: `${pct}%`, color: pct >= 65 ? 'var(--green)' : 'var(--gold)' },
-          { label: 'Racha actual', value: '3 ✓', color: 'var(--cyan)' },
-        ].map(s => (
-          <div key={s.label} className="glass" style={{ borderRadius: 14, padding: '1.2rem' }}>
-            <div style={{ fontSize: '0.7rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.4rem' }}>{s.label}</div>
-            <div style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '1.8rem', color: s.color }}>{s.value}</div>
-          </div>
-        ))}
-      </div>
-
-      <div className="glass" style={{ borderRadius: 16, overflow: 'hidden' }}>
-        <div className="bet-history-header" style={{ padding: '1rem 1.5rem', borderBottom: '1px solid var(--border)', display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr 1fr', gap: '1rem', fontSize: '0.72rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-          <span>Partido</span><span>Predicción</span><span>Confianza</span><span>Cuota</span><span>Resultado</span>
+      {/* Picks preview */}
+      <div className="glass" style={{ borderRadius: 16, padding: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
+          <h2 style={{ fontSize: '1rem' }}>Preview de picks recientes</h2>
+          {!isPaid && <span style={{ padding: '0.2rem 0.7rem', borderRadius: 100, fontSize: '0.72rem', background: 'rgba(255,68,85,0.1)', color: 'var(--red)', border: '1px solid rgba(255,68,85,0.2)' }}>🔒 Pro/Elite</span>}
         </div>
-        {MOCK_HISTORY.map((h, i) => (
-          <div key={i} className="bet-history-row" style={{ padding: '0.9rem 1.5rem', borderBottom: i < MOCK_HISTORY.length - 1 ? '1px solid var(--border)' : 'none', display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr 1fr', gap: '1rem', alignItems: 'center' }}>
-            <div>
-              <span style={{ marginRight: '0.4rem' }}>{h.sport}</span>
-              <span style={{ fontSize: '0.85rem' }}>{h.match}</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', filter: !isPaid ? 'blur(3px)' : 'none', userSelect: !isPaid ? 'none' : 'auto' }}>
+          {MOCK_PICKS.map((p, i) => (
+            <div key={i} style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto auto auto', alignItems: 'center', gap: '0.8rem',
+              padding: '0.8rem 1rem', background: 'var(--card2)', borderRadius: 10,
+              borderLeft: `3px solid ${p.tier === 'ELITE' ? 'var(--gold)' : 'var(--cyan)'}`,
+            }}>
+              <span style={{ fontSize: '1.1rem' }}>{p.sport}</span>
+              <div>
+                <div style={{ fontSize: '0.8rem', fontWeight: 600 }}>{p.match}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>{p.pick}</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>Conf.</div>
+                <div style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '0.85rem', color: p.confidence >= 70 ? 'var(--green)' : 'var(--gold)' }}>{p.confidence}%</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>Cuota</div>
+                <div style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '0.85rem' }}>{p.odds}</div>
+              </div>
+              <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', borderRadius: 100, background: p.tier === 'ELITE' ? 'rgba(201,168,76,0.1)' : 'rgba(77,159,255,0.1)', color: p.tier === 'ELITE' ? 'var(--gold)' : 'var(--cyan)', border: `1px solid ${p.tier === 'ELITE' ? 'rgba(201,168,76,0.25)' : 'rgba(77,159,255,0.25)'}` }}>{p.tier}</span>
             </div>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text2)' }}>{h.pick}</span>
-            <span style={{ fontFamily: 'Urbanist', fontWeight: 700, color: h.confidence >= 70 ? 'var(--green)' : 'var(--gold)', fontSize: '0.88rem' }}>{h.confidence}%</span>
-            <span style={{ color: 'var(--gold)', fontSize: '0.85rem' }}>@{h.odds}</span>
-            <span style={{ padding: '0.2rem 0.6rem', borderRadius: 100, fontSize: '0.72rem', fontWeight: 600, background: h.result === 'win' ? 'rgba(0,255,136,0.12)' : 'rgba(255,68,85,0.12)', color: h.result === 'win' ? 'var(--green)' : 'var(--red)', border: `1px solid ${h.result === 'win' ? 'rgba(0,255,136,0.25)' : 'rgba(255,68,85,0.25)'}`, display: 'inline-block' }}>
-              {h.result === 'win' ? '✓ Acierto' : '✗ Fallo'}
-            </span>
+          ))}
+        </div>
+        {!isPaid && (
+          <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
+            <p style={{ color: 'var(--muted)', marginBottom: '1rem', fontSize: '0.88rem' }}>Activa el Plan Pro para acceder a los picks en tiempo real</p>
+            <button onClick={() => navigate('/plans')} className="btn btn-gold">💎 Ver planes</button>
           </div>
-        ))}
+        )}
       </div>
     </div>
   );

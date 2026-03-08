@@ -24,7 +24,7 @@ export function Topbar() {
     }} className="mkt-topbar">
       {/* Ticker tape */}
       <div style={{ flex: 1, overflow: 'hidden' }}>
-        <div style={{ display: 'flex', animation: 'ticker 40s linear infinite', whiteSpace: 'nowrap' }}>
+        <div style={{ display: 'flex', animation: 'ticker 18s linear infinite', whiteSpace: 'nowrap' }}>
           {[...assets, ...assets].map((asset, i) => (
             <span key={i} onClick={() => navigate(`/market/${asset.id}`)}
               style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0 1.8rem', cursor: 'pointer', fontSize: '0.8rem', borderRight: '1px solid var(--border)' }}

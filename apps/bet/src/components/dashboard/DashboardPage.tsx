@@ -157,12 +157,7 @@ export function DashboardPage() {
       {/* ── Football competitions slider ─────────────────────── */}
       <div className="glass" style={{ borderRadius: 16, padding: '1.2rem 1.5rem', marginBottom: '1.5rem' }}>
         <h2 style={{ fontSize: '0.95rem', marginBottom: '1rem' }}>⚽ Competiciones de fútbol</h2>
-        <div style={{
-          display: 'flex', gap: '0.6rem',
-          overflowX: 'auto', paddingBottom: '0.4rem',
-          scrollbarWidth: 'none', msOverflowStyle: 'none',
-          WebkitOverflowScrolling: 'touch',
-        }}>
+        <div className="bet-competitions-slider">
           {FOOTBALL_COMPETITIONS.map(comp => (
             <button
               key={comp.id}

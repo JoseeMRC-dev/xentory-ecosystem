@@ -326,3 +326,94 @@ h1, h2, h3, h4 { font-family: 'Syne', sans-serif; font-weight: 700; letter-spaci
     flex-wrap: wrap !important;
   }
 }
+
+/* ══ ALERTS PAGE — RESPONSIVE ══════════════════════════════════ */
+
+/* Alert form: 3 cols → 1 col en móvil */
+.mkt-alert-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+/* Alert card row */
+.mkt-alert-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Alert header: title + button */
+.mkt-alerts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.8rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+/* Telegram banner buttons */
+.mkt-tg-banner-btns {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  /* Alert form: 3 cols → 1 col */
+  .mkt-alert-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Alerts header: stack title + button */
+  .mkt-alerts-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+  .mkt-alerts-header .btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Telegram banner: stack vertically */
+  .mkt-tg-banner {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+  .mkt-tg-banner-btns {
+    width: 100% !important;
+  }
+  .mkt-tg-banner-btns button {
+    flex: 1 !important;
+  }
+
+  /* Alert row: compress on mobile */
+  .mkt-alert-row {
+    gap: 0.6rem !important;
+  }
+
+  /* Verification code block */
+  .mkt-verify-code {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.6rem !important;
+  }
+  .mkt-verify-code button {
+    width: 100% !important;
+  }
+}
+
+/* iPad (768–1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  /* Alert form: 3 cols → 2 cols on iPad */
+  .mkt-alert-form-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  /* Telegram grid stays 1 col on iPad */
+  .mkt-telegram-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

@@ -52,6 +52,12 @@ export function Navbar() {
   const [scrolled, setScrolled]     = useState(false);
   const [userMenu, setUserMenu]     = useState(false);
   const [mob, setMob]               = useState(false);
+  const [settingsModal, setSettings] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<'email'|'password'|'delete'>('email');
+  const [sField, setSField]          = useState('');
+  const [sField2, setSField2]        = useState('');
+  const [sBusy, setSBusy]            = useState(false);
+  const [sMsg, setSMsg]              = useState<{type:'ok'|'err',text:string}|null>(null);
   const [tickerOn, setTickerOn]     = useState(() => {
     try { return localStorage.getItem('xentory_ticker') !== 'off'; }
     catch { return true; }
@@ -221,6 +227,20 @@ export function Navbar() {
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >{item.label}</div>
                     ))}
+                    <div style={{ borderTop: '1px solid var(--border)' }}>
+                      {[
+                        { label: '✉️ Modificar correo',     tab: 'email'    as const },
+                        { label: '🔑 Cambiar contraseña',   tab: 'password' as const },
+                        { label: '🗑️ Eliminar cuenta',       tab: 'delete'   as const },
+                      ].map(({ label, tab }) => (
+                        <div key={tab}
+                          onClick={() => { setSettingsTab(tab); setSettings(true); setSField(''); setSField2(''); setSMsg(null); setUserMenu(false); }}
+                          style={{ padding: '0.7rem 1rem', cursor: 'pointer', fontSize: '0.82rem', color: tab === 'delete' ? 'var(--red)' : 'var(--text2)', transition: 'background 0.15s' }}
+                          onMouseEnter={e => (e.currentTarget.style.background = 'var(--card2)')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                        >{label}</div>
+                      ))}
+                    </div>
                     <div
                       onClick={() => { logout(); navigate('/'); setUserMenu(false); }}
                       style={{ padding: '0.7rem 1rem', cursor: 'pointer', fontSize: '0.84rem', color: 'var(--red)', borderTop: '1px solid var(--border)', transition: 'background 0.15s' }}
@@ -354,6 +374,30 @@ export function Navbar() {
                     📊 {t('nav.dashboard')}
                   </Link>
 
+                  {/* Ajustes de cuenta */}
+                  <div className="hub-mob-acct-btns">
+                    {[
+                      { label: '✉️ Correo',     tab: 'email'    as const },
+                      { label: '🔑 Contraseña', tab: 'password' as const },
+                    ].map(({ label, tab }) => (
+                      <button key={tab}
+                        onClick={() => { setSettingsTab(tab); setSettings(true); setSField(''); setSField2(''); setSMsg(null); setMob(false); }}
+                        style={{ flex: 1, padding: '0.5rem 0.4rem', borderRadius: 8, background: 'var(--card2)', border: '1px solid var(--border)', color: 'var(--text2)', fontSize: '0.78rem', cursor: 'pointer' }}
+                      >{label}</button>
+                    ))}
+                  </div>
+
+                  {/* Cancelar suscripción */}
+                  {user?.plan !== 'free' && (
+                    <button
+                      onClick={() => { navigate('/pricing'); setMob(false); }}
+                      className="hub-mob-cancel-btn"
+                      style={{}}
+                    >
+                      ⚙️ {user?.plan === 'pro' ? 'Plan Pro' : 'Plan Elite'} · Cancelar suscripción
+                    </button>
+                  )}
+
                   {/* Cerrar sesión */}
                   <button
                     onClick={() => { logout(); navigate('/'); setMob(false); }}
@@ -382,6 +426,176 @@ export function Navbar() {
                 </div>
               )}
             </div>
+          </div>
+        </>
+      )}
+      {/* ── SETTINGS MODAL ─────────────────────────────── */}
+      {settingsModal && (
+        <>
+          <div
+            onClick={() => setSettings(false)}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(5,8,16,0.7)', backdropFilter: 'blur(6px)', zIndex: 1000, animation: 'fadeIn 0.2s ease' }}
+          />
+          <div className="hub-settings-modal" style={{
+            position: 'fixed', top: '50%', left: '50%',
+            transform: 'translate(-50%,-50%)',
+            zIndex: 1001,
+            background: 'var(--bg2)', border: '1px solid var(--border2)',
+            borderRadius: 20, padding: '2rem',
+            width: 'min(92vw, 420px)',
+            animation: 'fadeUp 0.25s ease',
+            boxShadow: '0 32px 80px rgba(0,0,0,0.6)',
+          }}>
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <div>
+                <div style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '1.15rem' }}>
+                  {settingsTab === 'email'    ? '✉️ Modificar correo'
+                  : settingsTab === 'password' ? '🔑 Cambiar contraseña'
+                  :                              '🗑️ Eliminar cuenta'}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: '0.15rem' }}>{user?.email}</div>
+              </div>
+              <button onClick={() => setSettings(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: '1.3rem', lineHeight: 1 }}>✕</button>
+            </div>
+
+            {/* Tabs */}
+            <div className="hub-settings-tabs">
+              {([
+                { tab: 'email'    as const, label: 'Correo' },
+                { tab: 'password' as const, label: 'Contraseña' },
+                { tab: 'delete'   as const, label: 'Cuenta' },
+              ] as {tab:'email'|'password'|'delete', label:string}[]).map(({ tab, label }) => (
+                <button key={tab} onClick={() => { setSettingsTab(tab); setSField(''); setSField2(''); setSMsg(null); }} style={{
+                  flex: 1, padding: '0.45rem', borderRadius: 7, border: 'none', cursor: 'pointer', fontSize: '0.78rem', fontWeight: settingsTab === tab ? 700 : 400,
+                  background: settingsTab === tab ? 'var(--card)' : 'transparent',
+                  color: settingsTab === tab ? (tab === 'delete' ? 'var(--red)' : 'var(--text)') : 'var(--muted)',
+                  transition: 'all 0.15s',
+                }}>{label}</button>
+              ))}
+            </div>
+
+            {/* Email tab */}
+            {settingsTab === 'email' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                <div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginBottom: '0.35rem', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Nuevo correo</div>
+                  <input type="email" placeholder={user?.email} value={sField} onChange={e => setSField(e.target.value)}
+                    style={{ width: '100%', padding: '0.65rem 0.9rem', borderRadius: 9, background: 'var(--card2)', border: '1px solid var(--border)', color: 'var(--text)', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginBottom: '0.35rem', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Confirmar correo</div>
+                  <input type="email" placeholder="Repite el correo" value={sField2} onChange={e => setSField2(e.target.value)}
+                    style={{ width: '100%', padding: '0.65rem 0.9rem', borderRadius: 9, background: 'var(--card2)', border: '1px solid var(--border)', color: 'var(--text)', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }} />
+                </div>
+                {sMsg && <div style={{ fontSize: '0.8rem', color: sMsg.type === 'ok' ? 'var(--green)' : 'var(--red)', padding: '0.5rem 0.8rem', borderRadius: 7, background: sMsg.type === 'ok' ? 'rgba(0,255,136,0.08)' : 'rgba(255,68,85,0.08)' }}>{sMsg.text}</div>}
+                <button
+                  onClick={async () => {
+                    if (!sField || sField !== sField2) { setSMsg({ type: 'err', text: 'Los correos no coinciden' }); return; }
+                    setSBusy(true);
+                    try {
+                      const { getSupabase } = await import('../../lib/supabase');
+                      const sb = getSupabase();
+                      if (!sb) throw new Error('no supabase');
+                      const { error } = await sb.auth.updateUser({ email: sField });
+                      if (error) throw error;
+                      setSMsg({ type: 'ok', text: 'Revisa tu bandeja — te enviamos un enlace de confirmación.' });
+                    } catch (e: any) {
+                      setSMsg({ type: 'err', text: e?.message ?? 'Error al actualizar' });
+                    } finally { setSBusy(false); }
+                  }}
+                  disabled={sBusy || !sField}
+                  className="btn btn-gold"
+                  style={{ width: '100%', justifyContent: 'center', marginTop: '0.2rem', opacity: !sField ? 0.5 : 1 }}
+                >
+                  {sBusy ? '⏳ Guardando…' : '✓ Actualizar correo'}
+                </button>
+              </div>
+            )}
+
+            {/* Password tab */}
+            {settingsTab === 'password' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                <div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginBottom: '0.35rem', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Nueva contraseña</div>
+                  <input type="password" placeholder="Mínimo 6 caracteres" value={sField} onChange={e => setSField(e.target.value)}
+                    style={{ width: '100%', padding: '0.65rem 0.9rem', borderRadius: 9, background: 'var(--card2)', border: '1px solid var(--border)', color: 'var(--text)', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginBottom: '0.35rem', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Confirmar contraseña</div>
+                  <input type="password" placeholder="Repite la contraseña" value={sField2} onChange={e => setSField2(e.target.value)}
+                    style={{ width: '100%', padding: '0.65rem 0.9rem', borderRadius: 9, background: 'var(--card2)', border: '1px solid var(--border)', color: 'var(--text)', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }} />
+                </div>
+                {sMsg && <div style={{ fontSize: '0.8rem', color: sMsg.type === 'ok' ? 'var(--green)' : 'var(--red)', padding: '0.5rem 0.8rem', borderRadius: 7, background: sMsg.type === 'ok' ? 'rgba(0,255,136,0.08)' : 'rgba(255,68,85,0.08)' }}>{sMsg.text}</div>}
+                <button
+                  onClick={async () => {
+                    if (!sField || sField.length < 6) { setSMsg({ type: 'err', text: 'Mínimo 6 caracteres' }); return; }
+                    if (sField !== sField2) { setSMsg({ type: 'err', text: 'Las contraseñas no coinciden' }); return; }
+                    setSBusy(true);
+                    try {
+                      const { getSupabase } = await import('../../lib/supabase');
+                      const sb = getSupabase();
+                      if (!sb) throw new Error('no supabase');
+                      const { error } = await sb.auth.updateUser({ password: sField });
+                      if (error) throw error;
+                      setSMsg({ type: 'ok', text: '¡Contraseña actualizada correctamente!' });
+                      setSField(''); setSField2('');
+                    } catch (e: any) {
+                      setSMsg({ type: 'err', text: e?.message ?? 'Error al actualizar' });
+                    } finally { setSBusy(false); }
+                  }}
+                  disabled={sBusy || !sField}
+                  className="btn btn-gold"
+                  style={{ width: '100%', justifyContent: 'center', marginTop: '0.2rem', opacity: !sField ? 0.5 : 1 }}
+                >
+                  {sBusy ? '⏳ Guardando…' : '✓ Cambiar contraseña'}
+                </button>
+              </div>
+            )}
+
+            {/* Delete tab */}
+            {settingsTab === 'delete' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                <div style={{ background: 'rgba(255,68,85,0.08)', border: '1px solid rgba(255,68,85,0.2)', borderRadius: 10, padding: '1rem' }}>
+                  <div style={{ fontWeight: 700, color: 'var(--red)', marginBottom: '0.4rem', fontSize: '0.88rem' }}>⚠️ Esta acción es irreversible</div>
+                  <div style={{ color: 'var(--muted)', fontSize: '0.82rem', lineHeight: 1.5 }}>
+                    Se eliminarán todos tus datos, suscripciones y configuraciones. No podrás recuperar tu cuenta.
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginBottom: '0.35rem', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Escribe "ELIMINAR" para confirmar</div>
+                  <input type="text" placeholder="ELIMINAR" value={sField} onChange={e => setSField(e.target.value)}
+                    style={{ width: '100%', padding: '0.65rem 0.9rem', borderRadius: 9, background: 'var(--card2)', border: '1px solid rgba(255,68,85,0.3)', color: 'var(--text)', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }} />
+                </div>
+                {sMsg && <div style={{ fontSize: '0.8rem', color: sMsg.type === 'ok' ? 'var(--green)' : 'var(--red)', padding: '0.5rem 0.8rem', borderRadius: 7, background: sMsg.type === 'ok' ? 'rgba(0,255,136,0.08)' : 'rgba(255,68,85,0.08)' }}>{sMsg.text}</div>}
+                <button
+                  onClick={async () => {
+                    if (sField !== 'ELIMINAR') { setSMsg({ type: 'err', text: 'Escribe exactamente "ELIMINAR"' }); return; }
+                    setSBusy(true);
+                    try {
+                      const { getSupabase } = await import('../../lib/supabase');
+                      const sb = getSupabase();
+                      if (!sb) throw new Error('no supabase');
+                      // Supabase requires admin to delete user — sign out and show message
+                      await sb.auth.signOut();
+                      setSMsg({ type: 'ok', text: 'Sesión cerrada. Contacta soporte para eliminar tus datos permanentemente.' });
+                      setTimeout(() => { logout(); navigate('/'); }, 2500);
+                    } catch (e: any) {
+                      setSMsg({ type: 'err', text: e?.message ?? 'Error' });
+                    } finally { setSBusy(false); }
+                  }}
+                  disabled={sBusy || sField !== 'ELIMINAR'}
+                  style={{
+                    width: '100%', padding: '0.7rem', borderRadius: 9, border: 'none', cursor: sField === 'ELIMINAR' ? 'pointer' : 'not-allowed',
+                    background: sField === 'ELIMINAR' ? 'var(--red)' : 'rgba(255,68,85,0.2)',
+                    color: 'white', fontFamily: 'Urbanist', fontWeight: 700, fontSize: '0.9rem',
+                    transition: 'all 0.2s', marginTop: '0.2rem', opacity: sField === 'ELIMINAR' ? 1 : 0.5,
+                  }}
+                >
+                  {sBusy ? '⏳ Procesando…' : '🗑️ Eliminar mi cuenta'}
+                </button>
+              </div>
+            )}
           </div>
         </>
       )}
