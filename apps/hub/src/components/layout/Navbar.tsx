@@ -388,13 +388,13 @@ export function Navbar() {
                   </div>
 
                   {/* Cancelar suscripción */}
-                  {user?.plan !== 'free' && (
+                  {(user?.subscriptions?.market !== 'free' || user?.subscriptions?.bets !== 'free') && (
                     <button
                       onClick={() => { navigate('/pricing'); setMob(false); }}
                       className="hub-mob-cancel-btn"
                       style={{}}
                     >
-                      ⚙️ {user?.plan === 'pro' ? 'Plan Pro' : 'Plan Elite'} · Cancelar suscripción
+                      ⚙️ {user?.subscriptions?.market !== 'free' ? `Plan ${user?.subscriptions?.market === 'pro' ? 'Pro' : 'Elite'}` : `Plan ${user?.subscriptions?.bets === 'pro' ? 'Pro' : 'Elite'}`} · Cancelar suscripción
                     </button>
                   )}
 

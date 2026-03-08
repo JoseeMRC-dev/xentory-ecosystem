@@ -11,8 +11,8 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
   },
 });
 
-// Keep getSupabase() for backward compatibility — now returns synchronously
-export async function getSupabase() { return supabase; }
+// Keep getSupabase() for backward compatibility — synchronous
+export function getSupabase() { return supabase; }
 export function getSupabaseClient()  { return supabase; }
 
 export type SupabaseUser = {
