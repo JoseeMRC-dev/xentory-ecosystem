@@ -212,3 +212,24 @@ export function TelegramPage() {
     </div>
   );
 }
+
+// ── HISTORY PAGE ─────────────────────────────────────────────────────────
+export function HistoryPage() {
+  return (
+    <div style={{ maxWidth: 800, margin: '0 auto', padding: 'calc(var(--bar-h, 52px) + 1.5rem) clamp(1rem, 4vw, 2rem) 3rem' }}>
+      <h1 style={{ fontSize: 'clamp(1.2rem, 4vw, 1.6rem)', marginBottom: '0.4rem' }}>
+        📋 Historial de Análisis
+      </h1>
+      <p style={{ color: 'var(--muted)', fontSize: '0.88rem', marginBottom: '2rem' }}>
+        Revisa todos los análisis y predicciones generados anteriormente.
+      </p>
+      <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: '2rem', textAlign: 'center' }}>
+        <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🏆</div>
+        <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>
+          El historial de análisis estará disponible próximamente.<br />
+          Aquí podrás ver todos tus análisis guardados y su rendimiento.
+        </p>
+      </div>
+    </div>
+  );
+}
