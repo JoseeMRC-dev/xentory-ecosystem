@@ -13,6 +13,10 @@ const NAV = [
   { to: '/plans',     icon: '💎', label: 'Planes'      },
 ];
 
+const HUB_URL  = (import.meta as any).env?.VITE_HUB_URL    ?? 'https://x-eight-beryl.vercel.app';
+const MKT_URL  = (import.meta as any).env?.VITE_MARKET_URL  ?? 'https://xentory-ecosystem-market.vercel.app';
+const BET_URL  = (import.meta as any).env?.VITE_BET_URL     ?? 'https://xentory-bet.vercel.app';
+
 const PLAN_COLORS: Record<string, string> = { free: '#6b7294', pro: '#c9a84c', elite: '#00d4ff' };
 const PLAN_LABELS: Record<string, string> = { free: 'Fanático', pro: 'Pro', elite: 'Elite' };
 
@@ -73,7 +77,18 @@ function NavContent({ onNav }: { onNav?: () => void }) {
               <div style={{ fontSize: '0.84rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</div>
               <div style={{ fontSize: '0.68rem', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
             </div>
-            <button onClick={logout} title="Cerrar sesión" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: '1rem', flexShrink: 0 }}>⏏</button>
+            <button 
+              onClick={() => {
+                // Clear all platform sessions before logout
+                try { localStorage.removeItem('xentory_bet_user'); } catch { /**/ }
+                try { localStorage.removeItem('xentory_market_user'); } catch { /**/ }
+                try { sessionStorage.removeItem('xentory_bet_session'); } catch { /**/ }
+                try { sessionStorage.removeItem('xentory_market_session'); } catch { /**/ }
+                logout();
+              }}
+              title="Cerrar sesión"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--red)', fontSize: '1rem', flexShrink: 0 }}
+            >⏏</button>
           </div>
         </div>
       )}
@@ -84,9 +99,9 @@ function NavContent({ onNav }: { onNav?: () => void }) {
 function LogoBlock() {
   return (
     <div style={{ padding: '1.2rem 1.2rem 0' }}>
-      <div style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 800, fontSize: '1.35rem', letterSpacing: '-0.02em', marginBottom: '0.25rem' }}>
-        <span className="text-gradient-gold">Xentory</span>
-        <span style={{ color: '#4d9fff' }}>Bet</span>
+      <div style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 800, fontSize: '1.35rem', letterSpacing: '-0.02em', marginBottom: '0.25rem', display: 'flex', gap: '0', alignItems: 'baseline' }}>
+        <a href={HUB_URL} style={{ textDecoration: 'none' }}><span className="text-gradient-gold">Xentory</span></a>
+        <a href={BET_URL} style={{ textDecoration: 'none' }}><span style={{ color: '#4d9fff' }}>Bet</span></a>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.9rem' }}>
         <span className="live-dot" />
@@ -132,9 +147,9 @@ export function Sidebar() {
           backdropFilter: 'blur(20px)', display: 'flex', alignItems: 'center',
           justifyContent: 'space-between', padding: '0 1rem',
         }}>
-          <div style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 800, fontSize: '1.15rem', letterSpacing: '-0.02em' }}>
-            <span className="text-gradient-gold">Xentory</span>
-            <span style={{ color: '#4d9fff' }}>Bet</span>
+          <div style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 800, fontSize: '1.15rem', letterSpacing: '-0.02em', display: 'flex', alignItems: 'baseline' }}>
+            <a href={HUB_URL} style={{ textDecoration: 'none' }}><span className="text-gradient-gold">Xentory</span></a>
+            <a href={BET_URL} style={{ textDecoration: 'none' }}><span style={{ color: '#4d9fff' }}>Bet</span></a>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <QuickBar />

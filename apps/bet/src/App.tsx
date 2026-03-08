@@ -14,7 +14,11 @@ import { LanguageProvider } from './context/LanguageContext';
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth();
   if (isLoading) return null;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) {
+    const HUB = (import.meta as any).env?.VITE_HUB_URL ?? 'https://x-eight-beryl.vercel.app';
+    window.location.href = HUB;
+    return null;
+  }
   return <>{children}</>;
 }
 
@@ -33,7 +37,11 @@ function AppRoutes() {
       <Route path="/login" element={<RedirectToHub />} />
 
       {/* Rutas protegidas */}
-      <Route path="/" element={<ProtectedRoute><AppLayout><Navigate to="/dashboard" replace /></AppLayout></ProtectedRoute>} />
+      <Route path="/" element={
+        window.location.search.includes('uid=')
+          ? <ProtectedRoute><AppLayout><Navigate to={"/dashboard" + window.location.search} replace /></AppLayout></ProtectedRoute>
+          : <ProtectedRoute><AppLayout><Navigate to="/dashboard" replace /></AppLayout></ProtectedRoute>
+      } />
       <Route path="/dashboard" element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>} />
       <Route path="/matches" element={<ProtectedRoute><AppLayout><MatchesPage /></AppLayout></ProtectedRoute>} />
       <Route path="/matches/:id" element={<ProtectedRoute><AppLayout><MatchAnalysisPage /></AppLayout></ProtectedRoute>} />

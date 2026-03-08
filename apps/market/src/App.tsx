@@ -29,7 +29,12 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
       </div>
     </div>
   );
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) {
+    // Redirect to Hub instead of /login — preserves clean flow
+    const HUB = (import.meta as any).env?.VITE_HUB_URL ?? 'https://x-eight-beryl.vercel.app';
+    window.location.href = HUB;
+    return null;
+  }
   return <AppLayout>{children}</AppLayout>;
 }
 
@@ -45,7 +50,12 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<RedirectToHub />} />
-      <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />
+      <Route path="/" element={
+        // If SSO params present, go to dashboard (AuthProvider will handle them)
+        window.location.search.includes('uid=')
+          ? <Navigate to={"/dashboard" + window.location.search} replace />
+          : <Navigate to={user ? "/dashboard" : "/login"} replace />
+      } />
 
       <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
       <Route path="/market" element={<ProtectedRoute><AnalysisPage /></ProtectedRoute>} />

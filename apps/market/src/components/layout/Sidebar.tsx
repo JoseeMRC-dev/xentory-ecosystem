@@ -14,6 +14,10 @@ const NAV_ITEMS = [
   { to: '/plans',      icon: '💎', label: 'Planes'     },
 ];
 
+const HUB_URL  = (import.meta as any).env?.VITE_HUB_URL    ?? 'https://x-eight-beryl.vercel.app';
+const MKT_URL  = (import.meta as any).env?.VITE_MARKET_URL  ?? 'https://xentory-ecosystem-market.vercel.app';
+const BET_URL  = (import.meta as any).env?.VITE_BET_URL     ?? 'https://xentory-bet.vercel.app';
+
 const PLAN_COLORS: Record<string, string> = { free: '#6b7294', pro: '#c9a84c', elite: '#00d4ff' };
 const PLAN_LABELS: Record<string, string> = { free: 'Básico', pro: 'Pro', elite: 'Elite' };
 
@@ -90,8 +94,8 @@ function LogoBlock() {
   return (
     <div style={{ padding: '1.2rem 1.2rem 0' }}>
       <div style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 800, fontSize: '1.35rem', letterSpacing: '-0.02em', marginBottom: '0.25rem' }}>
-        <span className="text-gradient-gold">Xentory</span>
-        <span style={{ color: '#4d9fff' }}>Market</span>
+        <a href={HUB_URL} style={{ textDecoration: 'none' }}><span className="text-gradient-gold">Xentory</span></a>
+        <a href={MKT_URL} style={{ textDecoration: 'none' }}><span style={{ color: '#4d9fff' }}>Market</span></a>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.9rem' }}>
         <span className="live-dot" />
@@ -138,8 +142,8 @@ export function Sidebar() {
           justifyContent: 'space-between', padding: '0 1rem',
         }}>
           <div style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 800, fontSize: '1.15rem', letterSpacing: '-0.02em' }}>
-            <span className="text-gradient-gold">Xentory</span>
-            <span style={{ color: '#4d9fff' }}>Market</span>
+            <a href={HUB_URL} style={{ textDecoration: 'none' }}><span className="text-gradient-gold">Xentory</span></a>
+            <a href={MKT_URL} style={{ textDecoration: 'none' }}><span style={{ color: '#4d9fff' }}>Market</span></a>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <CurrencyToggle />
