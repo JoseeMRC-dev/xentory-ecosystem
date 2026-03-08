@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { fetchTeamStats } from '../../services/sportsService';
+import { fetchTeamStats, getMockStatsBySport } from '../../services/sportsService';
 import { generateMatchAnalysis } from '../../services/aiService';
 import { SPORT_CONFIG, FORM_COLORS, confidenceColor } from '../../constants';
 import type { MatchAnalysis, FormMatch } from '../../types';
@@ -65,10 +65,20 @@ export function MatchAnalysisPage() {
     setLoading(true);
     setError('');
     try {
-      const [homeStats, awayStats] = await Promise.all([
-        fetchTeamStats(match.homeTeam.id, match.competition.id),
-        fetchTeamStats(match.awayTeam.id, match.competition.id),
-      ]);
+      let homeStats, awayStats;
+
+      if (match.sport === 'football') {
+        // Football: real API (falls back to football mock internally)
+        [homeStats, awayStats] = await Promise.all([
+          fetchTeamStats(match.homeTeam.id, match.competition.id),
+          fetchTeamStats(match.awayTeam.id, match.competition.id),
+        ]);
+      } else {
+        // Non-football: use sport-specific mock stats
+        homeStats = getMockStatsBySport(match.homeTeam.id, match.homeTeam.name, match.sport);
+        awayStats = getMockStatsBySport(match.awayTeam.id, match.awayTeam.name, match.sport);
+      }
+
       if (!homeStats || !awayStats) throw new Error('No stats');
       const result = await generateMatchAnalysis(match, homeStats, awayStats, user?.plan ?? 'free');
       setAnalysis(result);

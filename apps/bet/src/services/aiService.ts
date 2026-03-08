@@ -194,21 +194,30 @@ export async function generateMatchAnalysis(
     }
   } catch { /* use mock below */ }
 
-  // Mock fallback
+  // Mock fallback — sport-aware
   if (!summary) {
     const h = homeStats;
     const a = awayStats;
     const winner = markets.result.recommendation;
-    summary = `${h.team.name} recibe a ${a.team.name} en ${match.competition.name}. Los locales llegan con forma ${h.form.slice(0,3).map(f=>f.result).join('')} mientras los visitantes muestran ${a.form.slice(0,3).map(f=>f.result).join('')}. Las probabilidades favorecen ${winner === 'home' ? h.team.name : winner === 'away' ? a.team.name : 'el empate'} con un ${Math.max(markets.result.home, markets.result.draw, markets.result.away)}% de confianza estadística.`;
-    technical = `${h.team.name} promedia ${h.goalsScored.toFixed(1)} goles/partido y encaja ${h.goalsConceded.toFixed(1)}. Su BTTS histórico es del ${h.btts}%. ${a.team.name} marca ${a.goalsScored.toFixed(1)} y encaja ${a.goalsConceded.toFixed(1)}, con BTTS del ${a.btts}%. El promedio de goles esperados es ${(h.goalsScored + a.goalsScored).toFixed(1)}, lo que sitúa la línea Over/Under 2.5 con un ${markets.overUnder25.over}% de probabilidad alcista.`;
+    const isSoccer = match.sport === 'football';
+    const sportLabel = match.sport === 'basketball' ? 'baloncesto'
+      : match.sport === 'tennis' ? 'tenis'
+      : match.sport === 'f1' ? 'Fórmula 1'
+      : match.sport === 'golf' ? 'golf'
+      : 'fútbol';
+    const favorito = winner === 'home' ? h.team.name : winner === 'away' ? a.team.name : 'ninguno';
+    summary = `${h.team.name} se enfrenta a ${a.team.name} en ${match.competition.name} (${sportLabel}). ${h.team.name} llega con forma ${h.form.slice(0,3).map(f=>f.result).join('')} y ${a.team.name} con ${a.form.slice(0,3).map(f=>f.result).join('')}. Las probabilidades favorecen a ${favorito} con un ${Math.max(markets.result.home, markets.result.away)}% de confianza estadística.`;
+    technical = isSoccer
+      ? `${h.team.name} promedia ${h.goalsScored.toFixed(1)} goles/partido y encaja ${h.goalsConceded.toFixed(1)}. Su BTTS histórico es del ${h.btts}%. ${a.team.name} marca ${a.goalsScored.toFixed(1)} y encaja ${a.goalsConceded.toFixed(1)}, con BTTS del ${a.btts}%. El promedio de goles esperados es ${(h.goalsScored + a.goalsScored).toFixed(1)}, lo que sitúa la línea Over/Under 2.5 con un ${markets.overUnder25.over}% de probabilidad alcista.`
+      : `${h.team.name} llega con rendimiento ${h.form.map(f=>f.result).join('')} en sus últimos ${h.form.length} encuentros. ${a.team.name} muestra ${a.form.map(f=>f.result).join('')}. Basado en el historial reciente, ${favorito} tiene ventaja con un ${Math.max(markets.result.home, markets.result.away)}% de probabilidad de victoria.`;
     keyFactors = [
       `Forma reciente: ${h.team.name} ${h.form.map(f=>f.result).join('')} vs ${a.team.name} ${a.form.map(f=>f.result).join('')}`,
-      `Promedio de goles: ${(h.goalsScored + a.goalsScored).toFixed(1)} goles esperados por partido`,
-      `BTTS histórico combinado: ${Math.round((h.btts + a.btts) / 2)}%`,
+      isSoccer ? `Promedio de goles: ${(h.goalsScored + a.goalsScored).toFixed(1)} esperados por partido` : `Rendimiento ofensivo: ${h.team.name} ${h.goalsScored.toFixed(1)} vs ${a.team.name} ${a.goalsScored.toFixed(1)}`,
+      `Probabilidad de victoria: ${h.team.name} ${markets.result.home}% — ${a.team.name} ${markets.result.away}%`,
     ];
     risks = [
-      `Factor local: efecto de jugar en casa puede alterar las estadísticas`,
-      `Lesiones o rotaciones de último momento no contempladas en el análisis`,
+      `Factor anímico y forma física reciente no contemplados en el modelo estadístico`,
+      `Posibles cambios de último momento (lesiones, estrategia, condiciones)`,
     ];
   }
 

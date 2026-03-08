@@ -292,3 +292,52 @@ export function getMockMatchesBySport(sport: string): Match[] {
 }
 
 // SEASON is imported from constants
+
+// ══════════════════════════════════════
+// STATS MOCK POR DEPORTE (no-fútbol)
+// ══════════════════════════════════════
+export function getMockStatsBySport(
+  teamId: number,
+  teamName: string,
+  sport: string
+): TeamStats {
+  const shortName = teamName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 3);
+
+  // Resultados genéricos adaptados al deporte
+  const results: FormMatch['result'][] = ['W', 'W', 'L', 'W', 'W'];
+  const opponents: string[] = sport === 'tennis'
+    ? ['Medvedev', 'Zverev', 'Rublev', 'Fritz', 'Tsitsipas']
+    : sport === 'basketball'
+    ? ['Lakers', 'Celtics', 'Heat', 'Nuggets', 'Bucks']
+    : sport === 'f1'
+    ? ['Verstappen', 'Hamilton', 'Leclerc', 'Norris', 'Sainz']
+    : ['Opponent A', 'Opponent B', 'Opponent C', 'Opponent D', 'Opponent E'];
+
+  const now = Date.now();
+  const form: FormMatch[] = results.map((result, i) => ({
+    opponent:     opponents[i] ?? 'Rival',
+    result,
+    goalsFor:     result === 'W' ? 2 : 1,
+    goalsAgainst: result === 'L' ? 2 : 1,
+    date:         new Date(now - (i + 1) * 7 * 86400000).toISOString(),
+    isHome:       i % 2 === 0,
+  }));
+
+  // Métricas adaptadas por deporte
+  const scored   = sport === 'basketball' ? 108 + Math.random() * 10 : 1.8 + Math.random() * 0.8;
+  const conceded = sport === 'basketball' ? 102 + Math.random() * 10 : 1.2 + Math.random() * 0.6;
+
+  return {
+    team: { id: teamId, name: teamName, shortName },
+    form,
+    goalsScored:   scored,
+    goalsConceded: conceded,
+    cleanSheets:   sport === 'football' ? 5 : 0,
+    btts:          50,
+    over25:        55,
+    possession:    undefined,
+    shotsOnTarget: undefined,
+    homeRecord:    { w: 8, d: 0, l: 2 },
+    awayRecord:    { w: 6, d: 0, l: 4 },
+  };
+}
