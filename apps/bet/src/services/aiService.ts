@@ -86,13 +86,17 @@ function buildPrompt(match: Match, home: TeamStats, away: TeamStats, markets: Pr
   const formStr = (stats: TeamStats) =>
     stats.form.map(f => `${f.result} vs ${f.opponent} (${f.goalsFor}-${f.goalsAgainst}${f.isHome ? ' C' : ' F'})`).join(', ');
 
-  return `Analiza este partido y genera un análisis predictivo estructurado en español:
+  const sport = match.sport;
+  const isSoccer = sport === 'football';
+  const sportLabel = sport === 'football' ? 'fútbol'
+    : sport === 'basketball' ? 'baloncesto'
+    : sport === 'tennis' ? 'tenis'
+    : sport === 'f1' ? 'Fórmula 1'
+    : sport === 'golf' ? 'golf'
+    : sport;
 
-PARTIDO: ${home.team.name} vs ${away.team.name}
-COMPETICIÓN: ${match.competition.name}
-FECHA: ${new Date(match.date).toLocaleDateString('es-ES')}
-
-ESTADÍSTICAS ${home.team.name}:
+  const statsBlock = isSoccer
+    ? `ESTADÍSTICAS ${home.team.name}:
 - Forma reciente (últimos ${home.form.length}): ${formStr(home)}
 - Goles por partido: ${home.goalsScored.toFixed(2)} marcados / ${home.goalsConceded.toFixed(2)} encajados
 - BTTS %: ${home.btts}% | Over 2.5 %: ${home.over25}%
@@ -103,21 +107,46 @@ ESTADÍSTICAS ${away.team.name}:
 - Forma reciente (últimos ${away.form.length}): ${formStr(away)}
 - Goles por partido: ${away.goalsScored.toFixed(2)} marcados / ${away.goalsConceded.toFixed(2)} encajados
 - BTTS %: ${away.btts}% | Over 2.5 %: ${away.over25}%
-- Porterías a cero: ${away.cleanSheets}
+- Porterías a cero: ${away.cleanSheets}`
+    : `RENDIMIENTO RECIENTE ${home.team.name}:
+- Últimos resultados: ${formStr(home)}
+- Media puntos/sets/goles por partido: ${home.goalsScored.toFixed(2)}
+- Media encajados: ${home.goalsConceded.toFixed(2)}
 
-PROBABILIDADES CALCULADAS:
+RENDIMIENTO RECIENTE ${away.team.name}:
+- Últimos resultados: ${formStr(away)}
+- Media puntos/sets/goles por partido: ${away.goalsScored.toFixed(2)}
+- Media encajados: ${away.goalsConceded.toFixed(2)}`;
+
+  const marketsBlock = isSoccer
+    ? `PROBABILIDADES:
 - ${home.team.name} gana: ${markets.result.home}% (cuota ${markets.result.homeOdds})
 - Empate: ${markets.result.draw}% (cuota ${markets.result.drawOdds})
 - ${away.team.name} gana: ${markets.result.away}% (cuota ${markets.result.awayOdds})
 - Over 2.5: ${markets.overUnder25.over}% | Under 2.5: ${markets.overUnder25.under}%
 - BTTS Sí: ${markets.btts.yes}% | No: ${markets.btts.no}%
-- Mejor apuesta: ${markets.bestBet.pick} @ ${markets.bestBet.odds}
+- Mejor apuesta: ${markets.bestBet.pick} @ ${markets.bestBet.odds}`
+    : `PROBABILIDADES:
+- ${home.team.name} gana: ${markets.result.home}% (cuota ${markets.result.homeOdds})
+- ${away.team.name} gana: ${markets.result.away}% (cuota ${markets.result.awayOdds})
+- Mejor apuesta: ${markets.bestBet.pick} @ ${markets.bestBet.odds}`;
 
-Responde SOLO en JSON puro (sin markdown):
+  return `Eres un analista experto en ${sportLabel}. Analiza el siguiente evento y genera un análisis predictivo en español. Responde como especialista en ${sportLabel}, NO hables de fútbol si el deporte es otro.
+
+DEPORTE: ${sportLabel.toUpperCase()}
+PARTIDO: ${home.team.name} vs ${away.team.name}
+COMPETICIÓN: ${match.competition.name}
+FECHA: ${new Date(match.date).toLocaleDateString('es-ES')}
+
+${statsBlock}
+
+${marketsBlock}
+
+Responde SOLO en JSON puro (sin markdown ni backticks):
 {
-  "summary": "Resumen ejecutivo de 2-3 frases del contexto del partido",
-  "technical": "Análisis técnico de las estadísticas y forma de ambos equipos${isPro ? ' con contexto de competición' : ''}",
-  "keyFactors": ["factor clave 1", "factor clave 2", "factor clave 3"],
+  "summary": "Resumen de 2-3 frases del contexto de este evento de ${sportLabel}",
+  "technical": "Análisis técnico específico de ${sportLabel}: rendimiento, estadísticas clave y factores decisivos${isPro ? ' con contexto de competición' : ''}",
+  "keyFactors": ["factor 1 específico de ${sportLabel}", "factor 2", "factor 3"],
   "risks": ["riesgo 1", "riesgo 2"]
 }`;
 }

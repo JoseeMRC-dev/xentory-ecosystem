@@ -81,8 +81,8 @@ async function callEF(path: string, body: object): Promise<any> {
 }
 
 // ── GENERATE VERIFICATION CODE ─────────────────────────────────
-export function generateVerifyCode(userId: string, platform, // bet' | 'bet'): string {
-  const prefix = platform, // bet' ? 'XMKT' : 'XBET';
+export function generateVerifyCode(userId: string, platform: 'market' | 'bet'): string {
+  const prefix = platform === 'market' ? 'XMKT' : 'XBET';
   const hash   = userId.replace(/-/g, '').slice(0, 8).toUpperCase();
   return `${prefix}-${hash}`;
 }
@@ -91,7 +91,7 @@ export function generateVerifyCode(userId: string, platform, // bet' | 'bet'): s
 export async function upsertVerifyCode(
   userId:    string,
   userEmail: string,
-  platform, // bet' | 'bet',
+  platform: 'market' | 'bet',
   plan:      string
 ): Promise<string> {
   const code = generateVerifyCode(userId, platform);
@@ -109,7 +109,7 @@ export async function upsertVerifyCode(
 // ── CHECK TELEGRAM CONNECTION STATUS ─────────────────────────
 export async function getTelegramConnection(
   userId:   string,
-  platform, // bet' | 'bet'
+  platform: 'market' | 'bet',
 ): Promise<TelegramConnection | null> {
   const { data, error } = await supabase
     .from('telegram_connections')
