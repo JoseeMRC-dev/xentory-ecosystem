@@ -26,7 +26,6 @@ async function apiFetch(path: string): Promise<any> {
     });
     if (!res.ok) return null;
     const json = await res.json();
-    // Check API error / quota exceeded
     if (json.errors && Object.keys(json.errors).length > 0) {
       console.warn('[API-Football] Error:', json.errors);
       return null;
@@ -39,7 +38,6 @@ async function apiFetch(path: string): Promise<any> {
   }
 }
 
-// ── Remaining quota check ──
 export async function getApiStatus(): Promise<{ remaining: number; limit: number } | null> {
   const json = await apiFetch('/status');
   if (!json) return null;
@@ -49,7 +47,6 @@ export async function getApiStatus(): Promise<{ remaining: number; limit: number
   };
 }
 
-// ── Fetch upcoming fixtures for a league ──
 export async function fetchUpcomingMatches(leagueId: number, limit = 10): Promise<Match[]> {
   const json = await apiFetch(`/fixtures?league=${leagueId}&season=${SEASON}&next=${limit}&timezone=Europe/Madrid`);
   if (!json) return getMockMatches(leagueId, limit);
@@ -58,7 +55,6 @@ export async function fetchUpcomingMatches(leagueId: number, limit = 10): Promis
   return fixtures.map(mapFixtureToMatch);
 }
 
-// ── Fetch live fixtures ──
 export async function fetchLiveMatches(leagueId?: number): Promise<Match[]> {
   const path = leagueId ? `/fixtures?live=all&league=${leagueId}` : '/fixtures?live=all';
   const json = await apiFetch(path);
@@ -66,14 +62,12 @@ export async function fetchLiveMatches(leagueId?: number): Promise<Match[]> {
   return (json.response ?? []).map(mapFixtureToMatch);
 }
 
-// ── Fetch recent results (last N) ──
 export async function fetchRecentMatches(leagueId: number, limit = 5): Promise<Match[]> {
   const json = await apiFetch(`/fixtures?league=${leagueId}&season=${SEASON}&last=${limit}&timezone=Europe/Madrid`);
   if (!json) return [];
   return (json.response ?? []).map(mapFixtureToMatch);
 }
 
-// ── Fetch team statistics ──
 export async function fetchTeamStats(teamId: number, leagueId: number): Promise<TeamStats | null> {
   const [statsJson, formJson] = await Promise.all([
     apiFetch(`/teams/statistics?team=${teamId}&league=${leagueId}&season=${SEASON}`),
@@ -83,14 +77,12 @@ export async function fetchTeamStats(teamId: number, leagueId: number): Promise<
   return mapApiStatsToTeamStats(statsJson.response, formJson?.response ?? [], teamId);
 }
 
-// ── Fetch head-to-head ──
 export async function fetchH2H(team1Id: number, team2Id: number): Promise<Match[]> {
   const json = await apiFetch(`/fixtures/headtohead?h2h=${team1Id}-${team2Id}&last=5`);
   if (!json) return [];
   return (json.response ?? []).map(mapFixtureToMatch);
 }
 
-// ── Search teams ──
 export async function searchTeams(query: string): Promise<{ id: number; name: string; logo: string; country: string }[]> {
   const json = await apiFetch(`/teams?search=${encodeURIComponent(query)}`);
   if (!json) return [];
@@ -191,7 +183,7 @@ function mapApiStatsToTeamStats(stats: any, fixtures: any[], teamId: number): Te
 }
 
 // ══════════════════════════════════════
-// MOCK DATA — full fallback sin API key
+// MOCK DATA
 // ══════════════════════════════════════
 const MOCK_TEAMS = [
   { id: 541,  name: 'Real Madrid',        shortName: 'RMA' },
@@ -277,9 +269,7 @@ async function callTennisAPI(endpoint: string) {
   if (!API_KEY) return null;
   try {
     const res = await fetch(`${TENNIS_BASE}${endpoint}`, {
-      headers: {
-        'x-apisports-key': API_KEY,
-      },
+      headers: { 'x-apisports-key': API_KEY },
     });
     if (!res.ok) return null;
     const data = await res.json();
@@ -290,14 +280,12 @@ async function callTennisAPI(endpoint: string) {
 }
 
 function formatPlayerName(name: string): string {
-  // "Carlos Alcaraz" → "C. Alcaraz"
   const parts = name.trim().split(' ');
   if (parts.length < 2) return name;
   return `${parts[0][0]}. ${parts.slice(1).join(' ')}`;
 }
 
 export async function fetchTennisMatches(): Promise<Match[]> {
-  // Get today and next 7 days
   const today = new Date();
   const todayStr = today.toISOString().split('T')[0];
   const nextWeek = new Date(today.getTime() + 7 * 86400000);
@@ -310,14 +298,13 @@ export async function fetchTennisMatches(): Promise<Match[]> {
   if (!combined.length) return getMockMatchesBySport('tennis');
 
   const matches: Match[] = combined
-    .filter((g: any) => g?.status?.short === 'NS') // NS = Not Started
+    .filter((g: any) => g?.status?.short === 'NS')
     .slice(0, 12)
     .map((g: any, idx: number) => {
       const homePlayer = g.players?.home?.name ?? 'Jugador 1';
       const awayPlayer = g.players?.away?.name ?? 'Jugador 2';
       const tournament = g.tournament?.name ?? 'Torneo ATP/WTA';
       const country = g.country?.name ?? 'Internacional';
-      const isWTA = tournament.toLowerCase().includes('wta') || tournament.toLowerCase().includes('women');
       return {
         id: g.id ?? 30000 + idx,
         sport: 'tennis' as const,
@@ -348,7 +335,6 @@ export async function fetchTennisMatches(): Promise<Match[]> {
   return matches.length > 0 ? matches : getMockMatchesBySport('tennis');
 }
 
-
 export function getMockMatchesBySport(sport: string): Match[] {
   const now = Date.now();
   if (sport === 'basketball') return [
@@ -372,19 +358,12 @@ export function getMockMatchesBySport(sport: string): Match[] {
   return getMockMatches(2, 5);
 }
 
-// SEASON is imported from constants
-
-// ══════════════════════════════════════
-// STATS MOCK POR DEPORTE (no-fútbol)
-// ══════════════════════════════════════
 export function getMockStatsBySport(
   teamId: number,
   teamName: string,
   sport: string
 ): TeamStats {
   const shortName = teamName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 3);
-
-  // Resultados genéricos adaptados al deporte
   const results: FormMatch['result'][] = ['W', 'W', 'L', 'W', 'W'];
   const opponents: string[] = sport === 'tennis'
     ? ['Medvedev', 'Zverev', 'Rublev', 'Fritz', 'Tsitsipas']
@@ -393,7 +372,6 @@ export function getMockStatsBySport(
     : sport === 'f1'
     ? ['Verstappen', 'Hamilton', 'Leclerc', 'Norris', 'Sainz']
     : ['Opponent A', 'Opponent B', 'Opponent C', 'Opponent D', 'Opponent E'];
-
   const now = Date.now();
   const form: FormMatch[] = results.map((result, i) => ({
     opponent:     opponents[i] ?? 'Rival',
@@ -403,11 +381,8 @@ export function getMockStatsBySport(
     date:         new Date(now - (i + 1) * 7 * 86400000).toISOString(),
     isHome:       i % 2 === 0,
   }));
-
-  // Métricas adaptadas por deporte
   const scored   = sport === 'basketball' ? 108 + Math.random() * 10 : 1.8 + Math.random() * 0.8;
   const conceded = sport === 'basketball' ? 102 + Math.random() * 10 : 1.2 + Math.random() * 0.6;
-
   return {
     team: { id: teamId, name: teamName, shortName },
     form,
