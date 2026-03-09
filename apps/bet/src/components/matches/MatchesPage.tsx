@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { fetchUpcomingMatches, getMockMatchesBySport, fetchTennisMatches } from '../../services/sportsService';
+import { fetchUpcomingMatches, getMockMatchesBySport, fetchTennisMatches, fetchBasketballMatches, fetchF1Matches } from '../../services/sportsService';
 import { SPORT_CONFIG } from '../../constants';
 import type { Match, Sport } from '../../types';
 
@@ -169,6 +169,10 @@ export function MatchesPage() {
         results = all.flat();
       } else if (activeSport === 'tennis') {
         results = await fetchTennisMatches();
+      } else if (activeSport === 'basketball') {
+        results = await fetchBasketballMatches();
+      } else if (activeSport === 'f1') {
+        results = await fetchF1Matches();
       } else {
         results = getMockMatchesBySport(activeSport);
       }
