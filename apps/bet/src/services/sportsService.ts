@@ -4,7 +4,7 @@ import { SEASON, COMPETITIONS } from '../constants';
 // ─────────────────────────────────────────────────────────────────────────────
 // PROXY — all API calls go through /api/sports-proxy to avoid CORS
 // ─────────────────────────────────────────────────────────────────────────────
-const SUPABASE_URL = 'https://mtgatdmrpfysqphdgaue.supabase.co';
+const SUPABASE_URL = 'https://mtgatdmrpfysqphdgaue.supabase.co'h;
 const PROXY = `${SUPABASE_URL}/functions/v1/sports-proxy`;
 const cache = new Map<string, { data: any; ts: number }>();
 const CACHE_TTL = 15 * 60 * 1000;
