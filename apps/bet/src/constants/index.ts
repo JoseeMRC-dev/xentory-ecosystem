@@ -31,15 +31,15 @@ export interface PlanConfig {
 
 export const PLANS: PlanConfig[] = [
   {
-    id: 'free', name: 'Fanático', price: 0, yearlyPrice: 0, color: '#6b7294',
+    id: 'free', name: 'Fan', price: 0, yearlyPrice: 0, color: '#6b7294',
     features: [
       { label: '3 análisis al día',                  included: true  },
       { label: 'Mercado 1X2 básico',                 included: true  },
-      { label: 'Fútbol únicamente',                  included: true  },
+      { label: 'Football only',                  included: true  },
       { label: 'Últimos 3 partidos por equipo',      included: true  },
       { label: 'Análisis completo (5 partidos)',     included: false },
       { label: 'Over/Under + BTTS + Hándicap',       included: false },
-      { label: 'Canal Telegram señales',             included: false },
+      { label: 'Telegram signals channel',             included: false },
       { label: 'Baloncesto + Tenis + F1 + Golf',     included: false },
       { label: 'Mejor apuesta del día',              included: false },
     ],
@@ -55,7 +55,7 @@ export const PLANS: PlanConfig[] = [
       { label: 'Mejor apuesta del día',              included: true  },
       { label: 'Cuotas estimadas',                   included: true  },
       { label: 'Historial de predicciones',          included: true  },
-      { label: 'Informes PDF semanales',             included: false },
+      { label: 'Weekly PDF reports',             included: false },
     ],
   },
   {
@@ -64,10 +64,10 @@ export const PLANS: PlanConfig[] = [
       { label: 'Todo el Plan Pro incluido',          included: true  },
       { label: 'Canal Telegram ELITE exclusivo',     included: true, highlight: true },
       { label: 'Alertas pre-partido en tiempo real', included: true, highlight: true },
-      { label: 'Informes PDF semanales',             included: true  },
+      { label: 'Weekly PDF reports',             included: true  },
       { label: 'Análisis a demanda por equipo',      included: true  },
       { label: 'Estadísticas avanzadas H2H',         included: true  },
-      { label: 'Soporte prioritario 24/7',           included: true  },
+      { label: 'Priority support 24/7',           included: true  },
       { label: 'Acceso anticipado a funciones',      included: true  },
       { label: 'API de señales personal',            included: true  },
     ],

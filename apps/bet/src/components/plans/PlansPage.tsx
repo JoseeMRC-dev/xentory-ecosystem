@@ -88,10 +88,10 @@ export function PlansPage() {
               <div style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '1.1rem', color: plan.color, marginBottom: '0.2rem' }}>{plan.name}</div>
 
               <div style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '2.6rem', letterSpacing: '-0.04em', margin: '0.8rem 0 0.2rem', lineHeight: 1 }}>
-                {plan.price === 0 ? 'Gratis' : <><sup style={{ fontSize: '1rem', fontWeight: 400 }}>€</sup>{price}</>}
+                {plan.price === 0 ? 'Free' : <><sup style={{ fontSize: '1rem', fontWeight: 400 }}>€</sup>{price}</>}
               </div>
               <div style={{ color: 'var(--muted)', fontSize: '0.78rem', marginBottom: '1.3rem' }}>
-                {plan.price === 0 ? 'Sin tarjeta' : yearly ? `al año (${Math.round(price / 12)}€/mes)` : 'al mes · cancela cuando quieras'}
+                {plan.price === 0 ? 'No credit card' : yearly ? `per year (${Math.round(price / 12)}€/mo)` : 'per month · cancel anytime'}
               </div>
 
               <div style={{ height: 1, background: 'var(--border)', marginBottom: '1.3rem' }} />
@@ -123,8 +123,8 @@ export function PlansPage() {
                 {isBusy
                   ? <span className="animate-spin" style={{ display: 'inline-block', width: 15, height: 15, border: '2px solid currentColor', borderTopColor: 'transparent', borderRadius: '50%' }} />
                   : isCurrent ? '✓ Plan actual'
-                  : plan.price === 0 ? 'Plan gratuito'
-                  : `Activar ${plan.name}`}
+                  : plan.price === 0 ? 'Free plan'
+                  : `Activate ${plan.name}`}
               </button>
             </div>
           );

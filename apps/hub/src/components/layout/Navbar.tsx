@@ -107,7 +107,7 @@ export function Navbar() {
   const TickerToggle = () => (
     <button
       onClick={() => setTickerOn(v => !v)}
-      title={tickerOn ? 'Ocultar ticker' : 'Mostrar ticker'}
+      title={tickerOn ? 'Hide ticker' : 'Show ticker'}
       style={{
         width: 40, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer',
         background: tickerOn ? 'var(--green)' : 'var(--border2)',
@@ -158,7 +158,7 @@ export function Navbar() {
     <>
       <nav style={{
         position: 'fixed', top: 0, left: 0, right: 0,
-        height: 'var(--nav-h)', zIndex: 100,
+        height: 'var(--nav-h)', zIndex: 300,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0 clamp(1rem, 4vw, 2.5rem)',
         background: (scrolled || mob) ? 'var(--nav-bg)' : 'transparent',

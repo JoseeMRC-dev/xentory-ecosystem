@@ -62,7 +62,7 @@ export function PricingPage() {
 
         {/* Billing toggle */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.8rem', marginBottom: '2.5rem' }}>
-          <span style={{ fontSize: '0.85rem', color: !yearly ? 'var(--text)' : 'var(--muted)' }}>Mensual</span>
+          <span style={{ fontSize: '0.85rem', color: !yearly ? 'var(--text)' : 'var(--muted)' }}>Monthly</span>
           <button onClick={() => setYearly(y => !y)} style={{ width: 46, height: 26, borderRadius: 13, border: 'none', cursor: 'pointer', background: yearly ? 'var(--gold)' : 'var(--card2)', position: 'relative', transition: 'background 0.3s' }}>
             <span style={{ position: 'absolute', top: 3, left: yearly ? 24 : 3, width: 20, height: 20, borderRadius: '50%', background: yearly ? 'var(--bg)' : 'var(--muted)', transition: 'left 0.3s' }} />
           </button>
@@ -116,11 +116,13 @@ export function PricingPage() {
 
               <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginBottom: '2rem' }}>
                 <div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Precio individual</div>
-                  <div style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '1.5rem', textDecoration: 'line-through', color: 'var(--muted)' }}>58€/mes</div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Individual price</div>
+                  <div style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '1.5rem', textDecoration: 'line-through', color: 'var(--muted)' }}>
+                    {yearly ? `${Math.round(58 * 12 * 0.8)}€/yr` : '58€/mo'}
+                  </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--green)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Precio bundle</div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--green)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Bundle price</div>
                   <div style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '2.5rem', color: 'var(--gold)', letterSpacing: '-0.04em', display: 'flex', alignItems: 'baseline', gap: '0.2rem' }}>
                     {yearly
                       ? <>{Math.round(BUNDLE.monthlyPrice * 12 * 0.8)}€<span style={{ fontSize: '1rem', color: 'var(--muted)', fontWeight: 300 }}>/año</span></>
@@ -131,11 +133,11 @@ export function PricingPage() {
               </div>
 
               <div style={{ background: 'rgba(0,255,136,0.08)', border: '1px solid rgba(0,255,136,0.15)', borderRadius: 10, padding: '0.8rem', marginBottom: '2rem' }}>
-                <span style={{ color: 'var(--green)', fontWeight: 600, fontSize: '0.9rem' }}>💰 Ahorras {BUNDLE.saving}€ al mes</span>
+                <span style={{ color: 'var(--green)', fontWeight: 600, fontSize: '0.9rem' }}>💰 Save {BUNDLE.saving}€/mo vs individual</span>
               </div>
 
               <div style={{ textAlign: 'left', marginBottom: '2rem' }}>
-                {['Todo Xentory Market Pro incluido', 'Todo Xentory Bet Pro incluido', '2 canales Telegram premium', 'Señales de mercado + deportes', 'Una única suscripción para todo', 'Gestión de pagos simplificada'].map(f => (
+                {['All Xentory Market Pro included', 'All Xentory Bet Pro included', '2 premium Telegram channels', 'Market + sports signals', 'One single subscription', 'Simplified payment management'].map(f => (
                   <div key={f} style={{ display: 'flex', gap: '0.6rem', marginBottom: '0.7rem', fontSize: '0.88rem', alignItems: 'center' }}>
                     <span style={{ color: 'var(--green)', fontWeight: 700 }}>✓</span>
                     <span style={{ color: 'var(--text2)' }}>{f}</span>
@@ -185,7 +187,7 @@ export function PricingPage() {
                     {plan.price === 0 ? 'Gratis' : <><sup style={{ fontSize: '1rem', fontWeight: 400 }}>€</sup>{price}</>}
                   </div>
                   <div style={{ color: 'var(--muted)', fontSize: '0.78rem', marginBottom: '1.3rem' }}>
-                    {plan.price === 0 ? 'Sin tarjeta de crédito' : yearly ? `al año (${Math.round(price / 12)}€/mes)` : 'al mes · cancela cuando quieras'}
+                    {plan.price === 0 ? 'No credit card required' : yearly ? `per yr (${Math.round(price / 12)}€/mo)` : 'per month · cancel anytime'}
                   </div>
 
                   <div style={{ height: 1, background: 'var(--border)', marginBottom: '1.3rem' }} />
@@ -216,7 +218,7 @@ export function PricingPage() {
                   >
                     {isBusy ? <span className="animate-spin" style={{ display: 'inline-block', width: 15, height: 15, border: '2px solid currentColor', borderTopColor: 'transparent', borderRadius: '50%' }} />
                       : isCurrent ? '✓ Plan actual'
-                      : plan.price === 0 ? 'Empezar gratis' : `Activar ${plan.name}`}
+                      : plan.price === 0 ? 'Start free' : `Activate ${plan.name}`}
                   </button>
                 </div>
               );

@@ -9,39 +9,39 @@ export const PLATFORM_URLS = {
 // ── MARKET PLANS ──
 export const MARKET_PLANS: PlatformPlan[] = [
   {
-    id: 'free', name: 'Explorador', price: 0, yearlyPrice: 0,
+    id: 'free', name: 'Explorer', price: 0, yearlyPrice: 0,
     platform: 'market', color: '#6b7294',
     features: [
-      { label: '3 activos en watchlist', included: true },
-      { label: 'Análisis rápido IA (Flash)', included: true },
-      { label: 'Dashboard de precios', included: true },
-      { label: 'Análisis Pro (Google Grounding)', included: false },
-      { label: 'Alertas de precio', included: false },
-      { label: 'Canal Telegram PRO', included: false },
+      { label: '3 assets in watchlist', included: true },
+      { label: 'Fast AI analysis (Flash)', included: true },
+      { label: 'Price dashboard', included: true },
+      { label: 'Pro Analysis (Google Grounding)', included: false },
+      { label: 'Price alerts', included: false },
+      { label: 'PRO Telegram channel', included: false },
     ],
   },
   {
     id: 'pro', name: 'Pro', price: 29, yearlyPrice: 278,
     platform: 'market', color: '#c9a84c', popular: true,
     features: [
-      { label: 'Activos ilimitados', included: true },
-      { label: 'Análisis Pro + Google Grounding', included: true, highlight: true },
-      { label: 'Todos los indicadores técnicos', included: true },
-      { label: 'Alertas ilimitadas', included: true },
-      { label: 'Canal Telegram PRO', included: true, highlight: true },
-      { label: 'Cripto + Bolsa + Forex', included: true },
+      { label: 'Unlimited assets', included: true },
+      { label: 'Pro Analysis + Google Grounding', included: true, highlight: true },
+      { label: 'All technical indicators', included: true },
+      { label: 'Unlimited alerts', included: true },
+      { label: 'PRO Telegram channel', included: true, highlight: true },
+      { label: 'Crypto + Stocks + Forex', included: true },
     ],
   },
   {
     id: 'elite', name: 'Elite', price: 59, yearlyPrice: 566,
     platform: 'market', color: '#00d4ff',
     features: [
-      { label: 'Todo el Plan Pro', included: true },
-      { label: 'Análisis a demanda ilimitado', included: true, highlight: true },
-      { label: 'Canal Telegram ELITE', included: true, highlight: true },
-      { label: 'Informes PDF semanales', included: true },
-      { label: 'Soporte prioritario 24/7', included: true },
-      { label: 'Acceso anticipado a funciones', included: true },
+      { label: 'All Pro Plan', included: true },
+      { label: 'Unlimited on-demand analysis', included: true, highlight: true },
+      { label: 'ELITE Telegram channel', included: true, highlight: true },
+      { label: 'Weekly PDF reports', included: true },
+      { label: 'Priority support 24/7', included: true },
+      { label: 'Early access to features', included: true },
     ],
   },
 ];
@@ -49,26 +49,26 @@ export const MARKET_PLANS: PlatformPlan[] = [
 // ── BETS PLANS ──
 export const BETS_PLANS: PlatformPlan[] = [
   {
-    id: 'free', name: 'Fanático', price: 0, yearlyPrice: 0,
+    id: 'free', name: 'Fan', price: 0, yearlyPrice: 0,
     platform: 'bets', color: '#6b7294',
     features: [
-      { label: '3 predicciones al día', included: true },
-      { label: 'Análisis básico (últimos 3 partidos)', included: true },
-      { label: 'Fútbol únicamente', included: true },
-      { label: 'Análisis 5 partidos completo', included: false },
-      { label: 'Canal Telegram señales', included: false },
-      { label: 'Baloncesto + Tenis', included: false },
+      { label: '3 predictions per day', included: true },
+      { label: 'Basic analysis (last 3 matches)', included: true },
+      { label: 'Football only', included: true },
+      { label: 'Full 5-match analysis', included: false },
+      { label: 'Telegram signals channel', included: false },
+      { label: 'Basketball + Tennis', included: false },
     ],
   },
   {
     id: 'pro', name: 'Pro', price: 29, yearlyPrice: 278,
     platform: 'bets', color: '#c9a84c', popular: true,
     features: [
-      { label: 'Predicciones ilimitadas', included: true },
-      { label: 'Análisis completo 5 partidos', included: true, highlight: true },
-      { label: 'Fútbol + Baloncesto + Tenis', included: true },
-      { label: 'Canal Telegram señales PRO', included: true, highlight: true },
-      { label: 'Confianza estadística avanzada', included: true },
+      { label: 'Unlimited predictions', included: true },
+      { label: 'Full 5-match analysis', included: true, highlight: true },
+      { label: 'Football + Basketball + Tennis', included: true },
+      { label: 'PRO Telegram signals channel', included: true, highlight: true },
+      { label: 'Advanced statistical confidence', included: true },
       { label: 'Historial de predicciones', included: true },
     ],
   },
@@ -76,11 +76,11 @@ export const BETS_PLANS: PlatformPlan[] = [
     id: 'elite', name: 'Elite', price: 49, yearlyPrice: 470,
     platform: 'bets', color: '#00d4ff',
     features: [
-      { label: 'Todo el Plan Pro', included: true },
+      { label: 'All Pro Plan', included: true },
       { label: 'Análisis a demanda por equipo', included: true, highlight: true },
       { label: 'Canal Telegram ELITE exclusivo', included: true, highlight: true },
       { label: 'Alertas pre-partido en tiempo real', included: true },
-      { label: 'Informes PDF semanales', included: true },
+      { label: 'Weekly PDF reports', included: true },
       { label: 'Soporte prioritario', included: true },
     ],
   },
@@ -88,7 +88,7 @@ export const BETS_PLANS: PlatformPlan[] = [
 
 // ── BUNDLE DISCOUNT ──
 export const BUNDLE = {
-  name: 'Bundle Total',
+  name: 'Full Bundle',
   description: 'Xentory Market Pro + Xentory Bet Pro',
   monthlyPrice: 49,   // en vez de 29+29=58
   yearlyPrice: 470,

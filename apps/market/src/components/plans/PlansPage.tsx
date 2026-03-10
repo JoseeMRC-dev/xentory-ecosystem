@@ -183,7 +183,7 @@ export function PlansPage() {
                   )}
                 </div>
                 <div style={{ color: 'var(--muted)', fontSize: '0.8rem', marginTop: '0.3rem' }}>
-                  {plan.price === 0 ? 'Sin tarjeta de crédito' : yearly ? `al año (${Math.round(price / 12)}€/mes)` : 'al mes · cancela cuando quieras'}
+                  {plan.price === 0 ? 'No credit card required' : yearly ? `per year (${Math.round(price / 12)}€/mo)` : 'per month · cancel anytime'}
                 </div>
               </div>
 
@@ -226,7 +226,7 @@ export function PlansPage() {
               >
                 {isBusy ? (
                   <span className="animate-spin" style={{ display: 'inline-block', width: 16, height: 16, border: '2px solid currentColor', borderTopColor: 'transparent', borderRadius: '50%' }} />
-                ) : isCurrentPlan ? '✓ Plan actual' : plan.price === 0 ? 'Empezar gratis' : `Activar ${plan.name}`}
+                ) : isCurrentPlan ? '✓ Plan actual' : plan.price === 0 ? 'Start free' : `Activate ${plan.name}`}
               </button>
             </div>
           );

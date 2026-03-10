@@ -6,12 +6,12 @@ import { useCurrency } from '../../context/CurrencyContext';
 
 const NAV_ITEMS = [
   { to: '/dashboard',  icon: '⬛', label: 'Dashboard'  },
-  { to: '/market',     icon: '📊', label: 'Mercados'   },
+  { to: '/market',     icon: '📊', label: 'Markets'   },
   { to: '/watchlist',  icon: '⭐', label: 'Watchlist'  },
-  { to: '/analysis',   icon: '🧠', label: 'Análisis'   },
-  { to: '/alerts',     icon: '🔔', label: 'Alertas'    },
+  { to: '/analysis',   icon: '🧠', label: 'Analysis'   },
+  { to: '/alerts',     icon: '🔔', label: 'Alerts'    },
   { to: '/telegram',   icon: '✈️',  label: 'Telegram'   },
-  { to: '/plans',      icon: '💎', label: 'Planes'     },
+  { to: '/plans',      icon: '💎', label: 'Plans'     },
 ];
 
 const HUB_URL  = (import.meta as any).env?.VITE_HUB_URL    ?? 'https://x-eight-beryl.vercel.app';
@@ -19,7 +19,7 @@ const MKT_URL  = (import.meta as any).env?.VITE_MARKET_URL  ?? 'https://xentory-
 const BET_URL  = (import.meta as any).env?.VITE_BET_URL     ?? 'https://xentory-bet.vercel.app';
 
 const PLAN_COLORS: Record<string, string> = { free: '#6b7294', pro: '#c9a84c', elite: '#00d4ff' };
-const PLAN_LABELS: Record<string, string> = { free: 'Básico', pro: 'Pro', elite: 'Elite' };
+const PLAN_LABELS: Record<string, string> = { free: 'Free', pro: 'Pro', elite: 'Elite' };
 
 function CurrencyToggle() {
   const { currency, setCurrency } = useCurrency();

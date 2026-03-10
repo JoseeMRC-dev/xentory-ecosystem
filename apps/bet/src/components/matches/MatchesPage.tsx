@@ -28,7 +28,7 @@ const COMPETITIONS_BY_SPORT: Record<string, { id: string; name: string; emoji: s
     { id: 'ncaa',name: 'NCAA',       emoji: '🎓', country: 'USA' },
   ],
   tennis: [
-    { id: 'all', name: 'Todos',         emoji: '🎾' },
+    { id: 'all', name: 'All',         emoji: '🎾' },
     { id: 'atp', name: 'ATP Tour',      emoji: '👨', country: 'Mundial' },
     { id: 'wta', name: 'WTA Tour',      emoji: '👩', country: 'Mundial' },
     { id: 'gs',  name: 'Grand Slams',   emoji: '🏆', country: 'Mundial' },
@@ -41,7 +41,7 @@ const COMPETITIONS_BY_SPORT: Record<string, { id: string; name: string; emoji: s
     { id: 'r',   name: 'Carrera',       emoji: '🏁' },
   ],
   golf: [
-    { id: 'all',  name: 'Todos',         emoji: '⛳' },
+    { id: 'all',  name: 'All',         emoji: '⛳' },
     { id: 'pga',  name: 'PGA Tour',      emoji: '🇺🇸', country: 'USA' },
     { id: 'euro', name: 'DP World Tour', emoji: '🌍', country: 'Europa' },
     { id: 'maj',  name: 'Majors',        emoji: '🏆', country: 'Mundial' },

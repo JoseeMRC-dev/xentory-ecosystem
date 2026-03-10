@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { getLiveAssets, dataReady, formatPrice } from '../../services/marketService';
+import { WatchlistManager } from './WatchlistManager';
 import { SIGNAL_LABELS, STATUS_CONFIG, CATEGORY_LABELS } from '../../constants';
 import type { Asset } from '../../types';
 
 const MARKET_SUMMARY_MOCK = {
   bullish: 8, neutral: 4, bearish: 4, totalAssets: 16,
-  btcDominance: 54.2, fearGreed: 68, fearGreedLabel: 'Codicia',
+  btcDominance: 54.2, fearGreed: 68, fearGreedLabel: 'Greed',
 };
 
 function StatCard({ title, value, sub, color, icon }: { title: string; value: string; sub?: string; color?: string; icon: string }) {
@@ -116,8 +117,8 @@ export function DashboardPage() {
 
       {/* Stats — 4 cols desktop, 2x2 móvil */}
       <div className="mkt-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
-        <StatCard title="Activos alcistas" value={`${MARKET_SUMMARY_MOCK.bullish}/${MARKET_SUMMARY_MOCK.totalAssets}`} sub="en tendencia alcista" color="var(--green)" icon="🟢" />
-        <StatCard title="BTC Dominance" value={`${MARKET_SUMMARY_MOCK.btcDominance}%`} sub="del mercado crypto" color="var(--gold)" icon="₿" />
+        <StatCard title="Bullish assets" value={`${MARKET_SUMMARY_MOCK.bullish}/${MARKET_SUMMARY_MOCK.totalAssets}`} sub="in uptrend" color="var(--green)" icon="🟢" />
+        <StatCard title="BTC Dominance" value={`${MARKET_SUMMARY_MOCK.btcDominance}%`} sub="of crypto market" color="var(--gold)" icon="₿" />
         <StatCard title="Fear & Greed" value={`${MARKET_SUMMARY_MOCK.fearGreed}`} sub={MARKET_SUMMARY_MOCK.fearGreedLabel} color="#f97316" icon="😤" />
         <StatCard
           title="Tu plan"
@@ -129,6 +130,11 @@ export function DashboardPage() {
       </div>
 
       {/* Market table */}
+      {/* Custom Watchlist */}
+      <div className="glass" style={{ borderRadius: 16, padding: '1.5rem', marginBottom: '1.5rem', width: '100%' }}>
+        <WatchlistManager />
+      </div>
+
       <div className="glass" style={{ borderRadius: 16, overflow: 'hidden', width: '100%' }}>
 
         {/* Table header */}
@@ -144,7 +150,7 @@ export function DashboardPage() {
           {/* Category filter — scrollable on mobile */}
           <div className="mkt-cat-filter" style={{ display: 'flex', gap: '0.3rem', marginBottom: '0', overflowX: 'auto', scrollbarWidth: 'none' }}>
             {[
-              { key: 'all', label: 'Todos' },
+              { key: 'all', label: 'All' },
               { key: 'crypto', label: '₿ Cripto' },
               { key: 'stocks', label: '📈 Bolsa' },
               { key: 'forex', label: '💱 Forex' },
@@ -174,11 +180,11 @@ export function DashboardPage() {
           fontSize: '0.7rem', color: 'var(--muted)', textTransform: 'uppercase',
           letterSpacing: '0.08em', borderBottom: '1px solid var(--border)', background: 'var(--card2)',
         }}>
-          <div>Activo</div>
-          <div>Precio</div>
-          <div>Cambio 24h</div>
-          <div>Categoría</div>
-          <div>Estado</div>
+          <div>Asset</div>
+          <div>Price</div>
+          <div>24h Change</div>
+          <div>Category</div>
+          <div>Status</div>
         </div>
 
         {/* Rows */}

@@ -6,11 +6,11 @@ import { QuickBar } from './QuickBar';
 
 const NAV = [
   { to: '/dashboard', icon: '⬛', label: 'Dashboard'   },
-  { to: '/matches',   icon: '📅', label: 'Partidos'    },
+  { to: '/matches',   icon: '📅', label: 'Matches'    },
   { to: '/analysis',  icon: '🧠', label: 'Análisis IA' },
   { to: '/history',   icon: '📊', label: 'Historial'   },
   { to: '/telegram',  icon: '✈️',  label: 'Telegram'    },
-  { to: '/plans',     icon: '💎', label: 'Planes'      },
+  { to: '/plans',     icon: '💎', label: 'Plans'      },
 ];
 
 const HUB_URL  = (import.meta as any).env?.VITE_HUB_URL    ?? 'https://x-eight-beryl.vercel.app';

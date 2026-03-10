@@ -56,7 +56,7 @@ function connectBinanceWS() {
 
     ws.onopen = () => {
       wsConnected = true;
-      console.log('[Xentory Market] Binance WebSocket conectado ✓');
+      console.log('[Xentory Market] Binance WebSocket connected ✓');
     };
 
     ws.onmessage = (event) => {
@@ -105,7 +105,7 @@ function connectBinanceWS() {
       setTimeout(connectBinanceWS, 5000);
     };
   } catch (err) {
-    console.warn('[Xentory Market] WebSocket no disponible, usando fallback');
+    console.warn('[Xentory Market] WebSocket unavailable, using fallback');
     startPollingFallback();
   }
 }
@@ -415,7 +415,7 @@ export function computeTechnicalIndicators(history: PricePoint[]): TechnicalIndi
 
 export function formatPrice(price: number, category: string): string {
   if (category === 'forex') return price.toFixed(5);
-  if (price >= 1000) return price.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (price >= 1000) return price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   if (price >= 1)    return price.toFixed(2);
   return price.toFixed(5);
 }

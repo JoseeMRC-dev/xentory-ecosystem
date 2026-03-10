@@ -1,6 +1,8 @@
 import { useState, useRef, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useLoginProtection } from '../../hooks/useLoginProtection';
+import { TurnstileWidget, useCaptcha } from './TurnstileWidget';
 
 type Tab = 'login' | 'register' | 'magic';
 
@@ -32,11 +34,11 @@ function pwStrength(pw: string): { score: number; label: string; color: string }
   if (/[^A-Za-z0-9]/.test(pw)) score++;
   const levels = [
     { label: '', color: 'transparent' },
-    { label: 'Muy débil', color: 'var(--red)' },
-    { label: 'Débil', color: '#f97316' },
-    { label: 'Regular', color: '#eab308' },
-    { label: 'Fuerte', color: 'var(--green)' },
-    { label: 'Muy fuerte', color: 'var(--cyan)' },
+    { label: 'Very weak', color: 'var(--red)' },
+    { label: 'Weak', color: '#f97316' },
+    { label: 'Fair', color: '#eab308' },
+    { label: 'Strong', color: 'var(--green)' },
+    { label: 'Very strong', color: 'var(--cyan)' },
   ];
   return { score, ...levels[score] };
 }
@@ -59,6 +61,24 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
   const [googleLoading, setGl]    = useState(false);
 
   const { login, loginWithGoogle, register, sendMagicLink, resetPassword, isLoading } = useAuth();
+  const { checkLock, recordFailure, recordSuccess } = useLoginProtection();
+  const [lockInfo, setLockInfo] = useState<{ locked: boolean; remainingSec: number }>({ locked: false, remainingSec: 0 });
+  const captcha = useCaptcha();
+
+  // Countdown timer for lockout display
+  useEffect(() => {
+    if (!lockInfo.locked) return;
+    const interval = setInterval(() => {
+      const check = checkLock(email);
+      if (!check.locked) {
+        setLockInfo({ locked: false, remainingSec: 0 });
+        clearInterval(interval);
+      } else {
+        setLockInfo({ locked: true, remainingSec: check.remainingSec });
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [lockInfo.locked, email]);
   const navigate   = useNavigate();
 
   const strength = tab === 'register' ? pwStrength(password) : null;
@@ -67,17 +87,53 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
     e?.preventDefault();
     setError('');
 
-    if (!email.trim()) { setError('El email es obligatorio.'); return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('Introduce un email válido.'); return; }
+    if (!email.trim()) { setError('Email is required.'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('Please enter a valid email.'); return; }
 
     try {
       if (tab === 'login') {
-        if (!password) { setError('La contraseña es obligatoria.'); return; }
-        await login(email, password);
-        navigate('/dashboard');
+        if (!password) { setError('Password is required.'); return; }
+
+        // Check CAPTCHA
+        if (!captcha.isVerified) {
+          setError('Please complete the CAPTCHA verification.');
+          return;
+        }
+
+        // Check brute-force lock
+        const lock = checkLock(email);
+        if (lock.locked) {
+          setError(`Too many failed attempts. Please wait ${lock.remainingSec}s before trying again.`);
+          setLockInfo({ locked: true, remainingSec: lock.remainingSec });
+          return;
+        }
+
+        try {
+          await login(email, password);
+          recordSuccess(email); // Clear failure counter on success
+          navigate('/dashboard');
+        } catch (loginErr: any) {
+          captcha.reset(); // Force re-verification after each failed attempt
+          const result = recordFailure(email);
+          if (result.locked) {
+            setError(`Too many failed attempts. Account locked for ${Math.ceil(result.remainingMs / 1000)}s.`);
+            setLockInfo({ locked: true, remainingSec: Math.ceil(result.remainingMs / 1000) });
+          } else if (result.attemptsLeft > 0) {
+            setError(`Invalid credentials. ${result.attemptsLeft} attempt${result.attemptsLeft !== 1 ? 's' : ''} remaining before temporary lock.`);
+          } else {
+            setError(loginErr?.message || 'Login failed.');
+          }
+          return;
+        }
 
       } else if (tab === 'register') {
-        if (!name.trim())   { setError('El nombre es obligatorio.'); return; }
+        // Check CAPTCHA
+        if (!captcha.isVerified) {
+          setError('Please complete the CAPTCHA verification.');
+          return;
+        }
+
+        if (!name.trim())   { setError('Name is required.'); return; }
         if (password.length < 8) { setError('La contraseña debe tener al menos 8 caracteres.'); return; }
         if (!terms)         { setError('Debes aceptar los Términos de Uso para registrarte.'); return; }
         await register(email, password, name.trim());
@@ -92,7 +148,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
         setConfirm(true);
       } else {
         const msg = err?.message ?? '';
-        if (msg.includes('Invalid login credentials')) setError('Email o contraseña incorrectos.');
+        if (msg.includes('Invalid login credentials')) setError('Invalid email or password.');
         else if (msg.includes('Email already registered') || msg.includes('already been registered')) setError('Este email ya está registrado. Inicia sesión.');
         else if (msg.includes('Password should be')) setError('La contraseña debe tener al menos 6 caracteres.');
         else if (msg.includes('rate limit')) setError('Demasiados intentos. Espera un momento.');
@@ -116,6 +172,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
   };
 
   const changeTab = (t: Tab) => {
+    captcha.reset();
     if (t === 'register') { navigate('/register'); return; }
     if (t === 'login')    { navigate('/login');    return; }
     setTab(t); setError(''); setMagicSent(false); setConfirm(false);
@@ -123,8 +180,8 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
 
   const handleForgot = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!forgotEmail.trim()) { setForgotErr('Introduce tu email.'); return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail)) { setForgotErr('Email no válido.'); return; }
+    if (!forgotEmail.trim()) { setForgotErr('Email is required.'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail)) { setForgotErr('Invalid email.'); return; }
     setForgotL(true);
     setForgotErr('');
     try {
@@ -180,7 +237,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
     <PageWrapper>
       {/* Tabs */}
       <div style={{ display: 'flex', background: 'var(--card2)', borderRadius: 10, padding: '0.25rem', marginBottom: '1.5rem', gap: '0.1rem' }}>
-        {(['login', 'register', 'magic'] as Tab[]).map(t => { const label = t === 'login' ? 'Iniciar sesión' : t === 'register' ? 'Registrarse' : '✉ Magic Link'; return (
+        {(['login', 'register', 'magic'] as Tab[]).map(t => { const label = t === 'login' ? 'Sign in' : t === 'register' ? 'Sign up' : '✉ Magic Link'; return (
           <button key={t} onClick={() => changeTab(t)} style={{
             flex: 1, padding: '0.5rem 0.3rem', borderRadius: 8, border: 'none', cursor: 'pointer',
             fontSize: '0.78rem', fontWeight: 500, transition: 'all 0.2s',
@@ -215,7 +272,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
         )}
 
         <Field label="Email">
-          <input className="input" type="email" placeholder="tu@email.com"
+          <input className="input" type="email" placeholder="your@email.com"
             value={email} onChange={e => setEmail(e.target.value)}
             autoComplete={tab === 'register' ? 'email' : 'username'} />
         </Field>
@@ -290,18 +347,44 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
 
 
 
-        {error && (
+        {lockInfo.locked && (
+        <div style={{
+          background: 'rgba(255,68,85,0.08)', border: '1px solid rgba(255,68,85,0.25)',
+          borderRadius: 10, padding: '0.8rem 1rem', marginBottom: '1rem',
+          display: 'flex', alignItems: 'center', gap: '0.6rem',
+        }}>
+          <span style={{ fontSize: '1.1rem' }}>🔒</span>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: '0.82rem', color: 'var(--red)' }}>Account temporarily locked</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: '0.15rem' }}>
+              Too many failed attempts. Try again in <strong style={{ color: 'var(--text)' }}>{lockInfo.remainingSec}s</strong>.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {error && (
           <div style={{ padding: '0.7rem 0.9rem', background: 'rgba(255,68,85,0.08)', border: '1px solid rgba(255,68,85,0.2)', borderRadius: 8, color: 'var(--red)', fontSize: '0.82rem', lineHeight: 1.5 }}>
             {error}
           </div>
         )}
 
+        {/* CAPTCHA — shown for login and register */}
+        {(tab === 'login' || tab === 'register') && (
+          <TurnstileWidget
+            onVerify={captcha.onVerify}
+            onExpire={captcha.onExpire}
+            onError={captcha.onError}
+            theme="dark"
+          />
+        )}
+
         <button type="submit" disabled={isLoading} className="btn btn-gold btn-lg"
           style={{ justifyContent: 'center', marginTop: '0.2rem', opacity: isLoading ? 0.7 : 1 }}>
           {isLoading ? <Spinner /> : (
-            tab === 'login' ? 'Acceder al ecosistema →' :
-            tab === 'register' ? 'Crear cuenta →' :
-'Enviar Magic Link →'
+            tab === 'login' ? 'Enter the ecosystem →' :
+            tab === 'register' ? 'Create account →' :
+'Send Magic Link →'
           )}
         </button>
       </form>
@@ -309,10 +392,10 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
       {/* Footer links */}
       <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.75rem', color: 'var(--muted)' }}>
         {tab === 'login'
-          ? <>¿No tienes cuenta? <Link to="/register" style={{ color: 'var(--gold)', textDecoration: 'none' }}>Regístrate gratis →</Link></>
+          ? <>No account? <Link to="/register" style={{ color: 'var(--gold)', textDecoration: 'none' }}>Sign up free →</Link></>
           : tab === 'register'
-          ? <>¿Ya tienes cuenta? <Link to="/login" style={{ color: 'var(--gold)', textDecoration: 'none' }}>Inicia sesión</Link></>
-          : <>Recuerda: el enlace solo funciona una vez · <button onClick={() => changeTab('login')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gold)', fontSize: '0.75rem', padding: 0 }}>Volver al login</button></>
+          ? <>Already have an account? <Link to="/login" style={{ color: 'var(--gold)', textDecoration: 'none' }}>Sign in</Link></>
+          : <>Remember: the link only works once · <button onClick={() => changeTab('login')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gold)', fontSize: '0.75rem', padding: 0 }}>Back to login</button></>
         }
       </p>
 
@@ -352,7 +435,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
                   Entendido
                 </button>
                 <button onClick={() => { setShowForgot(false); changeTab('login'); }} style={{ marginTop: '0.8rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gold)', fontSize: '0.78rem', width: '100%', padding: '0.4rem' }}>
-                  Ir al login →
+                  Go to login →
                 </button>
               </div>
             ) : (
@@ -369,7 +452,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
                 <form onSubmit={handleForgot} style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
                   <div>
                     <label style={{ fontSize: '0.78rem', color: 'var(--muted)', display: 'block', marginBottom: '0.4rem' }}>Email</label>
-                    <input className="input" type="email" placeholder="tu@email.com"
+                    <input className="input" type="email" placeholder="your@email.com"
                       value={forgotEmail} onChange={e => setForgotEmail(e.target.value)}
                       autoComplete="email" />
                   </div>

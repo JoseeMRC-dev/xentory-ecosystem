@@ -222,7 +222,7 @@ img { display: block; max-width: 100%; }
 
 /* ══ TICKER v7 ═════════════════════════════════════════════════ */
 .ticker-wrap {
-  position: fixed; top: var(--nav-h); left: 0; right: 0; z-index: 90;
+  position: fixed; top: var(--nav-h); left: 0; right: 0; z-index: 290;
   height: var(--ticker-h);
   display: flex; align-items: center;
   background: var(--nav-bg);
@@ -400,6 +400,14 @@ html.ticker-hidden { --ticker-h: 0px; }
   border-color: var(--border);
 }
 
+/* ══ NAV STACKING CONTEXT — always above content ══════════════ */
+nav {
+  isolation: isolate;
+  z-index: 300;
+  transform: translateZ(0); /* force GPU layer */
+  -webkit-transform: translateZ(0);
+}
+
 /* ══ MOBILE NAV ALWAYS SOLID ═══════════════════════════════════ */
 @media (max-width: 900px) {
   nav[style] {
@@ -435,8 +443,8 @@ body.menu-open {
 
 /* Nav ALWAYS above ticker and everything else on mobile */
 @media (max-width: 900px) {
-  nav { z-index: 200 !important; }
-  .ticker-wrap { z-index: 190 !important; }
+  nav { z-index: 300 !important; }
+  .ticker-wrap { z-index: 290 !important; }
 }
 
 /* Drawer overlay covers full screen below nav */
