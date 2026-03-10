@@ -7,21 +7,21 @@ import type { Match, Sport } from '../../types';
 // ── COMPETITIONS ──
 const COMPETITIONS_BY_SPORT: Record<string, { id: string; name: string; emoji: string; country?: string }[]> = {
   football: [
-    { id: 'all', name: 'Todas',            emoji: '🏆' },
-    { id: '2',   name: 'Champions League', emoji: '🏆', country: 'Europa' },
-    { id: '3',   name: 'Europa League',    emoji: '🟠', country: 'Europa' },
-    { id: '140', name: 'La Liga',          emoji: '🇪🇸', country: 'España' },
-    { id: '141', name: 'Segunda División', emoji: '🇪🇸', country: 'España' },
-    { id: '39',  name: 'Premier League',   emoji: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', country: 'Inglaterra' },
-    { id: '135', name: 'Serie A',          emoji: '🇮🇹', country: 'Italia' },
-    { id: '78',  name: 'Bundesliga',       emoji: '🇩🇪', country: 'Alemania' },
-    { id: '61',  name: 'Ligue 1',          emoji: '🇫🇷', country: 'Francia' },
+    { id: 'all', name: 'All',              emoji: '🏆' },
+    { id: '2',   name: 'Champions League', emoji: '🏆', country: 'Europe' },
+    { id: '3',   name: 'Europa League',    emoji: '🟠', country: 'Europe' },
+    { id: '140', name: 'LaLiga',           emoji: '🇪🇸', country: 'Spain' },
+    { id: '141', name: 'Segunda División', emoji: '🇪🇸', country: 'Spain' },
+    { id: '39',  name: 'Premier League',   emoji: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', country: 'England' },
+    { id: '135', name: 'Serie A',          emoji: '🇮🇹', country: 'Italy' },
+    { id: '78',  name: 'Bundesliga',       emoji: '🇩🇪', country: 'Germany' },
+    { id: '61',  name: 'Ligue 1',          emoji: '🇫🇷', country: 'France' },
     { id: '94',  name: 'Primeira Liga',    emoji: '🇵🇹', country: 'Portugal' },
     { id: '128', name: 'Liga Argentina',   emoji: '🇦🇷', country: 'Argentina' },
     { id: '262', name: 'Liga MX',          emoji: '🇲🇽', country: 'México' },
   ],
   basketball: [
-    { id: 'all', name: 'Todas',      emoji: '🏀' },
+    { id: 'all', name: 'All',        emoji: '🏀' },
     { id: 'nba', name: 'NBA',        emoji: '🇺🇸', country: 'USA' },
     { id: 'acb', name: 'ACB',        emoji: '🇪🇸', country: 'España' },
     { id: 'ebl', name: 'EuroLeague', emoji: '🌍', country: 'Europa' },
@@ -35,10 +35,10 @@ const COMPETITIONS_BY_SPORT: Record<string, { id: string; name: string; emoji: s
     { id: 'dc',  name: 'Davis Cup',     emoji: '🌍', country: 'Mundial' },
   ],
   f1: [
-    { id: 'all', name: 'Todos los GP',  emoji: '🏎️' },
-    { id: 'fp',  name: 'Práctica libre',emoji: '🔧' },
-    { id: 'q',   name: 'Clasificación', emoji: '⏱️' },
-    { id: 'r',   name: 'Carrera',       emoji: '🏁' },
+    { id: 'all', name: 'All GPs',      emoji: '🏎️' },
+    { id: 'fp',  name: 'Practice',      emoji: '🔧' },
+    { id: 'q',   name: 'Qualifying',    emoji: '⏱️' },
+    { id: 'r',   name: 'Race',          emoji: '🏁' },
   ],
   golf: [
     { id: 'all',  name: 'All',         emoji: '⛳' },
@@ -237,7 +237,7 @@ export function MatchesPage() {
         <div>
           <h1 style={{ fontSize: '1.5rem', marginBottom: '0.3rem' }}>📅 Matches & Events</h1>
           <p style={{ color: 'var(--muted)', fontSize: '0.88rem' }}>
-            Filtra por deporte, competición o busca directamente.
+            Filter by sport, competition or search directly.
           </p>
         </div>
         {/* Search toggle */}
@@ -266,7 +266,7 @@ export function MatchesPage() {
             className="input"
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder={`Buscar equipos, jugadores, competiciones, pilotos... (${allMatches.length} eventos cargados)`}
+            placeholder={`Search teams, players, competitions, drivers... (${allMatches.length} events loaded)`}
             style={{ paddingLeft: '2.8rem', paddingRight: query ? '2.8rem' : '1rem', fontSize: '0.95rem', width: '100%' }}
           />
           {query && (
@@ -383,9 +383,9 @@ export function MatchesPage() {
           </h3>
           <p style={{ color: 'var(--muted)', fontSize: '0.88rem', marginBottom: '1.2rem' }}>
             {query
-              ? 'Prueba con otro nombre de equipo, jugador o competición.'
+              ? 'Try a different team name, player or competition.'
               : activeCompetition !== 'all'
-                ? 'No hay matches para esta competición.'
+                ? 'No matches for this competition.'
                 : 'No hay eventos disponibles. Prueba con otro deporte.'}
           </p>
           <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
