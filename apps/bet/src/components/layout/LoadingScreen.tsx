@@ -42,7 +42,7 @@ export function LoadingScreen({ onDone }: LoadingScreenProps) {
           width: min(400px, 80vw);
           height: min(400px, 80vw);
           border-radius: 50%;
-          background: radial-gradient(circle, rgba(0,204,106,0.08) 0%, transparent 70%);
+          background: radial-gradient(circle, rgba(77,159,255,0.08) 0%, transparent 70%);
           animation: bls-glow-pulse 3s ease-in-out infinite;
           pointer-events: none;
         }
@@ -67,8 +67,8 @@ export function LoadingScreen({ onDone }: LoadingScreenProps) {
         .bls-ring-outer {
           position: absolute; inset: 0; border-radius: 50%;
           border: 2px solid transparent;
-          border-top-color: #00cc6a;
-          border-right-color: rgba(0,204,106,0.3);
+          border-top-color: #4d9fff;
+          border-right-color: rgba(77,159,255,0.3);
           animation: bls-spin 1.1s cubic-bezier(0.4,0,0.2,1) infinite;
         }
         .bls-ring-mid {
@@ -80,7 +80,7 @@ export function LoadingScreen({ onDone }: LoadingScreenProps) {
         }
         .bls-dot {
           position: absolute; inset: 22px; border-radius: 50%;
-          background: linear-gradient(135deg, #00cc6a, #4d9fff);
+          background: linear-gradient(135deg, #4d9fff, #1a6fff);
           animation: bls-dot-pulse 1.5s ease-in-out infinite;
         }
         .bls-label {
@@ -95,7 +95,7 @@ export function LoadingScreen({ onDone }: LoadingScreenProps) {
         .bls-progress {
           position: absolute; bottom: 0; left: 0; right: 0;
           height: 2px;
-          background: linear-gradient(90deg, #00cc6a, #4d9fff);
+          background: linear-gradient(90deg, #4d9fff, #1a6fff);
           animation: bls-progress 2.5s linear both;
           transform-origin: left;
         }
@@ -129,7 +129,7 @@ export function LoadingScreen({ onDone }: LoadingScreenProps) {
             background: 'linear-gradient(135deg, #c9a84c, #f0d060)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
           }}>Xentory</span>
-          <span style={{ color: '#00cc6a' }}>Bet</span>
+          <span style={{ color: '#4d9fff' }}>Bet</span>
         </div>
         <div className="bls-spinner">
           <div className="bls-ring-outer" />

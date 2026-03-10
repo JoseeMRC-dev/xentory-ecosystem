@@ -115,8 +115,8 @@ export function DashboardPage() {
         {/* Upcoming matches */}
         <div className="glass" style={{ borderRadius: 16, padding: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
-            <h2 style={{ fontSize: '1rem' }}>📅 Próximos partidos</h2>
-            <button onClick={() => navigate('/matches')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gold)', fontSize: '0.78rem' }}>Ver todos →</button>
+            <h2 style={{ fontSize: '1rem' }}>📅 Upcoming matches</h2>
+            <button onClick={() => navigate('/matches')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gold)', fontSize: '0.78rem' }}>View alls →</button>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
@@ -228,7 +228,7 @@ export function DashboardPage() {
         >
           <div>
             <div style={{ fontFamily: 'Urbanist', fontWeight: 700, marginBottom: '0.2rem' }}>
-              🚀 Activa el Plan Pro — Análisis completo con todos los mercados
+              🚀 Upgrade to Pro Plan — Full analysis across all sports
             </div>
             <div style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>
               Over/Under · BTTS · Hándicap · Canal Telegram · Todos los deportes desde 29€/mes

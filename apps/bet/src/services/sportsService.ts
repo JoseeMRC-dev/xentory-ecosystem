@@ -274,17 +274,21 @@ function getMockTeamStats(teamId: number): TeamStats {
 const TENNIS_BASE = 'https://v1.tennis.api-sports.io';
 
 async function callTennisAPI(endpoint: string) {
-  if (!API_KEY) return null;
+  if (!API_KEY) { console.warn('[Tennis API] No API key found'); return null; }
   try {
     const res = await fetch(`${TENNIS_BASE}${endpoint}`, {
-      headers: {
-        'x-apisports-key': API_KEY,
-      },
+      headers: { 'x-apisports-key': API_KEY },
     });
-    if (!res.ok) return null;
+    if (!res.ok) { console.warn('[Tennis API] HTTP error:', res.status, res.statusText); return null; }
     const data = await res.json();
+    if (data?.errors && Object.keys(data.errors).length > 0) {
+      console.warn('[Tennis API] API error:', data.errors);
+      return null;
+    }
+    console.info('[Tennis API] OK — results:', data?.results ?? 0);
     return data?.response ?? null;
-  } catch {
+  } catch (e) {
+    console.warn('[Tennis API] Fetch failed:', e);
     return null;
   }
 }
@@ -353,7 +357,7 @@ export async function fetchTennisMatches(): Promise<Match[]> {
 // BASKETBALL API (api-sports.io v1)
 // ══════════════════════════════════════
 async function callSportsAPI(base: string, endpoint: string) {
-  if (!API_KEY) return null;
+  if (!API_KEY) { console.warn('[Sports API] No API key:', base); return null; }
   const cacheKey = base + endpoint;
   const cached = cache.get(cacheKey);
   if (cached && Date.now() - cached.ts < CACHE_TTL) return cached.data;
@@ -361,12 +365,18 @@ async function callSportsAPI(base: string, endpoint: string) {
     const res = await fetch(`${base}${endpoint}`, {
       headers: { 'x-apisports-key': API_KEY },
     });
-    if (!res.ok) return null;
+    if (!res.ok) { console.warn('[Sports API] HTTP error:', res.status, base + endpoint); return null; }
     const data = await res.json();
+    if (data?.errors && Object.keys(data.errors).length > 0) {
+      console.warn('[Sports API] API error:', data.errors, base + endpoint);
+      return null;
+    }
     const result = data?.response ?? null;
+    console.info('[Sports API] OK —', base.split('/')[2], '— results:', data?.results ?? 0);
     if (result) cache.set(cacheKey, { data: result, ts: Date.now() });
     return result;
-  } catch {
+  } catch (e) {
+    console.warn('[Sports API] Fetch failed:', e, base + endpoint);
     return null;
   }
 }
@@ -435,24 +445,33 @@ export async function fetchF1Matches(): Promise<Match[]> {
 
 export function getMockMatchesBySport(sport: string): Match[] {
   const now = Date.now();
-  if (sport === 'basketball') return [
-    { id: 2001, sport: 'basketball', competition: { id: 12, name: 'NBA', sport: 'basketball', country: 'USA', logo: '', emoji: '🏀' }, homeTeam: { id: 101, name: 'LA Lakers', shortName: 'LAL' }, awayTeam: { id: 102, name: 'Boston Celtics', shortName: 'BOS' }, date: new Date(now + 86400000).toISOString(), status: 'scheduled', venue: 'Crypto.com Arena' },
-    { id: 2002, sport: 'basketball', competition: { id: 12, name: 'NBA', sport: 'basketball', country: 'USA', logo: '', emoji: '🏀' }, homeTeam: { id: 103, name: 'Golden State Warriors', shortName: 'GSW' }, awayTeam: { id: 104, name: 'Miami Heat', shortName: 'MIA' }, date: new Date(now + 172800000).toISOString(), status: 'scheduled', venue: 'Chase Center' },
-    { id: 2003, sport: 'basketball', competition: { id: 12, name: 'NBA', sport: 'basketball', country: 'USA', logo: '', emoji: '🏀' }, homeTeam: { id: 105, name: 'Denver Nuggets', shortName: 'DEN' }, awayTeam: { id: 106, name: 'Phoenix Suns', shortName: 'PHX' }, date: new Date(now + 259200000).toISOString(), status: 'scheduled' },
-  ];
+  const d = (days: number) => new Date(now + days * 86400000).toISOString();
+
   if (sport === 'tennis') return [
-    { id: 3001, sport: 'tennis', competition: { id: 1, name: 'ATP Madrid Open', sport: 'tennis', country: 'España', logo: '', emoji: '🎾' }, homeTeam: { id: 201, name: 'C. Alcaraz', shortName: 'ALC' }, awayTeam: { id: 202, name: 'N. Djokovic', shortName: 'DJO' }, date: new Date(now + 86400000).toISOString(), status: 'scheduled' },
-    { id: 3002, sport: 'tennis', competition: { id: 1, name: 'ATP Madrid Open', sport: 'tennis', country: 'España', logo: '', emoji: '🎾' }, homeTeam: { id: 203, name: 'J. Sinner',   shortName: 'SIN' }, awayTeam: { id: 204, name: 'R. Nadal',    shortName: 'NAD' }, date: new Date(now + 172800000).toISOString(), status: 'scheduled' },
-    { id: 3003, sport: 'tennis', competition: { id: 3, name: 'WTA Roma',        sport: 'tennis', country: 'Italia',  logo: '', emoji: '🎾' }, homeTeam: { id: 205, name: 'I. Swiatek',  shortName: 'SWI' }, awayTeam: { id: 206, name: 'A. Sabalenka', shortName: 'SAB' }, date: new Date(now + 259200000).toISOString(), status: 'scheduled' },
+    { id: 3001, sport: 'tennis', competition: { id: 1, name: 'ATP Madrid Open', sport: 'tennis', country: 'Spain', logo: '', emoji: '🎾' }, homeTeam: { id: 201, name: 'C. Alcaraz', shortName: 'ALC' }, awayTeam: { id: 202, name: 'J. Sinner', shortName: 'SIN' }, date: d(1), status: 'scheduled', venue: 'Caja Mágica, Madrid' },
+    { id: 3002, sport: 'tennis', competition: { id: 1, name: 'ATP Madrid Open', sport: 'tennis', country: 'Spain', logo: '', emoji: '🎾' }, homeTeam: { id: 203, name: 'N. Djokovic', shortName: 'DJO' }, awayTeam: { id: 204, name: 'D. Medvedev', shortName: 'MED' }, date: d(1), status: 'scheduled', venue: 'Caja Mágica, Madrid' },
+    { id: 3003, sport: 'tennis', competition: { id: 2, name: 'WTA Madrid Open', sport: 'tennis', country: 'Spain', logo: '', emoji: '🎾' }, homeTeam: { id: 205, name: 'I. Swiatek', shortName: 'SWI' }, awayTeam: { id: 206, name: 'A. Sabalenka', shortName: 'SAB' }, date: d(2), status: 'scheduled', venue: 'Caja Mágica, Madrid' },
+    { id: 3004, sport: 'tennis', competition: { id: 1, name: 'ATP Madrid Open', sport: 'tennis', country: 'Spain', logo: '', emoji: '🎾' }, homeTeam: { id: 207, name: 'A. Zverev', shortName: 'ZVE' }, awayTeam: { id: 208, name: 'H. Hurkacz', shortName: 'HUR' }, date: d(2), status: 'scheduled', venue: 'Caja Mágica, Madrid' },
   ];
+
+  if (sport === 'basketball') return [
+    { id: 2001, sport: 'basketball', competition: { id: 12, name: 'NBA', sport: 'basketball', country: 'USA', logo: '', emoji: '🏀' }, homeTeam: { id: 101, name: 'Oklahoma City Thunder', shortName: 'OKC' }, awayTeam: { id: 102, name: 'Cleveland Cavaliers', shortName: 'CLE' }, date: d(1), status: 'scheduled', venue: 'Paycom Center' },
+    { id: 2002, sport: 'basketball', competition: { id: 12, name: 'NBA', sport: 'basketball', country: 'USA', logo: '', emoji: '🏀' }, homeTeam: { id: 103, name: 'Boston Celtics', shortName: 'BOS' }, awayTeam: { id: 104, name: 'Golden State Warriors', shortName: 'GSW' }, date: d(1), status: 'scheduled', venue: 'TD Garden' },
+    { id: 2003, sport: 'basketball', competition: { id: 12, name: 'NBA', sport: 'basketball', country: 'USA', logo: '', emoji: '🏀' }, homeTeam: { id: 105, name: 'Denver Nuggets', shortName: 'DEN' }, awayTeam: { id: 106, name: 'Minnesota Timberwolves', shortName: 'MIN' }, date: d(1), status: 'scheduled', venue: 'Ball Arena' },
+    { id: 2004, sport: 'basketball', competition: { id: 12, name: 'NBA', sport: 'basketball', country: 'USA', logo: '', emoji: '🏀' }, homeTeam: { id: 107, name: 'LA Lakers', shortName: 'LAL' }, awayTeam: { id: 108, name: 'Memphis Grizzlies', shortName: 'MEM' }, date: d(2), status: 'scheduled', venue: 'Crypto.com Arena' },
+  ];
+
   if (sport === 'f1') return [
-    { id: 4001, sport: 'f1', competition: { id: 50, name: 'Formula 1 2025', sport: 'f1', country: 'Mundial', logo: '', emoji: '🏎️' }, homeTeam: { id: 301, name: 'Max Verstappen (Red Bull)',    shortName: 'VER' }, awayTeam: { id: 302, name: 'Lewis Hamilton (Ferrari)',     shortName: 'HAM' }, date: new Date(now + 3 * 86400000).toISOString(), status: 'scheduled', venue: 'GP Baréin · Sakhir' },
-    { id: 4002, sport: 'f1', competition: { id: 50, name: 'Formula 1 2025', sport: 'f1', country: 'Mundial', logo: '', emoji: '🏎️' }, homeTeam: { id: 303, name: 'Charles Leclerc (Ferrari)',   shortName: 'LEC' }, awayTeam: { id: 304, name: 'Lando Norris (McLaren)',       shortName: 'NOR' }, date: new Date(now + 3 * 86400000).toISOString(), status: 'scheduled', venue: 'GP Baréin · Sakhir' },
+    { id: 4001, sport: 'f1', competition: { id: 1, name: 'Formula 1', sport: 'f1', country: 'Global', logo: '', emoji: '🏎️' }, homeTeam: { id: 401, name: 'M. Verstappen', shortName: 'VER' }, awayTeam: { id: 402, name: 'L. Hamilton', shortName: 'HAM' }, date: d(3), status: 'scheduled', venue: 'Circuit de Barcelona-Catalunya' },
+    { id: 4002, sport: 'f1', competition: { id: 1, name: 'Formula 1', sport: 'f1', country: 'Global', logo: '', emoji: '🏎️' }, homeTeam: { id: 403, name: 'C. Leclerc', shortName: 'LEC' }, awayTeam: { id: 404, name: 'L. Norris', shortName: 'NOR' }, date: d(3), status: 'scheduled', venue: 'Circuit de Barcelona-Catalunya' },
+    { id: 4003, sport: 'f1', competition: { id: 1, name: 'Formula 1', sport: 'f1', country: 'Global', logo: '', emoji: '🏎️' }, homeTeam: { id: 405, name: 'G. Russell', shortName: 'RUS' }, awayTeam: { id: 406, name: 'O. Piastri', shortName: 'PIA' }, date: d(3), status: 'scheduled', venue: 'Circuit de Barcelona-Catalunya' },
   ];
+
   if (sport === 'golf') return [
-    { id: 5001, sport: 'golf', competition: { id: 60, name: 'PGA Tour 2025', sport: 'golf', country: 'USA', logo: '', emoji: '⛳' }, homeTeam: { id: 401, name: 'Scottie Scheffler', shortName: 'SCH' }, awayTeam: { id: 402, name: 'Rory McIlroy',      shortName: 'MCI' }, date: new Date(now + 4 * 86400000).toISOString(), status: 'scheduled', venue: 'Augusta National' },
-    { id: 5002, sport: 'golf', competition: { id: 60, name: 'PGA Tour 2025', sport: 'golf', country: 'USA', logo: '', emoji: '⛳' }, homeTeam: { id: 403, name: 'Jon Rahm',          shortName: 'RAH' }, awayTeam: { id: 404, name: 'Tiger Woods',       shortName: 'WOO' }, date: new Date(now + 4 * 86400000).toISOString(), status: 'scheduled', venue: 'Augusta National' },
+    { id: 5001, sport: 'golf', competition: { id: 1, name: 'PGA Tour', sport: 'golf', country: 'USA', logo: '', emoji: '⛳' }, homeTeam: { id: 501, name: 'S. Scheffler', shortName: 'SCH' }, awayTeam: { id: 502, name: 'R. McIlroy', shortName: 'MCI' }, date: d(4), status: 'scheduled', venue: 'Augusta National' },
+    { id: 5002, sport: 'golf', competition: { id: 1, name: 'PGA Tour', sport: 'golf', country: 'USA', logo: '', emoji: '⛳' }, homeTeam: { id: 503, name: 'X. Schauffele', shortName: 'XSC' }, awayTeam: { id: 504, name: 'C. Young', shortName: 'YOU' }, date: d(4), status: 'scheduled', venue: 'Augusta National' },
   ];
+
   return getMockMatches(2, 5);
 }
 

@@ -92,7 +92,7 @@ function NavContent({ onNav }: { onNav?: () => void }) {
                 });
                 logout();
               }}
-              title="Cerrar sesión"
+              title="Sign out"
               style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--red)', fontSize: '1rem', flexShrink: 0 }}
             >⏏</button>
           </div>

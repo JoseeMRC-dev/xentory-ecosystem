@@ -234,7 +234,7 @@ export function MatchesPage() {
       {/* ── HEADER ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.8rem' }}>
         <div>
-          <h1 style={{ fontSize: '1.5rem', marginBottom: '0.3rem' }}>📅 Partidos y eventos</h1>
+          <h1 style={{ fontSize: '1.5rem', marginBottom: '0.3rem' }}>📅 Matches & Events</h1>
           <p style={{ color: 'var(--muted)', fontSize: '0.88rem' }}>
             Filtra por deporte, competición o busca directamente.
           </p>

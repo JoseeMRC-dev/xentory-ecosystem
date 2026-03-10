@@ -82,7 +82,7 @@ export function WatchlistPage() {
           <input
             className="input"
             style={{ width: '100%', paddingRight: '2.5rem' }}
-            placeholder="Buscar activo..."
+            placeholder="Search asset..."
             value={searchQ}
             onChange={e => setSearchQ(e.target.value)}
           />
@@ -341,7 +341,7 @@ export function AlertsPage() {
       {/* Header */}
       <div className="mkt-alerts-header">
         <div>
-          <h1 style={{ fontSize: '1.6rem', marginBottom: '0.3rem' }}>🔔 Alertas de precio</h1>
+          <h1 style={{ fontSize: '1.6rem', marginBottom: '0.3rem' }}>🔔 Price Alerts</h1>
           <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>Recibe notificaciones cuando un activo alcance tu precio objetivo.</p>
         </div>
         {isPaid && (
@@ -408,7 +408,7 @@ export function AlertsPage() {
       {!isPaid ? (
         <div className="glass" style={{ borderRadius: 16, padding: '3rem', textAlign: 'center' }}>
           <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🔔</div>
-          <h3 style={{ marginBottom: '0.5rem' }}>Alertas personalizadas — Plan Pro</h3>
+          <h3 style={{ marginBottom: '0.5rem' }}>Custom Alerts — Pro Plan</h3>
           <p style={{ color: 'var(--muted)', fontSize: '0.88rem', marginBottom: '1.5rem', lineHeight: 1.6 }}>
             Crea alertas ilimitadas para cualquier activo. Recíbelas en Telegram o Email al instante.
           </p>
@@ -446,7 +446,7 @@ export function AlertsPage() {
               {/* Asset / Condition / Price */}
               <div className="mkt-alert-form-grid">
                 <div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Activo</div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Asset</div>
                   <select value={newSymbol} onChange={e => {
                     const a = ALL_ASSETS.find(x => x.symbol === e.target.value);
                     if (a) { setNewSymbol(a.symbol); setNewName(a.name); }
@@ -469,7 +469,7 @@ export function AlertsPage() {
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Precio objetivo</div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Price objetivo</div>
                   <input type="number" placeholder="ej. 105000" value={newTarget} onChange={e => setNewTarget(e.target.value)}
                     style={{ width: '100%', padding: '0.55rem 0.8rem', borderRadius: 8, background: 'var(--card2)', border: '1px solid var(--border)', color: 'var(--text)', fontSize: '0.85rem', outline: 'none', boxSizing: 'border-box' }}
                   />
@@ -500,7 +500,7 @@ export function AlertsPage() {
               <div style={{ display: 'flex', gap: '0.6rem', justifyContent: 'flex-end' }}>
                 <button onClick={() => setShowForm(false)} style={{ padding: '0.55rem 1.2rem', borderRadius: 8, background: 'var(--card2)', border: '1px solid var(--border)', color: 'var(--text2)', cursor: 'pointer', fontSize: '0.85rem' }}>Cancelar</button>
                 <button onClick={handleAddAlert} disabled={saving || !newTarget} className="btn btn-gold" style={{ opacity: !newTarget || saving ? 0.5 : 1 }}>
-                  {saving ? '⏳ Guardando…' : '✓ Crear alerta'}
+                  {saving ? '⏳ Guardando…' : '✓ Create alert'}
                 </button>
               </div>
             </div>
@@ -591,7 +591,7 @@ export function AnalysisPage() {
   return (
     <div className="animate-fadeUp" style={{ maxWidth: 1000, width: '100%' }}>
       <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '1.6rem', marginBottom: '0.3rem' }}>🧠 Análisis IA</h1>
+        <h1 style={{ fontSize: '1.6rem', marginBottom: '0.3rem' }}>🧠 AI Analysis</h1>
         <p style={{ color: 'var(--muted)' }}>Selecciona un activo para generar un análisis profundo.</p>
       </div>
 

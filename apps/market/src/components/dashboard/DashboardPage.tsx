@@ -140,7 +140,7 @@ export function DashboardPage() {
         {/* Table header */}
         <div style={{ padding: '1rem 1rem 0', borderBottom: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem', gap: '0.5rem', flexWrap: 'wrap' }}>
-            <h2 style={{ fontSize: '1rem' }}>Mercados en vivo</h2>
+            <h2 style={{ fontSize: '1rem' }}>Live Markets</h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexShrink: 0 }}>
               <span className="live-dot" />
               <span style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>Actualizando cada 4s</span>
@@ -207,10 +207,10 @@ export function DashboardPage() {
         >
           <div>
             <div style={{ fontFamily: 'Urbanist', fontWeight: 700, marginBottom: '0.2rem', fontSize: '0.95rem' }}>
-              🚀 Activa el Plan Pro — Análisis IA profundo
+              🚀 Upgrade to Pro Plan — Deep AI Analysis
             </div>
             <div style={{ color: 'var(--muted)', fontSize: '0.82rem' }}>
-              Accede a análisis ilimitados, alertas de precio y canal Telegram exclusivo desde 29€/mes
+              Accede a análisis ilimitados, alerts de precio y canal Telegram exclusivo desde 29€/mes
             </div>
           </div>
           <button className="btn btn-gold" style={{ flexShrink: 0, marginLeft: '1rem' }}>

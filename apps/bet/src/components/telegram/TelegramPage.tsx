@@ -148,8 +148,8 @@ export function TelegramPage() {
           <h2 style={{ fontSize: '1rem', marginBottom: '1.2rem' }}>Canales disponibles</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
             {[
-              { plan: 'pro',   icon: '📊', name: '@XentoryBetPro',  color: 'var(--cyan)', features: ['Picks del día (todos los deportes)', 'Estadísticas pre-partido', 'Análisis de valor', 'Historial de resultados'] },
-              { plan: 'elite', icon: '👑', name: '@XentoryBetElite', color: 'var(--gold)', features: ['Todo lo de Pro', 'Picks anticipados (24h antes)', 'Análisis en vivo', 'Acceso prioritario'] },
+              { plan: 'pro',   icon: '📊', name: '@XentoryBetPro',  color: 'var(--cyan)', features: ['Daily picks (all sports)', 'Pre-match statistics', 'Value analysis', 'Results history'] },
+              { plan: 'elite', icon: '👑', name: '@XentoryBetElite', color: 'var(--gold)', features: ['Everything in Pro', 'Early picks (24h ahead)', 'Live analysis', 'Priority access'] },
             ].map(ch => (
               <div key={ch.plan} style={{ padding: '1rem', borderRadius: 12, background: 'var(--card2)',
                 border: user?.plan === ch.plan ? `1px solid ${ch.color}50` : '1px solid var(--border)',
@@ -204,7 +204,7 @@ export function TelegramPage() {
         </div>
         {!isPaid && (
           <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
-            <p style={{ color: 'var(--muted)', marginBottom: '1rem', fontSize: '0.88rem' }}>Activa el Plan Pro para acceder a los picks en tiempo real</p>
+            <p style={{ color: 'var(--muted)', marginBottom: '1rem', fontSize: '0.88rem' }}>Upgrade to Pro Plan to access real-time picks</p>
             <button onClick={() => navigate('/plans')} className="btn btn-gold">💎 Ver planes</button>
           </div>
         )}
@@ -218,7 +218,7 @@ export function HistoryPage() {
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: 'calc(var(--bar-h, 52px) + 1.5rem) clamp(1rem, 4vw, 2rem) 3rem' }}>
       <h1 style={{ fontSize: 'clamp(1.2rem, 4vw, 1.6rem)', marginBottom: '0.4rem' }}>
-        📋 Historial de Análisis
+        📋 Analysis History
       </h1>
       <p style={{ color: 'var(--muted)', fontSize: '0.88rem', marginBottom: '2rem' }}>
         Revisa todos los análisis y predicciones generados anteriormente.

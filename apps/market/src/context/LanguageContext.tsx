@@ -6,7 +6,15 @@ const LangCtx = createContext<Ctx | null>(null);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useState<Lang>(() => {
-    try { return (localStorage.getItem('xentory_lang') as Lang) ?? 'en'; } catch { return 'es'; }
+    try {
+      const stored = localStorage.getItem('xentory_lang') as Lang;
+      // v15+: default language is EN — clear legacy 'es' setting
+      if (!stored || stored === 'es') {
+        localStorage.setItem('xentory_lang', 'en');
+        return 'en';
+      }
+      return stored;
+    } catch { return 'en'; }
   });
   const toggle = useCallback(() => setLang(l => {
     const next = l === 'es' ? 'en' : 'es';

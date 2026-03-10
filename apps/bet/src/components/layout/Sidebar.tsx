@@ -7,8 +7,8 @@ import { QuickBar } from './QuickBar';
 const NAV = [
   { to: '/dashboard', icon: '⬛', label: 'Dashboard'   },
   { to: '/matches',   icon: '📅', label: 'Matches'    },
-  { to: '/analysis',  icon: '🧠', label: 'Análisis IA' },
-  { to: '/history',   icon: '📊', label: 'Historial'   },
+  { to: '/analysis',  icon: '🧠', label: 'AI Analysis' },
+  { to: '/history',   icon: '📊', label: 'History'   },
   { to: '/telegram',  icon: '✈️',  label: 'Telegram'    },
   { to: '/plans',     icon: '💎', label: 'Plans'      },
 ];
@@ -86,7 +86,7 @@ function NavContent({ onNav }: { onNav?: () => void }) {
                 try { sessionStorage.removeItem('xentory_market_session'); } catch { /**/ }
                 logout();
               }}
-              title="Cerrar sesión"
+              title="Sign out"
               style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--red)', fontSize: '1rem', flexShrink: 0 }}
             >⏏</button>
           </div>

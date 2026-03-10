@@ -229,7 +229,7 @@ export function TelegramPage() {
         </div>
         {!isPaid && (
           <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
-            <p style={{ color: 'var(--muted)', marginBottom: '1rem', fontSize: '0.88rem' }}>Activa el Plan Pro para ver las señales en tiempo real</p>
+            <p style={{ color: 'var(--muted)', marginBottom: '1rem', fontSize: '0.88rem' }}>Upgrade to Pro Plan to see real-time signals</p>
             <button onClick={() => navigate('/plans')} className="btn btn-gold">💎 Desbloquear señales</button>
           </div>
         )}

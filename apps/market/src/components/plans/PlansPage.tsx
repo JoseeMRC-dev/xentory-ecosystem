@@ -52,7 +52,7 @@ export function PlansPage() {
           color: 'var(--gold)', fontSize: '0.75rem', letterSpacing: '0.1em',
           textTransform: 'uppercase', marginBottom: '1rem',
         }}>
-          💎 Planes & Precios
+          💎 Plans & Pricing
         </div>
         <h1 style={{ fontSize: '2.2rem', marginBottom: '0.8rem' }}>
           Elige tu nivel de <span className="text-gradient-gold">análisis</span>
@@ -174,7 +174,7 @@ export function PlansPage() {
               <div style={{ marginBottom: '1.5rem' }}>
                 <div style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '2.8rem', letterSpacing: '-0.04em', lineHeight: 1 }}>
                   {plan.price === 0 ? (
-                    <span>Gratis</span>
+                    <span>Free</span>
                   ) : (
                     <>
                       <sup style={{ fontSize: '1rem', fontWeight: 400 }}>€</sup>

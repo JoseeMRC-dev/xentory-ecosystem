@@ -95,7 +95,7 @@ export function MatchAnalysisPage() {
   if (!match) return (
     <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--muted)' }}>
       <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>⚠️</div>
-      <h3>Partido no encontrado</h3>
+      <h3>Match no encontrado</h3>
       <button onClick={() => navigate('/matches')} className="btn btn-outline" style={{ marginTop: '1rem' }}>← Volver</button>
     </div>
   );
@@ -171,7 +171,7 @@ export function MatchAnalysisPage() {
           {/* AI Summary */}
           <div className="glass" style={{ borderRadius: 16, padding: '1.5rem', borderLeft: '3px solid var(--gold)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h2 style={{ fontSize: '1rem' }}>🧠 Análisis IA</h2>
+              <h2 style={{ fontSize: '1rem' }}>🧠 AI Analysis</h2>
               <span style={{
                 padding: '0.2rem 0.7rem', borderRadius: 100, fontSize: '0.65rem',
                 background: analysis.tier === 'pro' ? 'var(--gold-dim)' : 'var(--card2)',
@@ -187,7 +187,7 @@ export function MatchAnalysisPage() {
             )}
             {user?.plan === 'free' && (
               <div style={{ padding: '0.8rem 1rem', background: 'var(--card2)', borderRadius: 10, border: '1px solid var(--border)', fontSize: '0.82rem', color: 'var(--muted)' }}>
-                🔒 Análisis técnico completo disponible en Plan Pro
+                🔒 Full technical analysis available on Pro Plan
               </div>
             )}
           </div>
@@ -350,14 +350,14 @@ export function AnalysisPage() {
   return (
     <div className="animate-fadeUp" style={{ maxWidth: 1100, width: '100%' }}>
       <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '1.5rem', marginBottom: '0.3rem' }}>🧠 Análisis IA</h1>
-        <p style={{ color: 'var(--muted)', fontSize: '0.88rem' }}>Selecciona un partido desde la sección de Partidos para generar el análisis completo.</p>
+        <h1 style={{ fontSize: '1.5rem', marginBottom: '0.3rem' }}>🧠 AI Analysis</h1>
+        <p style={{ color: 'var(--muted)', fontSize: '0.88rem' }}>Select a match desde la sección de Matchs para generar el análisis completo.</p>
       </div>
       <div className="glass" style={{ borderRadius: 16, padding: '4rem', textAlign: 'center' }}>
         <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>🧠</div>
         <h2 style={{ marginBottom: '0.8rem' }}>Motor de predicción listo</h2>
         <p style={{ color: 'var(--muted)', maxWidth: 400, margin: '0 auto 2rem', lineHeight: 1.7 }}>
-          Ve a Partidos, elige un enfrentamiento y genera el análisis completo con probabilidades, cuotas estimadas y la mejor apuesta del día.
+          Ve a Matchs, elige un enfrentamiento y genera el análisis completo con probabilidades, cuotas estimadas y la mejor apuesta del día.
         </p>
         <button onClick={() => navigate('/matches')} className="btn btn-gold btn-lg">
           📅 Ver partidos disponibles

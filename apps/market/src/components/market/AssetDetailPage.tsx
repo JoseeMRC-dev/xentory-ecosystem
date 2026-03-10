@@ -85,7 +85,7 @@ export function AssetDetailPage() {
       {/* Back + header */}
       <div style={{ marginBottom: '1.5rem' }}>
         <button onClick={() => navigate(-1)} className="btn btn-ghost btn-sm" style={{ marginBottom: '1rem' }}>
-          ← Volver
+          ← Back
         </button>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -126,7 +126,7 @@ export function AssetDetailPage() {
             </button>
             <button onClick={runAnalysis} className="btn btn-gold" disabled={isAnalyzing}>
               {isAnalyzing ? <span className="animate-spin" style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid #050810', borderTopColor: 'transparent', borderRadius: '50%' }} /> : '🧠'}
-              {isAnalyzing ? 'Analizando...' : 'Análisis IA'}
+              {isAnalyzing ? 'Analyzing...' : 'AI Analysis'}
             </button>
           </div>
         </div>
@@ -238,7 +238,7 @@ export function AssetDetailPage() {
         {/* AI Analysis */}
         <div className="glass" style={{ borderRadius: 16, padding: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
-            <h2 style={{ fontSize: '1rem' }}>🧠 Análisis IA</h2>
+            <h2 style={{ fontSize: '1rem' }}>🧠 AI Analysis</h2>
             {analysis && (
               <span style={{
                 padding: '0.2rem 0.7rem', borderRadius: 100, fontSize: '0.7rem',
@@ -255,7 +255,7 @@ export function AssetDetailPage() {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 'calc(100% - 3rem)', gap: '1rem', padding: '2rem 0', textAlign: 'center' }}>
               <div style={{ fontSize: '2.5rem' }}>🤖</div>
               <div style={{ color: 'var(--muted)', fontSize: '0.88rem', lineHeight: 1.6 }}>
-                Pulsa el botón "Análisis IA" para que Gemini analice este activo en profundidad.
+                Pulsa el botón "AI Analysis" para que Gemini analice este activo en profundidad.
                 {user?.plan === 'free' && <><br /><span style={{ color: 'var(--gold)', fontSize: '0.8rem' }}>Plan Free: análisis básico. Pro/Elite: Google Grounding en vivo.</span></>}
               </div>
               <button onClick={runAnalysis} className="btn btn-gold">
