@@ -90,4 +90,4 @@ export function confidenceColor(n: number): string {
 
 // ── API-FOOTBALL ──
 export const API_FOOTBALL_BASE = 'https://v3.football.api-sports.io';
-export const SEASON = 2024;
+export const SEASON = '2025';

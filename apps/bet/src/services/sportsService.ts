@@ -51,11 +51,22 @@ export async function getApiStatus(): Promise<{ remaining: number; limit: number
 
 // ── Fetch upcoming fixtures for a league ──
 export async function fetchUpcomingMatches(leagueId: number, limit = 10): Promise<Match[]> {
-  const json = await apiFetch(`/fixtures?league=${leagueId}&season=${SEASON}&next=${limit}&timezone=Europe/Madrid`);
-  if (!json) return getMockMatches(leagueId, limit);
-  const fixtures = json.response ?? [];
-  if (fixtures.length === 0) return getMockMatches(leagueId, Math.min(limit, 3));
-  return fixtures.map(mapFixtureToMatch);
+  // Free plan: use date-by-date fetching (no "next" param support)
+  const today = new Date();
+  const allMatches: Match[] = [];
+
+  for (let dayOffset = 0; dayOffset <= 7 && allMatches.length < limit; dayOffset++) {
+    const date = new Date(today.getTime() + dayOffset * 86400000).toISOString().split('T')[0];
+    const json = await apiFetch(`/fixtures?date=${date}&league=${leagueId}&season=${SEASON}`);
+    if (!json) continue;
+    const fixtures = (json.response ?? []).filter((f: any) =>
+      f.fixture?.status?.short === 'NS' || f.fixture?.status?.short === 'TBD'
+    );
+    allMatches.push(...fixtures.map(mapFixtureToMatch));
+  }
+
+  if (allMatches.length === 0) return getMockMatches(leagueId, Math.min(limit, 3));
+  return allMatches.slice(0, limit);
 }
 
 // ── Fetch live fixtures ──
@@ -68,9 +79,18 @@ export async function fetchLiveMatches(leagueId?: number): Promise<Match[]> {
 
 // ── Fetch recent results (last N) ──
 export async function fetchRecentMatches(leagueId: number, limit = 5): Promise<Match[]> {
-  const json = await apiFetch(`/fixtures?league=${leagueId}&season=${SEASON}&last=${limit}&timezone=Europe/Madrid`);
-  if (!json) return [];
-  return (json.response ?? []).map(mapFixtureToMatch);
+  // Free plan: use date-by-date going backwards
+  const allMatches: Match[] = [];
+  for (let dayOffset = 0; dayOffset <= 7 && allMatches.length < limit; dayOffset++) {
+    const date = new Date(Date.now() - dayOffset * 86400000).toISOString().split('T')[0];
+    const json = await apiFetch(`/fixtures?date=${date}&league=${leagueId}&season=${SEASON}`);
+    if (!json) continue;
+    const fixtures = (json.response ?? []).filter((f: any) =>
+      f.fixture?.status?.short === 'FT' || f.fixture?.status?.short === 'AET'
+    );
+    allMatches.push(...fixtures.map(mapFixtureToMatch));
+  }
+  return allMatches.slice(0, limit);
 }
 
 // ── Fetch team statistics ──

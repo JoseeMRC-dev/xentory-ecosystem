@@ -51,8 +51,9 @@ const COMPETITIONS_BY_SPORT: Record<string, { id: string; name: string; emoji: s
 // ── MATCH CARD ──
 function MatchCard({ match, query, onClick }: { match: Match; query: string; onClick: () => void }) {
   const sport = SPORT_CONFIG[match.sport];
-  const dateStr = new Date(match.date).toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: 'short' });
-  const timeStr = new Date(match.date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  const matchDate = new Date(match.date);
+  const dateStr = matchDate.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', timeZone: 'Europe/Madrid' });
+  const timeStr = matchDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' });
 
   const highlight = (text: string) => {
     if (!query.trim()) return <span>{text}</span>;
@@ -378,13 +379,13 @@ export function MatchesPage() {
             {query ? '🔍' : (competitions.find(c => c.id === activeCompetition)?.emoji ?? SPORT_CONFIG[activeSport]?.emoji)}
           </div>
           <h3 style={{ marginBottom: '0.5rem' }}>
-            {query ? `Sin resultados para "${query}"` : 'No hay partidos próximos'}
+            {query ? `Sin resultados para "${query}"` : 'No hay matches próximos'}
           </h3>
           <p style={{ color: 'var(--muted)', fontSize: '0.88rem', marginBottom: '1.2rem' }}>
             {query
               ? 'Prueba con otro nombre de equipo, jugador o competición.'
               : activeCompetition !== 'all'
-                ? 'No hay partidos para esta competición.'
+                ? 'No hay matches para esta competición.'
                 : 'No hay eventos disponibles. Prueba con otro deporte.'}
           </p>
           <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
