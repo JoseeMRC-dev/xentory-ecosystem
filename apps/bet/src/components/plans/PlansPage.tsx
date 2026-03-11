@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { useLang } from '../../context/LanguageContext';
 import { PLANS } from '../../constants';
 import type { Plan } from '../../types';
 
 export function PlansPage() {
   const { user, upgradePlan } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLang();
   const [yearly, setYearly] = useState(false);
   const [loading, setLoading] = useState<Plan | null>(null);
   const [success, setSuccess] = useState(false);
@@ -25,38 +27,37 @@ export function PlansPage() {
   return (
     <div className="animate-fadeUp" style={{ maxWidth: 1000, width: '100%' }}>
 
-      {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.3rem 0.9rem', borderRadius: 100, background: 'var(--gold-dim)', border: '1px solid rgba(201,168,76,0.2)', color: 'var(--gold)', fontSize: '0.72rem', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '1rem' }}>
           💎 Xentory Bet Plans
         </div>
         <h1 style={{ fontSize: 'clamp(1.8rem, 4vw, 2.5rem)', marginBottom: '0.8rem' }}>
-          Elige tu nivel de predicción
+          {t('Elige tu nivel de predicción', 'Choose your prediction level')}
         </h1>
         <p style={{ color: 'var(--muted)', maxWidth: 480, margin: '0 auto 2rem', lineHeight: 1.75 }}>
-          Sin permanencia. El acceso al canal de Telegram se activa y cancela automáticamente con tu suscripción.
+          {t(
+            'Sin permanencia. El acceso al canal de Telegram se activa y cancela automáticamente con tu suscripción.',
+            'No commitment. Telegram channel access is activated and cancelled automatically with your subscription.'
+          )}
         </p>
 
-        {/* Billing toggle */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.8rem' }}>
-          <span style={{ fontSize: '0.85rem', color: !yearly ? 'var(--text)' : 'var(--muted)' }}>Mensual</span>
+          <span style={{ fontSize: '0.85rem', color: !yearly ? 'var(--text)' : 'var(--muted)' }}>{t('Mensual', 'Monthly')}</span>
           <button onClick={() => setYearly(y => !y)} style={{ width: 46, height: 26, borderRadius: 13, border: 'none', cursor: 'pointer', background: yearly ? 'var(--gold)' : 'var(--card2)', position: 'relative', transition: 'background 0.3s' }}>
             <span style={{ position: 'absolute', top: 3, left: yearly ? 24 : 3, width: 20, height: 20, borderRadius: '50%', background: yearly ? '#050810' : 'var(--muted)', transition: 'left 0.3s' }} />
           </button>
           <span style={{ fontSize: '0.85rem', color: yearly ? 'var(--text)' : 'var(--muted)' }}>
-            Anual <span style={{ color: 'var(--green)', fontSize: '0.75rem' }}>–20%</span>
+            {t('Anual', 'Yearly')} <span style={{ color: 'var(--green)', fontSize: '0.75rem' }}>–20%</span>
           </span>
         </div>
       </div>
 
-      {/* Success */}
       {success && (
         <div style={{ padding: '1rem 1.5rem', background: 'rgba(0,255,136,0.08)', border: '1px solid rgba(0,255,136,0.2)', borderRadius: 12, color: 'var(--green)', textAlign: 'center', marginBottom: '1.5rem' }}>
-          ✅ ¡Plan activado! Recibirás acceso al canal de Telegram en breve.
+          ✅ {t('¡Plan activado! Recibirás acceso al canal de Telegram en breve.', 'Plan activated! You will receive access to the Telegram channel shortly.')}
         </div>
       )}
 
-      {/* Plans */}
       <div className="bet-plans-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.2rem', marginBottom: '2.5rem' }}>
         {PLANS.map(plan => {
           const isCurrent = user?.plan === plan.id;
@@ -76,12 +77,12 @@ export function PlansPage() {
 
               {plan.popular && (
                 <div style={{ position: 'absolute', top: '1.2rem', right: '1.2rem', padding: '0.2rem 0.6rem', background: 'var(--gold-dim)', color: 'var(--gold)', fontSize: '0.62rem', letterSpacing: '0.1em', borderRadius: 4, border: '1px solid rgba(201,168,76,0.2)' }}>
-                  MÁS POPULAR
+                  {t('MÁS POPULAR', 'MOST POPULAR')}
                 </div>
               )}
               {isCurrent && (
                 <div style={{ position: 'absolute', top: plan.popular ? '3rem' : '1.2rem', right: '1.2rem', padding: '0.2rem 0.6rem', background: `${plan.color}12`, color: plan.color, fontSize: '0.62rem', borderRadius: 4 }}>
-                  ✓ ACTIVO
+                  ✓ {t('ACTIVO', 'ACTIVE')}
                 </div>
               )}
 
@@ -91,7 +92,11 @@ export function PlansPage() {
                 {plan.price === 0 ? 'Free' : <><sup style={{ fontSize: '1rem', fontWeight: 400 }}>€</sup>{price}</>}
               </div>
               <div style={{ color: 'var(--muted)', fontSize: '0.78rem', marginBottom: '1.3rem' }}>
-                {plan.price === 0 ? 'No credit card' : yearly ? `per year (${Math.round(price / 12)}€/mo)` : 'per month · cancel anytime'}
+                {plan.price === 0
+                  ? t('Sin tarjeta de crédito', 'No credit card')
+                  : yearly
+                    ? t(`al año (${Math.round(price / 12)}€/mes)`, `per year (${Math.round(price / 12)}€/mo)`)
+                    : t('al mes · cancela cuando quieras', 'per month · cancel anytime')}
               </div>
 
               <div style={{ height: 1, background: 'var(--border)', marginBottom: '1.3rem' }} />
@@ -122,22 +127,24 @@ export function PlansPage() {
               >
                 {isBusy
                   ? <span className="animate-spin" style={{ display: 'inline-block', width: 15, height: 15, border: '2px solid currentColor', borderTopColor: 'transparent', borderRadius: '50%' }} />
-                  : isCurrent ? '✓ Plan actual'
-                  : plan.price === 0 ? 'Free plan'
-                  : `Activate ${plan.name}`}
+                  : isCurrent ? `✓ ${t('Plan actual', 'Current plan')}`
+                  : plan.price === 0 ? t('Plan gratuito', 'Free plan')
+                  : `${t('Activar', 'Activate')} ${plan.name}`}
               </button>
             </div>
           );
         })}
       </div>
 
-      {/* Stripe notice */}
       <div style={{ textAlign: 'center', color: 'var(--muted)', fontSize: '0.78rem', lineHeight: 1.9 }}>
-        🔒 Pagos seguros procesados por Stripe · Cifrado SSL<br />
-        El acceso a Telegram se activa y desactiva automáticamente con tu suscripción.<br />
-        <a href="#" style={{ color: 'var(--gold)', textDecoration: 'none' }}>Política de reembolso</a> ·{' '}
-        <a href="#" style={{ color: 'var(--gold)', textDecoration: 'none' }}>Términos de uso</a> ·{' '}
-        <a href="#" style={{ color: 'var(--gold)', textDecoration: 'none' }}>Juego responsable</a>
+        🔒 {t('Pagos seguros procesados por Stripe · Cifrado SSL', 'Secure payments processed by Stripe · SSL Encrypted')}<br />
+        {t(
+          'El acceso a Telegram se activa y desactiva automáticamente con tu suscripción.',
+          'Telegram access is activated and deactivated automatically with your subscription.'
+        )}<br />
+        <a href="#" style={{ color: 'var(--gold)', textDecoration: 'none' }}>{t('Política de reembolso', 'Refund policy')}</a> ·{' '}
+        <a href="#" style={{ color: 'var(--gold)', textDecoration: 'none' }}>{t('Términos de uso', 'Terms of use')}</a> ·{' '}
+        <a href="#" style={{ color: 'var(--gold)', textDecoration: 'none' }}>{t('Juego responsable', 'Responsible gambling')}</a>
       </div>
     </div>
   );
