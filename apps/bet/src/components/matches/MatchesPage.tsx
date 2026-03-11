@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { fetchUpcomingMatches, getMockMatchesBySport, fetchTennisMatches, fetchBasketballMatches, fetchF1Matches } from '../../services/sportsService';
+import { fetchUpcomingMatches, getMockMatchesBySport, fetchTennisMatches, fetchBasketballMatches, fetchF1Matches, fetchGolfMatches } from '../../services/sportsService';
 import { SPORT_CONFIG } from '../../constants';
+import { useLang } from '../../context/LanguageContext';
 import type { Match, Sport } from '../../types';
 
 // ── COMPETITIONS ──
@@ -51,8 +52,10 @@ const COMPETITIONS_BY_SPORT: Record<string, { id: string; name: string; emoji: s
 // ── MATCH CARD ──
 function MatchCard({ match, query, onClick }: { match: Match; query: string; onClick: () => void }) {
   const sport = SPORT_CONFIG[match.sport];
+  const { lang } = useLang();
   const matchDate = new Date(match.date);
-  const dateStr = matchDate.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', timeZone: 'Europe/Madrid' });
+  const locale = lang === 'es' ? 'es-ES' : 'en-GB';
+  const dateStr = matchDate.toLocaleDateString(locale, { weekday: 'short', day: '2-digit', month: 'short', timeZone: 'Europe/Madrid' });
   const timeStr = matchDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' });
 
   const highlight = (text: string) => {
@@ -90,12 +93,12 @@ function MatchCard({ match, query, onClick }: { match: Match; query: string; onC
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           {match.status === 'live' && (
             <span style={{ fontSize: '0.65rem', padding: '0.15rem 0.5rem', borderRadius: 100, background: 'rgba(255,68,85,0.15)', color: 'var(--red)', border: '1px solid rgba(255,68,85,0.25)', animation: 'pulse 2s infinite' }}>
-              🔴 EN VIVO
+              🔴 {lang === 'es' ? 'EN VIVO' : 'LIVE'}
             </span>
           )}
           {match.status === 'finished' && (
             <span style={{ fontSize: '0.65rem', padding: '0.15rem 0.5rem', borderRadius: 100, background: 'rgba(107,114,148,0.15)', color: 'var(--muted)', border: '1px solid rgba(107,114,148,0.25)' }}>
-              FIN
+              {lang === 'es' ? 'FIN' : 'FT'}
             </span>
           )}
           <span style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>{dateStr} · {timeStr}</span>
@@ -108,7 +111,7 @@ function MatchCard({ match, query, onClick }: { match: Match; query: string; onC
           <div style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '1rem' }}>
             {highlight(match.homeTeam.name)}
           </div>
-          <div style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '0.2rem' }}>Local</div>
+          <div style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '0.2rem' }}>{lang === 'es' ? 'Local' : 'Home'}</div>
         </div>
         <div style={{ textAlign: 'center', minWidth: 64 }}>
           {match.status === 'finished' || match.status === 'live' ? (
@@ -125,7 +128,7 @@ function MatchCard({ match, query, onClick }: { match: Match; query: string; onC
           <div style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '1rem' }}>
             {highlight(match.awayTeam.name)}
           </div>
-          <div style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '0.2rem' }}>Visitante</div>
+          <div style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '0.2rem' }}>{lang === 'es' ? 'Visitante' : 'Away'}</div>
         </div>
       </div>
 
@@ -134,7 +137,7 @@ function MatchCard({ match, query, onClick }: { match: Match; query: string; onC
           <span style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>
             {match.venue ? `📍 ${match.venue}` : match.round}
           </span>
-          <span style={{ fontSize: '0.75rem', color: sport.color, fontWeight: 500 }}>Ver análisis →</span>
+          <span style={{ fontSize: '0.75rem', color: sport.color, fontWeight: 500 }}>{lang === 'es' ? 'Ver análisis →' : 'View analysis →'}</span>
         </div>
       )}
     </div>
@@ -147,6 +150,7 @@ function MatchCard({ match, query, onClick }: { match: Match; query: string; onC
 export function MatchesPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { t, lang } = useLang();
   const activeSport       = (searchParams.get('sport') ?? 'football') as Sport;
   const activeCompetition = searchParams.get('comp') ?? 'all';
 
@@ -174,6 +178,8 @@ export function MatchesPage() {
         results = await fetchBasketballMatches();
       } else if (activeSport === 'f1') {
         results = await fetchF1Matches();
+      } else if (activeSport === 'golf') {
+        results = await fetchGolfMatches();
       } else {
         results = getMockMatchesBySport(activeSport);
       }
@@ -229,15 +235,19 @@ export function MatchesPage() {
   const setSport = (sport: string) => setSearchParams({ sport, comp: 'all' });
   const setComp  = (comp: string)  => setSearchParams({ sport: activeSport, comp });
 
+  const match_word = lang === 'es'
+    ? (n: number) => `partido${n !== 1 ? 's' : ''}`
+    : (n: number) => `match${n !== 1 ? 'es' : ''}`;
+
   return (
     <div className="animate-fadeUp" style={{ maxWidth: 1100, width: '100%' }}>
 
       {/* ── HEADER ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.8rem' }}>
         <div>
-          <h1 style={{ fontSize: '1.5rem', marginBottom: '0.3rem' }}>📅 Matches & Events</h1>
+          <h1 style={{ fontSize: '1.5rem', marginBottom: '0.3rem' }}>📅 {t('Partidos y Eventos', 'Matches & Events')}</h1>
           <p style={{ color: 'var(--muted)', fontSize: '0.88rem' }}>
-            Filter by sport, competition or search directly.
+            {t('Filtra por deporte, competición o busca directamente.', 'Filter by sport, competition or search directly.')}
           </p>
         </div>
         {/* Search toggle */}
@@ -252,7 +262,7 @@ export function MatchesPage() {
             fontSize: '0.82rem', transition: 'all 0.2s',
           }}
         >
-          🔍 Buscar
+          🔍 {t('Buscar', 'Search')}
           <span style={{ padding: '0.1rem 0.4rem', borderRadius: 4, background: 'var(--card2)', fontSize: '0.65rem', color: 'var(--muted)', fontFamily: 'monospace' }}>/</span>
         </button>
       </div>
@@ -266,7 +276,10 @@ export function MatchesPage() {
             className="input"
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder={`Search teams, players, competitions, drivers... (${allMatches.length} events loaded)`}
+            placeholder={t(
+              `Buscar equipos, jugadores, competiciones... (${allMatches.length} eventos cargados)`,
+              `Search teams, players, competitions... (${allMatches.length} events loaded)`
+            )}
             style={{ paddingLeft: '2.8rem', paddingRight: query ? '2.8rem' : '1rem', fontSize: '0.95rem', width: '100%' }}
           />
           {query && (
@@ -278,8 +291,8 @@ export function MatchesPage() {
           {query && (
             <div style={{ marginTop: '0.4rem', fontSize: '0.75rem', color: 'var(--muted)' }}>
               {visibleMatches.length === 0
-                ? 'Sin resultados'
-                : `${visibleMatches.length} resultado${visibleMatches.length !== 1 ? 's' : ''} para "${query}"`}
+                ? t('Sin resultados', 'No results')
+                : `${visibleMatches.length} ${t('resultado', 'result')}${visibleMatches.length !== 1 ? 's' : ''} ${t('para', 'for')} "${query}"`}
             </div>
           )}
         </div>
@@ -307,7 +320,6 @@ export function MatchesPage() {
 
       {/* ── COMPETITION SELECTOR ── */}
       <div style={{ marginBottom: '1.5rem' }}>
-        {/* League pills — scrollable on mobile */}
         <div style={{ display: 'flex', gap: '0.4rem', overflowX: 'auto', paddingBottom: '0.3rem', scrollbarWidth: 'none' }}>
           {competitions.map(comp => {
             const matchCount = allMatches.filter(m =>
@@ -347,7 +359,7 @@ export function MatchesPage() {
       {/* ── ACTIVE FILTERS SUMMARY ── */}
       {(query || activeCompetition !== 'all') && !loading && (
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>Filtros activos:</span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>{t('Filtros activos:', 'Active filters:')}</span>
           {activeCompetition !== 'all' && (
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.2rem 0.6rem', borderRadius: 100, background: 'var(--gold-dim)', border: '1px solid rgba(201,168,76,0.25)', fontSize: '0.72rem', color: 'var(--gold)' }}>
               {competitions.find(c => c.id === activeCompetition)?.emoji} {competitions.find(c => c.id === activeCompetition)?.name}
@@ -361,7 +373,7 @@ export function MatchesPage() {
             </span>
           )}
           <button onClick={() => { setComp('all'); setQuery(''); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: '0.72rem', textDecoration: 'underline' }}>
-            Limpiar todo
+            {t('Limpiar todo', 'Clear all')}
           </button>
         </div>
       )}
@@ -379,21 +391,23 @@ export function MatchesPage() {
             {query ? '🔍' : (competitions.find(c => c.id === activeCompetition)?.emoji ?? SPORT_CONFIG[activeSport]?.emoji)}
           </div>
           <h3 style={{ marginBottom: '0.5rem' }}>
-            {query ? `Sin resultados para "${query}"` : 'No hay matches próximos'}
+            {query
+              ? t(`Sin resultados para "${query}"`, `No results for "${query}"`)
+              : t('No hay partidos próximos', 'No upcoming matches')}
           </h3>
           <p style={{ color: 'var(--muted)', fontSize: '0.88rem', marginBottom: '1.2rem' }}>
             {query
-              ? 'Try a different team name, player or competition.'
+              ? t('Prueba con otro nombre de equipo o competición.', 'Try a different team name or competition.')
               : activeCompetition !== 'all'
-                ? 'No matches for this competition.'
-                : 'No hay eventos disponibles. Prueba con otro deporte.'}
+                ? t('No hay partidos para esta competición.', 'No matches for this competition.')
+                : t('No hay eventos disponibles. Prueba con otro deporte.', 'No events available. Try a different sport.')}
           </p>
           <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             {activeCompetition !== 'all' && (
-              <button onClick={() => setComp('all')} className="btn btn-outline btn-sm">Ver todas</button>
+              <button onClick={() => setComp('all')} className="btn btn-outline btn-sm">{t('Ver todas', 'View all')}</button>
             )}
             {query && (
-              <button onClick={() => setQuery('')} className="btn btn-outline btn-sm">Limpiar búsqueda</button>
+              <button onClick={() => setQuery('')} className="btn btn-outline btn-sm">{t('Limpiar búsqueda', 'Clear search')}</button>
             )}
           </div>
         </div>
@@ -401,7 +415,7 @@ export function MatchesPage() {
         // Search results — flat list
         <>
           <div style={{ fontSize: '0.78rem', color: 'var(--muted)', marginBottom: '0.8rem' }}>
-            {visibleMatches.length} resultado{visibleMatches.length !== 1 ? 's' : ''} para "{query}"
+            {visibleMatches.length} {t('resultado', 'result')}{visibleMatches.length !== 1 ? 's' : ''} {t('para', 'for')} "{query}"
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
             {visibleMatches.map(match => (
@@ -418,7 +432,7 @@ export function MatchesPage() {
                 <span style={{ fontSize: '1rem' }}>{matches[0]?.competition.emoji}</span>
                 <span style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '0.95rem' }}>{compName}</span>
                 <span style={{ fontSize: '0.72rem', color: 'var(--muted)', marginLeft: '0.3rem' }}>
-                  {matches.length} partido{matches.length !== 1 ? 's' : ''}
+                  {matches.length} {match_word(matches.length)}
                 </span>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '0.8rem' }}>
@@ -429,10 +443,11 @@ export function MatchesPage() {
             </div>
           ))}
           <div style={{ fontSize: '0.75rem', color: 'var(--muted)', textAlign: 'center', paddingTop: '1rem' }}>
-            {visibleMatches.length} partido{visibleMatches.length !== 1 ? 's' : ''} en total
+            {visibleMatches.length} {match_word(visibleMatches.length)} {t('en total', 'total')}
           </div>
         </>
       )}
     </div>
   );
 }
+

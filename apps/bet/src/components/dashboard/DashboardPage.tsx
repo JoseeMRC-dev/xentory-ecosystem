@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { fetchUpcomingMatches, getMockMatchesBySport } from '../../services/sportsService';
+import { fetchUpcomingMatches } from '../../services/sportsService';
 import { SPORT_CONFIG, confidenceColor } from '../../constants';
+import { useLang } from '../../context/LanguageContext';
 import type { Match } from '../../types';
 
 // Football competitions for the slider
@@ -36,6 +37,7 @@ function StatCard({ icon, value, label, color }: { icon: string; value: string; 
 export function DashboardPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t, lang } = useLang();
   const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([]);
 
   useEffect(() => {
@@ -45,7 +47,9 @@ export function DashboardPage() {
   }, []);
 
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Buenos días' : hour < 18 ? 'Buenas tardes' : 'Buenas noches';
+  const greeting = lang === 'es'
+    ? (hour < 12 ? 'Buenos días' : hour < 18 ? 'Buenas tardes' : 'Buenas noches')
+    : (hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening');
 
   return (
     <div className="animate-fadeUp" style={{ maxWidth: 1100, width: '100%' }}>
@@ -55,15 +59,15 @@ export function DashboardPage() {
         <h1 style={{ fontSize: '1.6rem', marginBottom: '0.3rem' }}>
           {greeting}, <span className="text-gradient-gold">{user?.name.split(' ')[0]}</span> 👋
         </h1>
-        <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>Aquí tienes las mejores predicciones del día generadas por IA.</p>
+        <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>{t('Aquí tienes las mejores predicciones del día generadas por IA.', 'Here are the best AI-generated predictions for today.')}</p>
       </div>
 
       {/* Stats */}
       <div className="bet-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
-        <StatCard icon="🎯" value="3" label="Picks del día" color="var(--gold)" />
-        <StatCard icon="✅" value="68%" label="Acierto semanal" color="var(--green)" />
-        <StatCard icon="⚽🏀🎾" value="5" label="Deportes activos" color="var(--cyan)" />
-        <StatCard icon="✈️" value={user?.plan !== 'free' ? 'Activo' : 'Inactivo'} label="Canal Telegram" color={user?.plan !== 'free' ? 'var(--green)' : 'var(--muted)'} />
+        <StatCard icon="🎯" value="3" label={t('Picks del día', "Today's picks")} color="var(--gold)" />
+        <StatCard icon="✅" value="68%" label={t('Acierto semanal', 'Weekly accuracy')} color="var(--green)" />
+        <StatCard icon="⚽🏀🎾" value="5" label={t('Deportes activos', 'Active sports')} color="var(--cyan)" />
+        <StatCard icon="✈️" value={user?.plan !== 'free' ? t('Activo', 'Active') : t('Inactivo', 'Inactive')} label={t('Canal Telegram', 'Telegram channel')} color={user?.plan !== 'free' ? 'var(--green)' : 'var(--muted)'} />
       </div>
 
       {/* Best bets of the day */}
@@ -71,9 +75,9 @@ export function DashboardPage() {
 
         <div className="glass" style={{ borderRadius: 16, padding: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
-            <h2 style={{ fontSize: '1rem' }}>🎯 Mejores picks del día</h2>
+            <h2 style={{ fontSize: '1rem' }}>🎯 {t('Mejores picks del día', "Best picks of the day")}</h2>
             <span style={{ fontSize: '0.72rem', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-              <span className="live-dot" /> Actualizado hoy
+              <span className="live-dot" /> {t('Actualizado hoy', 'Updated today')}
             </span>
           </div>
 
@@ -108,15 +112,15 @@ export function DashboardPage() {
           </div>
 
           <button onClick={() => navigate('/analysis')} className="btn btn-gold" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }}>
-            🧠 Generar análisis completo
+            🧠 {t('Generar análisis completo', 'Generate full analysis')}
           </button>
         </div>
 
         {/* Upcoming matches */}
         <div className="glass" style={{ borderRadius: 16, padding: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
-            <h2 style={{ fontSize: '1rem' }}>📅 Upcoming matches</h2>
-            <button onClick={() => navigate('/matches')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gold)', fontSize: '0.78rem' }}>View alls →</button>
+            <h2 style={{ fontSize: '1rem' }}>📅 {t('Próximos partidos', 'Upcoming matches')}</h2>
+            <button onClick={() => navigate('/matches')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gold)', fontSize: '0.78rem' }}>{t('Ver todos', 'View all')} →</button>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
@@ -141,7 +145,7 @@ export function DashboardPage() {
                         {match.homeTeam.shortName} vs {match.awayTeam.shortName}
                       </div>
                       <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>
-                        {new Date(match.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}
+                        {new Date(match.date).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB', { day: '2-digit', month: 'short' })}
                       </div>
                     </div>
                     <div style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '0.2rem' }}>
@@ -156,7 +160,7 @@ export function DashboardPage() {
 
       {/* ── Football competitions slider ─────────────────────── */}
       <div className="glass" style={{ borderRadius: 16, padding: '1.2rem 1.5rem', marginBottom: '1.5rem' }}>
-        <h2 style={{ fontSize: '0.95rem', marginBottom: '1rem' }}>⚽ Competiciones de fútbol</h2>
+        <h2 style={{ fontSize: '0.95rem', marginBottom: '1rem' }}>⚽ {t('Competiciones de fútbol', 'Football competitions')}</h2>
         <div className="bet-competitions-slider">
           {FOOTBALL_COMPETITIONS.map(comp => (
             <button
@@ -193,7 +197,7 @@ export function DashboardPage() {
 
       {/* Sport quick access */}
       <div className="glass" style={{ borderRadius: 16, padding: '1.5rem' }}>
-        <h2 style={{ fontSize: '1rem', marginBottom: '1.2rem' }}>🏆 Acceso rápido por deporte</h2>
+        <h2 style={{ fontSize: '1rem', marginBottom: '1.2rem' }}>🏆 {t('Acceso rápido por deporte', 'Quick access by sport')}</h2>
         <div className="bet-sports-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.8rem' }}>
           {Object.entries(SPORT_CONFIG).map(([key, cfg]) => (
             <div
@@ -228,13 +232,13 @@ export function DashboardPage() {
         >
           <div>
             <div style={{ fontFamily: 'Urbanist', fontWeight: 700, marginBottom: '0.2rem' }}>
-              🚀 Upgrade to Pro Plan — Full analysis across all sports
+              🚀 {t('Upgrade a Plan Pro — Análisis completo en todos los deportes', 'Upgrade to Pro Plan — Full analysis across all sports')}
             </div>
             <div style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>
-              Over/Under · BTTS · Hándicap · Canal Telegram · Todos los deportes desde 29€/mes
+              {t('Over/Under · BTTS · Hándicap · Canal Telegram · Todos los deportes desde 29€/mes', 'Over/Under · BTTS · Handicap · Telegram channel · All sports from €29/month')}
             </div>
           </div>
-          <button className="btn btn-gold" style={{ flexShrink: 0, marginLeft: '1rem' }}>Ver planes →</button>
+          <button className="btn btn-gold" style={{ flexShrink: 0, marginLeft: '1rem' }}>{t('Ver planes', 'View plans')} →</button>
         </div>
       )}
     </div>

@@ -46,7 +46,6 @@ export async function fetchUpcomingMatches(leagueId: number, limit = 10): Promis
     const fixtures = (json.response ?? []).filter((f: any) => f.fixture?.status?.short === 'NS' || f.fixture?.status?.short === 'TBD');
     allMatches.push(...fixtures.map(mapFixtureToMatch));
   }
-  if (allMatches.length === 0) return getMockMatches(leagueId, Math.min(limit, 4));
   return allMatches.slice(0, limit);
 }
 
@@ -117,50 +116,127 @@ export async function fetchTennisMatches(): Promise<Match[]> {
       venue: g.venue ?? g.tournament?.name,
     })));
   }
-  return allMatches.length > 0 ? allMatches : getMockMatchesBySport('tennis');
+  return allMatches;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// BASKETBALL
+// ESPN API — direct fetch, no key needed, no CORS issues
+// ─────────────────────────────────────────────────────────────────────────────
+const ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports';
+const espnCache = new Map<string, { data: any; ts: number }>();
+
+async function espnFetch(path: string): Promise<any> {
+  const cached = espnCache.get(path);
+  if (cached && Date.now() - cached.ts < CACHE_TTL) return cached.data;
+  try {
+    const res = await fetch(`${ESPN_BASE}${path}`);
+    if (!res.ok) { console.warn(`[ESPN] ${path} → HTTP ${res.status}`); return null; }
+    const json = await res.json();
+    espnCache.set(path, { data: json, ts: Date.now() });
+    console.info(`[ESPN] ✅ ${path}`);
+    return json;
+  } catch (err) {
+    console.warn(`[ESPN] fetch failed:`, err);
+    return null;
+  }
+}
+
+function mapEspnStatus(s: string): Match['status'] {
+  if (s === 'in') return 'live';
+  if (s === 'post') return 'finished';
+  return 'scheduled';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BASKETBALL — ESPN (NBA + WNBA + NCB)
 // ─────────────────────────────────────────────────────────────────────────────
 export async function fetchBasketballMatches(): Promise<Match[]> {
-  const allMatches: Match[] = [];
-  for (let day = 0; day <= 3 && allMatches.length < 12; day++) {
-    const date = new Date(Date.now() + day * 86400000).toISOString().split('T')[0];
-    const json = await proxyFetch('basketball', `/games?date=${date}&league=12&season=2024-2025`);
+  const results: Match[] = [];
+
+  // NBA scoreboard (upcoming + live + recent)
+  const leagues = [
+    { path: '/basketball/nba/scoreboard', name: 'NBA', emoji: '🏀', country: 'USA' },
+    { path: '/basketball/mens-college-basketball/scoreboard', name: 'NCAA', emoji: '🎓', country: 'USA' },
+  ];
+
+  for (const league of leagues) {
+    const json = await espnFetch(league.path);
     if (!json) continue;
-    const scheduled = (json.response ?? []).filter((g: any) => g?.status?.short === 'NS');
-    allMatches.push(...scheduled.map((g: any, idx: number) => ({
-      id: g.id ?? 20000 + idx,
-      sport: 'basketball' as const,
-      competition: { id: g.league?.id ?? 12, name: g.league?.name ?? 'NBA', sport: 'basketball' as const, country: g.country?.name ?? 'USA', logo: g.league?.logo ?? '', emoji: '🏀' },
-      homeTeam: { id: g.teams?.home?.id ?? idx * 2, name: g.teams?.home?.name ?? 'Home', shortName: (g.teams?.home?.name ?? 'HOM').substring(0, 3).toUpperCase() },
-      awayTeam: { id: g.teams?.away?.id ?? idx * 2 + 1, name: g.teams?.away?.name ?? 'Away', shortName: (g.teams?.away?.name ?? 'AWY').substring(0, 3).toUpperCase() },
-      date: g.date ?? new Date(Date.now() + 86400000).toISOString(),
-      status: 'scheduled' as const,
-      venue: g.arena?.name ?? g.league?.name,
-    })));
+    const events: any[] = json.events ?? [];
+    for (const ev of events.slice(0, 8)) {
+      const comp = ev.competitions?.[0];
+      if (!comp) continue;
+      const home = comp.competitors?.find((c: any) => c.homeAway === 'home');
+      const away = comp.competitors?.find((c: any) => c.homeAway === 'away');
+      if (!home || !away) continue;
+      const status = mapEspnStatus(ev.status?.type?.state ?? 'pre');
+      results.push({
+        id: parseInt(ev.id) + 20000,
+        sport: 'basketball',
+        competition: { id: league.name === 'NBA' ? 12 : 100, name: league.name, sport: 'basketball', country: league.country, logo: '', emoji: league.emoji },
+        homeTeam: { id: parseInt(home.team?.id ?? '0'), name: home.team?.displayName ?? 'Home', shortName: home.team?.abbreviation ?? 'HOM', logo: home.team?.logo },
+        awayTeam: { id: parseInt(away.team?.id ?? '0'), name: away.team?.displayName ?? 'Away', shortName: away.team?.abbreviation ?? 'AWY', logo: away.team?.logo },
+        date: ev.date ?? new Date().toISOString(),
+        status,
+        homeScore: status !== 'scheduled' ? parseInt(home.score ?? '0') : undefined,
+        awayScore: status !== 'scheduled' ? parseInt(away.score ?? '0') : undefined,
+        venue: comp.venue?.fullName,
+      });
+    }
   }
-  return allMatches.length > 0 ? allMatches : getMockMatchesBySport('basketball');
+  return results;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FORMULA 1
+// FORMULA 1 — ESPN
 // ─────────────────────────────────────────────────────────────────────────────
 export async function fetchF1Matches(): Promise<Match[]> {
+  const json = await espnFetch('/racing/f1/scoreboard');
+  if (!json) return [];
+  const events: any[] = json.events ?? [];
   const season = new Date().getFullYear();
-  const json = await proxyFetch('f1', `/races?season=${season}`);
-  if (!json) return getMockMatchesBySport('f1');
-  const upcoming = (json.response ?? []).filter((r: any) => r?.status === 'Scheduled').slice(0, 6);
-  if (!upcoming.length) return getMockMatchesBySport('f1');
-  return upcoming.map((r: any, idx: number) => ({
-    id: r.id ?? 40000 + idx, sport: 'f1' as const,
-    competition: { id: r.competition?.id ?? 50, name: `Formula 1 ${season}`, sport: 'f1' as const, country: 'Global', logo: '', emoji: '🏎️' },
-    homeTeam: { id: 300 + idx * 2, name: r.circuit?.name ?? `GP ${r.competition?.location?.country ?? ''}`, shortName: 'GP' },
-    awayTeam: { id: 300 + idx * 2 + 1, name: r.competition?.location?.city ?? r.competition?.name ?? 'Grand Prix', shortName: 'F1' },
-    date: r.date ?? new Date(Date.now() + 86400000 * (idx + 1)).toISOString(),
-    status: 'scheduled' as const, venue: r.circuit?.name ?? '',
-  }));
+  return events.slice(0, 10).map((ev: any, idx: number) => {
+    const comp = ev.competitions?.[0];
+    const status = mapEspnStatus(ev.status?.type?.state ?? 'pre');
+    return {
+      id: parseInt(ev.id ?? String(40000 + idx)),
+      sport: 'f1' as const,
+      competition: { id: 50, name: `Formula 1 ${season}`, sport: 'f1' as const, country: 'Global', logo: '', emoji: '🏎️' },
+      homeTeam: { id: 300 + idx * 2, name: ev.name ?? ev.shortName ?? `Gran Premio`, shortName: ev.shortName?.substring(0, 6) ?? 'GP' },
+      awayTeam: { id: 300 + idx * 2 + 1, name: comp?.venue?.fullName ?? 'Circuito', shortName: 'F1' },
+      date: ev.date ?? new Date(Date.now() + 86400000 * (idx + 1)).toISOString(),
+      status,
+      venue: comp?.venue?.fullName ?? ev.name,
+    };
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GOLF — ESPN
+// ─────────────────────────────────────────────────────────────────────────────
+export async function fetchGolfMatches(): Promise<Match[]> {
+  const json = await espnFetch('/golf/pga/scoreboard');
+  if (!json) return [];
+  const events: any[] = json.events ?? [];
+  return events.slice(0, 8).map((ev: any, idx: number) => {
+    const comp = ev.competitions?.[0];
+    const status = mapEspnStatus(ev.status?.type?.state ?? 'pre');
+    // Golf: competitors are individual players
+    const players: any[] = comp?.competitors ?? [];
+    const p1 = players[0];
+    const p2 = players[1];
+    return {
+      id: parseInt(ev.id ?? String(50000 + idx)),
+      sport: 'golf' as const,
+      competition: { id: 200 + idx, name: ev.name ?? 'PGA Tour', sport: 'golf' as const, country: 'USA', logo: '', emoji: '⛳' },
+      homeTeam: { id: 500 + idx * 2, name: p1?.athlete?.displayName ?? p1?.team?.displayName ?? ev.name ?? 'Player 1', shortName: p1?.athlete?.shortName ?? 'P1' },
+      awayTeam: { id: 500 + idx * 2 + 1, name: p2?.athlete?.displayName ?? p2?.team?.displayName ?? 'Field', shortName: p2?.athlete?.shortName ?? 'FLD' },
+      date: ev.date ?? new Date(Date.now() + 86400000 * (idx + 1)).toISOString(),
+      status,
+      venue: comp?.venue?.fullName ?? ev.name,
+      round: ev.status?.type?.shortDetail,
+    };
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

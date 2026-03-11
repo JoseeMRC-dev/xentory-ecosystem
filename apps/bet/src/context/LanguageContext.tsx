@@ -8,13 +8,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useState<Lang>(() => {
     try {
       const stored = localStorage.getItem('xentory_lang') as Lang;
-      // v15+: default language is EN — clear legacy 'es' setting
-      if (!stored || stored === 'es') {
-        localStorage.setItem('xentory_lang', 'en');
-        return 'en';
-      }
-      return stored;
-    } catch { return 'en'; }
+      if (stored === 'en') return 'en';
+      // Default: español
+      localStorage.setItem('xentory_lang', 'es');
+      return 'es';
+    } catch { return 'es'; }
   });
   const toggle = useCallback(() => setLang(l => {
     const next = l === 'es' ? 'en' : 'es';

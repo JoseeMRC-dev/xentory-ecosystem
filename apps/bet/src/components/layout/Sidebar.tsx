@@ -3,14 +3,15 @@ import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { SPORT_CONFIG } from '../../constants';
 import { QuickBar } from './QuickBar';
+import { useLang } from '../../context/LanguageContext';
 
-const NAV = [
-  { to: '/dashboard', icon: '⬛', label: 'Dashboard'   },
-  { to: '/matches',   icon: '📅', label: 'Matches'    },
-  { to: '/analysis',  icon: '🧠', label: 'AI Analysis' },
-  { to: '/history',   icon: '📊', label: 'History'   },
-  { to: '/telegram',  icon: '✈️',  label: 'Telegram'    },
-  { to: '/plans',     icon: '💎', label: 'Plans'      },
+const NAV_ITEMS = (t: (es: string, en: string) => string) => [
+  { to: '/dashboard', icon: '⬛', label: t('Dashboard', 'Dashboard') },
+  { to: '/matches',   icon: '📅', label: t('Partidos',  'Matches')   },
+  { to: '/analysis',  icon: '🧠', label: t('Análisis IA','AI Analysis') },
+  { to: '/history',   icon: '📊', label: t('Historial', 'History')   },
+  { to: '/telegram',  icon: '✈️',  label: 'Telegram'                  },
+  { to: '/plans',     icon: '💎', label: t('Planes',    'Plans')      },
 ];
 
 const HUB_URL  = (import.meta as any).env?.VITE_HUB_URL    ?? 'https://x-eight-beryl.vercel.app';
@@ -18,17 +19,19 @@ const MKT_URL  = (import.meta as any).env?.VITE_MARKET_URL  ?? 'https://xentory-
 const BET_URL  = (import.meta as any).env?.VITE_BET_URL     ?? 'https://xentory-bet.vercel.app';
 
 const PLAN_COLORS: Record<string, string> = { free: '#6b7294', pro: '#c9a84c', elite: '#00d4ff' };
-const PLAN_LABELS: Record<string, string> = { free: 'Fanático', pro: 'Pro', elite: 'Elite' };
 
 function NavContent({ onNav }: { onNav?: () => void }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLang();
+  const NAV = NAV_ITEMS(t);
+  const PLAN_LABELS_I18N: Record<string, string> = { free: t('Fanático', 'Fan'), pro: 'Pro', elite: 'Elite' };
 
   return (
     <>
       {/* Sports filter */}
       <div style={{ padding: '0.9rem 1.2rem', borderBottom: '1px solid var(--border)' }}>
-        <div style={{ fontSize: '0.62rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>Deportes</div>
+        <div style={{ fontSize: '0.62rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>{t('Deportes', 'Sports')}</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
           {Object.entries(SPORT_CONFIG).map(([key, cfg]) => (
             <button
@@ -66,8 +69,8 @@ function NavContent({ onNav }: { onNav?: () => void }) {
       {user && (
         <div style={{ padding: '1rem 1.2rem', borderTop: '1px solid var(--border)' }}>
           <div onClick={() => navigate('/plans')} style={{ padding: '0.7rem 1rem', borderRadius: 10, background: 'var(--card2)', border: `1px solid ${PLAN_COLORS[user.plan]}30`, cursor: 'pointer', marginBottom: '0.7rem' }}>
-            <div style={{ fontSize: '0.62rem', color: 'var(--muted)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Tu plan</div>
-            <div style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 700, color: PLAN_COLORS[user.plan], fontSize: '0.92rem' }}>{PLAN_LABELS[user.plan]}</div>
+            <div style={{ fontSize: '0.62rem', color: 'var(--muted)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{t('Tu plan', 'Your plan')}</div>
+            <div style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 700, color: PLAN_COLORS[user.plan], fontSize: '0.92rem' }}>{PLAN_LABELS_I18N[user.plan]}</div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, background: 'linear-gradient(135deg,var(--gold),var(--green))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.78rem', color: '#050810' }}>
@@ -97,6 +100,7 @@ function NavContent({ onNav }: { onNav?: () => void }) {
 }
 
 function LogoBlock() {
+  const { t } = useLang();
   return (
     <div style={{ padding: '1.2rem 1.2rem 0' }}>
       <div style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 800, fontSize: '1.35rem', letterSpacing: '-0.02em', marginBottom: '0.25rem', display: 'flex', gap: '0', alignItems: 'baseline' }}>
@@ -104,7 +108,7 @@ function LogoBlock() {
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.9rem' }}>
         <span className="live-dot" />
-        <span style={{ fontSize: '0.6rem', color: 'var(--muted)', letterSpacing: '0.06em' }}>EN VIVO</span>
+        <span style={{ fontSize: '0.6rem', color: 'var(--muted)', letterSpacing: '0.06em' }}>{t('EN VIVO', 'LIVE')}</span>
       </div>
       <QuickBar />
       <div style={{ height: 1, background: 'var(--border)', marginTop: '1rem' }} />
