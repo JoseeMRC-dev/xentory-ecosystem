@@ -94,7 +94,7 @@ function PlatformCard({
           padding: '0.18rem 0.55rem', borderRadius: 100, fontSize: '0.62rem',
           background: `${PLAN_COLORS[plan]}14`, color: PLAN_COLORS[plan],
           border: `1px solid ${PLAN_COLORS[plan]}28`, fontWeight: 600,
-          fontFamily: 'Syne, sans-serif', letterSpacing: '0.05em',
+          fontFamily: 'Outfit, sans-serif', letterSpacing: '0.05em',
         }}>
           {PLAN_LABELS[plan]}
         </span>
@@ -105,7 +105,7 @@ function PlatformCard({
         {icon}
       </div>
 
-      <h3 style={{ fontSize: 'clamp(1rem, 3vw, 1.15rem)', marginBottom: '0.3rem', color, lineHeight: 1.2, fontFamily: 'Syne, sans-serif', fontWeight: 800 }}>{name}</h3>
+      <h3 style={{ fontSize: 'clamp(1rem, 3vw, 1.15rem)', marginBottom: '0.3rem', color, lineHeight: 1.2, fontFamily: 'Outfit, sans-serif', fontWeight: 800 }}>{name}</h3>
       <p style={{ color: 'var(--muted)', fontSize: '0.8rem', marginBottom: '1rem', lineHeight: 1.55 }}>
         {planKey === 'market'
           ? t('platforms.market.desc').substring(0, 65) + '…'
@@ -206,7 +206,7 @@ export function DashboardPage() {
 
       {/* Header */}
       <div className="animate-fadeUp" style={{ marginBottom: '1.8rem' }}>
-        <h1 style={{ fontSize: 'clamp(1.3rem,4vw,1.7rem)', marginBottom: '0.3rem', fontFamily: 'Syne, sans-serif', fontWeight: 800 }}>
+        <h1 style={{ fontSize: 'clamp(1.3rem,4vw,1.7rem)', marginBottom: '0.3rem', fontFamily: 'Outfit, sans-serif', fontWeight: 800 }}>
           {greeting}, <span className="text-gradient-gold">{user.name.split(' ')[0]}</span>
         </h1>
         <p style={{ color: 'var(--muted)', fontSize: 'clamp(0.78rem,2vw,0.88rem)' }}>{memberTxt}</p>
@@ -221,7 +221,7 @@ export function DashboardPage() {
         {launching && (
           <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'var(--bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', animation: 'fadeIn 0.3s ease' }}>
             <div style={{ position: 'absolute', width: 400, height: 400, borderRadius: '50%', background: launching === 'market' ? 'radial-gradient(circle,rgba(201,168,76,0.08),transparent 70%)' : 'radial-gradient(circle,rgba(0,200,122,0.08),transparent 70%)', pointerEvents: 'none' }} />
-            <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: 'clamp(2rem,6vw,2.8rem)', letterSpacing: '-0.04em', marginBottom: '2.5rem' }}>
+            <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(2rem,6vw,2.8rem)', letterSpacing: '-0.04em', marginBottom: '2.5rem' }}>
               <span className="text-gradient-gold">Xentory</span>
               <span style={{ color: launching === 'market' ? 'var(--cyan)' : 'var(--green)' }}> {launching === 'market' ? 'Market' : 'Bet'}</span>
             </div>
@@ -241,7 +241,7 @@ export function DashboardPage() {
 
         {/* Stats card */}
         <div className="glass" style={{ borderRadius: 18, padding: 'clamp(1rem,4vw,1.8rem)' }}>
-          <h2 style={{ fontSize: '0.92rem', marginBottom: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'Syne, sans-serif', color: 'var(--text2)' }}>
+          <h2 style={{ fontSize: '0.92rem', marginBottom: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'Outfit, sans-serif', color: 'var(--text2)' }}>
             <BrainIcon /> {lang === 'es' ? 'Tu actividad' : 'Your activity'}
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
@@ -251,7 +251,7 @@ export function DashboardPage() {
                   <span style={{ color: stat.color }}>{stat.icon}</span>
                   <span style={{ fontSize: '0.82rem', color: 'var(--text2)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{stat.label}</span>
                 </div>
-                <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, color: stat.color, fontSize: '1.05rem', flexShrink: 0, marginLeft: '0.5rem' }}>{stat.value}</span>
+                <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, color: stat.color, fontSize: '1.05rem', flexShrink: 0, marginLeft: '0.5rem' }}>{stat.value}</span>
               </div>
             ))}
           </div>
@@ -272,7 +272,7 @@ export function DashboardPage() {
 
         {/* Recent activity */}
         <div className="glass" style={{ borderRadius: 18, padding: 'clamp(1rem,4vw,1.8rem)' }}>
-          <h2 style={{ fontSize: '0.92rem', marginBottom: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'Syne, sans-serif', color: 'var(--text2)' }}>
+          <h2 style={{ fontSize: '0.92rem', marginBottom: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'Outfit, sans-serif', color: 'var(--text2)' }}>
             <ClockIcon /> {lang === 'es' ? 'Actividad reciente' : 'Recent activity'}
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -300,7 +300,7 @@ export function DashboardPage() {
               onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.38)')}
               onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.18)')}
             >
-              <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '0.88rem', marginBottom: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.88rem', marginBottom: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 <span style={{ color: 'var(--gold)' }}><StarIcon /></span>
                 {lang === 'es' ? 'Bundle Total — Ahorra 9€/mes' : 'Full Bundle — Save €9/mo'}
               </div>

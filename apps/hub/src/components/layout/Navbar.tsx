@@ -183,7 +183,7 @@ export function Navbar() {
         {(['USD', 'EUR'] as Currency[]).map(c => (
           <button key={c} onClick={() => setCurrency(c)} style={{
             padding: '0.18rem 0.45rem', borderRadius: 5, border: 'none', cursor: 'pointer',
-            fontSize: '0.65rem', fontWeight: 700, fontFamily: 'Syne, sans-serif', transition: 'all 0.18s',
+            fontSize: '0.65rem', fontWeight: 700, fontFamily: 'Outfit, sans-serif', transition: 'all 0.18s',
             background: currency === c ? 'linear-gradient(135deg,var(--gold),var(--gold-l))' : 'transparent',
             color: currency === c ? 'var(--bg)' : 'var(--muted)',
           }}>{c === 'USD' ? '$' : '€'}</button>
@@ -218,7 +218,7 @@ export function Navbar() {
       }}>
         {/* Logo */}
         <Link to="/" style={{ textDecoration: 'none', flexShrink: 0 }}>
-          <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: 'clamp(1.15rem,3vw,1.35rem)', letterSpacing: '-0.04em' }}>
+          <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.15rem,3vw,1.35rem)', letterSpacing: '-0.04em' }}>
             <span className="text-gradient-gold">Xen</span>
             <span style={{ color: 'var(--cyan)' }}>tory</span>
           </span>
@@ -254,7 +254,7 @@ export function Navbar() {
                   width: 34, height: 34, borderRadius: '50%', cursor: 'pointer', border: 'none',
                   background: 'linear-gradient(135deg,var(--gold),var(--cyan))',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '0.8rem', color: 'var(--bg)',
+                  fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '0.8rem', color: 'var(--bg)',
                   padding: 0,
                 }}>
                   {user.name.charAt(0).toUpperCase()}
@@ -363,7 +363,7 @@ export function Navbar() {
                 <>
                   {/* User info chip */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', padding: '0.6rem 0.8rem', background: 'var(--card2)', borderRadius: 10, border: '1px solid var(--border)', marginBottom: '0.2rem' }}>
-                    <div style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, background: 'linear-gradient(135deg,var(--gold),var(--cyan))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '0.85rem', color: 'var(--bg)' }}>
+                    <div style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, background: 'linear-gradient(135deg,var(--gold),var(--cyan))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '0.85rem', color: 'var(--bg)' }}>
                       {user.name.charAt(0).toUpperCase()}
                     </div>
                     <div style={{ minWidth: 0 }}>
@@ -376,7 +376,7 @@ export function Navbar() {
                     textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
                     padding: '0.75rem 1rem', borderRadius: 10,
                     background: 'linear-gradient(135deg,var(--gold),var(--gold-l))', color: 'var(--bg)',
-                    fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '0.92rem',
+                    fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.92rem',
                     boxShadow: '0 4px 20px rgba(201,168,76,0.3)',
                   }}>
                     <DashIcon /> {t('nav.dashboard')}
@@ -433,7 +433,7 @@ export function Navbar() {
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
               <div>
-                <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   {settingsTab === 'email'    ? <><MailIcon /> {t('settings.email.title')}</> :
                    settingsTab === 'password' ? <><KeyIcon />  {t('settings.pwd.title')}</> :
                                                 <><TrashIcon /> {t('settings.del.title')}</>}
@@ -524,7 +524,7 @@ export function Navbar() {
                           try { const { getSupabase } = await import('../../lib/supabase'); const sb = getSupabase(); if (!sb) throw new Error(); await sb.auth.signOut(); setSMsg({ type: 'ok', text: t('settings.del.signout') }); setTimeout(() => { logout(); navigate('/'); }, 2500); } catch (e: any) { setSMsg({ type: 'err', text: e?.message ?? 'Error' }); } finally { setSBusy(false); }
                         }}
                         disabled={sBusy || sField !== t('settings.del.placeholder')}
-                        style={{ width: '100%', padding: '0.7rem', borderRadius: 9, border: 'none', cursor: sField === t('settings.del.placeholder') ? 'pointer' : 'not-allowed', background: sField === t('settings.del.placeholder') ? 'var(--red)' : 'rgba(240,68,88,0.15)', color: 'white', fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '0.88rem', transition: 'all 0.2s', opacity: sField === t('settings.del.placeholder') ? 1 : 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+                        style={{ width: '100%', padding: '0.7rem', borderRadius: 9, border: 'none', cursor: sField === t('settings.del.placeholder') ? 'pointer' : 'not-allowed', background: sField === t('settings.del.placeholder') ? 'var(--red)' : 'rgba(240,68,88,0.15)', color: 'white', fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.88rem', transition: 'all 0.2s', opacity: sField === t('settings.del.placeholder') ? 1 : 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
                         {sBusy ? <SpinnerIcon /> : <><TrashIcon />{t('settings.del.btn')}</>}
                       </button>
                     </div>

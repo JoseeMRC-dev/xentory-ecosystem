@@ -89,7 +89,7 @@ export function PricingPage() {
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.22rem 0.75rem', borderRadius: 100, background: 'var(--gold-dim)', border: '1px solid rgba(201,168,76,0.2)', color: 'var(--gold)', fontSize: '0.62rem', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: '1.2rem', fontWeight: 600 }}>
           {t('pricing.badge')}
         </div>
-        <h1 style={{ fontSize: 'clamp(2rem,5vw,3rem)', marginBottom: '0.9rem', fontFamily: 'Syne, sans-serif', fontWeight: 800 }}>
+        <h1 style={{ fontSize: 'clamp(2rem,5vw,3rem)', marginBottom: '0.9rem', fontFamily: 'Outfit, sans-serif', fontWeight: 800 }}>
           {t('pricing.title')}
         </h1>
         <p style={{ color: 'var(--muted)', maxWidth: 500, margin: '0 auto 2.5rem', lineHeight: 1.75, fontSize: '0.9rem' }}>
@@ -113,7 +113,7 @@ export function PricingPage() {
           {TABS.map(([key, icon, label]) => (
             <button key={key} onClick={() => setPlatform(key)} style={{
               padding: '0.55rem 1.2rem', borderRadius: 9, border: 'none', cursor: 'pointer',
-              fontFamily: 'Syne, sans-serif', fontWeight: 600, fontSize: '0.83rem',
+              fontFamily: 'Outfit, sans-serif', fontWeight: 600, fontSize: '0.83rem',
               display: 'flex', alignItems: 'center', gap: '0.4rem',
               background: platform === key ? (key === 'bundle' ? 'linear-gradient(135deg,var(--gold),var(--gold-l))' : 'var(--card3)') : 'transparent',
               color: platform === key ? (key === 'bundle' ? 'var(--bg)' : 'var(--text)') : 'var(--muted)',
@@ -150,19 +150,19 @@ export function PricingPage() {
               <div style={{ width: 56, height: 56, borderRadius: 16, background: 'var(--gold-dim)', border: '1px solid rgba(201,168,76,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.2rem', color: 'var(--gold)' }}>
                 <BundleIcon />
               </div>
-              <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '1.4rem', marginBottom: '0.3rem' }}>{BUNDLE.name}</div>
+              <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1.4rem', marginBottom: '0.3rem' }}>{BUNDLE.name}</div>
               <p style={{ color: 'var(--muted)', marginBottom: '2rem', fontSize: '0.87rem', lineHeight: 1.7 }}>{BUNDLE.description}</p>
 
               <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginBottom: '2rem' }}>
                 <div>
                   <div style={{ fontSize: '0.65rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.3rem' }}>{t('pricing.bundle.individual')}</div>
-                  <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '1.4rem', textDecoration: 'line-through', color: 'var(--muted)' }}>
+                  <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '1.4rem', textDecoration: 'line-through', color: 'var(--muted)' }}>
                     {yearly ? `${Math.round(58 * 12 * 0.8)}€/yr` : '58€/mo'}
                   </div>
                 </div>
                 <div>
                   <div style={{ fontSize: '0.65rem', color: 'var(--green)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.3rem' }}>{t('pricing.bundle.price')}</div>
-                  <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '2.4rem', color: 'var(--gold)', letterSpacing: '-0.04em', lineHeight: 1, display: 'flex', alignItems: 'baseline', gap: '0.2rem' }}>
+                  <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '2.4rem', color: 'var(--gold)', letterSpacing: '-0.04em', lineHeight: 1, display: 'flex', alignItems: 'baseline', gap: '0.2rem' }}>
                     {yearly
                       ? <>{Math.round(BUNDLE.monthlyPrice * 12 * 0.8)}€<span style={{ fontSize: '1rem', color: 'var(--muted)', fontWeight: 300 }}>/yr</span></>
                       : <>{BUNDLE.monthlyPrice}€<span style={{ fontSize: '1rem', color: 'var(--muted)', fontWeight: 300 }}>/mo</span></>}
@@ -218,9 +218,9 @@ export function PricingPage() {
                     {isCurrent && <span style={{ padding: '0.18rem 0.55rem', background: `${plan.color}12`, color: plan.color, fontSize: '0.6rem', letterSpacing: '0.1em', borderRadius: 4, fontWeight: 700 }}>{t('pricing.active')}</span>}
                   </div>
 
-                  <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '1.05rem', color: plan.color, marginBottom: '1rem' }}>{plan.name}</div>
+                  <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '1.05rem', color: plan.color, marginBottom: '1rem' }}>{plan.name}</div>
 
-                  <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '2.4rem', letterSpacing: '-0.04em', lineHeight: 1, marginBottom: '0.3rem' }}>
+                  <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '2.4rem', letterSpacing: '-0.04em', lineHeight: 1, marginBottom: '0.3rem' }}>
                     {plan.price === 0 ? t('pricing.free.label') : <><sup style={{ fontSize: '0.9rem', fontWeight: 400, verticalAlign: 'super' }}>€</sup>{price}</>}
                   </div>
                   <div style={{ color: 'var(--muted)', fontSize: '0.76rem', marginBottom: '1.4rem', lineHeight: 1.4 }}>
@@ -241,7 +241,7 @@ export function PricingPage() {
                   <button onClick={() => handleSubscribe(plan.id as Plan, plt)} disabled={isCurrent || isBusy} style={{
                     width: '100%', padding: '0.78rem', borderRadius: 9, border: plan.popular ? 'none' : `1px solid ${plan.color}28`,
                     cursor: isCurrent ? 'not-allowed' : 'pointer',
-                    fontFamily: 'DM Sans, sans-serif', fontWeight: plan.popular ? 600 : 500, fontSize: '0.88rem',
+                    fontFamily: 'Figtree, sans-serif', fontWeight: plan.popular ? 600 : 500, fontSize: '0.88rem',
                     background: isCurrent ? 'var(--card2)' : plan.popular ? `linear-gradient(135deg,var(--gold),var(--gold-l))` : `${plan.color}10`,
                     color: isCurrent ? 'var(--muted)' : plan.popular ? 'var(--bg)' : plan.color,
                     opacity: isCurrent ? 0.65 : 1, transition: 'all 0.2s',
@@ -259,7 +259,7 @@ export function PricingPage() {
         <div style={{ margin: '2.5rem 0 1.5rem', padding: 'clamp(1.2rem,3vw,1.8rem)', borderRadius: 16, background: 'linear-gradient(135deg,rgba(0,200,122,0.04),rgba(201,168,76,0.03))', border: '1px solid rgba(0,200,122,0.12)', display: 'flex', alignItems: 'flex-start', gap: '1.2rem', flexWrap: 'wrap' }}>
           <div style={{ flexShrink: 0, marginTop: '2px' }}><ShieldIcon /></div>
           <div>
-            <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: 'clamp(0.95rem,2.5vw,1.1rem)', marginBottom: '0.3rem' }}>{t('pricing.guarantee.title')}</div>
+            <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: 'clamp(0.95rem,2.5vw,1.1rem)', marginBottom: '0.3rem' }}>{t('pricing.guarantee.title')}</div>
             <div style={{ color: 'var(--text2)', fontSize: '0.86rem', maxWidth: 520, lineHeight: 1.7 }}>{t('pricing.guarantee.desc')}</div>
           </div>
         </div>

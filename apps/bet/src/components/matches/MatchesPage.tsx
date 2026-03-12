@@ -108,14 +108,14 @@ function MatchCard({ match, query, onClick }: { match: Match; query: string; onC
       {/* Teams */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
         <div style={{ flex: 1, textAlign: 'right' }}>
-          <div style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '1rem' }}>
+          <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1rem' }}>
             {highlight(match.homeTeam.name)}
           </div>
           <div style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '0.2rem' }}>{lang === 'es' ? 'Local' : 'Home'}</div>
         </div>
         <div style={{ textAlign: 'center', minWidth: 64 }}>
           {match.status === 'finished' || match.status === 'live' ? (
-            <div style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '1.4rem', color: match.status === 'live' ? 'var(--red)' : 'var(--text)' }}>
+            <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.4rem', color: match.status === 'live' ? 'var(--red)' : 'var(--text)' }}>
               {match.homeScore ?? 0} — {match.awayScore ?? 0}
             </div>
           ) : (
@@ -125,7 +125,7 @@ function MatchCard({ match, query, onClick }: { match: Match; query: string; onC
           )}
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '1rem' }}>
+          <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1rem' }}>
             {highlight(match.awayTeam.name)}
           </div>
           <div style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '0.2rem' }}>{lang === 'es' ? 'Visitante' : 'Away'}</div>
@@ -430,7 +430,7 @@ export function MatchesPage() {
             <div key={compName} style={{ marginBottom: '2rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.8rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--border)' }}>
                 <span style={{ fontSize: '1rem' }}>{matches[0]?.competition.emoji}</span>
-                <span style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '0.95rem' }}>{compName}</span>
+                <span style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.95rem' }}>{compName}</span>
                 <span style={{ fontSize: '0.72rem', color: 'var(--muted)', marginLeft: '0.3rem' }}>
                   {matches.length} {match_word(matches.length)}
                 </span>

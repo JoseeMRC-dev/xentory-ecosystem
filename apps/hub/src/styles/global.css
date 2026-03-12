@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=Syne:wght@600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Figtree:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
 
 /* ══ DESIGN TOKENS ═════════════════════════════════════════════ */
 :root, html[data-theme="dark"], [data-theme="dark"] {
@@ -82,7 +82,7 @@ html { font-size: 16px; scroll-behavior: smooth; }
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Figtree', sans-serif;
   font-weight: 400;
   line-height: 1.6;
   overflow-x: hidden;
@@ -107,7 +107,7 @@ body {
 
 /* ── TYPOGRAPHY ─────────────────────────────────────────────── */
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-weight: 800;
   letter-spacing: -0.025em;
   line-height: 1.1;
@@ -116,7 +116,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Display italic accent using Instrument Serif */
 .italic-accent {
-  font-family: 'Instrument Serif', serif;
+  font-family: 'Outfit', sans-serif;
   font-style: italic;
   font-weight: 400;
   letter-spacing: -0.01em;
@@ -183,7 +183,7 @@ h1, h2, h3, h4, h5, h6 {
   gap: 0.5rem;
   padding: 0.6rem 1.35rem;
   border-radius: 8px;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Figtree', sans-serif;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -236,7 +236,7 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 8px;
   padding: 0.7rem 1rem;
   color: var(--text);
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Figtree', sans-serif;
   font-size: 0.9rem;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -328,14 +328,18 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ── LIVE TICKER ─────────────────────────────────────────────── */
 .ticker-wrap {
-  position: relative;
-  width: 100%;
+  position: fixed;
+  top: var(--nav-h);
+  left: 0;
+  right: 0;
+  z-index: 250;
   height: var(--ticker-h);
   background: var(--bg2);
   border-bottom: 1px solid var(--border);
   overflow: hidden;
   display: flex;
   align-items: center;
+  will-change: transform;
 }
 .ticker-badge {
   position: absolute; left: 0; top: 0; bottom: 0; z-index: 2;
@@ -345,7 +349,7 @@ h1, h2, h3, h4, h5, h6 {
   gap: 0.5rem;
 }
 .ticker-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s infinite; }
-.ticker-label { font-size: 0.55rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; white-space: nowrap; font-family: 'DM Sans', sans-serif; font-weight: 500; }
+.ticker-label { font-size: 0.55rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; white-space: nowrap; font-family: 'Figtree', sans-serif; font-weight: 500; }
 .ticker-mask {
   position: absolute; right: 0; top: 0; bottom: 0; width: 80px; z-index: 2;
   background: linear-gradient(270deg, var(--bg2) 40%, transparent);
@@ -366,12 +370,12 @@ h1, h2, h3, h4, h5, h6 {
 /* Ticker items */
 .ticker-item {
   display: inline-flex; align-items: center; gap: 0.5rem;
-  font-size: 0.72rem; font-family: 'DM Sans', sans-serif;
+  font-size: 0.72rem; font-family: 'Figtree', sans-serif;
   font-weight: 500; white-space: nowrap;
 }
 
 /* ── SETTINGS MODAL ─────────────────────────────────────────── */
-.hub-settings-modal { font-family: 'DM Sans', sans-serif; }
+.hub-settings-modal { font-family: 'Figtree', sans-serif; }
 .hub-settings-tabs {
   display: flex; background: var(--card2); border-radius: 9px;
   padding: 3px; margin-bottom: 1.4rem;
@@ -534,7 +538,7 @@ body.menu-open { overflow: hidden; }
   align-items: center;
   gap: 0.3rem;
   font-size: 0.72rem;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Figtree', sans-serif;
   font-weight: 500;
   white-space: nowrap;
   padding: 0 1.5rem;

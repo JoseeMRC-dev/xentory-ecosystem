@@ -24,7 +24,7 @@ export function LoadingScreen({ onDone }: LoadingScreenProps) {
       <style>{`
         .bls-root { position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;min-height:-webkit-fill-available;background:#050810;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;overflow:hidden;transition:opacity 0.5s ease; }
         .bls-glow { position:absolute;width:min(400px,80vw);height:min(400px,80vw);border-radius:50%;background:radial-gradient(circle, rgba(77,159,255,0.08) 0%, transparent 70%);animation:bls-glow-pulse 3s ease-in-out infinite;pointer-events:none; }
-        .bls-logo { font-family:'Urbanist',sans-serif;font-weight:900;font-size:clamp(1.8rem,7vw,2.8rem);letter-spacing:-0.04em;margin-bottom:2.5rem;animation:bls-slide-up 0.6s ease both;position:relative;z-index:1; }
+        .bls-logo { font-family:'Outfit',sans-serif;font-weight:900;font-size:clamp(1.8rem,7vw,2.8rem);letter-spacing:-0.04em;margin-bottom:2.5rem;animation:bls-slide-up 0.6s ease both;position:relative;z-index:1; }
         .bls-spinner { position:relative;width:clamp(56px,12vw,72px);height:clamp(56px,12vw,72px);margin-bottom:2rem;animation:bls-slide-up 0.6s 0.1s ease both;opacity:0;animation-fill-mode:forwards;z-index:1; }
         .bls-ring-outer { position:absolute;inset:0;border-radius:50%;border:2px solid transparent;border-top-color:#4d9fff;border-right-color:rgba(77,159,255,0.3);animation:bls-spin 1.1s cubic-bezier(0.4,0,0.2,1) infinite; }
         .bls-ring-mid { position:absolute;inset:10px;border-radius:50%;border:2px solid transparent;border-top-color:#4d9fff;border-left-color:rgba(77,159,255,0.3);animation:bls-spin 0.75s cubic-bezier(0.4,0,0.2,1) infinite reverse; }

@@ -98,7 +98,7 @@ function SectionHeader({ category, count }: { category: string; count: number })
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem', paddingBottom: '0.7rem', borderBottom: '1px solid var(--border)' }}>
       <span style={{ fontSize: '1.1rem' }}>{isAll ? '🌐' : cat?.emoji}</span>
-      <span style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '0.95rem' }}>
+      <span style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.95rem' }}>
         {isAll ? 'Últimas noticias' : `Noticias de ${cat?.label}`}
       </span>
       {count > 0 && (
@@ -247,12 +247,12 @@ export function BlogPage() {
         {/* Category tabs */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: '0.4rem', padding: '1rem 0 1.5rem', flexWrap: 'wrap' }}>
           <button onClick={() => handleCategoryClick('all')}
-            style={{ padding: '0.4rem 1rem', borderRadius: 100, border: 'none', cursor: 'pointer', background: activeCategory === 'all' ? 'var(--gold)' : 'var(--card2)', color: activeCategory === 'all' ? 'var(--bg)' : 'var(--muted)', fontFamily: 'Urbanist', fontWeight: 600, fontSize: '0.8rem', transition: 'all 0.2s' }}>
+            style={{ padding: '0.4rem 1rem', borderRadius: 100, border: 'none', cursor: 'pointer', background: activeCategory === 'all' ? 'var(--gold)' : 'var(--card2)', color: activeCategory === 'all' ? 'var(--bg)' : 'var(--muted)', fontFamily: 'Outfit', fontWeight: 600, fontSize: '0.8rem', transition: 'all 0.2s' }}>
             🌐 Todos
           </button>
           {Object.entries(CATEGORY_LABELS).filter(([k]) => k !== 'platform').map(([key, cat]) => (
             <button key={key} onClick={() => handleCategoryClick(key)}
-              style={{ padding: '0.4rem 1rem', borderRadius: 100, cursor: 'pointer', background: activeCategory === key ? `${cat.color}22` : 'var(--card2)', color: activeCategory === key ? cat.color : 'var(--muted)', fontFamily: 'Urbanist', fontWeight: 600, fontSize: '0.8rem', border: activeCategory === key ? `1px solid ${cat.color}50` : '1px solid var(--border)', transition: 'all 0.2s' }}>
+              style={{ padding: '0.4rem 1rem', borderRadius: 100, cursor: 'pointer', background: activeCategory === key ? `${cat.color}22` : 'var(--card2)', color: activeCategory === key ? cat.color : 'var(--muted)', fontFamily: 'Outfit', fontWeight: 600, fontSize: '0.8rem', border: activeCategory === key ? `1px solid ${cat.color}50` : '1px solid var(--border)', transition: 'all 0.2s' }}>
               {cat.emoji} {cat.label}
             </button>
           ))}
@@ -292,7 +292,7 @@ export function BlogPage() {
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem', paddingBottom: '0.7rem', borderBottom: '1px solid var(--border)' }}>
               <span style={{ fontSize: '1.1rem' }}>✍️</span>
-              <span style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '0.95rem' }}>Análisis del equipo Xentory</span>
+              <span style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.95rem' }}>Análisis del equipo Xentory</span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '1rem' }}>
               {staticFiltered.map(post => <BlogCard key={post.id} post={post} />)}

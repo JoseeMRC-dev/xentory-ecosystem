@@ -76,10 +76,10 @@ function MiniMockup() {
       {/* Mini header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '0.78rem', color: 'var(--text)' }}>BTC/USD</span>
+          <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '0.78rem', color: 'var(--text)' }}>BTC/USD</span>
           <span style={{ fontSize: '0.65rem', color: 'var(--green)', background: 'var(--green-dim)', padding: '0.1rem 0.4rem', borderRadius: 4, border: '1px solid rgba(0,200,122,0.2)' }}>+4.2%</span>
         </div>
-        <span style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '1rem', color: 'var(--text)' }}>$67,420</span>
+        <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1rem', color: 'var(--text)' }}>$67,420</span>
       </div>
       {/* Mini chart */}
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: 48, marginBottom: '1rem' }}>
@@ -141,7 +141,7 @@ function TestimonialCard({ item }: { item: typeof TESTIMONIALS_EN[0] }) {
       </p>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '0.5rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
-          <div style={{ width: 36, height: 36, borderRadius: '50%', flexShrink: 0, background: 'linear-gradient(135deg,var(--gold),var(--green))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '0.72rem', color: '#04060f' }}>
+          <div style={{ width: 36, height: 36, borderRadius: '50%', flexShrink: 0, background: 'linear-gradient(135deg,var(--gold),var(--green))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '0.72rem', color: '#04060f' }}>
             {item.avatar}
           </div>
           <div>
@@ -168,7 +168,7 @@ function ExitPopup({ onClose }: { onClose: () => void }) {
         <div style={{ width: 48, height: 48, borderRadius: 14, background: 'var(--gold-dim)', border: '1px solid rgba(201,168,76,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.8" strokeLinecap="round"><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-6"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
         </div>
-        <h2 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: 'clamp(1.2rem,4vw,1.55rem)', marginBottom: '0.7rem', letterSpacing: '-0.02em' }}>
+        <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.2rem,4vw,1.55rem)', marginBottom: '0.7rem', letterSpacing: '-0.02em' }}>
           {t('exit.title')}
         </h2>
         <p style={{ color: 'var(--text2)', lineHeight: 1.7, marginBottom: '1.5rem', fontSize: '0.88rem' }}>
@@ -276,9 +276,9 @@ export function HomePage() {
         </div>
 
         {/* Headline */}
-        <h1 className="animate-fadeUp" style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: 'clamp(2.2rem,6.5vw,4.8rem)', lineHeight: 1.05, letterSpacing: '-0.035em', maxWidth: 860, marginBottom: '1.2rem', animationDelay: '0.08s' }}>
+        <h1 className="animate-fadeUp" style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(2.2rem,6.5vw,4.8rem)', lineHeight: 1.05, letterSpacing: '-0.035em', maxWidth: 860, marginBottom: '1.2rem', animationDelay: '0.08s' }}>
           {t('hero.title1')}{' '}
-          <span className="text-gradient-gold" style={{ fontFamily: 'Syne, sans-serif' }}>{t('hero.title2')}</span><br />
+          <span className="text-gradient-gold" style={{ fontFamily: 'Outfit, sans-serif' }}>{t('hero.title2')}</span><br />
           {t('hero.title3')}
         </h1>
 
@@ -310,7 +310,7 @@ export function HomePage() {
         <div className="animate-fadeUp stats-grid-4" style={{ maxWidth: 680, width: '100%', animationDelay: '0.36s' }}>
           {STATS.map(s => (
             <div key={s.label} style={{ textAlign: 'center', padding: '0.8rem', borderRadius: 12, background: 'var(--card)', border: '1px solid var(--border)' }}>
-              <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: 'clamp(1.4rem,3vw,2rem)', color: s.color, letterSpacing: '-0.04em', lineHeight: 1.1 }}>{s.value}</div>
+              <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.4rem,3vw,2rem)', color: s.color, letterSpacing: '-0.04em', lineHeight: 1.1 }}>{s.value}</div>
               <div style={{ fontSize: 'clamp(0.58rem,1.4vw,0.68rem)', color: 'var(--muted)', marginTop: '0.3rem', lineHeight: 1.3 }}>{s.label}</div>
             </div>
           ))}
@@ -340,7 +340,7 @@ export function HomePage() {
               <div key={i} className="glass" style={{ borderRadius: 18, padding: 'clamp(1.5rem,3vw,2rem)', borderTop: `2px solid ${c.top}`, position: 'relative', overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', top: 0, right: 0, width: 80, height: 80, borderRadius: '0 0 0 80px', background: `${c.accent}06` }} />
                 <div style={{ fontSize: '0.62rem', color: c.accent, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.7rem', fontWeight: 600 }}>{c.label}</div>
-                <h3 style={{ fontSize: 'clamp(0.95rem,2vw,1.05rem)', marginBottom: '0.7rem', fontFamily: 'Syne, sans-serif' }}>{c.title}</h3>
+                <h3 style={{ fontSize: 'clamp(0.95rem,2vw,1.05rem)', marginBottom: '0.7rem', fontFamily: 'Outfit, sans-serif' }}>{c.title}</h3>
                 <p style={{ color: 'var(--text2)', fontSize: '0.86rem', lineHeight: 1.75, margin: 0 }}>{c.desc}</p>
               </div>
             ))}
@@ -369,7 +369,7 @@ export function HomePage() {
                 <div style={{ width: 40, height: 40, borderRadius: 11, background: 'var(--gold-dim)', border: '1px solid rgba(201,168,76,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.8" strokeLinecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
                 </div>
-                <h3 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: 'clamp(1.15rem,2.5vw,1.45rem)' }}>
+                <h3 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.15rem,2.5vw,1.45rem)' }}>
                   Xentory <span className="text-gradient-gold">{t('platforms.market.title').replace('Xentory ', '')}</span>
                 </h3>
               </div>
@@ -393,7 +393,7 @@ export function HomePage() {
                 <div style={{ width: 40, height: 40, borderRadius: 11, background: 'var(--green-dim)', border: '1px solid rgba(0,200,122,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
                 </div>
-                <h3 style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: 'clamp(1.15rem,2.5vw,1.45rem)' }}>
+                <h3 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.15rem,2.5vw,1.45rem)' }}>
                   Xentory <span className="text-gradient-green">{t('platforms.bet.title').replace('Xentory ', '')}</span>
                 </h3>
               </div>
@@ -423,11 +423,11 @@ export function HomePage() {
           <div className="how-grid">
             {HOW_STEPS.map((s, i) => (
               <div key={i} className="glass" style={{ borderRadius: 18, padding: 'clamp(1.5rem,3vw,2rem)', position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', top: '1.4rem', right: '1.4rem', fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '2.8rem', color: 'var(--border2)', lineHeight: 1, userSelect: 'none' }}>{s.num}</div>
+                <div style={{ position: 'absolute', top: '1.4rem', right: '1.4rem', fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '2.8rem', color: 'var(--border2)', lineHeight: 1, userSelect: 'none' }}>{s.num}</div>
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--gold-dim)', border: '1px solid rgba(201,168,76,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold)', marginBottom: '1.1rem' }}>
                   {s.icon}
                 </div>
-                <h3 style={{ fontFamily: 'Syne, sans-serif', fontSize: '1.05rem', marginBottom: '0.65rem' }}>{s.title}</h3>
+                <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.05rem', marginBottom: '0.65rem' }}>{s.title}</h3>
                 <p style={{ color: 'var(--text2)', fontSize: '0.86rem', lineHeight: 1.75, margin: 0 }}>{s.desc}</p>
               </div>
             ))}

@@ -15,7 +15,7 @@ export function AuthPage() {
       justifyContent: 'center', background: 'var(--bg)',
     }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '1.5rem', marginBottom: '1rem' }}>
+        <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.5rem', marginBottom: '1rem' }}>
           <span style={{ color: 'var(--gold)' }}>Xen</span><span style={{ color: 'var(--cyan)' }}>tory</span>
         </div>
         <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>{t('Redirigiendo al login...', 'Redirecting to login...')}</p>

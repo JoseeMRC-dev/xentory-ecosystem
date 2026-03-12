@@ -126,7 +126,7 @@ export function ResetPasswordPage() {
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <Link to="/" style={{ textDecoration: 'none' }}>
-            <div style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '1.6rem', letterSpacing: '-0.02em' }}>
+            <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.6rem', letterSpacing: '-0.02em' }}>
               <span className="text-gradient-gold">Xen</span>
               <span style={{ color: '#4d9fff' }}>tory</span>
             </div>
@@ -137,7 +137,7 @@ export function ResetPasswordPage() {
           /* ── Success state ── */
           <div style={{ textAlign: 'center', padding: '1rem 0' }}>
             <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✅</div>
-            <h2 style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '1.3rem', marginBottom: '0.8rem' }}>
+            <h2 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.3rem', marginBottom: '0.8rem' }}>
               Contraseña actualizada
             </h2>
             <p style={{ color: 'var(--text2)', fontSize: '0.88rem', lineHeight: 1.7, marginBottom: '0.5rem' }}>
@@ -149,7 +149,7 @@ export function ResetPasswordPage() {
           <>
             <div style={{ textAlign: 'center', marginBottom: '1.8rem' }}>
               <div style={{ fontSize: '2rem', marginBottom: '0.6rem' }}>🔐</div>
-              <h2 style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '1.3rem', marginBottom: '0.4rem' }}>
+              <h2 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.3rem', marginBottom: '0.4rem' }}>
                 Nueva contraseña
               </h2>
               <p style={{ color: 'var(--muted)', fontSize: '0.82rem', lineHeight: 1.6 }}>

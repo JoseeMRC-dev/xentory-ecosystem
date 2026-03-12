@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 export function TermsPage() {
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: 'calc(var(--bar-h) + 3rem) 1.5rem 5rem' }}>
-      <h1 style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: 'clamp(1.8rem,4vw,2.4rem)', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>
+      <h1 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: 'clamp(1.8rem,4vw,2.4rem)', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>
         Términos de Uso
       </h1>
       <p style={{ color: 'var(--muted)', fontSize: '0.82rem', marginBottom: '3rem' }}>
@@ -91,7 +91,7 @@ Xentory apoya el juego responsable y se reserva el derecho de suspender cuentas 
         },
       ].map(s => (
         <div key={s.title} style={{ marginBottom: '2rem' }}>
-          <h2 style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '1.05rem', marginBottom: '0.7rem', color: 'var(--text)' }}>{s.title}</h2>
+          <h2 style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1.05rem', marginBottom: '0.7rem', color: 'var(--text)' }}>{s.title}</h2>
           <p style={{ color: 'var(--text2)', lineHeight: 1.85, fontSize: '0.9rem', whiteSpace: 'pre-line' }}>{s.body}</p>
         </div>
       ))}

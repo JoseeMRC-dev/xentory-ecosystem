@@ -49,7 +49,7 @@ export function Footer() {
           {/* Brand column */}
           <div>
             {/* Logo */}
-            <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 800, fontSize: '1.2rem', marginBottom: '0.9rem', letterSpacing: '-0.04em' }}>
+            <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1.2rem', marginBottom: '0.9rem', letterSpacing: '-0.04em' }}>
               <span className="text-gradient-gold">Xen</span>
               <span style={{ color: LOGO_CYAN }}>tory</span>
             </div>
@@ -73,7 +73,7 @@ export function Footer() {
           {/* Link columns */}
           {cols.map(col => (
             <div key={col.title}>
-              <h4 style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)', marginBottom: '1rem', fontWeight: 600, fontFamily: 'Syne, sans-serif' }}>
+              <h4 style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)', marginBottom: '1rem', fontWeight: 600, fontFamily: 'Outfit, sans-serif' }}>
                 {col.title}
               </h4>
               {col.links.map(item => (

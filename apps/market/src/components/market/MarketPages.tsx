@@ -110,7 +110,7 @@ export function WatchlistPage() {
                   onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                 >
                   <div>
-                    <span style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '0.9rem' }}>{a.symbol}</span>
+                    <span style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.9rem' }}>{a.symbol}</span>
                     <span style={{ color: 'var(--muted)', fontSize: '0.8rem', marginLeft: '0.5rem' }}>{a.name}</span>
                   </div>
                   <span style={{ color: watchlist.includes(a.id) ? 'var(--gold)' : 'var(--muted)', fontSize: '0.8rem' }}>
@@ -151,11 +151,11 @@ export function WatchlistPage() {
               >
                 <div style={{ flex: 1 }} onClick={() => navigate(`/market/${asset.id}`)}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                    <div style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '1rem' }}>{asset.symbol}</div>
+                    <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1rem' }}>{asset.symbol}</div>
                     <span style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>{asset.name}</span>
                   </div>
                 </div>
-                <div style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '1.1rem' }} onClick={() => navigate(`/market/${asset.id}`)}>
+                <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1.1rem' }} onClick={() => navigate(`/market/${asset.id}`)}>
                   {formatPrice(asset.price, asset.category)}
                 </div>
                 <div style={{ color: isUp ? 'var(--green)' : 'var(--red)', fontWeight: 500, minWidth: 70, textAlign: 'right' }} onClick={() => navigate(`/market/${asset.id}`)}>
@@ -372,7 +372,7 @@ export function AlertsPage() {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>✈️</div>
           <div>
-            <div style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '0.92rem' }}>
+            <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.92rem' }}>
               Telegram{' '}
               {tgConn
                 ? <span style={{ color: 'var(--green)', fontSize: '0.75rem', marginLeft: '0.3rem' }}>● Conectado{tgConn.telegram_username ? ` · @${tgConn.telegram_username}` : ''}</span>
@@ -547,7 +547,7 @@ export function AlertsPage() {
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                      <span style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '0.95rem' }}>{alert.symbol}</span>
+                      <span style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.95rem' }}>{alert.symbol}</span>
                       <span className="mkt-alert-cat-badge" style={{ fontSize: '0.7rem', padding: '0.1rem 0.5rem', borderRadius: 100, background: 'var(--card2)', color: 'var(--muted)' }}>
                         {CAT_EMOJI[alert.category]} {alert.category}
                       </span>
@@ -608,12 +608,12 @@ export function AnalysisPage() {
               onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'translateY(0)'; }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.6rem' }}>
-                <div style={{ fontFamily: 'Urbanist', fontWeight: 700 }}>{asset.symbol}</div>
+                <div style={{ fontFamily: 'Outfit', fontWeight: 700 }}>{asset.symbol}</div>
                 <span style={{ color: isUp ? 'var(--green)' : 'var(--red)', fontSize: '0.8rem', fontWeight: 500 }}>
                   {isUp ? '▲' : '▼'} {Math.abs(asset.changePercent24h).toFixed(2)}%
                 </span>
               </div>
-              <div style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.2rem' }}>
+              <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.2rem' }}>
                 {formatPrice(asset.price, asset.category)}
               </div>
               <div style={{ color: 'var(--muted)', fontSize: '0.72rem' }}>{asset.name} · {asset.category}</div>

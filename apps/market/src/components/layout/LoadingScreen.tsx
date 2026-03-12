@@ -47,7 +47,7 @@ export function LoadingScreen({ onDone }: LoadingScreenProps) {
           pointer-events: none;
         }
         .xls-logo {
-          font-family: 'Urbanist', sans-serif;
+          font-family: 'Outfit', sans-serif;
           font-weight: 900;
           font-size: clamp(1.8rem, 7vw, 2.8rem);
           letter-spacing: -0.04em;

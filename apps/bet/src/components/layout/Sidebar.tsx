@@ -110,7 +110,7 @@ function NavContent({ onNav }: { onNav?: () => void }) {
         <div style={{ padding: '0.8rem 1rem', borderTop: '1px solid var(--border)' }}>
           <div onClick={() => navigate('/plans')} style={{ padding: '0.6rem 0.8rem', borderRadius: 8, background: 'var(--card2)', border: `1px solid ${PLAN_COLORS[user.plan]}22`, cursor: 'pointer', marginBottom: '0.6rem' }}>
             <div style={{ fontSize: '0.58rem', color: 'var(--muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '0.2rem' }}>{t('Plan activo', 'Active plan')}</div>
-            <div style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 700, color: PLAN_COLORS[user.plan], fontSize: '0.88rem' }}>{PLAN_LABELS[user.plan]}</div>
+            <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, color: PLAN_COLORS[user.plan], fontSize: '0.88rem' }}>{PLAN_LABELS[user.plan]}</div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
             <div style={{ width: 30, height: 30, borderRadius: '50%', flexShrink: 0, background: 'linear-gradient(135deg,var(--gold),var(--green))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.75rem', color: '#050810' }}>
@@ -137,7 +137,7 @@ function LogoBlock() {
   const { t } = useLang();
   return (
     <div style={{ padding: '1.1rem 1.2rem 0' }}>
-      <div style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 800, fontSize: '1.3rem', letterSpacing: '-0.02em', marginBottom: '0.2rem', display: 'flex', alignItems: 'baseline' }}>
+      <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1.3rem', letterSpacing: '-0.02em', marginBottom: '0.2rem', display: 'flex', alignItems: 'baseline' }}>
         <a href={HUB_URL} style={{ textDecoration: 'none' }}><span className="text-gradient-gold">Xentory</span></a>
         <Link to="/dashboard" style={{ textDecoration: 'none' }}><span style={{ color: '#4d9fff' }}>Bet</span></Link>
       </div>
@@ -165,7 +165,7 @@ export function Sidebar() {
       )}
       {isMobile && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 52, zIndex: 50, background: 'var(--nav-bg)', borderBottom: '1px solid var(--border)', backdropFilter: 'blur(20px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem' }}>
-          <div style={{ fontFamily: 'Urbanist, sans-serif', fontWeight: 800, fontSize: '1.1rem', letterSpacing: '-0.02em', display: 'flex', alignItems: 'baseline' }}>
+          <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1.1rem', letterSpacing: '-0.02em', display: 'flex', alignItems: 'baseline' }}>
             <a href={HUB_URL} style={{ textDecoration: 'none' }}><span className="text-gradient-gold">Xentory</span></a>
             <Link to="/dashboard" style={{ textDecoration: 'none' }}><span style={{ color: '#4d9fff' }}>Bet</span></Link>
           </div>

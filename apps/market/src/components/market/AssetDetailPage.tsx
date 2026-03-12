@@ -18,7 +18,7 @@ function IndicatorBadge({ label, value, sub, highlight }: { label: string; value
       borderRadius: 10,
     }}>
       <div style={{ fontSize: '0.7rem', color: 'var(--muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '0.3rem' }}>{label}</div>
-      <div style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '1.1rem', color: highlight ? 'var(--gold)' : 'var(--text)' }}>{value}</div>
+      <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1.1rem', color: highlight ? 'var(--gold)' : 'var(--text)' }}>{value}</div>
       {sub && <div style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '0.1rem' }}>{sub}</div>}
     </div>
   );
@@ -30,7 +30,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return (
     <div className="glass-2" style={{ padding: '0.7rem 1rem', borderRadius: 10, fontSize: '0.8rem' }}>
       <div style={{ color: 'var(--muted)', marginBottom: '0.3rem' }}>{d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
-      <div style={{ fontFamily: 'Urbanist', fontWeight: 700, color: 'var(--gold)' }}>{payload[0].value.toFixed(4)}</div>
+      <div style={{ fontFamily: 'Outfit', fontWeight: 700, color: 'var(--gold)' }}>{payload[0].value.toFixed(4)}</div>
     </div>
   );
 };
@@ -93,7 +93,7 @@ export function AssetDetailPage() {
               width: 52, height: 52, borderRadius: '50%',
               background: 'var(--card2)', border: '1px solid var(--border2)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontFamily: 'Urbanist', fontWeight: 800, fontSize: '0.9rem',
+              fontFamily: 'Outfit', fontWeight: 800, fontSize: '0.9rem',
             }}>
               {asset.symbol.slice(0, 2)}
             </div>
@@ -136,11 +136,11 @@ export function AssetDetailPage() {
       <div className="glass" style={{ borderRadius: 16, padding: '1.5rem', marginBottom: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <div style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '2.8rem', letterSpacing: '-0.04em', lineHeight: 1 }}>
+            <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '2.8rem', letterSpacing: '-0.04em', lineHeight: 1 }}>
               {formatPrice(asset.price, asset.category)}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.4rem' }}>
-              <span style={{ color: isUp ? 'var(--green)' : 'var(--red)', fontFamily: 'Urbanist', fontWeight: 700, fontSize: '1rem' }}>
+              <span style={{ color: isUp ? 'var(--green)' : 'var(--red)', fontFamily: 'Outfit', fontWeight: 700, fontSize: '1rem' }}>
                 {isUp ? '▲' : '▼'} {formatPrice(Math.abs(asset.change24h), asset.category)} ({Math.abs(asset.changePercent24h).toFixed(2)}%)
               </span>
               <span style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>últimas 24h</span>
@@ -158,7 +158,7 @@ export function AssetDetailPage() {
                   border: 'none',
                   cursor: 'pointer',
                   fontSize: '0.78rem',
-                  fontFamily: 'Urbanist',
+                  fontFamily: 'Outfit',
                   fontWeight: 600,
                   background: timeframe === tf ? 'var(--gold)' : 'var(--card2)',
                   color: timeframe === tf ? '#050810' : 'var(--muted)',
@@ -287,13 +287,13 @@ export function AssetDetailPage() {
               }}>
                 <div>
                   <div style={{ fontSize: '0.7rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Señal técnica</div>
-                  <div style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '1rem', color: SIGNAL_LABELS[analysis.signal]?.color }}>
+                  <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1rem', color: SIGNAL_LABELS[analysis.signal]?.color }}>
                     {SIGNAL_LABELS[analysis.signal]?.label}
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: '0.7rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Confianza</div>
-                  <div style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '1.2rem', color: SIGNAL_LABELS[analysis.signal]?.color }}>
+                  <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1.2rem', color: SIGNAL_LABELS[analysis.signal]?.color }}>
                     {analysis.confidence}%
                   </div>
                 </div>
@@ -316,13 +316,13 @@ export function AssetDetailPage() {
                 <div style={{ padding: '0.7rem 0.9rem', background: 'rgba(0,255,136,0.05)', border: '1px solid rgba(0,255,136,0.1)', borderRadius: 8 }}>
                   <div style={{ fontSize: '0.7rem', color: 'var(--green)', marginBottom: '0.3rem', letterSpacing: '0.06em' }}>SOPORTES</div>
                   {analysis.keyLevels.support.map((s, i) => (
-                    <div key={i} style={{ fontFamily: 'Urbanist', fontWeight: 600, fontSize: '0.85rem' }}>{formatPrice(s, asset.category)}</div>
+                    <div key={i} style={{ fontFamily: 'Outfit', fontWeight: 600, fontSize: '0.85rem' }}>{formatPrice(s, asset.category)}</div>
                   ))}
                 </div>
                 <div style={{ padding: '0.7rem 0.9rem', background: 'rgba(255,68,85,0.05)', border: '1px solid rgba(255,68,85,0.1)', borderRadius: 8 }}>
                   <div style={{ fontSize: '0.7rem', color: 'var(--red)', marginBottom: '0.3rem', letterSpacing: '0.06em' }}>RESISTENCIAS</div>
                   {analysis.keyLevels.resistance.map((r, i) => (
-                    <div key={i} style={{ fontFamily: 'Urbanist', fontWeight: 600, fontSize: '0.85rem' }}>{formatPrice(r, asset.category)}</div>
+                    <div key={i} style={{ fontFamily: 'Outfit', fontWeight: 600, fontSize: '0.85rem' }}>{formatPrice(r, asset.category)}</div>
                   ))}
                 </div>
               </div>

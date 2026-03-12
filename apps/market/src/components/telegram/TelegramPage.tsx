@@ -95,7 +95,7 @@ export function TelegramPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.9rem 1rem', background: 'var(--card2)', borderRadius: 10 }}>
               <div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginBottom: '0.2rem' }}>Plan activo</div>
-                <div style={{ fontFamily: 'Urbanist', fontWeight: 700, color: isPaid ? 'var(--gold)' : 'var(--muted)' }}>
+                <div style={{ fontFamily: 'Outfit', fontWeight: 700, color: isPaid ? 'var(--gold)' : 'var(--muted)' }}>
                   {user?.plan === 'free' ? 'Explorador' : user?.plan === 'pro' ? 'Pro ✓' : 'Elite ✓'}
                 </div>
               </div>
@@ -106,7 +106,7 @@ export function TelegramPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.9rem 1rem', background: 'var(--card2)', borderRadius: 10 }}>
               <div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginBottom: '0.2rem' }}>Canal asignado</div>
-                <div style={{ fontFamily: 'Urbanist', fontWeight: 700, color: channel.color, fontSize: '0.85rem' }}>
+                <div style={{ fontFamily: 'Outfit', fontWeight: 700, color: channel.color, fontSize: '0.85rem' }}>
                   {channel.name}
                 </div>
               </div>
@@ -117,7 +117,7 @@ export function TelegramPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.9rem 1rem', background: 'var(--card2)', borderRadius: 10 }}>
               <div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginBottom: '0.2rem' }}>Cuenta Telegram</div>
-                <div style={{ fontFamily: 'Urbanist', fontWeight: 700, color: conn ? 'var(--green)' : 'var(--muted)', fontSize: '0.88rem' }}>
+                <div style={{ fontFamily: 'Outfit', fontWeight: 700, color: conn ? 'var(--green)' : 'var(--muted)', fontSize: '0.88rem' }}>
                   {loading ? '…' : conn ? (conn.telegram_username ? `@${conn.telegram_username}` : 'Vinculada ✓') : 'Sin vincular'}
                 </div>
               </div>
@@ -156,7 +156,7 @@ export function TelegramPage() {
             ].map(step => (
               <div key={step.num} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
                 <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--gold-dim)', border: '1px solid rgba(201,168,76,0.2)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Urbanist', fontWeight: 700, fontSize: '0.7rem', color: 'var(--gold)', flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.7rem', color: 'var(--gold)', flexShrink: 0,
                 }}>{step.num}</div>
                 <div>
                   <div style={{ fontWeight: 500, fontSize: '0.9rem', marginBottom: '0.2rem' }}>{step.title}</div>
@@ -190,7 +190,7 @@ export function TelegramPage() {
           <div style={{ marginTop: '0.8rem', padding: '0.9rem 1rem', background: 'var(--card2)', borderRadius: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginBottom: '0.2rem' }}>Bot oficial</div>
-              <div style={{ fontFamily: 'Urbanist', fontWeight: 600, color: 'var(--cyan)', fontSize: '0.9rem' }}>@XentoryBot</div>
+              <div style={{ fontFamily: 'Outfit', fontWeight: 600, color: 'var(--cyan)', fontSize: '0.9rem' }}>@XentoryBot</div>
             </div>
             <a href="https://t.me/XentoryBot" target="_blank" rel="noreferrer" className="btn btn-outline btn-sm" style={{ textDecoration: 'none' }}>
               Abrir →
@@ -217,7 +217,7 @@ export function TelegramPage() {
             <div key={i} style={{ padding: '1rem 1.2rem', background: '#17212b', borderRadius: 12, borderLeft: `3px solid ${TYPE_COLORS[sig.type]}`, display: 'flex', gap: '1rem' }}>
               <div style={{ fontSize: '1.2rem', flexShrink: 0 }}>{sig.icon}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '0.75rem', color: TYPE_COLORS[sig.type], marginBottom: '0.3rem', letterSpacing: '0.05em' }}>{sig.ticker}</div>
+                <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.75rem', color: TYPE_COLORS[sig.type], marginBottom: '0.3rem', letterSpacing: '0.05em' }}>{sig.ticker}</div>
                 <div style={{ fontSize: '0.83rem', lineHeight: 1.5, color: 'var(--text2)' }}>{sig.message}</div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem' }}>
                   <span style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>{sig.time}</span>

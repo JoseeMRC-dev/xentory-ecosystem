@@ -41,7 +41,7 @@ function MarketRow({ label, prob, recommendation, isRec, odds }: {
           <div className="conf-bar-fill" style={{ width: `${prob}%`, background: color }} />
         </div>
       </div>
-      <div style={{ minWidth: 40, textAlign: 'right', fontFamily: 'Urbanist', fontWeight: 700, fontSize: '0.88rem', color }}>{prob}%</div>
+      <div style={{ minWidth: 40, textAlign: 'right', fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.88rem', color }}>{prob}%</div>
       {odds && <div style={{ minWidth: 40, textAlign: 'right', fontSize: '0.8rem', color: 'var(--gold)' }}>@{odds}</div>}
     </div>
   );
@@ -118,20 +118,20 @@ export function MatchAnalysisPage() {
 
         <div className="bet-match-hero-grid" style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: '1.5rem', textAlign: 'center' }}>
           <div>
-            <div style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '1.6rem', marginBottom: '0.3rem' }}>{match.homeTeam.name}</div>
+            <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.6rem', marginBottom: '0.3rem' }}>{match.homeTeam.name}</div>
             <div style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>{t('Local', 'Home')}</div>
           </div>
           <div style={{ background: 'var(--card2)', borderRadius: 12, padding: '0.8rem 1.5rem', border: '1px solid var(--border)' }}>
             <div style={{ fontSize: '0.7rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.3rem' }}>
               {new Date(match.date).toLocaleDateString(locale, { day: '2-digit', month: 'short' })}
             </div>
-            <div style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '1.2rem', letterSpacing: '0.1em' }}>VS</div>
+            <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.2rem', letterSpacing: '0.1em' }}>VS</div>
             <div style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '0.3rem' }}>
               {new Date(match.date).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
             </div>
           </div>
           <div>
-            <div style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '1.6rem', marginBottom: '0.3rem' }}>{match.awayTeam.name}</div>
+            <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.6rem', marginBottom: '0.3rem' }}>{match.awayTeam.name}</div>
             <div style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>{t('Visitante', 'Away')}</div>
           </div>
         </div>
@@ -192,16 +192,16 @@ export function MatchAnalysisPage() {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
-                <div style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '1.2rem', marginBottom: '0.3rem' }}>{analysis.markets.bestBet.pick}</div>
+                <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1.2rem', marginBottom: '0.3rem' }}>{analysis.markets.bestBet.pick}</div>
                 <div style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>{analysis.markets.bestBet.market}</div>
               </div>
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '1.8rem', color: 'var(--gold)' }}>@{analysis.markets.bestBet.odds}</div>
+                  <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.8rem', color: 'var(--gold)' }}>@{analysis.markets.bestBet.odds}</div>
                   <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>{t('Cuota estimada', 'Estimated odds')}</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '1.8rem', color: confidenceColor(analysis.markets.bestBet.confidence) }}>{analysis.markets.bestBet.confidence}%</div>
+                  <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.8rem', color: confidenceColor(analysis.markets.bestBet.confidence) }}>{analysis.markets.bestBet.confidence}%</div>
                   <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>{t('Confianza', 'Confidence')}</div>
                 </div>
               </div>
@@ -265,7 +265,7 @@ export function MatchAnalysisPage() {
                 { stats: analysis.awayStats, team: match.awayTeam },
               ].map(({ stats, team }) => (
                 <div key={team.id}>
-                  <div style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '0.92rem', marginBottom: '0.8rem' }}>{team.name}</div>
+                  <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.92rem', marginBottom: '0.8rem' }}>{team.name}</div>
                   <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1rem' }}>
                     {stats.form.map((f, i) => <FormBadge key={i} result={f.result} />)}
                   </div>

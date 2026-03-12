@@ -16,7 +16,7 @@ function StatCard({ title, value, sub, color }: { title: string; value: string; 
   return (
     <div className="glass" style={{ borderRadius: 14, padding: '1.4rem' }}>
       <div style={{ fontSize: '0.7rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>{title}</div>
-      <div style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '1.8rem', letterSpacing: '-0.03em', color: color ?? 'var(--text)', lineHeight: 1.1 }}>{value}</div>
+      <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1.8rem', letterSpacing: '-0.03em', color: color ?? 'var(--text)', lineHeight: 1.1 }}>{value}</div>
       {sub && <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginTop: '0.3rem' }}>{sub}</div>}
     </div>
   );
@@ -31,7 +31,7 @@ function AssetRow({ asset, onClick }: { asset: Asset; onClick: () => void }) {
       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', minWidth: 0 }}>
-        <div style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, background: `linear-gradient(135deg, ${asset.category === 'crypto' ? '#c9a84c' : asset.category === 'stocks' ? '#00d4ff' : '#00ff88'}22, transparent)`, border: '1px solid var(--border2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Urbanist', fontWeight: 700, fontSize: '0.62rem', color: 'var(--text2)' }}>
+        <div style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, background: `linear-gradient(135deg, ${asset.category === 'crypto' ? '#c9a84c' : asset.category === 'stocks' ? '#00d4ff' : '#00ff88'}22, transparent)`, border: '1px solid var(--border2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.62rem', color: 'var(--text2)' }}>
           {asset.symbol.slice(0, 2)}
         </div>
         <div style={{ minWidth: 0 }}>
@@ -39,7 +39,7 @@ function AssetRow({ asset, onClick }: { asset: Asset; onClick: () => void }) {
           <div style={{ fontSize: '0.68rem', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{asset.name}</div>
         </div>
       </div>
-      <div style={{ fontFamily: 'Urbanist', fontWeight: 600, fontSize: '0.88rem' }}>{formatPrice(asset.price, asset.category)}</div>
+      <div style={{ fontFamily: 'Outfit', fontWeight: 600, fontSize: '0.88rem' }}>{formatPrice(asset.price, asset.category)}</div>
       <div style={{ color: isUp ? 'var(--green)' : 'var(--red)', fontWeight: 500, fontSize: '0.82rem', whiteSpace: 'nowrap' }}>
         {isUp ? '▲' : '▼'} {Math.abs(asset.changePercent24h).toFixed(2)}%
       </div>
@@ -146,7 +146,7 @@ export function DashboardPage() {
       {user?.plan === 'free' && (
         <div onClick={() => navigate('/plans')} style={{ marginTop: '1.5rem', padding: '1.2rem 1.5rem', background: 'linear-gradient(135deg, rgba(201,168,76,0.07), rgba(0,212,255,0.04))', border: '1px solid rgba(201,168,76,0.18)', borderRadius: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
           <div>
-            <div style={{ fontFamily: 'Urbanist', fontWeight: 700, marginBottom: '0.2rem', fontSize: '0.95rem' }}>
+            <div style={{ fontFamily: 'Outfit', fontWeight: 700, marginBottom: '0.2rem', fontSize: '0.95rem' }}>
               {t('Upgrade al Plan Pro — Análisis IA en profundidad', 'Upgrade to Pro Plan — Deep AI Analysis')}
             </div>
             <div style={{ color: 'var(--muted)', fontSize: '0.82rem' }}>

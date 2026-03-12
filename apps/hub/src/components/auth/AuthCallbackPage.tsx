@@ -104,7 +104,7 @@ export function AuthCallbackPage() {
         </>
       ) : (
         <>
-          <div style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '1.5rem', marginBottom: '0.5rem' }}>
+          <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.5rem', marginBottom: '0.5rem' }}>
             <span style={{ color: '#c9a84c' }}>Xen</span>
             <span style={{ color: '#4d9fff' }}>tory</span>
           </div>

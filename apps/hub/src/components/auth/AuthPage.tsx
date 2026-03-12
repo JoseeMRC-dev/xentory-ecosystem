@@ -199,7 +199,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
     <PageWrapper>
       <div style={{ textAlign: 'center', padding: '1rem 0' }}>
         <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📬</div>
-        <h2 style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '1.4rem', marginBottom: '0.8rem' }}>Confirma tu email</h2>
+        <h2 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.4rem', marginBottom: '0.8rem' }}>Confirma tu email</h2>
         <p style={{ color: 'var(--text2)', lineHeight: 1.75, fontSize: '0.9rem', marginBottom: '1.5rem' }}>
           Hemos enviado un enlace de confirmación a<br />
           <strong style={{ color: 'var(--text)' }}>{email}</strong>.<br />
@@ -217,7 +217,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
     <PageWrapper>
       <div style={{ textAlign: 'center', padding: '1rem 0' }}>
         <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✉️</div>
-        <h2 style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '1.4rem', marginBottom: '0.8rem' }}>Revisa tu email</h2>
+        <h2 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.4rem', marginBottom: '0.8rem' }}>Revisa tu email</h2>
         <p style={{ color: 'var(--text2)', lineHeight: 1.75, fontSize: '0.9rem', marginBottom: '0.5rem' }}>
           Hemos enviado un enlace mágico a<br />
           <strong style={{ color: 'var(--text)' }}>{email}</strong>
@@ -421,7 +421,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
             {forgotSent ? (
               <div style={{ textAlign: 'center', padding: '0.5rem 0' }}>
                 <div style={{ fontSize: '2.5rem', marginBottom: '0.8rem' }}>📬</div>
-                <h3 style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '1.2rem', marginBottom: '0.6rem' }}>
+                <h3 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.2rem', marginBottom: '0.6rem' }}>
                   Revisa tu email
                 </h3>
                 <p style={{ color: 'var(--text2)', fontSize: '0.85rem', lineHeight: 1.7, marginBottom: '0.5rem' }}>
@@ -442,7 +442,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
               <>
                 <div style={{ marginBottom: '1.5rem' }}>
                   <div style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>🔐</div>
-                  <h3 style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '1.2rem', marginBottom: '0.4rem' }}>
+                  <h3 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.2rem', marginBottom: '0.4rem' }}>
                     Recuperar contraseña
                   </h3>
                   <p style={{ color: 'var(--muted)', fontSize: '0.82rem', lineHeight: 1.6 }}>
@@ -497,7 +497,7 @@ function PageWrapper({ children }: { children: React.ReactNode }) {
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '1.8rem' }}>
           <Link to="/" style={{ textDecoration: 'none' }}>
-            <div style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '1.7rem', letterSpacing: '-0.02em', marginBottom: '0.3rem' }}>
+            <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.7rem', letterSpacing: '-0.02em', marginBottom: '0.3rem' }}>
               <span className="text-gradient-gold">Xen</span>
               <span style={{ color: 'var(--cyan)' }}>tory</span>
             </div>

@@ -86,9 +86,9 @@ export function PlansPage() {
                 </div>
               )}
 
-              <div style={{ fontFamily: 'Urbanist', fontWeight: 700, fontSize: '1.1rem', color: plan.color, marginBottom: '0.2rem' }}>{plan.name}</div>
+              <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1.1rem', color: plan.color, marginBottom: '0.2rem' }}>{plan.name}</div>
 
-              <div style={{ fontFamily: 'Urbanist', fontWeight: 800, fontSize: '2.6rem', letterSpacing: '-0.04em', margin: '0.8rem 0 0.2rem', lineHeight: 1 }}>
+              <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '2.6rem', letterSpacing: '-0.04em', margin: '0.8rem 0 0.2rem', lineHeight: 1 }}>
                 {plan.price === 0 ? 'Free' : <><sup style={{ fontSize: '1rem', fontWeight: 400 }}>€</sup>{price}</>}
               </div>
               <div style={{ color: 'var(--muted)', fontSize: '0.78rem', marginBottom: '1.3rem' }}>
@@ -117,7 +117,7 @@ export function PlansPage() {
                   width: '100%', padding: '0.8rem', borderRadius: 8,
                   border: plan.popular ? 'none' : `1px solid ${plan.color}30`,
                   cursor: (isCurrent || plan.id === 'free') ? 'not-allowed' : 'pointer',
-                  fontFamily: 'DM Sans', fontWeight: plan.popular ? 600 : 500, fontSize: '0.88rem',
+                  fontFamily: 'Figtree', fontWeight: plan.popular ? 600 : 500, fontSize: '0.88rem',
                   background: isCurrent ? 'var(--card2)' : plan.popular ? 'linear-gradient(135deg,var(--gold),var(--gold-l))' : `${plan.color}12`,
                   color: isCurrent ? 'var(--muted)' : plan.popular ? '#050810' : plan.color,
                   opacity: (isCurrent || plan.id === 'free') ? 0.7 : 1,
