@@ -7,6 +7,7 @@ import { MatchesPage } from './components/matches/MatchesPage';
 import { MatchAnalysisPage, AnalysisPage } from './components/analysis/AnalysisPage';
 import { PlansPage } from './components/plans/PlansPage';
 import { TelegramPage, HistoryPage } from './components/telegram/TelegramPage';
+import { EducationPage } from './components/education/EducationPage';
 import './styles/global.css';
 import { LoadingScreen } from './components/layout/LoadingScreen';
 import { ThemeProvider } from './context/ThemeContext';
@@ -50,6 +51,7 @@ function AppRoutes() {
       <Route path="/history" element={<ProtectedRoute><AppLayout><HistoryPage /></AppLayout></ProtectedRoute>} />
       <Route path="/telegram" element={<ProtectedRoute><AppLayout><TelegramPage /></AppLayout></ProtectedRoute>} />
       <Route path="/plans" element={<ProtectedRoute><AppLayout><PlansPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/education" element={<ProtectedRoute><AppLayout><EducationPage /></AppLayout></ProtectedRoute>} />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

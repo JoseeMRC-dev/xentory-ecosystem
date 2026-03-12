@@ -7,6 +7,7 @@ import { AssetDetailPage } from './components/market/AssetDetailPage';
 import { WatchlistPage, AlertsPage, AnalysisPage } from './components/market/MarketPages';
 import { PlansPage } from './components/plans/PlansPage';
 import { TelegramPage } from './components/telegram/TelegramPage';
+import { EducationPage } from './components/education/EducationPage';
 import './styles/global.css';
 import { LoadingScreen } from './components/layout/LoadingScreen';
 import { ThemeProvider } from './context/ThemeContext';
@@ -52,6 +53,7 @@ function AppRoutes() {
       <Route path="/alerts" element={<ProtectedRoute><AlertsPage /></ProtectedRoute>} />
       <Route path="/telegram" element={<ProtectedRoute><TelegramPage /></ProtectedRoute>} />
       <Route path="/plans" element={<ProtectedRoute><PlansPage /></ProtectedRoute>} />
+      <Route path="/education" element={<ProtectedRoute><EducationPage /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
