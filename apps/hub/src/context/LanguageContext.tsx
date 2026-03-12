@@ -22,7 +22,7 @@ const LangContext = createContext<LangCtx | null>(null);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useState<Lang>(() => {
-    try { return (localStorage.getItem('xentory_lang') as Lang) ?? 'en'; }
+    try { return (localStorage.getItem('xentory_lang') as Lang) ?? 'es'; }
     catch { return 'es'; }
   });
 

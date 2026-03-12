@@ -202,11 +202,10 @@ export const LiveTicker = memo(() => {
     <div className="ticker-wrap">
       <div className="ticker-badge">
         <span className="ticker-dot" />
-        <span className="ticker-label">{t('home.hero.live')}</span>
+        <span className="ticker-label">{t('ticker.label')}</span>
       </div>
-      <div className="ticker-mask">
-        <div className="ticker-track" ref={trackRef} />
-      </div>
+      <div className="ticker-track" ref={trackRef} />
+      <div className="ticker-mask" />
     </div>
   );
 });
