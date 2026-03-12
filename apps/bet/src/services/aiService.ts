@@ -96,45 +96,49 @@ function buildPrompt(match: Match, home: TeamStats, away: TeamStats, markets: Pr
     : sport;
 
   const statsBlock = isSoccer
-    ? `ESTADÍSTICAS ${home.team.name}:
+    ? `ESTADÍSTICAS ${homeName}:
 - Forma reciente (últimos ${home.form.length}): ${formStr(home)}
 - Goles por partido: ${home.goalsScored.toFixed(2)} marcados / ${home.goalsConceded.toFixed(2)} encajados
 - BTTS %: ${home.btts}% | Over 2.5 %: ${home.over25}%
 - Porterías a cero: ${home.cleanSheets}
 ${home.possession ? `- Posesión media: ${home.possession}%` : ''}
 
-ESTADÍSTICAS ${away.team.name}:
+ESTADÍSTICAS ${awayName}:
 - Forma reciente (últimos ${away.form.length}): ${formStr(away)}
 - Goles por partido: ${away.goalsScored.toFixed(2)} marcados / ${away.goalsConceded.toFixed(2)} encajados
 - BTTS %: ${away.btts}% | Over 2.5 %: ${away.over25}%
 - Porterías a cero: ${away.cleanSheets}`
-    : `RENDIMIENTO RECIENTE ${home.team.name}:
+    : `RENDIMIENTO RECIENTE ${homeName}:
 - Últimos resultados: ${formStr(home)}
 - Media puntos/sets/goles por partido: ${home.goalsScored.toFixed(2)}
 - Media encajados: ${home.goalsConceded.toFixed(2)}
 
-RENDIMIENTO RECIENTE ${away.team.name}:
+RENDIMIENTO RECIENTE ${awayName}:
 - Últimos resultados: ${formStr(away)}
 - Media puntos/sets/goles por partido: ${away.goalsScored.toFixed(2)}
 - Media encajados: ${away.goalsConceded.toFixed(2)}`;
 
   const marketsBlock = isSoccer
     ? `PROBABILIDADES:
-- ${home.team.name} gana: ${markets.result.home}% (cuota ${markets.result.homeOdds})
+- ${homeName} gana: ${markets.result.home}% (cuota ${markets.result.homeOdds})
 - Empate: ${markets.result.draw}% (cuota ${markets.result.drawOdds})
-- ${away.team.name} gana: ${markets.result.away}% (cuota ${markets.result.awayOdds})
+- ${awayName} gana: ${markets.result.away}% (cuota ${markets.result.awayOdds})
 - Over 2.5: ${markets.overUnder25.over}% | Under 2.5: ${markets.overUnder25.under}%
 - BTTS Sí: ${markets.btts.yes}% | No: ${markets.btts.no}%
 - Mejor apuesta: ${markets.bestBet.pick} @ ${markets.bestBet.odds}`
     : `PROBABILIDADES:
-- ${home.team.name} gana: ${markets.result.home}% (cuota ${markets.result.homeOdds})
-- ${away.team.name} gana: ${markets.result.away}% (cuota ${markets.result.awayOdds})
+- ${homeName} gana: ${markets.result.home}% (cuota ${markets.result.homeOdds})
+- ${awayName} gana: ${markets.result.away}% (cuota ${markets.result.awayOdds})
 - Mejor apuesta: ${markets.bestBet.pick} @ ${markets.bestBet.odds}`;
+
+  // Always use match team names (authoritative) — stats may come from mock fallback
+  const homeName = match.homeTeam.name;
+  const awayName = match.awayTeam.name;
 
   return `Eres un analista experto en ${sportLabel}. Analiza el siguiente evento y genera un análisis predictivo en español. Responde como especialista en ${sportLabel}, NO hables de fútbol si el deporte es otro.
 
 DEPORTE: ${sportLabel.toUpperCase()}
-PARTIDO: ${home.team.name} vs ${away.team.name}
+PARTIDO: ${homeName} vs ${awayName}
 COMPETICIÓN: ${match.competition.name}
 FECHA: ${new Date(match.date).toLocaleDateString('es-ES')}
 

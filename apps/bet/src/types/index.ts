@@ -44,6 +44,10 @@ export interface Match {
   awayScore?: number;
   venue?: string;
   round?: string;
+  minute?: number;
+  clockDisplay?: string;
+  period?: string;
+  espnEventId?: string;
 }
 
 // ── FORM (últimos partidos) ──

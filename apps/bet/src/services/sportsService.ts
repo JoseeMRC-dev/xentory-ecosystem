@@ -28,6 +28,21 @@ async function proxyFetch(sport: string, path: string): Promise<any> {
 const ESPN_BASE  = 'https://site.api.espn.com/apis/site/v2/sports';
 const espnCache  = new Map<string, { data: any; ts: number }>();
 
+// Live fetch — very short TTL for in-progress polling
+const liveCache = new Map<string, { data: any; ts: number }>();
+const LIVE_TTL  = 15_000; // 15 s
+async function espnFetchLive(path: string): Promise<any> {
+  const hit = liveCache.get(path);
+  if (hit && Date.now() - hit.ts < LIVE_TTL) return hit.data;
+  try {
+    const res  = await fetch(`${ESPN_BASE}${path}`);
+    if (!res.ok) return null;
+    const json = await res.json();
+    liveCache.set(path, { data: json, ts: Date.now() });
+    return json;
+  } catch { return null; }
+}
+
 async function espnFetch(path: string): Promise<any> {
   const hit = espnCache.get(path);
   if (hit && Date.now() - hit.ts < CACHE_TTL) return hit.data;
@@ -45,6 +60,22 @@ function espnDate(offsetDays: number): string {
   const d = new Date();
   d.setDate(d.getDate() + offsetDays);
   return d.toISOString().slice(0, 10).replace(/-/g, '');
+}
+
+function parseClock(ev: any): { minute?: number; clockDisplay?: string; period?: string } {
+  const state = ev.status?.type?.state ?? 'pre';
+  if (state !== 'in') return {};
+  const detail  = ev.status?.type?.shortDetail ?? '';   // e.g. "45:00" | "HT" | "90+3'"
+  const clock   = ev.status?.clock ?? 0;                // seconds elapsed in period
+  const period  = ev.status?.period ?? 1;
+  if (detail === 'HT' || detail.includes('Half')) return { clockDisplay: 'HT', period: 'HT', minute: 45 };
+  const mins = Math.floor(clock / 60);
+  const periodMins = period === 1 ? mins : 45 + mins;
+  return {
+    minute:       Math.min(periodMins, 120),
+    clockDisplay: detail || `${periodMins}'`,
+    period:       period === 1 ? '1H' : period === 2 ? '2H' : 'ET',
+  };
 }
 
 function mapEspnStatus(s: string): Match['status'] {
@@ -81,8 +112,10 @@ function parseEspnFootballEvents(events: any[], cfg: LeagueCfg): Match[] {
     const away = comp.competitors?.find((c: any) => c.homeAway === 'away');
     if (!home || !away) continue;
     const status = mapEspnStatus(ev.status?.type?.state ?? 'pre');
+    const clk = parseClock(ev);
     matches.push({
       id: parseInt(ev.id ?? '0') + cfg.id * 100,
+      espnEventId: ev.id,
       sport: 'football',
       competition: { id: cfg.id, name: cfg.name, sport: 'football', country: cfg.country, logo: '', emoji: cfg.emoji },
       homeTeam: { id: parseInt(home.team?.id ?? '0'), name: home.team?.displayName ?? 'Home', shortName: home.team?.abbreviation ?? 'HOM', logo: home.team?.logo },
@@ -93,6 +126,7 @@ function parseEspnFootballEvents(events: any[], cfg: LeagueCfg): Match[] {
       awayScore: status !== 'scheduled' ? parseInt(away.score ?? '0') : undefined,
       venue: comp.venue?.fullName,
       round: ev.status?.type?.shortDetail ?? ev.name,
+      ...clk,
     });
   }
   return matches;
@@ -154,6 +188,121 @@ export async function fetchLiveMatches(leagueId?: number): Promise<Match[]> {
   return allResults.flat();
 }
 
+// ── LIVE POLLING: fetch single event by ESPN event ID ────────────────────────
+export async function fetchLiveMatchById(
+  sport: string, slug: string, espnEventId: string
+): Promise<Partial<Match> | null> {
+  const json = await espnFetchLive(`/${slug}/scoreboard`);
+  const events: any[] = json?.events ?? [];
+  const ev = events.find((e: any) => e.id === espnEventId);
+  if (!ev) return null;
+  const comp = ev.competitions?.[0];
+  const state  = ev.status?.type?.state ?? 'pre';
+  const status = mapEspnStatus(state);
+  const clk    = parseClock(ev);
+  if (sport === 'football') {
+    const home = comp?.competitors?.find((c: any) => c.homeAway === 'home');
+    const away = comp?.competitors?.find((c: any) => c.homeAway === 'away');
+    return {
+      status,
+      homeScore: state !== 'pre' ? parseInt(home?.score ?? '0') : undefined,
+      awayScore: state !== 'pre' ? parseInt(away?.score ?? '0') : undefined,
+      ...clk,
+    };
+  }
+  if (sport === 'tennis') {
+    const p1 = comp?.competitors?.[0];
+    const p2 = comp?.competitors?.[1];
+    return {
+      status,
+      homeScore: state !== 'pre' ? parseInt(p1?.score ?? '0') : undefined,
+      awayScore: state !== 'pre' ? parseInt(p2?.score ?? '0') : undefined,
+      clockDisplay: status === 'live' ? `Set ${(p1?.linescores?.length ?? 0) + 1}` : undefined,
+    };
+  }
+  if (sport === 'basketball') {
+    const home = comp?.competitors?.find((c: any) => c.homeAway === 'home');
+    const away = comp?.competitors?.find((c: any) => c.homeAway === 'away');
+    return {
+      status,
+      homeScore: state !== 'pre' ? parseInt(home?.score ?? '0') : undefined,
+      awayScore: state !== 'pre' ? parseInt(away?.score ?? '0') : undefined,
+      ...clk,
+    };
+  }
+  return null;
+}
+
+// ── FETCH ALL LIVE MATCHES ACROSS SPORTS for Bet ticker ──────────────────────
+export async function fetchAllLiveMatches(): Promise<Match[]> {
+  const results: Match[] = [];
+  // Football top leagues
+  const topLeagues = FOOTBALL_LEAGUES.slice(0, 6);
+  const footPromises = topLeagues.map(async cfg => {
+    const json = await espnFetchLive(`/${cfg.slug}/scoreboard`);
+    const events = (json?.events ?? []).filter((e: any) => e.status?.type?.state === 'in');
+    return parseEspnFootballEvents(events, cfg);
+  });
+  const footResults = await Promise.all(footPromises);
+  results.push(...footResults.flat());
+
+  // Tennis live
+  for (const tour of TENNIS_LEAGUES) {
+    const json = await espnFetchLive(`/${tour.slug}/scoreboard`);
+    const events = (json?.events ?? []).filter((e: any) => e.status?.type?.state === 'in');
+    for (const ev of events.slice(0, 6)) {
+      const comp = ev.competitions?.[0];
+      const p1   = comp?.competitors?.[0];
+      const p2   = comp?.competitors?.[1];
+      if (!p1 || !p2) continue;
+      results.push({
+        id: parseInt(ev.id ?? '0') + tour.baseId,
+        espnEventId: ev.id,
+        sport: 'tennis',
+        competition: { id: tour.baseId, name: ev.name ?? tour.name, sport: 'tennis', country: tour.country, logo: '', emoji: tour.emoji },
+        homeTeam: { id: parseInt(p1.id ?? '0'), name: p1.athlete?.displayName ?? 'P1', shortName: p1.athlete?.shortName ?? 'P1' },
+        awayTeam: { id: parseInt(p2.id ?? '0'), name: p2.athlete?.displayName ?? 'P2', shortName: p2.athlete?.shortName ?? 'P2' },
+        date: ev.date ?? new Date().toISOString(),
+        status: 'live',
+        homeScore: parseInt(p1.score ?? '0'),
+        awayScore: parseInt(p2.score ?? '0'),
+        clockDisplay: `Set ${(p1.linescores?.length ?? 0) + 1}`,
+      });
+    }
+  }
+
+  // Basketball live
+  const baskLeagues = [
+    { slug: 'basketball/nba', name: 'NBA', emoji: '🏀', country: 'USA', id: 12, baseId: 20000 },
+  ];
+  for (const league of baskLeagues) {
+    const json = await espnFetchLive(`/${league.slug}/scoreboard`);
+    const events = (json?.events ?? []).filter((e: any) => e.status?.type?.state === 'in');
+    for (const ev of events.slice(0, 6)) {
+      const comp = ev.competitions?.[0];
+      const home = comp?.competitors?.find((c: any) => c.homeAway === 'home');
+      const away = comp?.competitors?.find((c: any) => c.homeAway === 'away');
+      if (!home || !away) continue;
+      const clk = parseClock(ev);
+      results.push({
+        id: parseInt(ev.id ?? '0') + league.baseId,
+        espnEventId: ev.id,
+        sport: 'basketball',
+        competition: { id: league.id, name: league.name, sport: 'basketball', country: league.country, logo: '', emoji: league.emoji },
+        homeTeam: { id: parseInt(home.team?.id ?? '0'), name: home.team?.displayName ?? 'Home', shortName: home.team?.abbreviation ?? 'HOM' },
+        awayTeam: { id: parseInt(away.team?.id ?? '0'), name: away.team?.displayName ?? 'Away', shortName: away.team?.abbreviation ?? 'AWY' },
+        date: ev.date ?? new Date().toISOString(),
+        status: 'live',
+        homeScore: parseInt(home.score ?? '0'),
+        awayScore: parseInt(away.score ?? '0'),
+        ...clk,
+      });
+    }
+  }
+
+  return results;
+}
+
 export async function fetchRecentMatches(leagueId: number, limit = 5): Promise<Match[]> {
   const cfg = FOOTBALL_LEAGUES.find(l => l.id === leagueId);
   if (!cfg) return [];
@@ -200,32 +349,41 @@ export async function fetchTennisMatches(): Promise<Match[]> {
       }
     }
 
-    for (const ev of events.slice(0, 8)) {
+    for (const ev of events.slice(0, 15)) {
       const comp = ev.competitions?.[0];
       if (!comp) continue;
       const p1 = comp.competitors?.[0];
       const p2 = comp.competitors?.[1];
       if (!p1 || !p2) continue;
       const status = mapEspnStatus(ev.status?.type?.state ?? 'pre');
+      // Tennis score = sets won. linescores has per-set scores
+      const setsHome = p1.linescores?.length ?? (status !== 'scheduled' && p1.score !== undefined ? parseInt(p1.score) : undefined);
+      const setsAway = p2.linescores?.length ?? (status !== 'scheduled' && p2.score !== undefined ? parseInt(p2.score) : undefined);
+      const tennisClock = status === 'live' ? { clockDisplay: `Set ${(p1.linescores?.length ?? 0) + 1}`, period: 'live' } : {};
       results.push({
         id: parseInt(ev.id ?? '0') + tour.baseId,
+        espnEventId: ev.id,
         sport: 'tennis',
         competition: { id: tour.baseId, name: ev.name ?? tour.name, sport: 'tennis', country: tour.country, logo: '', emoji: tour.emoji },
         homeTeam: {
           id: parseInt(p1.id ?? '0'),
           name: p1.athlete?.displayName ?? p1.team?.displayName ?? 'Player 1',
           shortName: p1.athlete?.shortName ?? (p1.athlete?.displayName ?? 'P1').split(' ').pop()?.slice(0, 3).toUpperCase() ?? 'P1',
+          logo: p1.athlete?.flag?.href,
         },
         awayTeam: {
           id: parseInt(p2.id ?? '0'),
           name: p2.athlete?.displayName ?? p2.team?.displayName ?? 'Player 2',
           shortName: p2.athlete?.shortName ?? (p2.athlete?.displayName ?? 'P2').split(' ').pop()?.slice(0, 3).toUpperCase() ?? 'P2',
+          logo: p2.athlete?.flag?.href,
         },
         date: ev.date ?? new Date().toISOString(),
         status,
-        homeScore: status !== 'scheduled' ? (p1.score !== undefined ? parseInt(p1.score) : undefined) : undefined,
-        awayScore: status !== 'scheduled' ? (p2.score !== undefined ? parseInt(p2.score) : undefined) : undefined,
+        homeScore: status !== 'scheduled' ? (p1.score !== undefined ? parseInt(p1.score) : 0) : undefined,
+        awayScore: status !== 'scheduled' ? (p2.score !== undefined ? parseInt(p2.score) : 0) : undefined,
         venue: comp.venue?.fullName ?? ev.name,
+        round: ev.status?.type?.shortDetail ?? comp.tournament?.displayName,
+        ...tennisClock,
       });
     }
   }
@@ -256,15 +414,17 @@ export async function fetchBasketballMatches(): Promise<Match[]> {
       if (events.length > 0) break;
     }
 
-    for (const ev of events.slice(0, 8)) {
+    for (const ev of events.slice(0, 15)) {
       const comp = ev.competitions?.[0];
       if (!comp) continue;
       const home = comp.competitors?.find((c: any) => c.homeAway === 'home');
       const away = comp.competitors?.find((c: any) => c.homeAway === 'away');
       if (!home || !away) continue;
       const status = mapEspnStatus(ev.status?.type?.state ?? 'pre');
+      const baskClock = parseClock(ev);
       results.push({
         id: parseInt(ev.id ?? '0') + league.baseId,
+        espnEventId: ev.id,
         sport: 'basketball',
         competition: { id: league.id, name: league.name, sport: 'basketball', country: league.country, logo: '', emoji: league.emoji },
         homeTeam: { id: parseInt(home.team?.id ?? '0'), name: home.team?.displayName ?? 'Home', shortName: home.team?.abbreviation ?? 'HOM', logo: home.team?.logo },
@@ -274,6 +434,7 @@ export async function fetchBasketballMatches(): Promise<Match[]> {
         homeScore: status !== 'scheduled' ? parseInt(home.score ?? '0') : undefined,
         awayScore: status !== 'scheduled' ? parseInt(away.score ?? '0') : undefined,
         venue: comp.venue?.fullName,
+        ...baskClock,
       });
     }
   }

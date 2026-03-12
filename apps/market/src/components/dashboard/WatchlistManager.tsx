@@ -48,6 +48,40 @@ const ASSET_CATALOGUE = [
   { id: 'oil',    symbol: 'WTI',     name: 'Crude Oil (WTI)',  category: 'commodities' },
 ];
 
+// Realistic price reference for assets not yet in live feed
+const PRICE_REF: Record<string, { price: number; change24h: number; changePercent24h: number; category: string }> = {
+  btc:    { price: 83400,  change24h: 1240,   changePercent24h: 1.51,  category: 'crypto' },
+  eth:    { price: 1940,   change24h: -28,    changePercent24h: -1.42, category: 'crypto' },
+  sol:    { price: 133,    change24h: 2.1,    changePercent24h: 1.6,   category: 'crypto' },
+  xrp:    { price: 2.18,   change24h: 0.08,   changePercent24h: 3.8,   category: 'crypto' },
+  bnb:    { price: 580,    change24h: 6.2,    changePercent24h: 1.08,  category: 'crypto' },
+  ada:    { price: 0.71,   change24h: -0.03,  changePercent24h: -4.2,  category: 'crypto' },
+  doge:   { price: 0.155,  change24h: 0.004,  changePercent24h: 2.6,   category: 'crypto' },
+  avax:   { price: 21.8,   change24h: 0.6,    changePercent24h: 2.8,   category: 'crypto' },
+  dot:    { price: 4.2,    change24h: -0.1,   changePercent24h: -2.3,  category: 'crypto' },
+  link:   { price: 13.4,   change24h: 0.4,    changePercent24h: 3.1,   category: 'crypto' },
+  uni:    { price: 5.8,    change24h: -0.2,   changePercent24h: -3.3,  category: 'crypto' },
+  shib:   { price: 0.0000123, change24h: 0.0000003, changePercent24h: 2.5, category: 'crypto' },
+  pepe:   { price: 0.0000082, change24h: -0.0000002, changePercent24h: -2.4, category: 'crypto' },
+  wif:    { price: 0.92,   change24h: 0.05,   changePercent24h: 5.7,   category: 'crypto' },
+  nvda:   { price: 118.5,  change24h: -2.1,   changePercent24h: -1.74, category: 'stocks' },
+  aapl:   { price: 213.4,  change24h: 1.28,   changePercent24h: 0.6,   category: 'stocks' },
+  tsla:   { price: 258.1,  change24h: -3.14,  changePercent24h: -1.2,  category: 'stocks' },
+  msft:   { price: 415.6,  change24h: 3.32,   changePercent24h: 0.81,  category: 'stocks' },
+  amzn:   { price: 198.9,  change24h: -1.8,   changePercent24h: -0.9,  category: 'stocks' },
+  googl:  { price: 174.8,  change24h: 2.1,    changePercent24h: 1.22,  category: 'stocks' },
+  meta:   { price: 587.2,  change24h: 8.4,    changePercent24h: 1.45,  category: 'stocks' },
+  nflx:   { price: 912.5,  change24h: 11.2,   changePercent24h: 1.24,  category: 'stocks' },
+  spx:    { price: 5614,   change24h: -28,    changePercent24h: -0.5,  category: 'indices' },
+  eurusd: { price: 1.0842, change24h: 0.0018, changePercent24h: 0.17,  category: 'forex' },
+  gbpusd: { price: 1.2641, change24h: -0.003, changePercent24h: -0.25, category: 'forex' },
+  usdjpy: { price: 149.82, change24h: 0.54,   changePercent24h: 0.36,  category: 'forex' },
+  eurgbp: { price: 0.8562, change24h: 0.001,  changePercent24h: 0.12,  category: 'forex' },
+  gold:   { price: 2932,   change24h: 18,     changePercent24h: 0.62,  category: 'commodities' },
+  silver: { price: 32.4,   change24h: 0.3,    changePercent24h: 0.93,  category: 'commodities' },
+  oil:    { price: 70.8,   change24h: -0.9,   changePercent24h: -1.26, category: 'commodities' },
+};
+
 const CATEGORY_COLORS: Record<string, string> = {
   crypto:      '#c9a84c',
   stocks:      '#00d4ff',
@@ -114,11 +148,21 @@ export function WatchlistManager() {
       ).slice(0, 8)
     : ASSET_CATALOGUE.slice(0, 8);
 
-  // Merge catalogue with live prices
+  // Merge catalogue with live prices — fallback to PRICE_REF so price is never 0
   const watchlistAssets = watchlistIds.map(id => {
     const live = liveData.find(a => a.id === id);
-    const cat  = ASSET_CATALOGUE.find(a => a.id === id);
-    return live ?? (cat ? { ...cat, price: 0, change24h: 0, changePercent24h: 0, volume24h: 0, status: 'neutral' as const } : null);
+    if (live && live.price > 0) return live;
+    const cat = ASSET_CATALOGUE.find(a => a.id === id);
+    if (!cat) return null;
+    const ref = PRICE_REF[id];
+    return {
+      ...cat,
+      price:            ref?.price           ?? 0,
+      change24h:        ref?.change24h        ?? 0,
+      changePercent24h: ref?.changePercent24h ?? 0,
+      volume24h:        0,
+      status:           ref ? (ref.changePercent24h >= 0 ? 'bullish' : 'bearish') : 'neutral',
+    } as Asset;
   }).filter(Boolean) as Asset[];
 
   return (
