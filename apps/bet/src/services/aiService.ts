@@ -83,6 +83,10 @@ function deriveMarkets(home: TeamStats, away: TeamStats): PredictionMarkets {
 }
 
 function buildPrompt(match: Match, home: TeamStats, away: TeamStats, markets: PredictionMarkets, isPro: boolean): string {
+  // Always use match team names (authoritative) — stats may come from mock fallback
+  const homeName = match.homeTeam.name;
+  const awayName = match.awayTeam.name;
+
   const formStr = (stats: TeamStats) =>
     stats.form.map(f => `${f.result} vs ${f.opponent} (${f.goalsFor}-${f.goalsAgainst}${f.isHome ? ' C' : ' F'})`).join(', ');
 
@@ -130,10 +134,6 @@ RENDIMIENTO RECIENTE ${awayName}:
 - ${homeName} gana: ${markets.result.home}% (cuota ${markets.result.homeOdds})
 - ${awayName} gana: ${markets.result.away}% (cuota ${markets.result.awayOdds})
 - Mejor apuesta: ${markets.bestBet.pick} @ ${markets.bestBet.odds}`;
-
-  // Always use match team names (authoritative) — stats may come from mock fallback
-  const homeName = match.homeTeam.name;
-  const awayName = match.awayTeam.name;
 
   return `Eres un analista experto en ${sportLabel}. Analiza el siguiente evento y genera un análisis predictivo en español. Responde como especialista en ${sportLabel}, NO hables de fútbol si el deporte es otro.
 
