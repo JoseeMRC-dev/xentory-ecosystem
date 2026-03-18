@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { fetchUpcomingMatches, fetchBasketballMatches, fetchTennisMatches } from '../../services/sportsService';
+import { fetchUpcomingMatches, fetchBasketballMatches, fetchTennisMatches, getMockMatchesBySport } from '../../services/sportsService';
 import { SPORT_CONFIG, confidenceColor } from '../../constants';
 import { useLang } from '../../context/LanguageContext';
 import type { Match } from '../../types';
@@ -77,23 +77,32 @@ export function DashboardPage() {
   const [todayPicks, setTodayPicks] = useState<DayPick[]>([]);
 
   useEffect(() => {
+    let cancelled = false;
+    const addPick = (p: DayPick | null, sportEmoji: string) => {
+      if (!p || cancelled) return;
+      setTodayPicks(prev => prev.some(x => x.sport === sportEmoji) ? prev : [...prev, p]);
+    };
+    const withTimeout = <T,>(promise: Promise<T>, fallback: T, ms: number): Promise<T> =>
+      Promise.race([promise, new Promise<T>(res => setTimeout(() => res(fallback), ms))]);
+
+    // Football — fast, loads upcoming matches + pick immediately
     Promise.all([
       fetchUpcomingMatches(2, 3),
       fetchUpcomingMatches(140, 3),
       fetchUpcomingMatches(39, 2),
-      fetchBasketballMatches(),
-      fetchTennisMatches(),
-    ]).then(([cl, ll, epl, bask, tennis]) => {
+    ]).then(([cl, ll, epl]) => {
+      if (cancelled) return;
       setUpcomingMatches([...cl, ...ll].slice(0, 6));
-      const picks: DayPick[] = [];
-      const footMatch = (epl[0] ?? ll[0] ?? cl[0]);
-      if (footMatch) { const p = buildPick(footMatch, lang); if (p) picks.push(p); }
-      const baskMatch = bask[0];
-      if (baskMatch) { const p = buildPick(baskMatch, lang); if (p) picks.push(p); }
-      const tennisMatch = tennis[0];
-      if (tennisMatch) { const p = buildPick(tennisMatch, lang); if (p) picks.push(p); }
-      setTodayPicks(picks);
+      addPick(buildPick(epl[0] ?? ll[0] ?? cl[0], lang), '⚽');
     });
+
+    // Basketball and tennis: 2s timeout → mock fallback so they never block
+    withTimeout(fetchBasketballMatches(), getMockMatchesBySport('basketball'), 2000)
+      .then(m => addPick(buildPick(m[0], lang), '🏀'));
+    withTimeout(fetchTennisMatches(), getMockMatchesBySport('tennis'), 2000)
+      .then(m => addPick(buildPick(m[0], lang), '🎾'));
+
+    return () => { cancelled = true; };
   }, [lang]);
 
   const hour = new Date().getHours();
