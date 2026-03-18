@@ -131,7 +131,7 @@ export function DashboardPage() {
               : upcomingMatches.slice(0, 5).map(match => (
                   <div
                     key={match.id}
-                    onClick={() => navigate(`/matches/${match.id}`)}
+                    onClick={() => navigate(`/matches/${match.id}`, { state: { match } })}
                     style={{
                       padding: '0.7rem 0.9rem', background: 'var(--card2)',
                       borderRadius: 10, cursor: 'pointer',
