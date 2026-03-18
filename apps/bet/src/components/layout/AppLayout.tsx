@@ -9,7 +9,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', overflowX: 'hidden' }}>
       <Sidebar />
-      <div style={{ marginLeft: 'var(--sidebar-w)', flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <div className="bet-content-wrapper" style={{ marginLeft: 'var(--sidebar-w)', flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh', width: 0 }}>
         <BetLiveTicker />
         <main
           className="bet-main"

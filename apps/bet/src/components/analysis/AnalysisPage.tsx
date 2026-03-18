@@ -158,6 +158,9 @@ export function MatchAnalysisPage() {
         awayStats = getMockStatsBySport(match.awayTeam.id, match.awayTeam.name, match.sport);
       }
       if (!homeStats || !awayStats) throw new Error('No stats');
+      // Always use the match team names — stats from mock/API may have wrong names
+      homeStats = { ...homeStats, team: { ...homeStats.team, name: match.homeTeam.name, shortName: match.homeTeam.shortName ?? match.homeTeam.name.slice(0, 3).toUpperCase() } };
+      awayStats = { ...awayStats, team: { ...awayStats.team, name: match.awayTeam.name, shortName: match.awayTeam.shortName ?? match.awayTeam.name.slice(0, 3).toUpperCase() } };
       const result = await generateMatchAnalysis(match, homeStats, awayStats, user?.plan ?? 'free');
       setAnalysis(result);
     } catch { setError(t('Error al generar el análisis. Inténtalo de nuevo.', 'Error generating analysis. Please try again.')); }
