@@ -29,7 +29,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
       <style>{`
         :root { --topbar-h: ${TOPBAR_H}px; }
         @media (max-width: 768px) {
-          .bet-main { padding-top: calc(${TOPBAR_H}px + 1.2rem) !important; }
+          :root { --sidebar-w: 0px; }
+          .bet-main { padding-top: calc(52px + ${TOPBAR_H}px + 1rem) !important; }
         }
       `}</style>
     </div>

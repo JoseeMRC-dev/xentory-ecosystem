@@ -319,8 +319,8 @@ export async function fetchRecentMatches(leagueId: number, limit = 5): Promise<M
 // TENNIS — ESPN multi-day scan
 // ─────────────────────────────────────────────────────────────────────────────
 const TENNIS_LEAGUES = [
-  { slug: 'tennis/atp',  name: 'ATP Tour', emoji: '🎾', country: 'International', baseId: 30000 },
-  { slug: 'tennis/wta',  name: 'WTA Tour', emoji: '🎾', country: 'International', baseId: 31000 },
+  { slug: 'tennis/atp-singles', name: 'ATP Tour', emoji: '🎾', country: 'International', baseId: 30000 },
+  { slug: 'tennis/wta-singles', name: 'WTA Tour', emoji: '🎾', country: 'International', baseId: 31000 },
 ];
 
 export async function fetchTennisMatches(): Promise<Match[]> {
