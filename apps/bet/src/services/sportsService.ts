@@ -329,8 +329,8 @@ export async function fetchTennisMatches(): Promise<Match[]> {
   for (const tour of TENNIS_LEAGUES) {
     let events: any[] = [];
 
-    // Try today first, then forward up to 7 days
-    for (let d = 0; d <= 7; d++) {
+    // Try today first, then forward up to 14 days
+    for (let d = 0; d <= 14; d++) {
       const dateStr = espnDate(d);
       const path = d === 0
         ? `/${tour.slug}/scoreboard`
@@ -340,9 +340,9 @@ export async function fetchTennisMatches(): Promise<Match[]> {
       if (events.length > 0) break;
     }
 
-    // Also try backward 2 days (live / just finished tournaments)
+    // Also try backward 7 days (live / just finished tournaments)
     if (events.length === 0) {
-      for (let d = 1; d <= 2; d++) {
+      for (let d = 1; d <= 7; d++) {
         const json = await espnFetch(`/${tour.slug}/scoreboard?dates=${espnDate(-d)}`);
         events = json?.events ?? [];
         if (events.length > 0) break;
@@ -630,11 +630,11 @@ const d = (days: number, h = 20, m = 0) => { const dt = new Date(); dt.setDate(d
 
 export function getMockMatchesBySport(sport: string): Match[] {
   if (sport === 'tennis') return [
-    { id: 3001, sport: 'tennis', competition: { id: 1, name: 'ATP Indian Wells Masters', sport: 'tennis', country: 'USA', logo: '', emoji: '🎾' }, homeTeam: { id: 201, name: 'C. Alcaraz', shortName: 'ALC' }, awayTeam: { id: 202, name: 'J. Sinner', shortName: 'SIN' }, date: d(1, 19), status: 'scheduled', venue: 'Indian Wells Tennis Garden' },
-    { id: 3002, sport: 'tennis', competition: { id: 1, name: 'ATP Indian Wells Masters', sport: 'tennis', country: 'USA', logo: '', emoji: '🎾' }, homeTeam: { id: 203, name: 'N. Djokovic', shortName: 'DJO' }, awayTeam: { id: 204, name: 'D. Medvedev', shortName: 'MED' }, date: d(1, 21), status: 'scheduled', venue: 'Indian Wells Tennis Garden' },
-    { id: 3003, sport: 'tennis', competition: { id: 2, name: 'WTA Indian Wells Masters', sport: 'tennis', country: 'USA', logo: '', emoji: '🎾' }, homeTeam: { id: 205, name: 'I. Swiatek', shortName: 'SWI' }, awayTeam: { id: 206, name: 'A. Sabalenka', shortName: 'SAB' }, date: d(2, 20), status: 'scheduled', venue: 'Indian Wells Tennis Garden' },
-    { id: 3004, sport: 'tennis', competition: { id: 1, name: 'ATP Indian Wells Masters', sport: 'tennis', country: 'USA', logo: '', emoji: '🎾' }, homeTeam: { id: 207, name: 'A. Zverev', shortName: 'ZVE' }, awayTeam: { id: 208, name: 'H. Hurkacz', shortName: 'HUR' }, date: d(2, 17, 30), status: 'scheduled', venue: 'Indian Wells Tennis Garden' },
-    { id: 3005, sport: 'tennis', competition: { id: 1, name: 'ATP Indian Wells Masters', sport: 'tennis', country: 'USA', logo: '', emoji: '🎾' }, homeTeam: { id: 209, name: 'T. Fritz', shortName: 'FRI' }, awayTeam: { id: 210, name: 'S. Tsitsipas', shortName: 'TSI' }, date: d(3, 19), status: 'scheduled', venue: 'Indian Wells Tennis Garden' },
+    { id: 3001, sport: 'tennis', competition: { id: 1, name: 'ATP Miami Open', sport: 'tennis', country: 'USA', logo: '', emoji: '🎾' }, homeTeam: { id: 201, name: 'C. Alcaraz', shortName: 'ALC' }, awayTeam: { id: 202, name: 'J. Sinner', shortName: 'SIN' }, date: d(1, 19), status: 'scheduled', venue: 'Hard Rock Stadium, Miami' },
+    { id: 3002, sport: 'tennis', competition: { id: 1, name: 'ATP Miami Open', sport: 'tennis', country: 'USA', logo: '', emoji: '🎾' }, homeTeam: { id: 203, name: 'N. Djokovic', shortName: 'DJO' }, awayTeam: { id: 204, name: 'D. Medvedev', shortName: 'MED' }, date: d(1, 21), status: 'scheduled', venue: 'Hard Rock Stadium, Miami' },
+    { id: 3003, sport: 'tennis', competition: { id: 2, name: 'WTA Miami Open', sport: 'tennis', country: 'USA', logo: '', emoji: '🎾' }, homeTeam: { id: 205, name: 'I. Swiatek', shortName: 'SWI' }, awayTeam: { id: 206, name: 'A. Sabalenka', shortName: 'SAB' }, date: d(2, 20), status: 'scheduled', venue: 'Hard Rock Stadium, Miami' },
+    { id: 3004, sport: 'tennis', competition: { id: 1, name: 'ATP Miami Open', sport: 'tennis', country: 'USA', logo: '', emoji: '🎾' }, homeTeam: { id: 207, name: 'A. Zverev', shortName: 'ZVE' }, awayTeam: { id: 208, name: 'H. Hurkacz', shortName: 'HUR' }, date: d(2, 17, 30), status: 'scheduled', venue: 'Hard Rock Stadium, Miami' },
+    { id: 3005, sport: 'tennis', competition: { id: 1, name: 'ATP Miami Open', sport: 'tennis', country: 'USA', logo: '', emoji: '🎾' }, homeTeam: { id: 209, name: 'T. Fritz', shortName: 'FRI' }, awayTeam: { id: 210, name: 'S. Tsitsipas', shortName: 'TSI' }, date: d(3, 19), status: 'scheduled', venue: 'Hard Rock Stadium, Miami' },
   ];
 
   if (sport === 'basketball') return [

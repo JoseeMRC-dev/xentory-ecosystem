@@ -53,7 +53,7 @@ const SPORTS = [
   { key: 'basketball', label: 'Basketball' }, { key: 'f1', label: 'Formula 1' }, { key: 'golf', label: 'Golf' },
 ];
 
-function NavContent({ onNav }: { onNav?: () => void }) {
+function NavContent({ onNav, hideSports }: { onNav?: () => void; hideSports?: boolean }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { t } = useLang();
@@ -72,6 +72,7 @@ function NavContent({ onNav }: { onNav?: () => void }) {
 
   return (
     <>
+      {!hideSports && (
       <div style={{ padding: '0.8rem 1.2rem', borderBottom: '1px solid var(--border)' }}>
         <div style={{ fontSize: '0.58rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
           {t('Deportes', 'Sports')}
@@ -86,6 +87,7 @@ function NavContent({ onNav }: { onNav?: () => void }) {
           ))}
         </div>
       </div>
+      )}
 
       <nav style={{ flex: 1, padding: '0.6rem', display: 'flex', flexDirection: 'column', gap: '0.1rem', overflowY: 'auto' }}>
         {NAV.map(item => (
@@ -181,7 +183,7 @@ export function Sidebar() {
         <>
           <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, top: 52, zIndex: 48, background: 'rgba(5,8,16,0.6)', backdropFilter: 'blur(3px)' }} />
           <div style={{ position: 'fixed', top: 52, left: 0, right: 0, bottom: 0, zIndex: 49, background: '#080d1a', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', overflowY: 'auto', animation: 'slideDown 0.18s ease both' }}>
-            <NavContent onNav={() => setOpen(false)} />
+            <NavContent onNav={() => setOpen(false)} hideSports />
           </div>
         </>
       )}

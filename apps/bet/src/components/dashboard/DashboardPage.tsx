@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { fetchUpcomingMatches } from '../../services/sportsService';
+import { fetchUpcomingMatches, fetchBasketballMatches, fetchTennisMatches } from '../../services/sportsService';
 import { SPORT_CONFIG, confidenceColor } from '../../constants';
 import { useLang } from '../../context/LanguageContext';
 import type { Match } from '../../types';
@@ -18,11 +18,46 @@ const FOOTBALL_COMPETITIONS = [
   { id: 'libertadores', emoji: '🌎', name: 'Copa Libertadores', shortName: 'Lib', color: '#00a651' },
 ];
 
-const TODAY_PICKS = [
-  { sport: '⚽', match: 'Real Madrid vs Barcelona', competition: 'La Liga', pick: 'Real Madrid gana', confidence: 74, odds: 1.85, market: '1X2' },
-  { sport: '🏀', match: 'Lakers vs Celtics', competition: 'NBA', pick: 'Over 224.5', confidence: 68, odds: 1.91, market: 'Over/Under' },
-  { sport: '🎾', match: 'Alcaraz vs Sinner', competition: 'ATP Madrid', pick: 'Alcaraz gana', confidence: 72, odds: 1.65, market: 'Resultado' },
-];
+type DayPick = { sport: string; match: string; competition: string; pick: string; confidence: number; odds: number; market: string; };
+
+function buildPick(m: Match, lang: string): DayPick | null {
+  const seed = ((m.id % 97) + 97) % 97;
+  const confidence = 62 + (seed % 18);
+  if (m.sport === 'football') {
+    return {
+      sport: '⚽',
+      match: `${m.homeTeam.name} vs ${m.awayTeam.name}`,
+      competition: m.competition.name,
+      pick: lang === 'es' ? `${m.homeTeam.shortName} gana` : `${m.homeTeam.shortName} wins`,
+      confidence,
+      odds: parseFloat((1.50 + (seed % 60) / 100).toFixed(2)),
+      market: '1X2',
+    };
+  }
+  if (m.sport === 'basketball') {
+    return {
+      sport: '🏀',
+      match: `${m.homeTeam.shortName} vs ${m.awayTeam.shortName}`,
+      competition: m.competition.name,
+      pick: `Over ${210 + (seed % 25)}.5`,
+      confidence,
+      odds: parseFloat((1.80 + (seed % 20) / 100).toFixed(2)),
+      market: 'Over/Under',
+    };
+  }
+  if (m.sport === 'tennis') {
+    return {
+      sport: '🎾',
+      match: `${m.homeTeam.name} vs ${m.awayTeam.name}`,
+      competition: m.competition.name,
+      pick: lang === 'es' ? `${m.homeTeam.shortName} gana` : `${m.homeTeam.shortName} wins`,
+      confidence,
+      odds: parseFloat((1.45 + (seed % 55) / 100).toFixed(2)),
+      market: lang === 'es' ? 'Resultado' : 'Result',
+    };
+  }
+  return null;
+}
 
 function StatCard({ icon, value, label, color }: { icon: string; value: string; label: string; color: string }) {
   return (
@@ -39,12 +74,27 @@ export function DashboardPage() {
   const navigate = useNavigate();
   const { t, lang } = useLang();
   const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([]);
+  const [todayPicks, setTodayPicks] = useState<DayPick[]>([]);
 
   useEffect(() => {
-    // Load upcoming matches from Champions + La Liga
-    Promise.all([fetchUpcomingMatches(2, 3), fetchUpcomingMatches(140, 3)])
-      .then(([cl, ll]) => setUpcomingMatches([...cl, ...ll].slice(0, 6)));
-  }, []);
+    Promise.all([
+      fetchUpcomingMatches(2, 3),
+      fetchUpcomingMatches(140, 3),
+      fetchUpcomingMatches(39, 2),
+      fetchBasketballMatches(),
+      fetchTennisMatches(),
+    ]).then(([cl, ll, epl, bask, tennis]) => {
+      setUpcomingMatches([...cl, ...ll].slice(0, 6));
+      const picks: DayPick[] = [];
+      const footMatch = (epl[0] ?? ll[0] ?? cl[0]);
+      if (footMatch) { const p = buildPick(footMatch, lang); if (p) picks.push(p); }
+      const baskMatch = bask[0];
+      if (baskMatch) { const p = buildPick(baskMatch, lang); if (p) picks.push(p); }
+      const tennisMatch = tennis[0];
+      if (tennisMatch) { const p = buildPick(tennisMatch, lang); if (p) picks.push(p); }
+      setTodayPicks(picks);
+    });
+  }, [lang]);
 
   const hour = new Date().getHours();
   const greeting = lang === 'es'
@@ -64,7 +114,7 @@ export function DashboardPage() {
 
       {/* Stats */}
       <div className="bet-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
-        <StatCard icon="🎯" value="3" label={t('Picks del día', "Today's picks")} color="var(--gold)" />
+        <StatCard icon="🎯" value={String(todayPicks.length || '—')} label={t('Picks del día', "Today's picks")} color="var(--gold)" />
         <StatCard icon="✅" value="68%" label={t('Acierto semanal', 'Weekly accuracy')} color="var(--green)" />
         <StatCard icon="⚽🏀🎾" value="5" label={t('Deportes activos', 'Active sports')} color="var(--cyan)" />
         <StatCard icon="✈️" value={user?.plan !== 'free' ? t('Activo', 'Active') : t('Inactivo', 'Inactive')} label={t('Canal Telegram', 'Telegram channel')} color={user?.plan !== 'free' ? 'var(--green)' : 'var(--muted)'} />
@@ -82,7 +132,12 @@ export function DashboardPage() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-            {TODAY_PICKS.map((pick, i) => (
+            {todayPicks.length === 0
+              ? Array(3).fill(0).map((_, i) => (
+                  <div key={i} style={{ height: 64, borderRadius: 12, background: 'var(--card2)' }} className="skeleton" />
+                ))
+              : null}
+            {todayPicks.map((pick, i) => (
               <div
                 key={i}
                 onClick={() => navigate('/matches')}
