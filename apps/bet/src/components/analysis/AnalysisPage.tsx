@@ -129,7 +129,7 @@ export function MatchAnalysisPage() {
     if (match.status === 'finished') return;
     const slug = match.sport === 'football'
       ? (FOOTBALL_LEAGUE_SLUGS[match.competition.id] ?? 'soccer/eng.1')
-      : match.sport === 'tennis' ? 'tennis/atp'
+      : match.sport === 'tennis' ? (match.competition.id >= 31000 ? 'tennis/wta-singles' : 'tennis/atp-singles')
       : match.sport === 'basketball' ? 'basketball/nba'
       : null;
     if (!slug) return;
@@ -164,7 +164,12 @@ export function MatchAnalysisPage() {
     setLoading(false);
   };
 
-  useEffect(() => { if (match) generateAnalysis(); }, []);
+  useEffect(() => {
+    setAnalysis(null);
+    setError('');
+    if (match) generateAnalysis();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [match?.id]);
 
   if (!match) return (
     <div style={{ textAlign:'center', padding:'4rem', color:'var(--muted)' }}>
