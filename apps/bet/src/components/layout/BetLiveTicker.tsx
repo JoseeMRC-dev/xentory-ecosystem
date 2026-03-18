@@ -72,7 +72,7 @@ export function BetLiveTicker() {
   }, []);
 
   return (
-    <div style={{
+    <div className="bet-live-ticker-bar" style={{
       position: 'fixed', top: 0, left: 'var(--sidebar-w)', right: 0,
       height: 'var(--topbar-h, 36px)',
       background: '#060810',
@@ -110,7 +110,8 @@ export function BetLiveTicker() {
           to   { transform: translateX(-50%); }
         }
         @media (max-width: 768px) {
-          /* on mobile ticker sits below nav */
+          /* on mobile ticker sits below the 52px nav header */
+          .bet-live-ticker-bar { top: 52px !important; }
         }
       `}</style>
     </div>

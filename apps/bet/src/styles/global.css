@@ -130,10 +130,13 @@ h1, h2, h3, h4 {
 
   html, body { overflow-x: hidden; }
 
+  /* Reset sidebar width to 0 so all inline var(--sidebar-w) references work on mobile */
+  :root { --sidebar-w: 0px; }
+
   .bet-main {
     margin-left: 0 !important;
     padding: 1rem !important;
-    padding-top: calc(52px + 1rem) !important;
+    padding-top: calc(52px + 36px + 1rem) !important; /* mobile header (52) + ticker (36) + spacing */
     box-sizing: border-box !important;
     width: 100% !important;
     overflow-x: hidden !important;
