@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { fetchUpcomingMatches, fetchBasketballMatches, fetchTennisMatches, getMockMatchesBySport } from '../../services/sportsService';
+import { fetchUpcomingMatches, fetchBasketballMatches, fetchTennisMatches } from '../../services/sportsService';
 import { SPORT_CONFIG, confidenceColor } from '../../constants';
 import { useLang } from '../../context/LanguageContext';
 import type { Match } from '../../types';
@@ -52,36 +52,31 @@ export function DashboardPage() {
   const navigate = useNavigate();
   const { t, lang } = useLang();
   // Pre-populate with mock data so the UI renders immediately
-  const [upcomingMatches, setUpcomingMatches] = useState<Match[]>(() => getMockMatchesBySport('football'));
-  const [todayPicks, setTodayPicks] = useState<DayPick[]>(() =>
-    [getMockMatchesBySport('football')[0], getMockMatchesBySport('basketball')[0], getMockMatchesBySport('tennis')[0]]
-      .map((m, i) => buildPick(m, 'es') ?? null)
-      .filter(Boolean) as DayPick[]
-  );
+  const [upcomingMatches, setUpcomingMatches] = useState<Match[] | null>(null);
+  const [todayPicks, setTodayPicks] = useState<DayPick[]>([]);
 
   useEffect(() => {
     let cancelled = false;
-    const withTimeout = <T,>(p: Promise<T>, fallback: T, ms: number): Promise<T> =>
-      Promise.race([p, new Promise<T>(res => setTimeout(() => res(fallback), ms))]);
 
-    // Football: range request → max 3 HTTP calls, resolves fast
-    withTimeout(
-      Promise.all([fetchUpcomingMatches(2, 3), fetchUpcomingMatches(140, 3), fetchUpcomingMatches(39, 2)]),
-      [getMockMatchesBySport('football'), getMockMatchesBySport('football'), getMockMatchesBySport('football')] as [Match[], Match[], Match[]],
-      3000
-    ).then(([cl, ll, epl]) => {
-      if (cancelled) return;
-      const upcoming = [...cl, ...ll].filter(m => m.status !== 'finished').slice(0, 6);
-      if (upcoming.length > 0) setUpcomingMatches(upcoming);
-      const footPick = buildPick(epl.find(m => m.status !== 'finished') ?? ll.find(m => m.status !== 'finished') ?? cl.find(m => m.status !== 'finished'), lang);
-      if (footPick) setTodayPicks(prev => [footPick, ...prev.filter(p => p.sport !== '⚽')]);
+    // Fútbol: hoy primero (live/scheduled), luego rango adelante si no hay
+    Promise.all([fetchUpcomingMatches(2, 3), fetchUpcomingMatches(140, 3), fetchUpcomingMatches(39, 2)])
+      .then(([cl, ll, epl]) => {
+        if (cancelled) return;
+        setUpcomingMatches([...cl, ...ll].filter(m => m.status !== 'finished').slice(0, 6));
+        const pick = buildPick(
+          [...epl, ...ll, ...cl].find(m => m.status !== 'finished'),
+          lang
+        );
+        if (pick) setTodayPicks(prev => [pick, ...prev.filter(p => p.sport !== '⚽')]);
+      });
+
+    fetchBasketballMatches().then(m => {
+      if (!cancelled && m[0]) { const p = buildPick(m[0], lang); if (p) setTodayPicks(prev => [...prev.filter(x => x.sport !== '🏀'), p]); }
     });
 
-    withTimeout(fetchBasketballMatches(), getMockMatchesBySport('basketball'), 2000)
-      .then(m => { if (!cancelled && m[0]) { const p = buildPick(m[0], lang); if (p) setTodayPicks(prev => [...prev.filter(x => x.sport !== '🏀'), p]); } });
-
-    withTimeout(fetchTennisMatches(), getMockMatchesBySport('tennis'), 2000)
-      .then(m => { if (!cancelled && m[0]) { const p = buildPick(m[0], lang); if (p) setTodayPicks(prev => [...prev.filter(x => x.sport !== '🎾'), p]); } });
+    fetchTennisMatches().then(m => {
+      if (!cancelled && m[0]) { const p = buildPick(m[0], lang); if (p) setTodayPicks(prev => [...prev.filter(x => x.sport !== '🎾'), p]); }
+    });
 
     return () => { cancelled = true; };
   }, [lang]);
@@ -122,6 +117,11 @@ export function DashboardPage() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+            {todayPicks.length === 0
+              ? Array(3).fill(0).map((_, i) => (
+                  <div key={i} style={{ height: 64, borderRadius: 12, background: 'var(--card2)' }} className="skeleton" />
+                ))
+              : null}
             {todayPicks.map((pick, i) => (
               <div
                 key={i}
@@ -164,7 +164,11 @@ export function DashboardPage() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-            {upcomingMatches.slice(0, 5).map(match => (
+            {upcomingMatches === null
+              ? Array(4).fill(0).map((_, i) => (
+                  <div key={i} style={{ height: 56, borderRadius: 10, background: 'var(--card2)' }} className="skeleton" />
+                ))
+              : upcomingMatches.slice(0, 5).map(match => (
                   <div
                     key={match.id}
                     onClick={() => navigate(`/matches/${match.id}`, { state: { match } })}

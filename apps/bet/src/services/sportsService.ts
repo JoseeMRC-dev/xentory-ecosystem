@@ -132,19 +132,19 @@ function parseEspnFootballEvents(events: any[], cfg: LeagueCfg): Match[] {
   return matches;
 }
 
-// Fetch a league from ESPN using range requests (fast, max 3 HTTP calls)
+// Fetch a league from ESPN — prefer today's live/scheduled, then look ahead
 async function fetchLeagueMatches(cfg: LeagueCfg, limit: number): Promise<Match[]> {
-  // 1. Forward range: tomorrow → +14 days (skips today's finished games)
-  const fwdJson = await espnFetch(`/${cfg.slug}/scoreboard?dates=${espnDate(1)}-${espnDate(14)}`);
-  let events: any[] = fwdJson?.events ?? [];
+  // 1. Today: live + scheduled (exclude finished)
+  const todayJson = await espnFetch(`/${cfg.slug}/scoreboard`);
+  let events: any[] = (todayJson?.events ?? []).filter((e: any) => e.status?.type?.state !== 'post');
 
-  // 2. If nothing ahead, check today for live/scheduled games
+  // 2. Nothing today → look ahead 14 days (single range request)
   if (events.length === 0) {
-    const todayJson = await espnFetch(`/${cfg.slug}/scoreboard`);
-    events = (todayJson?.events ?? []).filter((e: any) => e.status?.type?.state !== 'post');
+    const fwdJson = await espnFetch(`/${cfg.slug}/scoreboard?dates=${espnDate(1)}-${espnDate(14)}`);
+    events = fwdJson?.events ?? [];
   }
 
-  // 3. Last resort: recent past (3-day range backward)
+  // 3. Last resort: recent finished games (backward 3 days)
   if (events.length === 0) {
     const bwdJson = await espnFetch(`/${cfg.slug}/scoreboard?dates=${espnDate(-3)}-${espnDate(0)}`);
     events = bwdJson?.events ?? [];
