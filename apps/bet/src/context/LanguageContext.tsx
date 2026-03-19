@@ -5,7 +5,9 @@ interface Ctx { lang: Lang; toggle: () => void; t: (es: string, en: string) => s
 const LangCtx = createContext<Ctx | null>(null);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLang] = useState<Lang>('es');
+  const [lang, setLang] = useState<Lang>(() => {
+    try { return (localStorage.getItem('xentory_lang') as Lang) ?? 'es'; } catch { return 'es'; }
+  });
   const toggle = useCallback(() => setLang(l => {
     const next = l === 'es' ? 'en' : 'es';
     try { localStorage.setItem('xentory_lang', next); } catch { /**/ }
