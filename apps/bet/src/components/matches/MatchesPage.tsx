@@ -5,6 +5,10 @@ import { SPORT_CONFIG } from '../../constants';
 import { useLang } from '../../context/LanguageContext';
 import type { Match, Sport } from '../../types';
 
+// ── LEAGUE PRIORITY ORDER (for grouped display) ──
+// Champions → Europa → LaLiga 1/2 → Serie A/B → Bundesliga 1/2 → Premier/Championship → rest
+const LEAGUE_PRIORITY: number[] = [2, 3, 140, 141, 135, 136, 78, 79, 39, 40, 61, 94, 128, 262];
+
 // ── COMPETITIONS ──
 const COMPETITIONS_BY_SPORT: Record<string, { id: string; name: string; emoji: string; country?: string }[]> = {
   football: [
@@ -13,9 +17,12 @@ const COMPETITIONS_BY_SPORT: Record<string, { id: string; name: string; emoji: s
     { id: '3',   name: 'Europa League',    emoji: '🟠', country: 'Europe' },
     { id: '140', name: 'LaLiga',           emoji: '🇪🇸', country: 'Spain' },
     { id: '141', name: 'Segunda División', emoji: '🇪🇸', country: 'Spain' },
-    { id: '39',  name: 'Premier League',   emoji: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', country: 'England' },
     { id: '135', name: 'Serie A',          emoji: '🇮🇹', country: 'Italy' },
+    { id: '136', name: 'Serie B',          emoji: '🇮🇹', country: 'Italy' },
     { id: '78',  name: 'Bundesliga',       emoji: '🇩🇪', country: 'Germany' },
+    { id: '79',  name: '2. Bundesliga',    emoji: '🇩🇪', country: 'Germany' },
+    { id: '39',  name: 'Premier League',   emoji: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', country: 'England' },
+    { id: '40',  name: 'Championship',     emoji: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', country: 'England' },
     { id: '61',  name: 'Ligue 1',          emoji: '🇫🇷', country: 'France' },
     { id: '94',  name: 'Primeira Liga',    emoji: '🇵🇹', country: 'Portugal' },
     { id: '128', name: 'Liga Argentina',   emoji: '🇦🇷', country: 'Argentina' },
@@ -154,10 +161,11 @@ export function MatchesPage() {
   const activeSport       = (searchParams.get('sport') ?? 'football') as Sport;
   const activeCompetition = searchParams.get('comp') ?? 'all';
 
-  const [allMatches, setAllMatches] = useState<Match[]>([]);
-  const [loading, setLoading]       = useState(true);
-  const [query, setQuery]           = useState('');
-  const [showSearch, setShowSearch] = useState(false);
+  const [allMatches, setAllMatches]   = useState<Match[]>([]);
+  const [loading, setLoading]         = useState(true);
+  const [query, setQuery]             = useState('');
+  const [showSearch, setShowSearch]   = useState(false);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'upcoming' | 'played'>('all');
   const searchRef = useRef<HTMLInputElement>(null);
 
   // Fetch when sport changes
@@ -169,7 +177,7 @@ export function MatchesPage() {
     const load = async () => {
       let results: Match[] = [];
       if (activeSport === 'football') {
-        const ids = [2, 3, 140, 141, 39, 135, 78, 61, 94, 128, 262];
+        const ids = [2, 3, 140, 141, 135, 136, 78, 79, 39, 40, 61, 94, 128, 262];
         const all = await Promise.all(ids.map(id => fetchWeekMatches(id)));
         results = all.flat().sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       } else if (activeSport === 'tennis') {
@@ -209,9 +217,14 @@ export function MatchesPage() {
 
   const competitions = COMPETITIONS_BY_SPORT[activeSport] ?? [];
 
-  // Filter: competition + search query
+  // Filter: competition + status + search query
   const visibleMatches = allMatches
     .filter(m => activeCompetition === 'all' || String(m.competition.id) === activeCompetition)
+    .filter(m => {
+      if (statusFilter === 'upcoming') return m.status !== 'finished';
+      if (statusFilter === 'played')   return m.status === 'finished';
+      return true;
+    })
     .filter(m => {
       if (!query.trim()) return true;
       const q = query.toLowerCase();
@@ -230,6 +243,16 @@ export function MatchesPage() {
     const key = m.competition.name;
     if (!grouped[key]) grouped[key] = [];
     grouped[key].push(m);
+  });
+
+  // Sort groups by league priority
+  const sortedGroupEntries = Object.entries(grouped).sort(([, aMs], [, bMs]) => {
+    const getId = (ms: Match[]) => {
+      const raw = ms[0]?.competition.id;
+      return typeof raw === 'string' ? parseInt(raw) : (raw ?? 9999);
+    };
+    const ap = LEAGUE_PRIORITY.indexOf(getId(aMs)); const bp = LEAGUE_PRIORITY.indexOf(getId(bMs));
+    return (ap === -1 ? 9999 : ap) - (bp === -1 ? 9999 : bp);
   });
 
   const setSport = (sport: string) => setSearchParams({ sport, comp: 'all' });
@@ -356,6 +379,35 @@ export function MatchesPage() {
         </div>
       </div>
 
+      {/* ── STATUS FILTER ── */}
+      {activeSport === 'football' && (
+        <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.2rem', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.72rem', color: 'var(--muted)', marginRight: '0.2rem' }}>
+            {lang === 'es' ? 'Mostrar:' : 'Show:'}
+          </span>
+          {([
+            { id: 'all',      label: lang === 'es' ? 'Todos'     : 'All',      emoji: '📅' },
+            { id: 'upcoming', label: lang === 'es' ? 'Por jugar' : 'Upcoming', emoji: '⏳' },
+            { id: 'played',   label: lang === 'es' ? 'Jugados'   : 'Played',   emoji: '✅' },
+          ] as const).map(f => (
+            <button
+              key={f.id}
+              onClick={() => setStatusFilter(f.id)}
+              style={{
+                padding: '0.35rem 0.9rem', borderRadius: 100, cursor: 'pointer',
+                fontSize: '0.78rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.3rem',
+                background: statusFilter === f.id ? 'var(--gold-dim)' : 'var(--card2)',
+                color:      statusFilter === f.id ? 'var(--gold)'    : 'var(--muted)',
+                border:     statusFilter === f.id ? '1px solid rgba(201,168,76,0.4)' : '1px solid var(--border)',
+                transition: 'all 0.2s',
+              }}
+            >
+              <span>{f.emoji}</span><span>{f.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* ── ACTIVE FILTERS SUMMARY ── */}
       {(query || activeCompetition !== 'all') && !loading && (
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem', alignItems: 'center' }}>
@@ -424,11 +476,13 @@ export function MatchesPage() {
           </div>
         </>
       ) : (
-        // Grouped by competition
+        // Grouped by competition — ordered by league priority
         <>
-          {Object.entries(grouped).map(([compName, matches]) => {
-            const played   = matches.filter(m => m.status === 'finished');
-            const pending  = matches.filter(m => m.status !== 'finished');
+          {sortedGroupEntries.map(([compName, matches]) => {
+            // Sub-sections only when showing "all" (upcoming+played mixed)
+            const showSplit = statusFilter === 'all';
+            const played    = showSplit ? matches.filter(m => m.status === 'finished')    : [];
+            const pending   = showSplit ? matches.filter(m => m.status !== 'finished')    : matches;
             return (
               <div key={compName} style={{ marginBottom: '2rem' }}>
                 {/* Competition header */}
@@ -438,22 +492,22 @@ export function MatchesPage() {
                   <span style={{ fontSize: '0.72rem', color: 'var(--muted)', marginLeft: '0.3rem' }}>
                     {matches.length} {match_word(matches.length)}
                   </span>
-                  {played.length > 0 && (
+                  {showSplit && played.length > 0 && (
                     <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.45rem', borderRadius: 100, background: 'rgba(107,114,148,0.12)', color: 'var(--muted)', border: '1px solid rgba(107,114,148,0.2)' }}>
                       {played.length} {lang === 'es' ? 'jugados' : 'played'}
                     </span>
                   )}
-                  {pending.length > 0 && (
+                  {showSplit && pending.length > 0 && (
                     <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.45rem', borderRadius: 100, background: 'rgba(0,212,255,0.08)', color: 'var(--cyan)', border: '1px solid rgba(0,212,255,0.2)' }}>
                       {pending.length} {lang === 'es' ? 'por jugar' : 'upcoming'}
                     </span>
                   )}
                 </div>
 
-                {/* Upcoming first */}
+                {/* Upcoming / all */}
                 {pending.length > 0 && (
                   <>
-                    {played.length > 0 && (
+                    {showSplit && played.length > 0 && (
                       <div style={{ fontSize: '0.7rem', color: 'var(--cyan)', fontWeight: 600, marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                         {lang === 'es' ? 'Por jugar' : 'Upcoming'}
                       </div>
@@ -466,8 +520,8 @@ export function MatchesPage() {
                   </>
                 )}
 
-                {/* Played */}
-                {played.length > 0 && (
+                {/* Played (only in "all" view) */}
+                {showSplit && played.length > 0 && (
                   <>
                     {pending.length > 0 && (
                       <div style={{ fontSize: '0.7rem', color: 'var(--muted)', fontWeight: 600, marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
