@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { fetchUpcomingMatches, fetchBasketballMatches, fetchTennisMatches } from '../../services/sportsService';
+import { calculateWeeklyAccuracy } from '../../services/weeklyAccuracy';
 import { SPORT_CONFIG, confidenceColor } from '../../constants';
 import { useLang } from '../../context/LanguageContext';
 import type { Match } from '../../types';
@@ -54,6 +55,7 @@ export function DashboardPage() {
   // Pre-populate with mock data so the UI renders immediately
   const [upcomingMatches, setUpcomingMatches] = useState<Match[] | null>(null);
   const [todayPicks, setTodayPicks] = useState<DayPick[]>([]);
+  const [weeklyAcc, setWeeklyAcc] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -78,6 +80,10 @@ export function DashboardPage() {
       if (!cancelled && m[0]) { const p = buildPick(m[0], lang); if (p) setTodayPicks(prev => [...prev.filter(x => x.sport !== '🎾'), p]); }
     });
 
+    calculateWeeklyAccuracy().then(r => {
+      if (!cancelled && r.percent !== null) setWeeklyAcc(r.percent);
+    });
+
     return () => { cancelled = true; };
   }, [lang]);
 
@@ -100,7 +106,7 @@ export function DashboardPage() {
       {/* Stats */}
       <div className="bet-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
         <StatCard icon="🎯" value={String(todayPicks.length || '—')} label={t('Picks del día', "Today's picks")} color="var(--gold)" />
-        <StatCard icon="✅" value="68%" label={t('Acierto semanal', 'Weekly accuracy')} color="var(--green)" />
+        <StatCard icon="" value={weeklyAcc !== null ? `${weeklyAcc}%` : '—'} label={t('Acierto semanal', 'Weekly accuracy')} color="var(--green)" />
         <StatCard icon="" value="5" label={t('Deportes activos', 'Active sports')} color="var(--cyan)" />
         <StatCard icon="✈️" value={user?.plan !== 'free' ? t('Activo', 'Active') : t('Inactivo', 'Inactive')} label={t('Canal Telegram', 'Telegram channel')} color={user?.plan !== 'free' ? 'var(--green)' : 'var(--muted)'} />
       </div>

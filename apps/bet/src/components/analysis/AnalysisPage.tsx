@@ -3,6 +3,7 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { fetchTeamStats, getMockStatsBySport, fetchLiveMatchById } from '../../services/sportsService';
 import { generateMatchAnalysis } from '../../services/aiService';
+import { savePick } from '../../services/predictionStore';
 import { SPORT_CONFIG, FORM_COLORS, confidenceColor } from '../../constants';
 import { useLang } from '../../context/LanguageContext';
 import type { MatchAnalysis, FormMatch, Match } from '../../types';
@@ -163,6 +164,19 @@ export function MatchAnalysisPage() {
       awayStats = { ...awayStats, team: { ...awayStats.team, name: match.awayTeam.name, shortName: match.awayTeam.shortName ?? match.awayTeam.name.slice(0, 3).toUpperCase() } };
       const result = await generateMatchAnalysis(match, homeStats, awayStats, user?.plan ?? 'free');
       setAnalysis(result);
+
+      // Persist prediction to localStorage for weekly accuracy tracking
+      if (match.espnEventId && match.sport === 'football') {
+        const leagueSlug = FOOTBALL_LEAGUE_SLUGS[match.competition.id] ?? 'soccer/uefa.champions';
+        const bb = result.markets.bestBet;
+        const market = bb.market.toLowerCase().includes('2.5') ? 'overUnder25'
+          : bb.market.toLowerCase().includes('btts') ? 'btts'
+          : 'result';
+        const pick = market === 'result' ? result.markets.result.recommendation
+          : market === 'overUnder25' ? result.markets.overUnder25.recommendation
+          : result.markets.btts.recommendation;
+        savePick(match.espnEventId, leagueSlug, match.sport, match.homeTeam.name, match.awayTeam.name, match.date, market, pick, bb.confidence);
+      }
     } catch { setError(t('Error al generar el análisis. Inténtalo de nuevo.', 'Error generating analysis. Please try again.')); }
     setLoading(false);
   };
