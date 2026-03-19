@@ -60,20 +60,23 @@ export function DashboardPage() {
   useEffect(() => {
     let cancelled = false;
 
-    // Fútbol: varias ligas para asegurar al menos 5 partidos próximos
+    // Fútbol: LaLiga tiene prioridad; el resto rellena hasta 5
     Promise.all([
+      fetchUpcomingMatches(140, 5), // LaLiga — prioridad máxima
       fetchUpcomingMatches(2, 3),   // UCL
-      fetchUpcomingMatches(140, 3), // LaLiga
       fetchUpcomingMatches(39, 3),  // Premier League
       fetchUpcomingMatches(78, 2),  // Bundesliga
       fetchUpcomingMatches(135, 2), // Serie A
-    ]).then(([cl, ll, epl, bl, sa]) => {
+    ]).then(([ll, cl, epl, bl, sa]) => {
         if (cancelled) return;
-        const all = [...cl, ...ll, ...epl, ...bl, ...sa]
-          .filter(m => m.status !== 'finished')
+        const upcoming = (ms: Match[]) => ms.filter(m => m.status !== 'finished');
+        // Slots 1-3 guaranteed for LaLiga; rest filled by other leagues sorted by date
+        const laliga   = upcoming(ll).slice(0, 3);
+        const others   = [...upcoming(cl), ...upcoming(epl), ...upcoming(bl), ...upcoming(sa)]
           .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-        setUpcomingMatches(all.slice(0, 5));
-        const pick = buildPick(all[0], lang);
+        const combined = [...laliga, ...others.filter(m => !laliga.find(l => l.id === m.id))];
+        setUpcomingMatches(combined.slice(0, 5));
+        const pick = buildPick(laliga[0] ?? others[0], lang);
         if (pick) setTodayPicks(prev => [pick, ...prev.filter(p => p.sport !== '⚽')]);
       });
 
