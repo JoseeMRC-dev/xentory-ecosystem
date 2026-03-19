@@ -69,7 +69,11 @@ export function DashboardPage() {
       fetchUpcomingMatches(135, 2), // Serie A
     ]).then(([ll, cl, epl, bl, sa]) => {
         if (cancelled) return;
-        const upcoming = (ms: Match[]) => ms.filter(m => m.status !== 'finished');
+        const now = Date.now();
+        // Only matches not yet played and with a future (or live) date
+        const upcoming = (ms: Match[]) => ms.filter(m =>
+          m.status !== 'finished' && (m.status === 'live' || new Date(m.date).getTime() >= now - 3_600_000)
+        );
         // Slots 1-3 guaranteed for LaLiga; rest filled by other leagues sorted by date
         const laliga   = upcoming(ll).slice(0, 3);
         const others   = [...upcoming(cl), ...upcoming(epl), ...upcoming(bl), ...upcoming(sa)]

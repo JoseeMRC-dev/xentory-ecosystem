@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { fetchUpcomingMatches, getMockMatchesBySport, fetchTennisMatches, fetchBasketballMatches, fetchF1Matches, fetchGolfMatches } from '../../services/sportsService';
+import { fetchWeekMatches, getMockMatchesBySport, fetchTennisMatches, fetchBasketballMatches, fetchF1Matches, fetchGolfMatches } from '../../services/sportsService';
 import { SPORT_CONFIG } from '../../constants';
 import { useLang } from '../../context/LanguageContext';
 import type { Match, Sport } from '../../types';
@@ -170,8 +170,8 @@ export function MatchesPage() {
       let results: Match[] = [];
       if (activeSport === 'football') {
         const ids = [2, 3, 140, 141, 39, 135, 78, 61, 94, 128, 262];
-        const all = await Promise.all(ids.map(id => fetchUpcomingMatches(id, 5)));
-        results = all.flat();
+        const all = await Promise.all(ids.map(id => fetchWeekMatches(id)));
+        results = all.flat().sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       } else if (activeSport === 'tennis') {
         results = await fetchTennisMatches();
       } else if (activeSport === 'basketball') {
@@ -426,22 +426,64 @@ export function MatchesPage() {
       ) : (
         // Grouped by competition
         <>
-          {Object.entries(grouped).map(([compName, matches]) => (
-            <div key={compName} style={{ marginBottom: '2rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.8rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--border)' }}>
-                <span style={{ fontSize: '1rem' }}>{matches[0]?.competition.emoji}</span>
-                <span style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.95rem' }}>{compName}</span>
-                <span style={{ fontSize: '0.72rem', color: 'var(--muted)', marginLeft: '0.3rem' }}>
-                  {matches.length} {match_word(matches.length)}
-                </span>
+          {Object.entries(grouped).map(([compName, matches]) => {
+            const played   = matches.filter(m => m.status === 'finished');
+            const pending  = matches.filter(m => m.status !== 'finished');
+            return (
+              <div key={compName} style={{ marginBottom: '2rem' }}>
+                {/* Competition header */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.8rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--border)' }}>
+                  <span style={{ fontSize: '1rem' }}>{matches[0]?.competition.emoji}</span>
+                  <span style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.95rem' }}>{compName}</span>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--muted)', marginLeft: '0.3rem' }}>
+                    {matches.length} {match_word(matches.length)}
+                  </span>
+                  {played.length > 0 && (
+                    <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.45rem', borderRadius: 100, background: 'rgba(107,114,148,0.12)', color: 'var(--muted)', border: '1px solid rgba(107,114,148,0.2)' }}>
+                      {played.length} {lang === 'es' ? 'jugados' : 'played'}
+                    </span>
+                  )}
+                  {pending.length > 0 && (
+                    <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.45rem', borderRadius: 100, background: 'rgba(0,212,255,0.08)', color: 'var(--cyan)', border: '1px solid rgba(0,212,255,0.2)' }}>
+                      {pending.length} {lang === 'es' ? 'por jugar' : 'upcoming'}
+                    </span>
+                  )}
+                </div>
+
+                {/* Upcoming first */}
+                {pending.length > 0 && (
+                  <>
+                    {played.length > 0 && (
+                      <div style={{ fontSize: '0.7rem', color: 'var(--cyan)', fontWeight: 600, marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                        {lang === 'es' ? 'Por jugar' : 'Upcoming'}
+                      </div>
+                    )}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '0.8rem', marginBottom: played.length > 0 ? '1rem' : 0 }}>
+                      {pending.map(match => (
+                        <MatchCard key={match.id} match={match} query="" onClick={() => navigate(`/matches/${match.id}`, { state: { match } })} />
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {/* Played */}
+                {played.length > 0 && (
+                  <>
+                    {pending.length > 0 && (
+                      <div style={{ fontSize: '0.7rem', color: 'var(--muted)', fontWeight: 600, marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                        {lang === 'es' ? 'Jugados' : 'Played'}
+                      </div>
+                    )}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '0.8rem', opacity: 0.7 }}>
+                      {played.map(match => (
+                        <MatchCard key={match.id} match={match} query="" onClick={() => navigate(`/matches/${match.id}`, { state: { match } })} />
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '0.8rem' }}>
-                {matches.map(match => (
-                  <MatchCard key={match.id} match={match} query="" onClick={() => navigate(`/matches/${match.id}`, { state: { match } })} />
-                ))}
-              </div>
-            </div>
-          ))}
+            );
+          })}
           <div style={{ fontSize: '0.75rem', color: 'var(--muted)', textAlign: 'center', paddingTop: '1rem' }}>
             {visibleMatches.length} {match_word(visibleMatches.length)} {t('en total', 'total')}
           </div>

@@ -162,6 +162,37 @@ export async function fetchUpcomingMatches(leagueId: number, limit = 10): Promis
   return getMockMatches(leagueId, limit);   // only if ESPN fails entirely
 }
 
+// Returns the Monday→Sunday range of the current calendar week as YYYYMMDD strings
+function currentWeekRange(): { start: string; end: string } {
+  const now = new Date();
+  const dayOfWeek = now.getDay(); // 0=Sun … 6=Sat
+  const daysFromMon = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const mon = new Date(now);
+  mon.setDate(now.getDate() - daysFromMon);
+  const sun = new Date(mon);
+  sun.setDate(mon.getDate() + 6);
+  const fmt = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, '');
+  return { start: fmt(mon), end: fmt(sun) };
+}
+
+/** All matches (finished + scheduled) for a league during the current Mon–Sun week */
+export async function fetchWeekMatches(leagueId: number): Promise<Match[]> {
+  const cfg = FOOTBALL_LEAGUES.find(l => l.id === leagueId);
+  if (!cfg) return [];
+  const { start, end } = currentWeekRange();
+  const json = await espnFetch(`/${cfg.slug}/scoreboard?dates=${start}-${end}`);
+  const events: any[] = json?.events ?? [];
+  if (events.length > 0) {
+    return parseEspnFootballEvents(events, cfg)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }
+  // Fallback: today's scoreboard (live + nearby)
+  const todayJson = await espnFetch(`/${cfg.slug}/scoreboard`);
+  const todayEvents: any[] = todayJson?.events ?? [];
+  if (todayEvents.length > 0) return parseEspnFootballEvents(todayEvents, cfg);
+  return getMockMatches(leagueId, 10);
+}
+
 export async function fetchLiveMatches(leagueId?: number): Promise<Match[]> {
   if (leagueId) {
     const cfg = FOOTBALL_LEAGUES.find(l => l.id === leagueId);
