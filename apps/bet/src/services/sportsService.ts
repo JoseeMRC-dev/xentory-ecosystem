@@ -315,66 +315,95 @@ const TENNIS_LEAGUES = [
   { slug: 'tennis/wta-singles', name: 'WTA Tour', emoji: '🎾', country: 'International', baseId: 31000 },
 ];
 
+function parseTennisMatch(ev: any, comp: any, tour: typeof TENNIS_LEAGUES[0]): Match | null {
+  const p1 = comp.competitors?.[0];
+  const p2 = comp.competitors?.[1];
+  if (!p1 || !p2) return null;
+  // Prefer comp-level status, fallback to event-level
+  const rawState = comp.status?.type?.state ?? ev.status?.type?.state ?? 'pre';
+  const status = mapEspnStatus(rawState);
+  const tennisClock = status === 'live'
+    ? { clockDisplay: `Set ${(p1.linescores?.length ?? 0) + 1}`, period: 'live' }
+    : {};
+  const compId = parseInt(comp.id ?? ev.id ?? '0');
+  const tournamentName = comp.tournament?.displayName ?? ev.name ?? tour.name;
+  return {
+    id: compId + tour.baseId,
+    espnEventId: comp.id ?? ev.id,
+    sport: 'tennis',
+    competition: { id: tour.baseId, name: tournamentName, sport: 'tennis', country: tour.country, logo: '', emoji: tour.emoji },
+    homeTeam: {
+      id: parseInt(p1.id ?? '0'),
+      name: p1.athlete?.displayName ?? p1.team?.displayName ?? 'Player 1',
+      shortName: p1.athlete?.shortName ?? (p1.athlete?.displayName ?? 'P1').split(' ').pop()?.slice(0, 3).toUpperCase() ?? 'P1',
+      logo: p1.athlete?.flag?.href,
+    },
+    awayTeam: {
+      id: parseInt(p2.id ?? '0'),
+      name: p2.athlete?.displayName ?? p2.team?.displayName ?? 'Player 2',
+      shortName: p2.athlete?.shortName ?? (p2.athlete?.displayName ?? 'P2').split(' ').pop()?.slice(0, 3).toUpperCase() ?? 'P2',
+      logo: p2.athlete?.flag?.href,
+    },
+    date: comp.date ?? ev.date ?? new Date().toISOString(),
+    status,
+    homeScore: status !== 'scheduled' ? (p1.score !== undefined ? parseInt(p1.score) : 0) : undefined,
+    awayScore: status !== 'scheduled' ? (p2.score !== undefined ? parseInt(p2.score) : 0) : undefined,
+    venue: comp.venue?.fullName ?? ev.name,
+    round: comp.status?.type?.shortDetail ?? ev.status?.type?.shortDetail ?? comp.tournament?.displayName,
+    ...tennisClock,
+  };
+}
+
 export async function fetchTennisMatches(): Promise<Match[]> {
   const results: Match[] = [];
 
   for (const tour of TENNIS_LEAGUES) {
     let events: any[] = [];
 
-    // Single range request: today → +14 days (instead of 15 sequential requests)
-    const fwdRange = `${espnDate(0)}-${espnDate(14)}`;
-    const fwdJson  = await espnFetch(`/${tour.slug}/scoreboard?dates=${fwdRange}`);
-    events = fwdJson?.events ?? [];
+    // 1. Base scoreboard — returns the active/current tournament
+    const baseJson = await espnFetch(`/${tour.slug}/scoreboard`);
+    events = baseJson?.events ?? [];
 
-    // Also try base scoreboard (returns "current" tournament)
+    // 2. Day-by-day forward scan (today → +7 days)
     if (events.length === 0) {
-      const baseJson = await espnFetch(`/${tour.slug}/scoreboard`);
-      events = baseJson?.events ?? [];
+      for (let d = 0; d <= 7 && events.length === 0; d++) {
+        const json = await espnFetch(`/${tour.slug}/scoreboard?dates=${espnDate(d)}`);
+        events = json?.events ?? [];
+      }
     }
 
-    // Backward 7-day range for live / just-finished tournaments
+    // 3. Backward scan in case we're between rounds
     if (events.length === 0) {
-      const bwdRange = `${espnDate(-7)}-${espnDate(-1)}`;
-      const bwdJson  = await espnFetch(`/${tour.slug}/scoreboard?dates=${bwdRange}`);
-      events = bwdJson?.events ?? [];
+      for (let d = 1; d <= 5 && events.length === 0; d++) {
+        const json = await espnFetch(`/${tour.slug}/scoreboard?dates=${espnDate(-d)}`);
+        events = json?.events ?? [];
+      }
     }
 
-    for (const ev of events.slice(0, 15)) {
-      const comp = ev.competitions?.[0];
-      if (!comp) continue;
-      const p1 = comp.competitors?.[0];
-      const p2 = comp.competitors?.[1];
-      if (!p1 || !p2) continue;
-      const status = mapEspnStatus(ev.status?.type?.state ?? 'pre');
-      // Tennis score = sets won. linescores has per-set scores
-      const setsHome = p1.linescores?.length ?? (status !== 'scheduled' && p1.score !== undefined ? parseInt(p1.score) : undefined);
-      const setsAway = p2.linescores?.length ?? (status !== 'scheduled' && p2.score !== undefined ? parseInt(p2.score) : undefined);
-      const tennisClock = status === 'live' ? { clockDisplay: `Set ${(p1.linescores?.length ?? 0) + 1}`, period: 'live' } : {};
-      results.push({
-        id: parseInt(ev.id ?? '0') + tour.baseId,
-        espnEventId: ev.id,
-        sport: 'tennis',
-        competition: { id: tour.baseId, name: ev.name ?? tour.name, sport: 'tennis', country: tour.country, logo: '', emoji: tour.emoji },
-        homeTeam: {
-          id: parseInt(p1.id ?? '0'),
-          name: p1.athlete?.displayName ?? p1.team?.displayName ?? 'Player 1',
-          shortName: p1.athlete?.shortName ?? (p1.athlete?.displayName ?? 'P1').split(' ').pop()?.slice(0, 3).toUpperCase() ?? 'P1',
-          logo: p1.athlete?.flag?.href,
-        },
-        awayTeam: {
-          id: parseInt(p2.id ?? '0'),
-          name: p2.athlete?.displayName ?? p2.team?.displayName ?? 'Player 2',
-          shortName: p2.athlete?.shortName ?? (p2.athlete?.displayName ?? 'P2').split(' ').pop()?.slice(0, 3).toUpperCase() ?? 'P2',
-          logo: p2.athlete?.flag?.href,
-        },
-        date: ev.date ?? new Date().toISOString(),
-        status,
-        homeScore: status !== 'scheduled' ? (p1.score !== undefined ? parseInt(p1.score) : 0) : undefined,
-        awayScore: status !== 'scheduled' ? (p2.score !== undefined ? parseInt(p2.score) : 0) : undefined,
-        venue: comp.venue?.fullName ?? ev.name,
-        round: ev.status?.type?.shortDetail ?? comp.tournament?.displayName,
-        ...tennisClock,
-      });
+    for (const ev of events) {
+      // ESPN tennis can have two shapes:
+      // A) each event IS a match → competitions[0] has 2 competitors
+      // B) each event IS a tournament → competitions[] is the list of matches
+      const competitions: any[] = ev.competitions ?? [];
+      if (competitions.length === 0) continue;
+
+      const firstComp = competitions[0];
+      const isNestedTournament = competitions.length > 1 ||
+        (firstComp?.competitors?.length ?? 0) === 2;
+
+      if (isNestedTournament && competitions.length > 1) {
+        // Shape B: tournament — iterate all matches
+        for (const comp of competitions.slice(0, 15)) {
+          const m = parseTennisMatch(ev, comp, tour);
+          if (m) results.push(m);
+        }
+      } else {
+        // Shape A: event is the match
+        const m = parseTennisMatch(ev, firstComp, tour);
+        if (m) results.push(m);
+      }
+
+      if (results.length >= 20) break;
     }
   }
 

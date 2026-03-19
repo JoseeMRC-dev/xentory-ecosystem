@@ -60,15 +60,20 @@ export function DashboardPage() {
   useEffect(() => {
     let cancelled = false;
 
-    // Fútbol: hoy primero (live/scheduled), luego rango adelante si no hay
-    Promise.all([fetchUpcomingMatches(2, 3), fetchUpcomingMatches(140, 3), fetchUpcomingMatches(39, 2)])
-      .then(([cl, ll, epl]) => {
+    // Fútbol: varias ligas para asegurar al menos 5 partidos próximos
+    Promise.all([
+      fetchUpcomingMatches(2, 3),   // UCL
+      fetchUpcomingMatches(140, 3), // LaLiga
+      fetchUpcomingMatches(39, 3),  // Premier League
+      fetchUpcomingMatches(78, 2),  // Bundesliga
+      fetchUpcomingMatches(135, 2), // Serie A
+    ]).then(([cl, ll, epl, bl, sa]) => {
         if (cancelled) return;
-        setUpcomingMatches([...cl, ...ll].filter(m => m.status !== 'finished').slice(0, 6));
-        const pick = buildPick(
-          [...epl, ...ll, ...cl].find(m => m.status !== 'finished'),
-          lang
-        );
+        const all = [...cl, ...ll, ...epl, ...bl, ...sa]
+          .filter(m => m.status !== 'finished')
+          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        setUpcomingMatches(all.slice(0, 5));
+        const pick = buildPick(all[0], lang);
         if (pick) setTodayPicks(prev => [pick, ...prev.filter(p => p.sport !== '⚽')]);
       });
 
