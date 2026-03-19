@@ -354,7 +354,7 @@ function parseTennisMatch(ev: any, comp: any, tour: typeof TENNIS_LEAGUES[0]): M
   };
 }
 
-export async function fetchTennisMatches(): Promise<Match[]> {
+async function fetchTennisMatchesFromESPN(): Promise<Match[]> {
   const results: Match[] = [];
 
   for (const tour of TENNIS_LEAGUES) {
@@ -407,8 +407,101 @@ export async function fetchTennisMatches(): Promise<Match[]> {
     }
   }
 
-  // Fallback to curated mock if ESPN has nothing
-  return results.length > 0 ? results : getMockMatchesBySport('tennis');
+  return results;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TENNIS — TheSportsDB (primary, free, no key) + ESPN fallback
+// ─────────────────────────────────────────────────────────────────────────────
+const sdbCache = new Map<string, { data: any; ts: number }>();
+const SDB_BASE = 'https://www.thesportsdb.com/api/v1/json/3';
+
+async function sdbFetch(path: string): Promise<any> {
+  const hit = sdbCache.get(path);
+  if (hit && Date.now() - hit.ts < CACHE_TTL) return hit.data;
+  try {
+    const res = await fetch(`${SDB_BASE}${path}`);
+    if (!res.ok) return null;
+    const json = await res.json();
+    sdbCache.set(path, { data: json, ts: Date.now() });
+    return json;
+  } catch { return null; }
+}
+
+async function fetchTennisFromSportsDB(): Promise<Match[]> {
+  const results: Match[] = [];
+  const seen = new Set<string>();
+
+  // Scan today + next 4 days
+  for (let d = 0; d <= 4 && results.length < 20; d++) {
+    const date = new Date();
+    date.setDate(date.getDate() + d);
+    const dateStr = date.toISOString().slice(0, 10);
+
+    const json = await sdbFetch(`/eventsday.php?d=${dateStr}&s=Tennis`);
+    const events: any[] = json?.events ?? [];
+
+    for (const ev of events) {
+      if (!ev.strHomeTeam || !ev.strAwayTeam) continue;
+      const key = `${ev.strHomeTeam}-${ev.strAwayTeam}-${ev.dateEvent}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      const isFinished = ev.strStatus === 'Match Finished' || (ev.intHomeScore !== null && ev.intHomeScore !== '');
+      const isLive     = ev.strStatus === 'In Progress' || ev.strStatus === 'HT';
+      const status: Match['status'] = isFinished ? 'finished' : isLive ? 'live' : 'scheduled';
+
+      const matchId = parseInt(ev.idEvent ?? '0');
+      const homeName = ev.strHomeTeam ?? 'Player 1';
+      const awayName = ev.strAwayTeam ?? 'Player 2';
+
+      results.push({
+        id: matchId + 40000,
+        sport: 'tennis',
+        competition: {
+          id: parseInt(ev.idLeague ?? '0'),
+          name: ev.strLeague ?? ev.strSport ?? 'Tennis',
+          sport: 'tennis',
+          country: 'International',
+          logo: '',
+          emoji: '🎾',
+        },
+        homeTeam: {
+          id: matchId * 2,
+          name: homeName,
+          shortName: homeName.split(' ').pop()?.slice(0, 3).toUpperCase() ?? 'P1',
+        },
+        awayTeam: {
+          id: matchId * 2 + 1,
+          name: awayName,
+          shortName: awayName.split(' ').pop()?.slice(0, 3).toUpperCase() ?? 'P2',
+        },
+        date: ev.dateEvent && ev.strTime
+          ? `${ev.dateEvent}T${ev.strTime}`
+          : (ev.dateEvent ? `${ev.dateEvent}T12:00:00` : new Date().toISOString()),
+        status,
+        homeScore: (isFinished || isLive) && ev.intHomeScore !== null ? parseInt(ev.intHomeScore) : undefined,
+        awayScore: (isFinished || isLive) && ev.intAwayScore !== null ? parseInt(ev.intAwayScore) : undefined,
+        venue: ev.strVenue ?? undefined,
+        round: ev.strRound ?? undefined,
+      });
+    }
+  }
+
+  return results;
+}
+
+export async function fetchTennisMatches(): Promise<Match[]> {
+  // 1. TheSportsDB — real data, free, no key
+  const sdb = await fetchTennisFromSportsDB();
+  if (sdb.length > 0) return sdb;
+
+  // 2. ESPN fallback
+  const espn = await fetchTennisMatchesFromESPN();
+  if (espn.length > 0) return espn;
+
+  // 3. Last resort: mocks
+  return getMockMatchesBySport('tennis');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
