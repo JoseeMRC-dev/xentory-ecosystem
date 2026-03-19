@@ -101,7 +101,7 @@ export function DashboardPage() {
       <div className="bet-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
         <StatCard icon="🎯" value={String(todayPicks.length || '—')} label={t('Picks del día', "Today's picks")} color="var(--gold)" />
         <StatCard icon="✅" value="68%" label={t('Acierto semanal', 'Weekly accuracy')} color="var(--green)" />
-        <StatCard icon="⚽🏀🎾" value="5" label={t('Deportes activos', 'Active sports')} color="var(--cyan)" />
+        <StatCard icon="" value="5" label={t('Deportes activos', 'Active sports')} color="var(--cyan)" />
         <StatCard icon="✈️" value={user?.plan !== 'free' ? t('Activo', 'Active') : t('Inactivo', 'Inactive')} label={t('Canal Telegram', 'Telegram channel')} color={user?.plan !== 'free' ? 'var(--green)' : 'var(--muted)'} />
       </div>
 
