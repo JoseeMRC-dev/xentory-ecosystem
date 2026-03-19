@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { fetchUpcomingMatches, fetchBasketballMatches, fetchTennisMatches } from '../../services/sportsService';
-import { calculateWeeklyAccuracy } from '../../services/weeklyAccuracy';
+import { calculateGlobalAccuracy } from '../../services/globalAccuracy';
 import { SPORT_CONFIG, confidenceColor } from '../../constants';
 import { useLang } from '../../context/LanguageContext';
 import type { Match } from '../../types';
@@ -80,7 +80,7 @@ export function DashboardPage() {
       if (!cancelled && m[0]) { const p = buildPick(m[0], lang); if (p) setTodayPicks(prev => [...prev.filter(x => x.sport !== '🎾'), p]); }
     });
 
-    calculateWeeklyAccuracy().then(r => {
+    calculateGlobalAccuracy().then(r => {
       if (!cancelled && r.percent !== null) setWeeklyAcc(r.percent);
     });
 
