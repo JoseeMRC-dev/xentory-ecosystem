@@ -18,43 +18,21 @@ const FOOTBALL_COMPETITIONS = [
   { id: 'libertadores', emoji: '🌎', name: 'Copa Libertadores', shortName: 'Lib', color: '#00a651' },
 ];
 
-type DayPick = { sport: string; match: string; competition: string; pick: string; confidence: number; odds: number; market: string; };
+type DayPick = { sport: string; match: string; competition: string; pick: string; confidence: number; odds: number; market: string; matchId: number; matchRef: Match; };
 
-function buildPick(m: Match, lang: string): DayPick | null {
+function buildPick(m: Match | undefined, lang: string): DayPick | null {
+  if (!m) return null;
   const seed = ((m.id % 97) + 97) % 97;
   const confidence = 62 + (seed % 18);
+  const base = { matchId: m.id, matchRef: m };
   if (m.sport === 'football') {
-    return {
-      sport: '⚽',
-      match: `${m.homeTeam.name} vs ${m.awayTeam.name}`,
-      competition: m.competition.name,
-      pick: lang === 'es' ? `${m.homeTeam.shortName} gana` : `${m.homeTeam.shortName} wins`,
-      confidence,
-      odds: parseFloat((1.50 + (seed % 60) / 100).toFixed(2)),
-      market: '1X2',
-    };
+    return { ...base, sport: '⚽', match: `${m.homeTeam.name} vs ${m.awayTeam.name}`, competition: m.competition.name, pick: lang === 'es' ? `${m.homeTeam.shortName} gana` : `${m.homeTeam.shortName} wins`, confidence, odds: parseFloat((1.50 + (seed % 60) / 100).toFixed(2)), market: '1X2' };
   }
   if (m.sport === 'basketball') {
-    return {
-      sport: '🏀',
-      match: `${m.homeTeam.shortName} vs ${m.awayTeam.shortName}`,
-      competition: m.competition.name,
-      pick: `Over ${210 + (seed % 25)}.5`,
-      confidence,
-      odds: parseFloat((1.80 + (seed % 20) / 100).toFixed(2)),
-      market: 'Over/Under',
-    };
+    return { ...base, sport: '🏀', match: `${m.homeTeam.shortName} vs ${m.awayTeam.shortName}`, competition: m.competition.name, pick: `Over ${210 + (seed % 25)}.5`, confidence, odds: parseFloat((1.80 + (seed % 20) / 100).toFixed(2)), market: 'Over/Under' };
   }
   if (m.sport === 'tennis') {
-    return {
-      sport: '🎾',
-      match: `${m.homeTeam.name} vs ${m.awayTeam.name}`,
-      competition: m.competition.name,
-      pick: lang === 'es' ? `${m.homeTeam.shortName} gana` : `${m.homeTeam.shortName} wins`,
-      confidence,
-      odds: parseFloat((1.45 + (seed % 55) / 100).toFixed(2)),
-      market: lang === 'es' ? 'Resultado' : 'Result',
-    };
+    return { ...base, sport: '🎾', match: `${m.homeTeam.name} vs ${m.awayTeam.name}`, competition: m.competition.name, pick: lang === 'es' ? `${m.homeTeam.shortName} gana` : `${m.homeTeam.shortName} wins`, confidence, odds: parseFloat((1.45 + (seed % 55) / 100).toFixed(2)), market: lang === 'es' ? 'Resultado' : 'Result' };
   }
   return null;
 }
@@ -149,7 +127,7 @@ export function DashboardPage() {
             {todayPicks.map((pick, i) => (
               <div
                 key={i}
-                onClick={() => navigate('/matches')}
+                onClick={() => navigate(`/matches/${pick.matchId}`, { state: { match: pick.matchRef } })}
                 style={{
                   padding: '1rem 1.2rem',
                   background: 'var(--card2)', borderRadius: 12,
@@ -261,22 +239,23 @@ export function DashboardPage() {
 
       {/* Sport quick access */}
       <div className="glass" style={{ borderRadius: 16, padding: '1.5rem' }}>
-        <h2 style={{ fontSize: '1rem', marginBottom: '1.2rem' }}>🏆 {t('Acceso rápido por deporte', 'Quick access by sport')}</h2>
-        <div className="bet-sports-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.8rem' }}>
+        <h2 style={{ fontSize: '1rem', marginBottom: '1rem' }}>🏆 {t('Acceso rápido por deporte', 'Quick access by sport')}</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '0.5rem' }}>
           {Object.entries(SPORT_CONFIG).map(([key, cfg]) => (
             <div
               key={key}
               onClick={() => navigate(`/matches?sport=${key}`)}
               style={{
-                padding: '1.2rem 0.8rem', borderRadius: 12, textAlign: 'center',
+                display: 'flex', alignItems: 'center', gap: '0.6rem',
+                padding: '0.65rem 0.9rem', borderRadius: 10,
                 background: 'var(--card2)', border: '1px solid var(--border)',
                 cursor: 'pointer', transition: 'all 0.2s',
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = cfg.color; e.currentTarget.style.background = `${cfg.color}08`; }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = cfg.color; e.currentTarget.style.background = `${cfg.color}10`; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--card2)'; }}
             >
-              <div style={{ fontSize: '1.8rem', marginBottom: '0.4rem' }}>{cfg.emoji}</div>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text2)', fontWeight: 500 }}>{cfg.label}</div>
+              <span style={{ fontSize: '1.2rem', flexShrink: 0 }}>{cfg.emoji}</span>
+              <span style={{ fontSize: '0.83rem', color: 'var(--text2)', fontWeight: 500 }}>{cfg.label}</span>
             </div>
           ))}
         </div>

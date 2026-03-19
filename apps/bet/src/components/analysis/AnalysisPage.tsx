@@ -319,20 +319,46 @@ export function MatchAnalysisPage() {
 export function AnalysisPage() {
   const navigate = useNavigate();
   const { t } = useLang();
+  const [open, setOpen] = useState(true);
+
   return (
-    <div className="animate-fadeUp" style={{ maxWidth:1100, width:'100%' }}>
-      <div style={{ marginBottom:'2rem' }}>
-        <h1 style={{ fontSize:'1.5rem', marginBottom:'0.3rem' }}>🧠 {t('Análisis IA','AI Analysis')}</h1>
-        <p style={{ color:'var(--muted)', fontSize:'0.88rem' }}>{t('Selecciona un partido desde la sección de Partidos para generar el análisis completo.','Select a match from the Matches section to generate the full analysis.')}</p>
+    <>
+      {/* Backdrop */}
+      {open && (
+        <div
+          onClick={() => setOpen(false)}
+          style={{ position:'fixed', inset:0, zIndex:100, background:'rgba(5,8,16,0.72)', backdropFilter:'blur(6px)', display:'flex', alignItems:'center', justifyContent:'center', padding:'1rem' }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ background:'var(--nav-bg)', border:'1px solid var(--border)', borderRadius:20, padding:'2.5rem 2rem', width:'100%', maxWidth:420, textAlign:'center', animation:'slideDown 0.22s ease both', position:'relative' }}
+          >
+            <button
+              onClick={() => setOpen(false)}
+              style={{ position:'absolute', top:'0.8rem', right:'0.8rem', background:'none', border:'none', cursor:'pointer', color:'var(--muted)', fontSize:'1.1rem', lineHeight:1 }}
+            >✕</button>
+            <div style={{ fontSize:'3rem', marginBottom:'1rem' }}>🧠</div>
+            <h2 style={{ fontSize:'1.25rem', marginBottom:'0.5rem' }}>{t('¿Qué quieres analizar?','What do you want to analyse?')}</h2>
+            <p style={{ color:'var(--muted)', fontSize:'0.88rem', lineHeight:1.7, marginBottom:'2rem' }}>
+              {t('Selecciona un partido y la IA generará probabilidades, cuotas estimadas y la mejor apuesta.','Pick a match and the AI will generate probabilities, estimated odds and the best bet.')}
+            </p>
+            <button onClick={() => navigate('/matches')} className="btn btn-gold" style={{ width:'100%', justifyContent:'center', fontSize:'0.95rem', padding:'0.8rem' }}>
+              📅 {t('Ver partidos disponibles','View available matches')}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Background page */}
+      <div className="animate-fadeUp" style={{ maxWidth:1100, width:'100%', opacity: open ? 0.3 : 1, pointerEvents: open ? 'none' : 'auto', transition:'opacity 0.2s' }}>
+        <div style={{ marginBottom:'2rem' }}>
+          <h1 style={{ fontSize:'1.5rem', marginBottom:'0.3rem' }}>🧠 {t('Análisis IA','AI Analysis')}</h1>
+          <p style={{ color:'var(--muted)', fontSize:'0.88rem' }}>{t('Selecciona un partido desde la sección de Partidos para generar el análisis completo.','Select a match from the Matches section to generate the full analysis.')}</p>
+        </div>
+        <div className="glass" style={{ borderRadius:16, padding:'4rem', textAlign:'center' }}>
+          <button onClick={() => setOpen(true)} className="btn btn-gold btn-lg">📅 {t('Ver partidos disponibles','View available matches')}</button>
+        </div>
       </div>
-      <div className="glass" style={{ borderRadius:16, padding:'4rem', textAlign:'center' }}>
-        <div style={{ fontSize:'3.5rem', marginBottom:'1rem' }}>🧠</div>
-        <h2 style={{ marginBottom:'0.8rem' }}>{t('Motor de predicción listo','Prediction engine ready')}</h2>
-        <p style={{ color:'var(--muted)', maxWidth:400, margin:'0 auto 2rem', lineHeight:1.7 }}>
-          {t('Ve a Partidos, elige un enfrentamiento y genera el análisis completo con probabilidades, cuotas estimadas y la mejor apuesta del día.','Go to Matches, pick a game and generate the full analysis with probabilities, estimated odds and the best bet of the day.')}
-        </p>
-        <button onClick={() => navigate('/matches')} className="btn btn-gold btn-lg">📅 {t('Ver partidos disponibles','View available matches')}</button>
-      </div>
-    </div>
+    </>
   );
 }

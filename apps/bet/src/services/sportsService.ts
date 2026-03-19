@@ -132,14 +132,19 @@ function parseEspnFootballEvents(events: any[], cfg: LeagueCfg): Match[] {
   return matches;
 }
 
-// Fetch a league from ESPN — try today first, then search ±14 days for matches
+// Fetch a league from ESPN — prefer upcoming/live games over finished ones
 async function fetchLeagueMatches(cfg: LeagueCfg, limit: number): Promise<Match[]> {
   // Try today's scoreboard first
   let json = await espnFetch(`/${cfg.slug}/scoreboard`);
   let events: any[] = json?.events ?? [];
 
-  // If empty (no games today), search forward up to 14 days
-  if (events.length === 0) {
+  // Prefer non-finished events (scheduled or live)
+  const upcoming = events.filter(e => e.status?.type?.state !== 'post');
+  if (upcoming.length > 0) {
+    events = upcoming;
+  } else {
+    // All finished or empty → look forward up to 14 days
+    events = [];
     for (let d = 1; d <= 14; d++) {
       const dateStr = espnDate(d);
       json = await espnFetch(`/${cfg.slug}/scoreboard?dates=${dateStr}`);
@@ -329,24 +334,22 @@ export async function fetchTennisMatches(): Promise<Match[]> {
   for (const tour of TENNIS_LEAGUES) {
     let events: any[] = [];
 
-    // Try today first, then forward up to 14 days
-    for (let d = 0; d <= 14; d++) {
-      const dateStr = espnDate(d);
-      const path = d === 0
-        ? `/${tour.slug}/scoreboard`
-        : `/${tour.slug}/scoreboard?dates=${dateStr}`;
-      const json = await espnFetch(path);
-      events = json?.events ?? [];
-      if (events.length > 0) break;
+    // Single range request: today → +14 days (instead of 15 sequential requests)
+    const fwdRange = `${espnDate(0)}-${espnDate(14)}`;
+    const fwdJson  = await espnFetch(`/${tour.slug}/scoreboard?dates=${fwdRange}`);
+    events = fwdJson?.events ?? [];
+
+    // Also try base scoreboard (returns "current" tournament)
+    if (events.length === 0) {
+      const baseJson = await espnFetch(`/${tour.slug}/scoreboard`);
+      events = baseJson?.events ?? [];
     }
 
-    // Also try backward 7 days (live / just finished tournaments)
+    // Backward 7-day range for live / just-finished tournaments
     if (events.length === 0) {
-      for (let d = 1; d <= 7; d++) {
-        const json = await espnFetch(`/${tour.slug}/scoreboard?dates=${espnDate(-d)}`);
-        events = json?.events ?? [];
-        if (events.length > 0) break;
-      }
+      const bwdRange = `${espnDate(-7)}-${espnDate(-1)}`;
+      const bwdJson  = await espnFetch(`/${tour.slug}/scoreboard?dates=${bwdRange}`);
+      events = bwdJson?.events ?? [];
     }
 
     for (const ev of events.slice(0, 15)) {
