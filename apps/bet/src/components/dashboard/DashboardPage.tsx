@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { fetchUpcomingMatches, fetchBasketballMatches, fetchTennisMatches, getMockMatchesBySport } from '../../services/sportsService';
+import { fetchUpcomingMatches, fetchBasketballMatches, fetchTennisMatches } from '../../services/sportsService';
+import { calculateGlobalAccuracy } from '../../services/globalAccuracy';
 import { SPORT_CONFIG, confidenceColor } from '../../constants';
 import { useLang } from '../../context/LanguageContext';
 import type { Match } from '../../types';
@@ -51,34 +52,37 @@ export function DashboardPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { t, lang } = useLang();
-  const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([]);
+  // Pre-populate with mock data so the UI renders immediately
+  const [upcomingMatches, setUpcomingMatches] = useState<Match[] | null>(null);
   const [todayPicks, setTodayPicks] = useState<DayPick[]>([]);
+  const [weeklyAcc, setWeeklyAcc] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    const addPick = (p: DayPick | null, sportEmoji: string) => {
-      if (!p || cancelled) return;
-      setTodayPicks(prev => prev.some(x => x.sport === sportEmoji) ? prev : [...prev, p]);
-    };
-    const withTimeout = <T,>(promise: Promise<T>, fallback: T, ms: number): Promise<T> =>
-      Promise.race([promise, new Promise<T>(res => setTimeout(() => res(fallback), ms))]);
 
-    // Football — fast, loads upcoming matches + pick immediately
-    Promise.all([
-      fetchUpcomingMatches(2, 3),
-      fetchUpcomingMatches(140, 3),
-      fetchUpcomingMatches(39, 2),
-    ]).then(([cl, ll, epl]) => {
-      if (cancelled) return;
-      setUpcomingMatches([...cl, ...ll].slice(0, 6));
-      addPick(buildPick(epl[0] ?? ll[0] ?? cl[0], lang), '⚽');
+    // Fútbol: hoy primero (live/scheduled), luego rango adelante si no hay
+    Promise.all([fetchUpcomingMatches(2, 3), fetchUpcomingMatches(140, 3), fetchUpcomingMatches(39, 2)])
+      .then(([cl, ll, epl]) => {
+        if (cancelled) return;
+        setUpcomingMatches([...cl, ...ll].filter(m => m.status !== 'finished').slice(0, 6));
+        const pick = buildPick(
+          [...epl, ...ll, ...cl].find(m => m.status !== 'finished'),
+          lang
+        );
+        if (pick) setTodayPicks(prev => [pick, ...prev.filter(p => p.sport !== '⚽')]);
+      });
+
+    fetchBasketballMatches().then(m => {
+      if (!cancelled && m[0]) { const p = buildPick(m[0], lang); if (p) setTodayPicks(prev => [...prev.filter(x => x.sport !== '🏀'), p]); }
     });
 
-    // Basketball and tennis: 2s timeout → mock fallback so they never block
-    withTimeout(fetchBasketballMatches(), getMockMatchesBySport('basketball'), 2000)
-      .then(m => addPick(buildPick(m[0], lang), '🏀'));
-    withTimeout(fetchTennisMatches(), getMockMatchesBySport('tennis'), 2000)
-      .then(m => addPick(buildPick(m[0], lang), '🎾'));
+    fetchTennisMatches().then(m => {
+      if (!cancelled && m[0]) { const p = buildPick(m[0], lang); if (p) setTodayPicks(prev => [...prev.filter(x => x.sport !== '🎾'), p]); }
+    });
+
+    calculateGlobalAccuracy().then(r => {
+      if (!cancelled && r.percent !== null) setWeeklyAcc(r.percent);
+    });
 
     return () => { cancelled = true; };
   }, [lang]);
@@ -102,8 +106,8 @@ export function DashboardPage() {
       {/* Stats */}
       <div className="bet-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
         <StatCard icon="🎯" value={String(todayPicks.length || '—')} label={t('Picks del día', "Today's picks")} color="var(--gold)" />
-        <StatCard icon="✅" value="68%" label={t('Acierto semanal', 'Weekly accuracy')} color="var(--green)" />
-        <StatCard icon="⚽🏀🎾" value="5" label={t('Deportes activos', 'Active sports')} color="var(--cyan)" />
+        <StatCard icon="" value={weeklyAcc !== null ? `${weeklyAcc}%` : '—'} label={t('Acierto semanal', 'Weekly accuracy')} color="var(--green)" />
+        <StatCard icon="" value="5" label={t('Deportes activos', 'Active sports')} color="var(--cyan)" />
         <StatCard icon="✈️" value={user?.plan !== 'free' ? t('Activo', 'Active') : t('Inactivo', 'Inactive')} label={t('Canal Telegram', 'Telegram channel')} color={user?.plan !== 'free' ? 'var(--green)' : 'var(--muted)'} />
       </div>
 
@@ -166,7 +170,7 @@ export function DashboardPage() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-            {upcomingMatches.length === 0
+            {upcomingMatches === null
               ? Array(4).fill(0).map((_, i) => (
                   <div key={i} style={{ height: 56, borderRadius: 10, background: 'var(--card2)' }} className="skeleton" />
                 ))
