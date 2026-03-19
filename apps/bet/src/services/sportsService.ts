@@ -162,6 +162,37 @@ export async function fetchUpcomingMatches(leagueId: number, limit = 10): Promis
   return getMockMatches(leagueId, limit);   // only if ESPN fails entirely
 }
 
+// Returns the Monday→Sunday range of the current calendar week as YYYYMMDD strings
+function currentWeekRange(): { start: string; end: string } {
+  const now = new Date();
+  const dayOfWeek = now.getDay(); // 0=Sun … 6=Sat
+  const daysFromMon = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const mon = new Date(now);
+  mon.setDate(now.getDate() - daysFromMon);
+  const sun = new Date(mon);
+  sun.setDate(mon.getDate() + 6);
+  const fmt = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, '');
+  return { start: fmt(mon), end: fmt(sun) };
+}
+
+/** All matches (finished + scheduled) for a league during the current Mon–Sun week */
+export async function fetchWeekMatches(leagueId: number): Promise<Match[]> {
+  const cfg = FOOTBALL_LEAGUES.find(l => l.id === leagueId);
+  if (!cfg) return [];
+  const { start, end } = currentWeekRange();
+  const json = await espnFetch(`/${cfg.slug}/scoreboard?dates=${start}-${end}`);
+  const events: any[] = json?.events ?? [];
+  if (events.length > 0) {
+    return parseEspnFootballEvents(events, cfg)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }
+  // Fallback: today's scoreboard (live + nearby)
+  const todayJson = await espnFetch(`/${cfg.slug}/scoreboard`);
+  const todayEvents: any[] = todayJson?.events ?? [];
+  if (todayEvents.length > 0) return parseEspnFootballEvents(todayEvents, cfg);
+  return getMockMatches(leagueId, 10);
+}
+
 export async function fetchLiveMatches(leagueId?: number): Promise<Match[]> {
   if (leagueId) {
     const cfg = FOOTBALL_LEAGUES.find(l => l.id === leagueId);
@@ -491,16 +522,95 @@ async function fetchTennisFromSportsDB(): Promise<Match[]> {
   return results;
 }
 
+// api-sports.io tennis status → our status
+const TENNIS_FINISHED = new Set(['FT', 'AOT', 'AO', 'WO', 'RET', 'INT', 'CANC', 'ABD', 'AWD']);
+const TENNIS_LIVE     = new Set(['LIVE', 'S1', 'S2', 'S3', 'S4', 'S5', 'BREAK', 'TIE']);
+
+async function fetchTennisFromApiSports(): Promise<Match[]> {
+  const results: Match[] = [];
+  const seen = new Set<string>();
+
+  // Scan today + next 3 days; stop as soon as we have matches
+  for (let d = 0; d <= 3 && results.length < 20; d++) {
+    const dateObj = new Date();
+    dateObj.setDate(dateObj.getDate() + d);
+    const dateStr = dateObj.toISOString().slice(0, 10);
+
+    const json = await proxyFetch('tennis', `/games?date=${dateStr}`);
+    const games: any[] = json?.response ?? [];
+
+    for (const game of games) {
+      const hp = game.players?.home;
+      const ap = game.players?.away;
+      if (!hp?.name || !ap?.name) continue;
+
+      const key = `${hp.name}-${ap.name}-${game.date ?? dateStr}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      const short  = game.status?.short ?? 'NS';
+      const status: Match['status'] = TENNIS_FINISHED.has(short)
+        ? 'finished' : TENNIS_LIVE.has(short) ? 'live' : 'scheduled';
+
+      const gameId   = parseInt(game.id ?? '0');
+      const homeName = String(hp.name);
+      const awayName = String(ap.name);
+      // api-sports returns "C. Alcaraz" — use the last token as shortName
+      const shortOf  = (n: string) => n.split(' ').pop()?.slice(0, 4).toUpperCase() ?? n.slice(0, 3).toUpperCase();
+
+      results.push({
+        id: gameId + 50000,
+        sport: 'tennis',
+        competition: {
+          id: parseInt(game.league?.id ?? '0'),
+          name: game.tournament?.name ?? game.league?.name ?? 'Tennis',
+          sport: 'tennis',
+          country: game.country?.name ?? 'International',
+          logo: game.league?.logo ?? '',
+          emoji: '🎾',
+        },
+        homeTeam: {
+          id: parseInt(hp.id ?? '0'),
+          name: homeName,
+          shortName: shortOf(homeName),
+          logo: hp.photo ?? undefined,
+        },
+        awayTeam: {
+          id: parseInt(ap.id ?? '0'),
+          name: awayName,
+          shortName: shortOf(awayName),
+          logo: ap.photo ?? undefined,
+        },
+        date: game.date && game.time
+          ? `${game.date}T${game.time}:00`
+          : `${game.date ?? dateStr}T12:00:00`,
+        status,
+        homeScore: status !== 'scheduled' && game.scores?.home?.current != null
+          ? parseInt(game.scores.home.current) : undefined,
+        awayScore: status !== 'scheduled' && game.scores?.away?.current != null
+          ? parseInt(game.scores.away.current) : undefined,
+        round: game.league?.name ?? undefined,
+      });
+    }
+  }
+
+  return results;
+}
+
 export async function fetchTennisMatches(): Promise<Match[]> {
-  // 1. TheSportsDB — real data, free, no key
+  // 1. api-sports.io via Supabase proxy — same key as football, real data
+  const apiSports = await fetchTennisFromApiSports();
+  if (apiSports.length > 0) return apiSports;
+
+  // 2. TheSportsDB — free public API
   const sdb = await fetchTennisFromSportsDB();
   if (sdb.length > 0) return sdb;
 
-  // 2. ESPN fallback
+  // 3. ESPN fallback
   const espn = await fetchTennisMatchesFromESPN();
   if (espn.length > 0) return espn;
 
-  // 3. Last resort: mocks
+  // 4. Last resort: mocks
   return getMockMatchesBySport('tennis');
 }
 
