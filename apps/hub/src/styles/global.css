@@ -560,3 +560,18 @@ body.menu-open { overflow: hidden; }
   position: relative;
   overflow: hidden;
 }
+
+/* ── ONBOARDING MODAL OVERLAY ─────────────────────────────────── */
+.onboarding-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(4, 6, 15, 0.90);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(0.6rem, 4vw, 1.5rem);
+  overflow-y: auto;
+}

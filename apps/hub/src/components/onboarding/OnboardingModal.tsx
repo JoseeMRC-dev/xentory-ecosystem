@@ -93,23 +93,30 @@ export function OnboardingModal({ onComplete }: OnboardingProps) {
 
   return (
     <div className="onboarding-overlay">
-      <div style={{
-        background: 'var(--bg2)', borderRadius: 24,
-        border: '1px solid var(--border2)',
-        padding: 'clamp(1.5rem, 5vw, 2.5rem)',
-        maxWidth: 520, width: '100%',
-        position: 'relative',
-        animation: 'fadeUp 0.4s ease',
-      }}>
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: 'var(--bg2)', borderRadius: 24,
+          border: '1px solid var(--border2)',
+          padding: 'clamp(1.5rem, 5vw, 2.5rem)',
+          maxWidth: 520, width: '100%',
+          position: 'relative',
+          animation: 'fadeUp 0.4s ease',
+        }}
+      >
+        {/* Close button */}
+        <button
+          onClick={handleSkip}
+          style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: '1.2rem', lineHeight: 1, padding: '0.2rem', zIndex: 1 }}
+        >✕</button>
+
         {/* Progress bar */}
         <div style={{ marginBottom: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
             <span style={{ fontSize: '0.72rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Paso {step + 1} de {STEPS.length}
             </span>
-            <button onClick={handleSkip} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: '0.78rem', textDecoration: 'underline' }}>
-              Saltar
-            </button>
+            <span />
           </div>
           <div style={{ height: 4, borderRadius: 100, background: 'var(--card2)', overflow: 'hidden' }}>
             <div style={{ height: '100%', borderRadius: 100, background: 'linear-gradient(90deg, var(--gold), var(--gold-l))', width: `${progress}%`, transition: 'width 0.4s ease' }} />
