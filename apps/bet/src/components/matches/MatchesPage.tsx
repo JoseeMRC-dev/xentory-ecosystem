@@ -56,6 +56,25 @@ const COMPETITIONS_BY_SPORT: Record<string, { id: string; name: string; emoji: s
   ],
 };
 
+// ── DYNAMIC CALENDAR ICON ──
+function CalendarDay() {
+  const day = new Date().getDate();
+  return (
+    <span style={{
+      display: 'inline-flex', flexDirection: 'column', alignItems: 'center',
+      width: '1.8rem', height: '1.8rem', borderRadius: 5, overflow: 'hidden',
+      border: '1.5px solid rgba(255,255,255,0.12)', verticalAlign: 'middle', flexShrink: 0,
+    }}>
+      <span style={{ background: '#ef4444', height: '35%', width: '100%' }} />
+      <span style={{
+        fontFamily: 'Outfit', fontWeight: 800, fontSize: '0.85rem', color: 'var(--text)',
+        background: 'var(--card2)', width: '100%', flex: 1,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>{day}</span>
+    </span>
+  );
+}
+
 // ── MATCH CARD ──
 function MatchCard({ match, query, onClick }: { match: Match; query: string; onClick: () => void }) {
   const sport = SPORT_CONFIG[match.sport];
@@ -160,19 +179,43 @@ export function MatchesPage() {
   const { t, lang } = useLang();
   const activeSport       = (searchParams.get('sport') ?? 'football') as Sport;
   const activeCompetition = searchParams.get('comp') ?? 'all';
+  const locale = lang === 'es' ? 'es-ES' : 'en-GB';
 
   const [allMatches, setAllMatches]   = useState<Match[]>([]);
   const [loading, setLoading]         = useState(true);
   const [query, setQuery]             = useState('');
   const [showSearch, setShowSearch]   = useState(false);
   const [statusFilter, setStatusFilter] = useState<'all' | 'upcoming' | 'played'>('all');
+  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
+
+  // Day helpers
+  const getDateStr = (offsetDays: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + offsetDays);
+    return d.toLocaleDateString('en-CA', { timeZone: 'Europe/Madrid' });
+  };
+  const todayStr    = getDateStr(0);
+  const tomorrowStr = getDateStr(1);
+  const dayAfterStr = getDateStr(2);
+
+  const getDayDisplayLabel = (dateStr: string): string => {
+    if (dateStr === todayStr)    return lang === 'es' ? 'HOY'            : 'TODAY';
+    if (dateStr === tomorrowStr) return lang === 'es' ? 'MAÑANA'         : 'TOMORROW';
+    if (dateStr === dayAfterStr) return lang === 'es' ? 'PASADO MAÑANA'  : 'DAY AFTER';
+    if (dateStr < todayStr)      return lang === 'es' ? 'ANTERIORES'     : 'PREVIOUS';
+    const d = new Date(dateStr + 'T12:00:00');
+    return d.toLocaleDateString(locale, { weekday: 'long', day: '2-digit', month: 'short' });
+  };
 
   // Fetch when sport changes
   useEffect(() => {
     setLoading(true);
     setAllMatches([]);
     setQuery('');
+    setSelectedDate('');
+    setShowDatePicker(false);
 
     const load = async () => {
       let results: Match[] = [];
@@ -217,13 +260,18 @@ export function MatchesPage() {
 
   const competitions = COMPETITIONS_BY_SPORT[activeSport] ?? [];
 
-  // Filter: competition + status + search query
+  // Filter: competition + status + date + search query
   const visibleMatches = allMatches
     .filter(m => activeCompetition === 'all' || String(m.competition.id) === activeCompetition)
     .filter(m => {
       if (statusFilter === 'upcoming') return m.status !== 'finished';
       if (statusFilter === 'played')   return m.status === 'finished';
       return true;
+    })
+    .filter(m => {
+      if (!selectedDate) return true;
+      const d = new Date(m.date).toLocaleDateString('en-CA', { timeZone: 'Europe/Madrid' });
+      return d === selectedDate;
     })
     .filter(m => {
       if (!query.trim()) return true;
@@ -237,23 +285,27 @@ export function MatchesPage() {
       );
     });
 
-  // Group matches by competition for display
-  const grouped: Record<string, Match[]> = {};
+  // Group by day (YYYY-MM-DD in Madrid TZ) → competition
+  const byDay: Record<string, Record<string, Match[]>> = {};
   visibleMatches.forEach(m => {
-    const key = m.competition.name;
-    if (!grouped[key]) grouped[key] = [];
-    grouped[key].push(m);
+    const dayKey  = new Date(m.date).toLocaleDateString('en-CA', { timeZone: 'Europe/Madrid' });
+    const compKey = m.competition.name;
+    if (!byDay[dayKey]) byDay[dayKey] = {};
+    if (!byDay[dayKey][compKey]) byDay[dayKey][compKey] = [];
+    byDay[dayKey][compKey].push(m);
   });
+  const sortedDays = Object.entries(byDay).sort(([a], [b]) => a.localeCompare(b));
 
-  // Sort groups by league priority
-  const sortedGroupEntries = Object.entries(grouped).sort(([, aMs], [, bMs]) => {
-    const getId = (ms: Match[]) => {
-      const raw = ms[0]?.competition.id;
-      return typeof raw === 'string' ? parseInt(raw) : (raw ?? 9999);
-    };
-    const ap = LEAGUE_PRIORITY.indexOf(getId(aMs)); const bp = LEAGUE_PRIORITY.indexOf(getId(bMs));
-    return (ap === -1 ? 9999 : ap) - (bp === -1 ? 9999 : bp);
-  });
+  // Sort competition groups within a day by league priority
+  const sortCompGroups = (entries: [string, Match[]][]) =>
+    entries.sort(([, aMs], [, bMs]) => {
+      const getId = (ms: Match[]) => {
+        const raw = ms[0]?.competition.id;
+        return typeof raw === 'string' ? parseInt(raw) : (raw ?? 9999);
+      };
+      const ap = LEAGUE_PRIORITY.indexOf(getId(aMs)); const bp = LEAGUE_PRIORITY.indexOf(getId(bMs));
+      return (ap === -1 ? 9999 : ap) - (bp === -1 ? 9999 : bp);
+    });
 
   const setSport = (sport: string) => setSearchParams({ sport, comp: 'all' });
   const setComp  = (comp: string)  => setSearchParams({ sport: activeSport, comp });
@@ -268,7 +320,9 @@ export function MatchesPage() {
       {/* ── HEADER ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.8rem' }}>
         <div>
-          <h1 style={{ fontSize: '1.5rem', marginBottom: '0.3rem' }}>📅 {t('Partidos y Eventos', 'Matches & Events')}</h1>
+          <h1 style={{ fontSize: '1.5rem', marginBottom: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <CalendarDay /> {t('Partidos y Eventos', 'Matches & Events')}
+          </h1>
           <p style={{ color: 'var(--muted)', fontSize: '0.88rem' }}>
             {t('Filtra por deporte, competición o busca directamente.', 'Filter by sport, competition or search directly.')}
           </p>
@@ -379,37 +433,76 @@ export function MatchesPage() {
         </div>
       </div>
 
-      {/* ── STATUS FILTER ── */}
-      {activeSport === 'football' && (
-        <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.2rem', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.72rem', color: 'var(--muted)', marginRight: '0.2rem' }}>
-            {lang === 'es' ? 'Mostrar:' : 'Show:'}
+      {/* ── STATUS FILTER + DATE PICKER ── */}
+      <div style={{ display: 'flex', gap: '0.4rem', marginBottom: showDatePicker ? '0.5rem' : '1.2rem', alignItems: 'center', flexWrap: 'wrap' }}>
+        <span style={{ fontSize: '0.72rem', color: 'var(--muted)', marginRight: '0.2rem' }}>
+          {lang === 'es' ? 'Mostrar:' : 'Show:'}
+        </span>
+        {([
+          { id: 'all',      label: lang === 'es' ? 'Todos'     : 'All',      emoji: '📋' },
+          { id: 'upcoming', label: lang === 'es' ? 'Por jugar' : 'Upcoming', emoji: '⏳' },
+          { id: 'played',   label: lang === 'es' ? 'Jugados'   : 'Played',   emoji: '✅' },
+        ] as const).map(f => (
+          <button
+            key={f.id}
+            onClick={() => setStatusFilter(f.id)}
+            style={{
+              padding: '0.35rem 0.9rem', borderRadius: 100, cursor: 'pointer',
+              fontSize: '0.78rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.3rem',
+              background: statusFilter === f.id ? 'var(--gold-dim)' : 'var(--card2)',
+              color:      statusFilter === f.id ? 'var(--gold)'    : 'var(--muted)',
+              border:     statusFilter === f.id ? '1px solid rgba(201,168,76,0.4)' : '1px solid var(--border)',
+              transition: 'all 0.2s',
+            }}
+          >
+            <span>{f.emoji}</span><span>{f.label}</span>
+          </button>
+        ))}
+        {/* Elegir fecha */}
+        <button
+          onClick={() => { setShowDatePicker(s => !s); if (showDatePicker) setSelectedDate(''); }}
+          style={{
+            padding: '0.35rem 0.9rem', borderRadius: 100, cursor: 'pointer',
+            fontSize: '0.78rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.3rem',
+            background: selectedDate ? 'rgba(0,212,255,0.1)' : 'var(--card2)',
+            color:      selectedDate ? 'var(--cyan)'         : 'var(--muted)',
+            border:     selectedDate ? '1px solid rgba(0,212,255,0.3)' : '1px solid var(--border)',
+            transition: 'all 0.2s',
+          }}
+        >
+          <span>📆</span>
+          <span>
+            {selectedDate
+              ? new Date(selectedDate + 'T12:00:00').toLocaleDateString(locale, { day: '2-digit', month: 'short' })
+              : (lang === 'es' ? 'Elegir fecha' : 'Pick date')}
           </span>
-          {([
-            { id: 'all',      label: lang === 'es' ? 'Todos'     : 'All',      emoji: '📅' },
-            { id: 'upcoming', label: lang === 'es' ? 'Por jugar' : 'Upcoming', emoji: '⏳' },
-            { id: 'played',   label: lang === 'es' ? 'Jugados'   : 'Played',   emoji: '✅' },
-          ] as const).map(f => (
-            <button
-              key={f.id}
-              onClick={() => setStatusFilter(f.id)}
-              style={{
-                padding: '0.35rem 0.9rem', borderRadius: 100, cursor: 'pointer',
-                fontSize: '0.78rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.3rem',
-                background: statusFilter === f.id ? 'var(--gold-dim)' : 'var(--card2)',
-                color:      statusFilter === f.id ? 'var(--gold)'    : 'var(--muted)',
-                border:     statusFilter === f.id ? '1px solid rgba(201,168,76,0.4)' : '1px solid var(--border)',
-                transition: 'all 0.2s',
-              }}
-            >
-              <span>{f.emoji}</span><span>{f.label}</span>
-            </button>
-          ))}
+          {selectedDate && (
+            <span
+              onClick={e => { e.stopPropagation(); setSelectedDate(''); setShowDatePicker(false); }}
+              style={{ marginLeft: '0.1rem', fontSize: '0.8rem' }}
+            >✕</span>
+          )}
+        </button>
+      </div>
+      {showDatePicker && (
+        <div style={{ marginBottom: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+          <input
+            type="date"
+            className="input"
+            value={selectedDate}
+            onChange={e => setSelectedDate(e.target.value)}
+            style={{ maxWidth: 200, padding: '0.4rem 0.8rem', fontSize: '0.88rem' }}
+          />
+          {selectedDate && !loading && (
+            <span style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>
+              {visibleMatches.length} {match_word(visibleMatches.length)} {lang === 'es' ? 'encontrados' : 'found'}
+            </span>
+          )}
         </div>
       )}
 
       {/* ── ACTIVE FILTERS SUMMARY ── */}
-      {(query || activeCompetition !== 'all') && !loading && (
+      {(query || activeCompetition !== 'all' || selectedDate) && !loading && (
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem', alignItems: 'center' }}>
           <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>{t('Filtros activos:', 'Active filters:')}</span>
           {activeCompetition !== 'all' && (
@@ -418,13 +511,19 @@ export function MatchesPage() {
               <button onClick={() => setComp('all')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gold)', fontSize: '0.8rem', padding: 0 }}>✕</button>
             </span>
           )}
+          {selectedDate && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.2rem 0.6rem', borderRadius: 100, background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.2)', fontSize: '0.72rem', color: 'var(--cyan)' }}>
+              📆 {new Date(selectedDate + 'T12:00:00').toLocaleDateString(locale, { weekday: 'short', day: '2-digit', month: 'short' })}
+              <button onClick={() => { setSelectedDate(''); setShowDatePicker(false); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--cyan)', fontSize: '0.8rem', padding: 0 }}>✕</button>
+            </span>
+          )}
           {query && (
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.2rem 0.6rem', borderRadius: 100, background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.2)', fontSize: '0.72rem', color: 'var(--cyan)' }}>
               🔍 "{query}"
               <button onClick={() => setQuery('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--cyan)', fontSize: '0.8rem', padding: 0 }}>✕</button>
             </span>
           )}
-          <button onClick={() => { setComp('all'); setQuery(''); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: '0.72rem', textDecoration: 'underline' }}>
+          <button onClick={() => { setComp('all'); setQuery(''); setSelectedDate(''); setShowDatePicker(false); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: '0.72rem', textDecoration: 'underline' }}>
             {t('Limpiar todo', 'Clear all')}
           </button>
         </div>
@@ -476,65 +575,86 @@ export function MatchesPage() {
           </div>
         </>
       ) : (
-        // Grouped by competition — ordered by league priority
+        // Grouped by day → competition
         <>
-          {sortedGroupEntries.map(([compName, matches]) => {
-            // Sub-sections only when showing "all" (upcoming+played mixed)
-            const showSplit = statusFilter === 'all';
-            const played    = showSplit ? matches.filter(m => m.status === 'finished')    : [];
-            const pending   = showSplit ? matches.filter(m => m.status !== 'finished')    : matches;
+          {sortedDays.map(([dayKey, compGroups]) => {
+            const dayLabel    = getDayDisplayLabel(dayKey);
+            const sortedComps = sortCompGroups(Object.entries(compGroups));
+            const dayTotal    = Object.values(compGroups).flat().length;
+            const dayColor    = dayKey === todayStr ? 'var(--gold)' : dayKey === tomorrowStr ? 'var(--cyan)' : 'var(--text)';
             return (
-              <div key={compName} style={{ marginBottom: '2rem' }}>
-                {/* Competition header */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.8rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--border)' }}>
-                  <span style={{ fontSize: '1rem' }}>{matches[0]?.competition.emoji}</span>
-                  <span style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.95rem' }}>{compName}</span>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--muted)', marginLeft: '0.3rem' }}>
-                    {matches.length} {match_word(matches.length)}
+              <div key={dayKey} style={{ marginBottom: '2.5rem' }}>
+                {/* Day header */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem', paddingBottom: '0.6rem', borderBottom: `2px solid ${dayKey === todayStr ? 'rgba(201,168,76,0.35)' : dayKey === tomorrowStr ? 'rgba(0,212,255,0.25)' : 'var(--border)'}` }}>
+                  <span style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1rem', color: dayColor, letterSpacing: '0.04em' }}>{dayLabel}</span>
+                  {dayKey !== todayStr && (
+                    <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>
+                      · {new Date(dayKey + 'T12:00:00').toLocaleDateString(locale, { weekday: 'long', day: '2-digit', month: 'short' })}
+                    </span>
+                  )}
+                  <span style={{ fontSize: '0.72rem', color: 'var(--muted)', marginLeft: '0.2rem' }}>
+                    {dayTotal} {match_word(dayTotal)}
                   </span>
-                  {showSplit && played.length > 0 && (
-                    <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.45rem', borderRadius: 100, background: 'rgba(107,114,148,0.12)', color: 'var(--muted)', border: '1px solid rgba(107,114,148,0.2)' }}>
-                      {played.length} {lang === 'es' ? 'jugados' : 'played'}
-                    </span>
-                  )}
-                  {showSplit && pending.length > 0 && (
-                    <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.45rem', borderRadius: 100, background: 'rgba(0,212,255,0.08)', color: 'var(--cyan)', border: '1px solid rgba(0,212,255,0.2)' }}>
-                      {pending.length} {lang === 'es' ? 'por jugar' : 'upcoming'}
-                    </span>
-                  )}
                 </div>
 
-                {/* Upcoming / all */}
-                {pending.length > 0 && (
-                  <>
-                    {showSplit && played.length > 0 && (
-                      <div style={{ fontSize: '0.7rem', color: 'var(--cyan)', fontWeight: 600, marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                        {lang === 'es' ? 'Por jugar' : 'Upcoming'}
+                {/* Competition groups within this day */}
+                {sortedComps.map(([compName, matches]) => {
+                  const showSplit = statusFilter === 'all';
+                  const played    = showSplit ? matches.filter(m => m.status === 'finished') : [];
+                  const pending   = showSplit ? matches.filter(m => m.status !== 'finished') : matches;
+                  return (
+                    <div key={compName} style={{ marginBottom: '1.5rem' }}>
+                      {/* Competition header */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.7rem', paddingBottom: '0.4rem', borderBottom: '1px solid var(--border)' }}>
+                        <span style={{ fontSize: '0.9rem' }}>{matches[0]?.competition.emoji}</span>
+                        <span style={{ fontFamily: 'Outfit', fontWeight: 600, fontSize: '0.9rem' }}>{compName}</span>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>{matches.length} {match_word(matches.length)}</span>
+                        {showSplit && played.length > 0 && (
+                          <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.45rem', borderRadius: 100, background: 'rgba(107,114,148,0.12)', color: 'var(--muted)', border: '1px solid rgba(107,114,148,0.2)' }}>
+                            {played.length} {lang === 'es' ? 'jugados' : 'played'}
+                          </span>
+                        )}
+                        {showSplit && pending.length > 0 && (
+                          <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.45rem', borderRadius: 100, background: 'rgba(0,212,255,0.08)', color: 'var(--cyan)', border: '1px solid rgba(0,212,255,0.2)' }}>
+                            {pending.length} {lang === 'es' ? 'por jugar' : 'upcoming'}
+                          </span>
+                        )}
                       </div>
-                    )}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '0.8rem', marginBottom: played.length > 0 ? '1rem' : 0 }}>
-                      {pending.map(match => (
-                        <MatchCard key={match.id} match={match} query="" onClick={() => navigate(`/matches/${match.id}`, { state: { match } })} />
-                      ))}
-                    </div>
-                  </>
-                )}
 
-                {/* Played (only in "all" view) */}
-                {showSplit && played.length > 0 && (
-                  <>
-                    {pending.length > 0 && (
-                      <div style={{ fontSize: '0.7rem', color: 'var(--muted)', fontWeight: 600, marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                        {lang === 'es' ? 'Jugados' : 'Played'}
-                      </div>
-                    )}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '0.8rem', opacity: 0.7 }}>
-                      {played.map(match => (
-                        <MatchCard key={match.id} match={match} query="" onClick={() => navigate(`/matches/${match.id}`, { state: { match } })} />
-                      ))}
+                      {/* Pending */}
+                      {pending.length > 0 && (
+                        <>
+                          {showSplit && played.length > 0 && (
+                            <div style={{ fontSize: '0.7rem', color: 'var(--cyan)', fontWeight: 600, marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                              {lang === 'es' ? 'Por jugar' : 'Upcoming'}
+                            </div>
+                          )}
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '0.8rem', marginBottom: played.length > 0 ? '1rem' : 0 }}>
+                            {pending.map(match => (
+                              <MatchCard key={match.id} match={match} query="" onClick={() => navigate(`/matches/${match.id}`, { state: { match } })} />
+                            ))}
+                          </div>
+                        </>
+                      )}
+
+                      {/* Played */}
+                      {showSplit && played.length > 0 && (
+                        <>
+                          {pending.length > 0 && (
+                            <div style={{ fontSize: '0.7rem', color: 'var(--muted)', fontWeight: 600, marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                              {lang === 'es' ? 'Jugados' : 'Played'}
+                            </div>
+                          )}
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '0.8rem', opacity: 0.7 }}>
+                            {played.map(match => (
+                              <MatchCard key={match.id} match={match} query="" onClick={() => navigate(`/matches/${match.id}`, { state: { match } })} />
+                            ))}
+                          </div>
+                        </>
+                      )}
                     </div>
-                  </>
-                )}
+                  );
+                })}
               </div>
             );
           })}
