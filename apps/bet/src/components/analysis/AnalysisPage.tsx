@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { fetchTeamStats, getMockStatsBySport, fetchLiveMatchById } from '../../services/sportsService';
+import { fetchTeamStats, getMockStatsBySport, fetchLiveMatchById, fetchWeekMatches, fetchTennisMatches, fetchBasketballMatches, fetchF1Matches, fetchGolfMatches } from '../../services/sportsService';
 import { generateMatchAnalysis } from '../../services/aiService';
 import { SPORT_CONFIG, FORM_COLORS, confidenceColor } from '../../constants';
 import { useLang } from '../../context/LanguageContext';
@@ -316,47 +316,276 @@ export function MatchAnalysisPage() {
   );
 }
 
-export function AnalysisPage() {
+// ── Competitions for the wizard (football, in priority order) ──
+const WIZARD_FOOTBALL_COMPS = [
+  { id: '2',   name: 'Champions League', emoji: '🏆' },
+  { id: '3',   name: 'Europa League',    emoji: '🟠' },
+  { id: '140', name: 'LaLiga',           emoji: '🇪🇸' },
+  { id: '141', name: 'Segunda División', emoji: '🇪🇸' },
+  { id: '135', name: 'Serie A',          emoji: '🇮🇹' },
+  { id: '136', name: 'Serie B',          emoji: '🇮🇹' },
+  { id: '78',  name: 'Bundesliga',       emoji: '🇩🇪' },
+  { id: '79',  name: '2. Bundesliga',    emoji: '🇩🇪' },
+  { id: '39',  name: 'Premier League',   emoji: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
+  { id: '40',  name: 'Championship',     emoji: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
+  { id: '61',  name: 'Ligue 1',          emoji: '🇫🇷' },
+  { id: '94',  name: 'Primeira Liga',    emoji: '🇵🇹' },
+  { id: '128', name: 'Liga Argentina',   emoji: '🇦🇷' },
+  { id: '262', name: 'Liga MX',          emoji: '🇲🇽' },
+];
+
+type WizardComp = typeof WIZARD_FOOTBALL_COMPS[number];
+
+// ── 3-step wizard modal ──
+function AnalysisWizardModal({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate();
-  const { t } = useLang();
+  const { lang } = useLang();
+
+  const [step, setStep]         = useState<1 | 2 | 3>(1);
+  const [selSport, setSelSport] = useState('');
+  const [selComp, setSelComp]   = useState<WizardComp | null>(null);
+  const [matches, setMatches]   = useState<Match[]>([]);
+  const [loading, setLoading]   = useState(false);
+
+  const loadMatches = async (sport: string, compId?: string) => {
+    setLoading(true);
+    let results: Match[] = [];
+    if (sport === 'football' && compId) {
+      results = await fetchWeekMatches(parseInt(compId));
+    } else if (sport === 'tennis') {
+      results = await fetchTennisMatches();
+    } else if (sport === 'basketball') {
+      results = await fetchBasketballMatches();
+    } else if (sport === 'f1') {
+      results = await fetchF1Matches();
+    } else if (sport === 'golf') {
+      results = await fetchGolfMatches();
+    }
+    // Upcoming/live first, then played
+    setMatches(results.sort((a, b) => {
+      if (a.status !== 'finished' && b.status === 'finished') return -1;
+      if (a.status === 'finished' && b.status !== 'finished') return 1;
+      return new Date(a.date).getTime() - new Date(b.date).getTime();
+    }));
+    setLoading(false);
+  };
+
+  const handleSport = (sport: string) => {
+    setSelSport(sport);
+    if (sport === 'football') { setStep(2); }
+    else { setStep(3); loadMatches(sport); }
+  };
+
+  const handleComp = (comp: WizardComp) => {
+    setSelComp(comp);
+    setStep(3);
+    loadMatches('football', comp.id);
+  };
+
+  const handleMatch = (match: Match) => {
+    onClose();
+    navigate(`/matches/${match.id}`, { state: { match } });
+  };
+
+  const goBack = () => {
+    if (step === 3 && selSport === 'football') { setStep(2); setMatches([]); }
+    else { setStep(1); setSelSport(''); setSelComp(null); setMatches([]); }
+  };
+
+  const btnBase: React.CSSProperties = {
+    display: 'flex', alignItems: 'center', gap: '0.7rem',
+    padding: '0.8rem 1rem', borderRadius: 12, cursor: 'pointer',
+    background: 'var(--card2)', border: '1px solid var(--border)',
+    color: 'var(--text)', fontSize: '0.88rem', fontWeight: 500,
+    transition: 'border-color 0.2s, background 0.2s', width: '100%',
+  };
+
+  return (
+    // Backdrop — intentionally no onClick to prevent accidental close
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 200,
+      background: 'rgba(5,8,16,0.9)', backdropFilter: 'blur(14px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem',
+    }}>
+      <div style={{
+        background: 'var(--nav-bg)', border: '1px solid var(--border)',
+        borderRadius: 22, padding: '1.8rem', width: '100%', maxWidth: 440,
+        position: 'relative', maxHeight: '85vh', display: 'flex', flexDirection: 'column',
+        animation: 'slideDown 0.22s ease both',
+      }}>
+
+        {/* Header row */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+          {step > 1
+            ? <button onClick={goBack} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '0.3rem', padding: 0 }}>
+                ← {lang === 'es' ? 'Volver' : 'Back'}
+              </button>
+            : <span />}
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: '1.2rem', lineHeight: 1, padding: '0.2rem' }}>✕</button>
+        </div>
+
+        {/* Progress bar */}
+        <div style={{ display: 'flex', gap: '0.35rem', marginBottom: '1.5rem' }}>
+          {[1, 2, 3].map(s => (
+            <div key={s} style={{ flex: 1, height: 3, borderRadius: 3, background: step >= s ? 'var(--gold)' : 'var(--border)', transition: 'background 0.3s' }} />
+          ))}
+        </div>
+
+        {/* ── STEP 1: Sport ── */}
+        {step === 1 && (
+          <div style={{ overflowY: 'auto' }}>
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🧠</div>
+              <h2 style={{ fontSize: '1.2rem', marginBottom: '0.3rem' }}>
+                {lang === 'es' ? '¿Qué quieres analizar?' : 'What do you want to analyse?'}
+              </h2>
+              <p style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>
+                {lang === 'es' ? 'Paso 1 de 3 — Elige el deporte' : 'Step 1 of 3 — Choose a sport'}
+              </p>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {Object.entries(SPORT_CONFIG).map(([key, cfg]) => (
+                <button
+                  key={key} onClick={() => handleSport(key)}
+                  style={btnBase}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = cfg.color; (e.currentTarget as HTMLElement).style.background = `${cfg.color}12`; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'; (e.currentTarget as HTMLElement).style.background = 'var(--card2)'; }}
+                >
+                  <span style={{ fontSize: '1.3rem' }}>{cfg.emoji}</span>
+                  <span style={{ flex: 1, textAlign: 'left' }}>{cfg.label}</span>
+                  <span style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>→</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── STEP 2: Competition (football only) ── */}
+        {step === 2 && (
+          <div style={{ overflowY: 'auto' }}>
+            <div style={{ textAlign: 'center', marginBottom: '1.2rem' }}>
+              <div style={{ fontSize: '1.8rem', marginBottom: '0.3rem' }}>⚽</div>
+              <h2 style={{ fontSize: '1.1rem', marginBottom: '0.3rem' }}>
+                {lang === 'es' ? '¿Qué competición?' : 'Which competition?'}
+              </h2>
+              <p style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>
+                {lang === 'es' ? 'Paso 2 de 3 — Elige la liga' : 'Step 2 of 3 — Choose a league'}
+              </p>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              {WIZARD_FOOTBALL_COMPS.map(comp => (
+                <button
+                  key={comp.id} onClick={() => handleComp(comp)}
+                  style={btnBase}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--gold)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'; }}
+                >
+                  <span>{comp.emoji}</span>
+                  <span style={{ flex: 1, textAlign: 'left' }}>{comp.name}</span>
+                  <span style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>→</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── STEP 3: Match ── */}
+        {step === 3 && (
+          <div style={{ overflowY: 'auto' }}>
+            <div style={{ textAlign: 'center', marginBottom: '1.2rem' }}>
+              {selComp && <div style={{ fontSize: '1.5rem', marginBottom: '0.3rem' }}>{selComp.emoji}</div>}
+              <h2 style={{ fontSize: '1.1rem', marginBottom: '0.3rem' }}>
+                {lang === 'es' ? '¿Qué partido?' : 'Which match?'}
+              </h2>
+              <p style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>
+                {lang === 'es' ? 'Paso 3 de 3 — Selecciona el partido' : 'Step 3 of 3 — Select a match'}
+                {selComp ? ` · ${selComp.name}` : selSport ? ` · ${SPORT_CONFIG[selSport as keyof typeof SPORT_CONFIG]?.label ?? selSport}` : ''}
+              </p>
+            </div>
+
+            {loading ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                {Array(5).fill(0).map((_, i) => (
+                  <div key={i} style={{ height: 58, borderRadius: 10, background: 'var(--card2)', animation: 'pulse 1.5s infinite' }} />
+                ))}
+              </div>
+            ) : matches.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: 'var(--muted)', fontSize: '0.88rem' }}>
+                {lang === 'es' ? 'No hay partidos disponibles esta semana.' : 'No matches available this week.'}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                {matches.map(match => {
+                  const d = new Date(match.date);
+                  const dateStr = d.toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB', { weekday: 'short', day: '2-digit', month: 'short', timeZone: 'Europe/Madrid' });
+                  const timeStr = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' });
+                  return (
+                    <button
+                      key={match.id} onClick={() => handleMatch(match)}
+                      style={{ ...btnBase, padding: '0.7rem 0.9rem' }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--gold)'; (e.currentTarget as HTMLElement).style.background = 'rgba(201,168,76,0.06)'; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'; (e.currentTarget as HTMLElement).style.background = 'var(--card2)'; }}
+                    >
+                      <div style={{ flex: 1, textAlign: 'left' }}>
+                        <div style={{ fontSize: '0.86rem', fontWeight: 600 }}>
+                          {match.homeTeam.name} <span style={{ color: 'var(--muted)', fontWeight: 400 }}>vs</span> {match.awayTeam.name}
+                        </div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '0.15rem' }}>
+                          {dateStr} · {timeStr}
+                        </div>
+                      </div>
+                      {match.status === 'live' && (
+                        <span style={{ fontSize: '0.6rem', padding: '0.1rem 0.35rem', borderRadius: 100, background: 'rgba(255,68,85,0.15)', color: 'var(--red)', border: '1px solid rgba(255,68,85,0.25)', animation: 'pulse 2s infinite', flexShrink: 0 }}>
+                          🔴 {lang === 'es' ? 'VIVO' : 'LIVE'}
+                        </span>
+                      )}
+                      {match.status === 'finished' && (
+                        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--muted)', flexShrink: 0 }}>
+                          {match.homeScore ?? 0}–{match.awayScore ?? 0}
+                        </span>
+                      )}
+                      <span style={{ color: 'var(--gold)', fontSize: '0.78rem', flexShrink: 0 }}>→</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function AnalysisPage() {
   const [open, setOpen] = useState(true);
+  const { t } = useLang();
 
   return (
     <>
-      {/* Backdrop */}
-      {open && (
-        <div
-          onClick={() => setOpen(false)}
-          style={{ position:'fixed', inset:0, zIndex:100, background:'rgba(5,8,16,0.72)', backdropFilter:'blur(6px)', display:'flex', alignItems:'center', justifyContent:'center', padding:'1rem' }}
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{ background:'var(--nav-bg)', border:'1px solid var(--border)', borderRadius:20, padding:'2.5rem 2rem', width:'100%', maxWidth:420, textAlign:'center', animation:'slideDown 0.22s ease both', position:'relative' }}
-          >
-            <button
-              onClick={() => setOpen(false)}
-              style={{ position:'absolute', top:'0.8rem', right:'0.8rem', background:'none', border:'none', cursor:'pointer', color:'var(--muted)', fontSize:'1.1rem', lineHeight:1 }}
-            >✕</button>
-            <div style={{ fontSize:'3rem', marginBottom:'1rem' }}>🧠</div>
-            <h2 style={{ fontSize:'1.25rem', marginBottom:'0.5rem' }}>{t('¿Qué quieres analizar?','What do you want to analyse?')}</h2>
-            <p style={{ color:'var(--muted)', fontSize:'0.88rem', lineHeight:1.7, marginBottom:'2rem' }}>
-              {t('Selecciona un partido y la IA generará probabilidades, cuotas estimadas y la mejor apuesta.','Pick a match and the AI will generate probabilities, estimated odds and the best bet.')}
-            </p>
-            <button onClick={() => navigate('/matches')} className="btn btn-gold" style={{ width:'100%', justifyContent:'center', fontSize:'0.95rem', padding:'0.8rem' }}>
-              📅 {t('Ver partidos disponibles','View available matches')}
-            </button>
-          </div>
-        </div>
-      )}
+      {open && <AnalysisWizardModal onClose={() => setOpen(false)} />}
 
-      {/* Background page */}
-      <div className="animate-fadeUp" style={{ maxWidth:1100, width:'100%', opacity: open ? 0.3 : 1, pointerEvents: open ? 'none' : 'auto', transition:'opacity 0.2s' }}>
-        <div style={{ marginBottom:'2rem' }}>
-          <h1 style={{ fontSize:'1.5rem', marginBottom:'0.3rem' }}>🧠 {t('Análisis IA','AI Analysis')}</h1>
-          <p style={{ color:'var(--muted)', fontSize:'0.88rem' }}>{t('Selecciona un partido desde la sección de Partidos para generar el análisis completo.','Select a match from the Matches section to generate the full analysis.')}</p>
+      {/* Background page — blurred/dim while modal is open */}
+      <div
+        className="animate-fadeUp"
+        style={{
+          maxWidth: 1100, width: '100%',
+          opacity: open ? 0.12 : 1,
+          pointerEvents: open ? 'none' : 'auto',
+          filter: open ? 'blur(3px)' : 'none',
+          transition: 'opacity 0.2s, filter 0.2s',
+        }}
+      >
+        <div style={{ marginBottom: '2rem' }}>
+          <h1 style={{ fontSize: '1.5rem', marginBottom: '0.3rem' }}>🧠 {t('Análisis IA', 'AI Analysis')}</h1>
+          <p style={{ color: 'var(--muted)', fontSize: '0.88rem' }}>
+            {t('Selecciona un partido para generar el análisis completo.', 'Select a match to generate the full analysis.')}
+          </p>
         </div>
-        <div className="glass" style={{ borderRadius:16, padding:'4rem', textAlign:'center' }}>
-          <button onClick={() => setOpen(true)} className="btn btn-gold btn-lg">📅 {t('Ver partidos disponibles','View available matches')}</button>
+        <div className="glass" style={{ borderRadius: 16, padding: '4rem', textAlign: 'center' }}>
+          <button onClick={() => setOpen(true)} className="btn btn-gold btn-lg">
+            📅 {t('Ver partidos disponibles', 'View available matches')}
+          </button>
         </div>
       </div>
     </>
