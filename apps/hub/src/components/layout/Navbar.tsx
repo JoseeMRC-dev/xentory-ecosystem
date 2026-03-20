@@ -305,8 +305,8 @@ export function Navbar() {
                     </div>
                     {/* Logout */}
                     <div onClick={async () => { await logout(); navigate('/login'); setUserMenu(false); }}
-                      style={{ padding: '0.65rem 1rem', cursor: 'pointer', fontSize: '0.83rem', display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'var(--red)', transition: 'background 0.12s' }}
-                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(240,68,88,0.07)')}
+                      style={{ padding: '0.65rem 1rem', cursor: 'pointer', fontSize: '0.83rem', display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'var(--gold)', transition: 'background 0.12s' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(201,168,76,0.07)')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                     >
                       <LogoutIcon />{t('nav.signout')}
@@ -404,9 +404,9 @@ export function Navbar() {
                   )}
                   {/* Logout */}
                   <button onClick={async () => { await logout(); navigate('/login'); setMob(false); }} style={{
-                    background: 'rgba(240,68,88,0.07)', border: '1px solid rgba(240,68,88,0.3)',
+                    background: 'rgba(201,168,76,0.07)', border: '1px solid rgba(201,168,76,0.3)',
                     borderRadius: 10, padding: '0.65rem 1rem', cursor: 'pointer',
-                    color: 'var(--red)', fontSize: '0.88rem', fontWeight: 600,
+                    color: 'var(--gold)', fontSize: '0.88rem', fontWeight: 600,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.2s',
                   }}>
                     <LogoutIcon /> {t('nav.signout')}
