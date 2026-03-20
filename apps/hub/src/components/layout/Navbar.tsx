@@ -250,13 +250,15 @@ export function Navbar() {
                 onMouseEnter={() => setUserMenu(true)}
                 onMouseLeave={() => setUserMenu(false)}
               >
-                <button style={{
-                  width: 34, height: 34, borderRadius: '50%', cursor: 'pointer', border: 'none',
-                  background: 'linear-gradient(135deg,var(--gold),var(--cyan))',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '0.8rem', color: 'var(--bg)',
-                  padding: 0,
-                }}>
+                <button
+                  onClick={() => setUserMenu(v => !v)}
+                  style={{
+                    width: 34, height: 34, borderRadius: '50%', cursor: 'pointer', border: 'none',
+                    background: 'linear-gradient(135deg,var(--gold),var(--cyan))',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '0.8rem', color: 'var(--bg)',
+                    padding: 0,
+                  }}>
                   {user.name.charAt(0).toUpperCase()}
                 </button>
                 {userMenu && (
@@ -264,6 +266,7 @@ export function Navbar() {
                     position: 'absolute', top: 'calc(100% + 8px)', right: 0, borderRadius: 14,
                     minWidth: 200, overflow: 'hidden', border: '1px solid var(--border2)', zIndex: 400,
                     boxShadow: 'var(--shadow-lg)', animation: 'slideUp 0.15s ease both',
+                    background: 'var(--bg2)',
                   }}>
                     {/* User info */}
                     <div style={{ padding: '0.85rem 1rem', borderBottom: '1px solid var(--border)' }}>
@@ -301,7 +304,7 @@ export function Navbar() {
                       ))}
                     </div>
                     {/* Logout */}
-                    <div onClick={() => { logout(); navigate('/'); setUserMenu(false); }}
+                    <div onClick={async () => { await logout(); navigate('/login'); setUserMenu(false); }}
                       style={{ padding: '0.65rem 1rem', cursor: 'pointer', fontSize: '0.83rem', display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'var(--red)', transition: 'background 0.12s' }}
                       onMouseEnter={e => (e.currentTarget.style.background = 'rgba(240,68,88,0.07)')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
@@ -400,7 +403,7 @@ export function Navbar() {
                     </button>
                   )}
                   {/* Logout */}
-                  <button onClick={() => { logout(); navigate('/'); setMob(false); }} style={{
+                  <button onClick={async () => { await logout(); navigate('/login'); setMob(false); }} style={{
                     background: 'rgba(240,68,88,0.07)', border: '1px solid rgba(240,68,88,0.3)',
                     borderRadius: 10, padding: '0.65rem 1rem', cursor: 'pointer',
                     color: 'var(--red)', fontSize: '0.88rem', fontWeight: 600,

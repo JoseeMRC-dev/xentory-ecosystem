@@ -94,6 +94,13 @@ export function OnboardingModal({ onComplete }: OnboardingProps) {
     setSelected(null);
   };
 
+  const handleBack = () => {
+    const prevStep = step - 1;
+    setStep(prevStep);
+    setSelected(selections[prevStep] ?? null);
+    setSelections(sels => sels.slice(0, -1));
+  };
+
   const handleSkip = () => {
     onComplete();
     navigate('/dashboard');
@@ -174,15 +181,26 @@ export function OnboardingModal({ onComplete }: OnboardingProps) {
           ))}
         </div>
 
-        {/* Next button */}
-        <button
-          onClick={handleNext}
-          disabled={!selected}
-          className="btn btn-gold"
-          style={{ width: '100%', justifyContent: 'center', opacity: selected ? 1 : 0.4, cursor: selected ? 'pointer' : 'not-allowed', fontSize: '0.95rem', padding: '0.85rem' }}
-        >
-          {isLast ? 'Empezar →' : 'Continuar →'}
-        </button>
+        {/* Back + Next buttons */}
+        <div style={{ display: 'flex', gap: '0.6rem' }}>
+          {step > 0 && (
+            <button
+              onClick={handleBack}
+              className="btn btn-outline"
+              style={{ padding: '0.85rem 1.2rem', fontSize: '0.88rem', flexShrink: 0, gap: '0.3rem' }}
+            >
+              ← Volver
+            </button>
+          )}
+          <button
+            onClick={handleNext}
+            disabled={!selected}
+            className="btn btn-gold"
+            style={{ flex: 1, justifyContent: 'center', opacity: selected ? 1 : 0.4, cursor: selected ? 'pointer' : 'not-allowed', fontSize: '0.95rem', padding: '0.85rem' }}
+          >
+            {isLast ? 'Empezar →' : 'Continuar →'}
+          </button>
+        </div>
       </div>
     </div>
   );
