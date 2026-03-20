@@ -139,6 +139,7 @@ export interface MatchAnalysis {
   markets: PredictionMarkets;
   aiSummary: string;
   aiTechnical: string;
+  prediction?: string;
   keyFactors: string[];
   risks: string[];
   tier: 'flash' | 'pro';
