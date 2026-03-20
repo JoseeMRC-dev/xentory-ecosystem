@@ -298,7 +298,7 @@ export function MatchAnalysisPage() {
                     </div>
                   )}
                   <div style={{ display:'flex', flexDirection:'column', gap:'0.4rem' }}>
-                    {match.sport === 'football' ? [
+                    {(match.sport === 'football' ? [
                       { label:t('Goles/partido','Goals/match'), value:stats.goalsScored.toFixed(1), color:'var(--green)' },
                       { label:t('Encajados/partido','Conceded/match'), value:stats.goalsConceded.toFixed(1), color:'var(--red)' },
                       { label:'BTTS hist.', value:`${stats.btts}%`, color:'var(--cyan)' },
@@ -310,7 +310,7 @@ export function MatchAnalysisPage() {
                     ] : [
                       { label:t('% victorias','Win rate'), value:`${stats.form.length ? Math.round(stats.form.filter(f=>f.result==='W').length/stats.form.length*100) : 0}%`, color:'var(--green)' },
                       { label:t('Victorias','Wins'), value:`${stats.form.filter(f=>f.result==='W').length}/${stats.form.length}`, color:'var(--cyan)' },
-                    ]}.map(item => (
+                    ]).map(item => (
                       <div key={item.label} style={{ display:'flex', justifyContent:'space-between', fontSize:'0.82rem' }}>
                         <span style={{ color:'var(--muted)' }}>{item.label}</span>
                         <span style={{ color:item.color, fontWeight:500 }}>{item.value}</span>
