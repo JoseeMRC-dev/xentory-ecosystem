@@ -1096,7 +1096,16 @@ const MOCK_TEAMS = [
 
 function getMockTeamStats(teamId: number): TeamStats {
   const team = MOCK_TEAMS.find(t => t.id === teamId) ?? MOCK_TEAMS[0];
-  const results: FormMatch['result'][] = ['W','W','D','W','L'];
+  // Vary form pattern per team so home and away don't look identical
+  const formPatterns: FormMatch['result'][][] = [
+    ['W','W','D','W','L'],
+    ['W','L','W','W','D'],
+    ['D','W','W','L','W'],
+    ['L','W','W','D','W'],
+    ['W','W','L','W','W'],
+    ['W','D','L','W','W'],
+  ];
+  const results = formPatterns[teamId % formPatterns.length];
   const opponents = MOCK_TEAMS.filter(t => t.id !== teamId).slice(0, 5);
   const now = Date.now();
   const form: FormMatch[] = results.map((result, i) => ({
@@ -1104,7 +1113,10 @@ function getMockTeamStats(teamId: number): TeamStats {
     goalsFor: result === 'W' ? 2 : result === 'D' ? 1 : 0, goalsAgainst: result === 'L' ? 2 : result === 'D' ? 1 : 0,
     date: new Date(now - (i + 1) * 7 * 86400000).toISOString(), isHome: i % 2 === 0,
   }));
-  return { team: { id: team.id, name: team.name, shortName: team.shortName }, form, goalsScored: 1.8, goalsConceded: 0.9, cleanSheets: 10, btts: 50, over25: 60, possession: 58, shotsOnTarget: 6, homeRecord: { w: 7, d: 2, l: 1 }, awayRecord: { w: 5, d: 3, l: 2 } };
+  const wins = results.filter(r => r === 'W').length;
+  const scored = 1.2 + (wins / results.length) * 1.2;
+  const conceded = 1.8 - (wins / results.length) * 0.9;
+  return { team: { id: team.id, name: team.name, shortName: team.shortName }, form, goalsScored: parseFloat(scored.toFixed(2)), goalsConceded: parseFloat(conceded.toFixed(2)), cleanSheets: wins, btts: 40 + teamId % 25, over25: 45 + teamId % 30, possession: 48 + teamId % 15, shotsOnTarget: 4 + teamId % 4, homeRecord: { w: wins + 1, d: 1, l: results.length - wins }, awayRecord: { w: Math.max(0, wins - 1), d: 2, l: results.length - wins + 1 } };
 }
 
 export function getMockStatsBySport(teamId: number, teamName: string, sport: string): TeamStats {

@@ -251,26 +251,87 @@ export function MatchAnalysisPage() {
           </div>
 
           <div className="bet-markets-grid" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'1.2rem' }}>
+            {/* 1X2 — todos los deportes, sin Empate para basket/tenis */}
             <div className="glass" style={{ borderRadius:16, padding:'1.5rem' }}>
-              <h3 style={{ fontSize:'0.9rem', marginBottom:'1rem' }}>⚖️ {t('Resultado 1X2','Result 1X2')}</h3>
+              <h3 style={{ fontSize:'0.9rem', marginBottom:'1rem' }}>⚖️ {match.sport === 'football' ? t('Resultado 1X2','Result 1X2') : t('Ganador del partido','Match winner')}</h3>
               <MarketRow label={`${match.homeTeam.name} ${t('gana','wins')}`} prob={analysis.markets.result.home} recommendation="home" isRec={analysis.markets.result.recommendation==='home'} odds={analysis.markets.result.homeOdds} />
-              <MarketRow label={t('Empate','Draw')} prob={analysis.markets.result.draw} recommendation="draw" isRec={analysis.markets.result.recommendation==='draw'} odds={analysis.markets.result.drawOdds} />
+              {match.sport === 'football' && <MarketRow label={t('Empate','Draw')} prob={analysis.markets.result.draw} recommendation="draw" isRec={analysis.markets.result.recommendation==='draw'} odds={analysis.markets.result.drawOdds} />}
               <MarketRow label={`${match.awayTeam.name} ${t('gana','wins')}`} prob={analysis.markets.result.away} recommendation="away" isRec={analysis.markets.result.recommendation==='away'} odds={analysis.markets.result.awayOdds} />
             </div>
+
+            {/* Over/Under — adaptado al deporte */}
             <div className="glass" style={{ borderRadius:16, padding:'1.5rem' }}>
-              <h3 style={{ fontSize:'0.9rem', marginBottom:'1rem' }}>📊 {t('Goles Over/Under','Goals Over/Under')}</h3>
-              <MarketRow label={t('Over 2.5 goles','Over 2.5 goals')} prob={analysis.markets.overUnder25.over} recommendation="over" isRec={analysis.markets.overUnder25.recommendation==='over'} odds={parseFloat((1/(analysis.markets.overUnder25.over/100)*0.92).toFixed(2))} />
-              <MarketRow label={t('Under 2.5 goles','Under 2.5 goals')} prob={analysis.markets.overUnder25.under} recommendation="under" isRec={analysis.markets.overUnder25.recommendation==='under'} />
-              <div style={{ height:1, background:'var(--border)', margin:'0.5rem 0' }} />
-              {user?.plan !== 'free' ? (
-                <><MarketRow label={t('Over 3.5 goles','Over 3.5 goals')} prob={analysis.markets.overUnder35.over} recommendation="over" isRec={analysis.markets.overUnder35.recommendation==='over'} /><MarketRow label={t('Under 3.5 goles','Under 3.5 goals')} prob={analysis.markets.overUnder35.under} recommendation="under" isRec={analysis.markets.overUnder35.recommendation==='under'} /></>
-              ) : <div style={{ padding:'0.6rem', textAlign:'center', fontSize:'0.75rem', color:'var(--muted)' }}>🔒 Over/Under 3.5 — Plan Pro</div>}
+              {match.sport === 'football' ? (
+                <>
+                  <h3 style={{ fontSize:'0.9rem', marginBottom:'1rem' }}>📊 {t('Goles Over/Under','Goals Over/Under')}</h3>
+                  <MarketRow label={t('Over 2.5 goles','Over 2.5 goals')} prob={analysis.markets.overUnder25.over} recommendation="over" isRec={analysis.markets.overUnder25.recommendation==='over'} odds={parseFloat((1/(analysis.markets.overUnder25.over/100)*0.92).toFixed(2))} />
+                  <MarketRow label={t('Under 2.5 goles','Under 2.5 goals')} prob={analysis.markets.overUnder25.under} recommendation="under" isRec={analysis.markets.overUnder25.recommendation==='under'} />
+                  <div style={{ height:1, background:'var(--border)', margin:'0.5rem 0' }} />
+                  {user?.plan !== 'free' ? (
+                    <><MarketRow label={t('Over 3.5 goles','Over 3.5 goals')} prob={analysis.markets.overUnder35.over} recommendation="over" isRec={analysis.markets.overUnder35.recommendation==='over'} /><MarketRow label={t('Under 3.5 goles','Under 3.5 goals')} prob={analysis.markets.overUnder35.under} recommendation="under" isRec={analysis.markets.overUnder35.recommendation==='under'} /></>
+                  ) : <div style={{ padding:'0.6rem', textAlign:'center', fontSize:'0.75rem', color:'var(--muted)' }}>🔒 Over/Under 3.5 — Plan Pro</div>}
+                </>
+              ) : match.sport === 'basketball' ? (
+                <>
+                  <h3 style={{ fontSize:'0.9rem', marginBottom:'1rem' }}>📊 {t('Puntos Over/Under','Points Over/Under')}</h3>
+                  <MarketRow label={t('Over 210.5 puntos','Over 210.5 points')} prob={analysis.markets.overUnder25.over} recommendation="over" isRec={analysis.markets.overUnder25.recommendation==='over'} odds={parseFloat((1/(analysis.markets.overUnder25.over/100)*0.92).toFixed(2))} />
+                  <MarketRow label={t('Under 210.5 puntos','Under 210.5 points')} prob={analysis.markets.overUnder25.under} recommendation="under" isRec={analysis.markets.overUnder25.recommendation==='under'} />
+                </>
+              ) : match.sport === 'tennis' ? (
+                <>
+                  <h3 style={{ fontSize:'0.9rem', marginBottom:'1rem' }}>📊 {t('Sets Over/Under','Sets Over/Under')}</h3>
+                  <MarketRow label={t('Over 2.5 sets','Over 2.5 sets')} prob={analysis.markets.overUnder25.over} recommendation="over" isRec={analysis.markets.overUnder25.recommendation==='over'} odds={parseFloat((1/(analysis.markets.overUnder25.over/100)*0.92).toFixed(2))} />
+                  <MarketRow label={t('Under 2.5 sets','Under 2.5 sets')} prob={analysis.markets.overUnder25.under} recommendation="under" isRec={analysis.markets.overUnder25.recommendation==='under'} />
+                </>
+              ) : (
+                <>
+                  <h3 style={{ fontSize:'0.9rem', marginBottom:'1rem' }}>📊 {t('Probabilidades','Probabilities')}</h3>
+                  <MarketRow label={`${match.homeTeam.name} ${t('gana','wins')}`} prob={analysis.markets.result.home} recommendation="home" isRec={analysis.markets.result.recommendation==='home'} odds={analysis.markets.result.homeOdds} />
+                  <MarketRow label={`${match.awayTeam.name} ${t('gana','wins')}`} prob={analysis.markets.result.away} recommendation="away" isRec={analysis.markets.result.recommendation==='away'} odds={analysis.markets.result.awayOdds} />
+                </>
+              )}
             </div>
-            <div className="glass" style={{ borderRadius:16, padding:'1.5rem' }}>
-              <h3 style={{ fontSize:'0.9rem', marginBottom:'1rem' }}>🥅 BTTS</h3>
-              <MarketRow label={t('BTTS — Sí','BTTS — Yes')} prob={analysis.markets.btts.yes} recommendation="yes" isRec={analysis.markets.btts.recommendation==='yes'} />
-              <MarketRow label={t('BTTS — No','BTTS — No')} prob={analysis.markets.btts.no} recommendation="no" isRec={analysis.markets.btts.recommendation==='no'} />
-            </div>
+
+            {/* BTTS — solo fútbol; para otros deportes: Hándicap o info */}
+            {match.sport === 'football' ? (
+              <div className="glass" style={{ borderRadius:16, padding:'1.5rem' }}>
+                <h3 style={{ fontSize:'0.9rem', marginBottom:'1rem' }}>🥅 BTTS — {t('Ambos marcan','Both teams score')}</h3>
+                <MarketRow label={t('BTTS — Sí','BTTS — Yes')} prob={analysis.markets.btts.yes} recommendation="yes" isRec={analysis.markets.btts.recommendation==='yes'} />
+                <MarketRow label={t('BTTS — No','BTTS — No')} prob={analysis.markets.btts.no} recommendation="no" isRec={analysis.markets.btts.recommendation==='no'} />
+              </div>
+            ) : match.sport === 'basketball' ? (
+              <div className="glass" style={{ borderRadius:16, padding:'1.5rem' }}>
+                <h3 style={{ fontSize:'0.9rem', marginBottom:'1rem' }}>🏀 {t('Ventaja local','Home advantage')}</h3>
+                <div style={{ color:'var(--text2)', fontSize:'0.85rem', lineHeight:1.6 }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'0.5rem' }}>
+                    <span style={{ color:'var(--muted)' }}>{t('Factor cancha propia','Home court factor')}</span>
+                    <span style={{ color:'var(--green)', fontWeight:600 }}>+3–4 pts</span>
+                  </div>
+                  <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'0.5rem' }}>
+                    <span style={{ color:'var(--muted)' }}>{t('Total esperado','Expected total')}</span>
+                    <span style={{ color:'var(--gold)', fontWeight:600 }}>{Math.round(analysis.homeStats.goalsScored + analysis.awayStats.goalsScored)} pts</span>
+                  </div>
+                  <div style={{ display:'flex', justifyContent:'space-between' }}>
+                    <span style={{ color:'var(--muted)' }}>{t('Diff. puntuación','Score differential')}</span>
+                    <span style={{ color:analysis.homeStats.goalsScored > analysis.awayStats.goalsScored ? 'var(--green)' : 'var(--red)', fontWeight:600 }}>
+                      {(analysis.homeStats.goalsScored - analysis.awayStats.goalsScored) >= 0 ? '+' : ''}{(analysis.homeStats.goalsScored - analysis.awayStats.goalsScored).toFixed(1)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="glass" style={{ borderRadius:16, padding:'1.5rem' }}>
+                <h3 style={{ fontSize:'0.9rem', marginBottom:'1rem' }}>📈 {t('Confianza del modelo','Model confidence')}</h3>
+                <div style={{ textAlign:'center', padding:'1.5rem 0' }}>
+                  <div style={{ fontFamily:'Outfit', fontWeight:800, fontSize:'2.5rem', color:confidenceColor(Math.max(analysis.markets.result.home, analysis.markets.result.away)) }}>
+                    {Math.max(analysis.markets.result.home, analysis.markets.result.away)}%
+                  </div>
+                  <div style={{ fontSize:'0.78rem', color:'var(--muted)', marginTop:'0.3rem' }}>{t('probabilidad de victoria del favorito','probability of favourite winning')}</div>
+                </div>
+              </div>
+            )}
+
+            {/* Hándicap */}
             <div className="glass" style={{ borderRadius:16, padding:'1.5rem' }}>
               <h3 style={{ fontSize:'0.9rem', marginBottom:'1rem' }}>⚡ {t('Hándicap','Handicap')} ({analysis.markets.handicap.line > 0 ? '+' : ''}{analysis.markets.handicap.line})</h3>
               {user?.plan !== 'free' ? (
