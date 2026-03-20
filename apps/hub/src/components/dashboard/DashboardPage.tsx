@@ -71,10 +71,11 @@ const TelegramIcon = () => (
 
 // ── PLATFORM CARD ─────────────────────────────────────────────────────
 function PlatformCard({
-  icon, name, planKey, plan, color, onLaunch, onUpgrade,
+  icon, name, planKey, plan, color, onLaunch, onUpgrade, highlighted,
 }: {
   icon: React.ReactNode; name: string; planKey: 'market' | 'bets';
   plan: Plan; color: string; onLaunch: () => void; onUpgrade: () => void;
+  highlighted?: boolean;
 }) {
   const { t, lang } = useLang();
   const isPaid = plan !== 'free';
@@ -84,10 +85,15 @@ function PlatformCard({
       borderRadius: 18, padding: 'clamp(1.2rem, 4vw, 1.8rem)',
       borderTop: `2px solid ${color}`, position: 'relative', overflow: 'hidden',
       display: 'flex', flexDirection: 'column', transition: 'transform 0.2s',
+      boxShadow: highlighted ? `0 0 0 1px ${color}40, 0 4px 24px ${color}14` : undefined,
     }}
       onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-2px)')}
       onMouseLeave={e => (e.currentTarget.style.transform = 'none')}
     >
+      {/* "Tu plataforma" badge for highlighted card */}
+      {highlighted && (
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${color}, transparent)` }} />
+      )}
       {/* Plan badge */}
       <div style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
         <span style={{
@@ -141,12 +147,18 @@ function PlatformCard({
 }
 
 // ── MAIN DASHBOARD ────────────────────────────────────────────────────
+function readPref(key: string) { try { return localStorage.getItem(key); } catch { return null; } }
+
 export function DashboardPage() {
   const { user, launchPlatform } = useAuth();
   const { t, lang } = useLang();
   const navigate = useNavigate();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [launching, setLaunching] = useState<'market' | 'bets' | null>(null);
+
+  // Onboarding preferences — drive personalization
+  const prefPlatform = readPref('xentory_pref_platform'); // 'market'|'sports'|'both'
+  const prefAnalysis = readPref('xentory_pref_analysis'); // 'btc'|'match'|'portfolio'
 
   const handleLaunch = async (platform: 'market' | 'bets') => {
     setLaunching(platform);
@@ -175,9 +187,26 @@ export function DashboardPage() {
     : (hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening');
 
   const memberDays = Math.round((Date.now() - new Date(user.createdAt).getTime()) / 86400000);
-  const memberTxt  = lang === 'es'
-    ? `Miembro desde hace ${memberDays} días · Gestiona tus plataformas aquí.`
-    : `Member for ${memberDays} days · Manage your platforms here.`;
+
+  // Personalized subtitle based on onboarding preference
+  const prefLabel = prefPlatform === 'market'  ? (lang === 'es' ? 'Análisis de mercados'       : 'Market analysis')
+    : prefPlatform === 'sports'  ? (lang === 'es' ? 'Predicciones deportivas'    : 'Sports predictions')
+    : prefPlatform === 'both'    ? (lang === 'es' ? 'Ecosistema completo'         : 'Full ecosystem')
+    : null;
+  const memberTxt = prefLabel
+    ? (lang === 'es' ? `Tu perfil: ${prefLabel} · Gestiona tus plataformas aquí.`
+                     : `Your focus: ${prefLabel} · Manage your platforms here.`)
+    : (lang === 'es' ? `Miembro desde hace ${memberDays} días · Gestiona tus plataformas aquí.`
+                     : `Member for ${memberDays} days · Manage your platforms here.`);
+
+  // Quick action derived from step-2 answer
+  const quickAction = prefAnalysis === 'btc'
+    ? { emoji: '₿',  label: lang === 'es' ? 'Continuar: Analizar Bitcoin'          : 'Continue: Analyse Bitcoin',           platform: 'market' as const }
+    : prefAnalysis === 'match'
+    ? { emoji: '🏆', label: lang === 'es' ? 'Continuar: Predecir Champions League' : 'Continue: Predict Champions League',  platform: 'bets'   as const }
+    : prefAnalysis === 'portfolio'
+    ? { emoji: '💱', label: lang === 'es' ? 'Continuar: Analizar EUR/USD'          : 'Continue: Analyse EUR/USD',           platform: 'market' as const }
+    : null;
 
   const STATS = [
     { icon: <BrainIcon />,  label: lang === 'es' ? 'Análisis IA ejecutados'   : 'AI analyses run',      value: MOCK_STATS.marketAnalysesRun,          color: 'var(--gold)'   },
@@ -186,7 +215,7 @@ export function DashboardPage() {
     { icon: <SendIcon />,   label: lang === 'es' ? 'Señales Telegram'          : 'Telegram signals',     value: MOCK_STATS.telegramSignalsReceived,     color: 'var(--green)'  },
   ];
 
-  const RECENT = lang === 'es' ? [
+  const RECENT_BASE = lang === 'es' ? [
     { icon: <MarketIcon />, text: 'Análisis IA de BTC/USDT generado',   time: 'hace 2h',  platform: 'market' },
     { icon: <BetIcon />,    text: 'Predicción: Real Madrid vs Barça',   time: 'hace 5h',  platform: 'bets'   },
     { icon: <BellIcon />,   text: 'Alerta de precio NVDA activada',     time: 'hace 1d',  platform: 'market' },
@@ -199,6 +228,12 @@ export function DashboardPage() {
     { icon: <SendIcon />,   text: '12 signals received on Telegram',    time: '1d ago',   platform: 'market' },
     { icon: <BetIcon />,    text: 'Prediction: Champions League',       time: '2d ago',   platform: 'bets'   },
   ];
+  // Sort activity to surface preferred platform first
+  const RECENT = prefPlatform === 'sports'
+    ? [...RECENT_BASE].sort((a, b) => (a.platform === 'bets'   ? -1 : b.platform === 'bets'   ? 1 : 0))
+    : prefPlatform === 'market'
+    ? [...RECENT_BASE].sort((a, b) => (a.platform === 'market' ? -1 : b.platform === 'market' ? 1 : 0))
+    : RECENT_BASE;
 
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: 'calc(var(--bar-h) + 1.5rem) clamp(1rem,4vw,2rem) 3rem' }}>
@@ -212,10 +247,51 @@ export function DashboardPage() {
         <p style={{ color: 'var(--muted)', fontSize: 'clamp(0.78rem,2vw,0.88rem)' }}>{memberTxt}</p>
       </div>
 
-      {/* Platform cards */}
+      {/* Quick action banner — shown only when onboarding preference is set */}
+      {quickAction && (
+        <div
+          className="animate-fadeUp"
+          onClick={() => handleLaunch(quickAction.platform)}
+          style={{
+            marginBottom: '1.2rem', padding: '0.85rem 1.2rem', borderRadius: 14, cursor: 'pointer',
+            background: quickAction.platform === 'market' ? 'linear-gradient(135deg,rgba(201,168,76,0.08),rgba(201,168,76,0.03))' : 'linear-gradient(135deg,rgba(0,200,122,0.08),rgba(0,200,122,0.03))',
+            border: `1px solid ${quickAction.platform === 'market' ? 'rgba(201,168,76,0.22)' : 'rgba(0,200,122,0.22)'}`,
+            display: 'flex', alignItems: 'center', gap: '0.8rem',
+            transition: 'border-color 0.2s, transform 0.2s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = quickAction.platform === 'market' ? 'rgba(201,168,76,0.45)' : 'rgba(0,200,122,0.45)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = quickAction.platform === 'market' ? 'rgba(201,168,76,0.22)' : 'rgba(0,200,122,0.22)'; e.currentTarget.style.transform = 'none'; }}
+        >
+          <span style={{ fontSize: '1.4rem', flexShrink: 0 }}>{quickAction.emoji}</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: quickAction.platform === 'market' ? 'var(--gold)' : 'var(--green)' }}>
+              {quickAction.label}
+            </div>
+            <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginTop: '0.1rem' }}>
+              {lang === 'es' ? 'Basado en tus preferencias' : 'Based on your preferences'}
+            </div>
+          </div>
+          <ArrowIcon />
+        </div>
+      )}
+
+      {/* Platform cards — ordered by preference */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,260px),1fr))', gap: 'clamp(0.8rem,3vw,1.2rem)', marginBottom: '1.5rem' }}>
-        <PlatformCard icon={<MarketIcon />} name="Xentory Market" planKey="market" plan={user.subscriptions.market} color="var(--gold)" onLaunch={() => handleLaunch('market')} onUpgrade={() => navigate('/pricing#market')} />
-        <PlatformCard icon={<BetIcon />}    name="Xentory Bet"    planKey="bets"   plan={user.subscriptions.bets}   color="var(--green)" onLaunch={() => handleLaunch('bets')} onUpgrade={() => navigate('/pricing#bets')} />
+        {(prefPlatform === 'sports'
+          ? [
+              <PlatformCard key="bets"   icon={<BetIcon />}    name="Xentory Bet"    planKey="bets"   plan={user.subscriptions.bets}   color="var(--green)" onLaunch={() => handleLaunch('bets')}   onUpgrade={() => navigate('/pricing#bets')}   highlighted />,
+              <PlatformCard key="market" icon={<MarketIcon />} name="Xentory Market" planKey="market" plan={user.subscriptions.market} color="var(--gold)"  onLaunch={() => handleLaunch('market')} onUpgrade={() => navigate('/pricing#market')} />,
+            ]
+          : prefPlatform === 'market'
+          ? [
+              <PlatformCard key="market" icon={<MarketIcon />} name="Xentory Market" planKey="market" plan={user.subscriptions.market} color="var(--gold)"  onLaunch={() => handleLaunch('market')} onUpgrade={() => navigate('/pricing#market')} highlighted />,
+              <PlatformCard key="bets"   icon={<BetIcon />}    name="Xentory Bet"    planKey="bets"   plan={user.subscriptions.bets}   color="var(--green)" onLaunch={() => handleLaunch('bets')}   onUpgrade={() => navigate('/pricing#bets')} />,
+            ]
+          : [
+              <PlatformCard key="market" icon={<MarketIcon />} name="Xentory Market" planKey="market" plan={user.subscriptions.market} color="var(--gold)"  onLaunch={() => handleLaunch('market')} onUpgrade={() => navigate('/pricing#market')} />,
+              <PlatformCard key="bets"   icon={<BetIcon />}    name="Xentory Bet"    planKey="bets"   plan={user.subscriptions.bets}   color="var(--green)" onLaunch={() => handleLaunch('bets')}   onUpgrade={() => navigate('/pricing#bets')} />,
+            ]
+        )}
 
         {/* Launch overlay */}
         {launching && (

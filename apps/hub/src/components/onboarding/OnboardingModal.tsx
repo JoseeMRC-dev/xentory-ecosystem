@@ -58,13 +58,22 @@ export function OnboardingModal({ onComplete }: OnboardingProps) {
     setSelected(id);
   };
 
+  const savePreferences = (sels: string[]) => {
+    // sels[0] = platform preference (market|sports|both)
+    // sels[1] = first analysis interest (btc|match|portfolio)
+    try {
+      if (sels[0]) localStorage.setItem('xentory_pref_platform', sels[0]);
+      if (sels[1]) localStorage.setItem('xentory_pref_analysis', sels[1]);
+    } catch { /**/ }
+  };
+
   const handleNext = () => {
     if (!selected) return;
     const newSelections = [...selections, selected];
     setSelections(newSelections);
 
-    // Handle actions on last step
     if (isLast) {
+      savePreferences(newSelections);
       if (selected === 'telegram') {
         onComplete();
         navigate('/telegram');
@@ -72,12 +81,11 @@ export function OnboardingModal({ onComplete }: OnboardingProps) {
         onComplete();
         navigate('/pricing');
       } else {
-        // Redirect based on first selection
+        // Redirect to the actual analysis chosen in step 2
         onComplete();
-        const first = newSelections[0];
-        if (first === 'market') window.location.href = MARKET_URL;
-        else if (first === 'sports') window.location.href = BET_URL;
-        else navigate('/dashboard');
+        const analysis = newSelections[1];
+        if (analysis === 'match') window.location.href = BET_URL + '/analysis';
+        else window.location.href = MARKET_URL;
       }
       return;
     }
@@ -93,23 +101,30 @@ export function OnboardingModal({ onComplete }: OnboardingProps) {
 
   return (
     <div className="onboarding-overlay">
-      <div style={{
-        background: 'var(--bg2)', borderRadius: 24,
-        border: '1px solid var(--border2)',
-        padding: 'clamp(1.5rem, 5vw, 2.5rem)',
-        maxWidth: 520, width: '100%',
-        position: 'relative',
-        animation: 'fadeUp 0.4s ease',
-      }}>
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: 'var(--bg2)', borderRadius: 24,
+          border: '1px solid var(--border2)',
+          padding: 'clamp(1.5rem, 5vw, 2.5rem)',
+          maxWidth: 520, width: '100%',
+          position: 'relative',
+          animation: 'fadeUp 0.4s ease',
+        }}
+      >
+        {/* Close button */}
+        <button
+          onClick={handleSkip}
+          style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: '1.2rem', lineHeight: 1, padding: '0.2rem', zIndex: 1 }}
+        >✕</button>
+
         {/* Progress bar */}
         <div style={{ marginBottom: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
             <span style={{ fontSize: '0.72rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Paso {step + 1} de {STEPS.length}
             </span>
-            <button onClick={handleSkip} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: '0.78rem', textDecoration: 'underline' }}>
-              Saltar
-            </button>
+            <span />
           </div>
           <div style={{ height: 4, borderRadius: 100, background: 'var(--card2)', overflow: 'hidden' }}>
             <div style={{ height: '100%', borderRadius: 100, background: 'linear-gradient(90deg, var(--gold), var(--gold-l))', width: `${progress}%`, transition: 'width 0.4s ease' }} />
