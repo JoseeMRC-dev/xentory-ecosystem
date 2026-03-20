@@ -48,6 +48,9 @@ export interface Match {
   clockDisplay?: string;
   period?: string;
   espnEventId?: string;
+  // Golf-specific
+  leaderboard?: Array<{pos: string; name: string; score: string; thru: string}>;
+  totalPlayers?: number;
 }
 
 // ── FORM (últimos partidos) ──

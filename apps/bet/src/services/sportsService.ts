@@ -345,8 +345,8 @@ export async function fetchRecentMatches(leagueId: number, limit = 5): Promise<M
 // TENNIS — ESPN multi-day scan
 // ─────────────────────────────────────────────────────────────────────────────
 const TENNIS_LEAGUES = [
-  { slug: 'tennis/atp-singles', name: 'ATP Tour', emoji: '🎾', country: 'International', baseId: 30000 },
-  { slug: 'tennis/wta-singles', name: 'WTA Tour', emoji: '🎾', country: 'International', baseId: 31000 },
+  { slug: 'tennis/atp-singles', altSlug: 'tennis/atp', name: 'ATP Tour', emoji: '🎾', country: 'International', baseId: 30000 },
+  { slug: 'tennis/wta-singles', altSlug: 'tennis/wta', name: 'WTA Tour', emoji: '🎾', country: 'International', baseId: 31000 },
 ];
 
 function parseTennisMatch(ev: any, comp: any, tour: typeof TENNIS_LEAGUES[0]): Match | null {
@@ -394,15 +394,24 @@ async function fetchTennisMatchesFromESPN(): Promise<Match[]> {
   for (const tour of TENNIS_LEAGUES) {
     let events: any[] = [];
 
-    // 1. Base scoreboard — returns the active/current tournament
+    // 1. Base scoreboard — try main slug, then alt slug
     const baseJson = await espnFetch(`/${tour.slug}/scoreboard`);
     events = baseJson?.events ?? [];
 
-    // 2. Day-by-day forward scan (today → +7 days)
+    if (events.length === 0) {
+      const altJson = await espnFetch(`/${tour.altSlug}/scoreboard`);
+      events = altJson?.events ?? [];
+    }
+
+    // 2. Day-by-day forward scan (today → +7 days) — try both slugs
     if (events.length === 0) {
       for (let d = 0; d <= 7 && events.length === 0; d++) {
         const json = await espnFetch(`/${tour.slug}/scoreboard?dates=${espnDate(d)}`);
         events = json?.events ?? [];
+        if (events.length === 0) {
+          const altJson = await espnFetch(`/${tour.altSlug}/scoreboard?dates=${espnDate(d)}`);
+          events = altJson?.events ?? [];
+        }
       }
     }
 
@@ -411,6 +420,10 @@ async function fetchTennisMatchesFromESPN(): Promise<Match[]> {
       for (let d = 1; d <= 5 && events.length === 0; d++) {
         const json = await espnFetch(`/${tour.slug}/scoreboard?dates=${espnDate(-d)}`);
         events = json?.events ?? [];
+        if (events.length === 0) {
+          const altJson = await espnFetch(`/${tour.altSlug}/scoreboard?dates=${espnDate(-d)}`);
+          events = altJson?.events ?? [];
+        }
       }
     }
 
@@ -466,8 +479,8 @@ async function fetchTennisFromSportsDB(): Promise<Match[]> {
   const results: Match[] = [];
   const seen = new Set<string>();
 
-  // Scan today + next 4 days
-  for (let d = 0; d <= 4 && results.length < 20; d++) {
+  // Scan past 2 days (ongoing tournaments) + today + next 4 days
+  for (let d = -2; d <= 4 && results.length < 20; d++) {
     const date = new Date();
     date.setDate(date.getDate() + d);
     const dateStr = date.toISOString().slice(0, 10);
@@ -692,30 +705,81 @@ export async function fetchF1Matches(): Promise<Match[]> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GOLF — ESPN
+// GOLF — ESPN (tournaments with leaderboard)
 // ─────────────────────────────────────────────────────────────────────────────
+function parseGolfScore(score: string): number {
+  if (!score || score === '--' || score === 'WD' || score === 'CUT' || score === 'MC') return 9999;
+  if (score === 'E') return 0;
+  const n = parseInt(score.replace('+', ''));
+  return isNaN(n) ? 9999 : n;
+}
+
 export async function fetchGolfMatches(): Promise<Match[]> {
-  const json = await espnFetch('/golf/pga/scoreboard');
-  const events: any[] = json?.events ?? [];
-  if (events.length === 0) return getMockMatchesBySport('golf');
-  return events.slice(0, 8).map((ev: any, idx: number) => {
-    const comp    = ev.competitions?.[0];
-    const status  = mapEspnStatus(ev.status?.type?.state ?? 'pre');
-    const players = comp?.competitors ?? [];
-    const p1 = players[0];
-    const p2 = players[1];
-    return {
-      id: parseInt(ev.id ?? String(50000 + idx)),
-      sport: 'golf' as const,
-      competition: { id: 200 + idx, name: ev.name ?? 'PGA Tour', sport: 'golf' as const, country: 'USA', logo: '', emoji: '⛳' },
-      homeTeam: { id: 500 + idx * 2, name: p1?.athlete?.displayName ?? ev.name ?? 'Player 1', shortName: p1?.athlete?.shortName ?? 'P1' },
-      awayTeam: { id: 500 + idx * 2 + 1, name: p2?.athlete?.displayName ?? 'Field', shortName: p2?.athlete?.shortName ?? 'FLD' },
-      date: ev.date ?? new Date(Date.now() + 86400000 * (idx + 1)).toISOString(),
-      status,
-      venue: comp?.venue?.fullName ?? ev.name,
-      round: ev.status?.type?.shortDetail,
-    };
-  });
+  const results: Match[] = [];
+  const golfTours = [
+    { slug: 'golf/pga',  name: 'PGA Tour',      emoji: '⛳', country: 'USA',    id: 200, baseId: 50000 },
+    { slug: 'golf/euro', name: 'DP World Tour',  emoji: '🌍', country: 'Europe', id: 201, baseId: 51000 },
+  ];
+
+  for (const tour of golfTours) {
+    let events: any[] = [];
+
+    // Current scoreboard (active tournament)
+    const json = await espnFetch(`/${tour.slug}/scoreboard`);
+    events = json?.events ?? [];
+
+    // If nothing active, look ahead up to 3 weeks
+    if (events.length === 0) {
+      for (let w = 1; w <= 3 && events.length === 0; w++) {
+        const j = await espnFetch(`/${tour.slug}/scoreboard?dates=${espnDate(w * 7 - 6)}-${espnDate(w * 7)}`);
+        events = j?.events ?? [];
+      }
+    }
+
+    for (const ev of events.slice(0, 3)) {
+      const comp    = ev.competitions?.[0];
+      // ESPN golf competitors are already sorted by leaderboard position
+      const players: any[] = comp?.competitors ?? [];
+      const status  = mapEspnStatus(ev.status?.type?.state ?? 'pre');
+
+      const leaderboard: Match['leaderboard'] = players.slice(0, 10).map((p: any) => ({
+        pos:   p.status?.type?.shortDetail ?? '-',
+        name:  p.athlete?.displayName ?? p.athlete?.shortName ?? 'Player',
+        score: p.score ?? 'E',
+        thru:  String(p.thru ?? p.status?.type?.detail ?? '-'),
+      }));
+
+      const leader = players[0];
+      const second = players[1];
+
+      results.push({
+        id: parseInt(ev.id ?? '0') + tour.baseId,
+        espnEventId: ev.id,
+        sport: 'golf',
+        competition: { id: tour.id, name: ev.name ?? tour.name, sport: 'golf', country: tour.country, logo: '', emoji: tour.emoji },
+        homeTeam: {
+          id: parseInt(leader?.id ?? '0'),
+          name: leader?.athlete?.displayName ?? 'TBD',
+          shortName: leader?.athlete?.shortName ?? leader?.athlete?.displayName?.split(' ').pop()?.slice(0, 4) ?? 'TBD',
+        },
+        awayTeam: {
+          id: parseInt(second?.id ?? '1'),
+          name: second?.athlete?.displayName ?? 'Field',
+          shortName: second?.athlete?.shortName ?? second?.athlete?.displayName?.split(' ').pop()?.slice(0, 4) ?? 'FLD',
+        },
+        date: ev.date ?? new Date().toISOString(),
+        status,
+        homeScore: leader ? parseGolfScore(leader.score ?? 'E') : undefined,
+        awayScore: second ? parseGolfScore(second.score ?? 'E') : undefined,
+        venue: comp?.venue?.fullName ?? ev.name,
+        round: ev.status?.type?.shortDetail,
+        leaderboard: leaderboard.length > 0 ? leaderboard : undefined,
+        totalPlayers: players.length > 0 ? players.length : undefined,
+      });
+    }
+  }
+
+  return results.length > 0 ? results : getMockMatchesBySport('golf');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -876,8 +940,40 @@ export function getMockMatchesBySport(sport: string): Match[] {
   ];
 
   if (sport === 'golf') return [
-    { id: 5001, sport: 'golf', competition: { id: 1, name: 'The Masters Tournament', sport: 'golf', country: 'USA', logo: '', emoji: '⛳' }, homeTeam: { id: 501, name: 'S. Scheffler', shortName: 'SCH' }, awayTeam: { id: 502, name: 'R. McIlroy', shortName: 'MCI' }, date: '2026-04-09T14:00:00+00:00', status: 'scheduled', venue: 'Augusta National' },
-    { id: 5002, sport: 'golf', competition: { id: 1, name: 'The Masters Tournament', sport: 'golf', country: 'USA', logo: '', emoji: '⛳' }, homeTeam: { id: 503, name: 'X. Schauffele', shortName: 'XSC' }, awayTeam: { id: 504, name: 'C. Young', shortName: 'YOU' }, date: '2026-04-10T14:00:00+00:00', status: 'scheduled', venue: 'Augusta National' },
+    {
+      id: 5001, sport: 'golf',
+      competition: { id: 200, name: 'Valero Texas Open', sport: 'golf', country: 'USA', logo: '', emoji: '⛳' },
+      homeTeam: { id: 501, name: 'Scottie Scheffler', shortName: 'SCH' },
+      awayTeam: { id: 502, name: 'Rory McIlroy', shortName: 'MCI' },
+      date: d(0, 14), status: 'live', venue: 'TPC San Antonio (Oaks Course)', round: 'Round 3',
+      leaderboard: [
+        { pos: '1',   name: 'Scottie Scheffler',  score: '-12', thru: 'F'  },
+        { pos: 'T2',  name: 'Rory McIlroy',        score: '-9',  thru: 'F'  },
+        { pos: 'T2',  name: 'Collin Morikawa',     score: '-9',  thru: '15' },
+        { pos: '4',   name: 'Xander Schauffele',   score: '-8',  thru: '12' },
+        { pos: 'T5',  name: 'Jon Rahm',            score: '-7',  thru: 'F'  },
+        { pos: 'T5',  name: 'Wyndham Clark',       score: '-7',  thru: '9'  },
+      ],
+      totalPlayers: 156,
+    },
+    {
+      id: 5002, sport: 'golf',
+      competition: { id: 200, name: 'The Masters Tournament', sport: 'golf', country: 'USA', logo: '', emoji: '⛳' },
+      homeTeam: { id: 503, name: 'TBD', shortName: 'TBD' },
+      awayTeam: { id: 504, name: 'Field', shortName: 'FLD' },
+      date: '2026-04-09T14:00:00+00:00', status: 'scheduled',
+      venue: 'Augusta National Golf Club', round: 'April 9–12, 2026',
+      totalPlayers: 88,
+    },
+    {
+      id: 5003, sport: 'golf',
+      competition: { id: 201, name: 'Porsche European Open', sport: 'golf', country: 'Germany', logo: '', emoji: '🌍' },
+      homeTeam: { id: 505, name: 'Tommy Fleetwood', shortName: 'FLT' },
+      awayTeam: { id: 506, name: 'Shane Lowry', shortName: 'LOW' },
+      date: d(7, 12), status: 'scheduled',
+      venue: 'Hamburg Country Club', round: d(7, 12).slice(0, 10),
+      totalPlayers: 120,
+    },
   ];
 
   return getMockMatches(2, 6);

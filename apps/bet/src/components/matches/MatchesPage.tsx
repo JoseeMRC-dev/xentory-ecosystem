@@ -75,6 +75,85 @@ function CalendarDay() {
   );
 }
 
+// ── GOLF SCORE COLOR ──
+function parseGolfScoreColor(score: string): string {
+  if (!score || score === 'E' || score === '--') return 'var(--text)';
+  if (score.startsWith('-')) return '#00ff88';
+  if (score.startsWith('+')) return '#ef4444';
+  return 'var(--text)';
+}
+
+// ── GOLF TOURNAMENT CARD ──
+function GolfCard({ match, onClick }: { match: Match; onClick: () => void }) {
+  const { lang } = useLang();
+  const matchDate = new Date(match.date);
+  const locale = lang === 'es' ? 'es-ES' : 'en-GB';
+  const dateStr = matchDate.toLocaleDateString(locale, { weekday: 'short', day: '2-digit', month: 'short', timeZone: 'Europe/Madrid' });
+  const liveStyle = { fontSize: '0.65rem', padding: '0.15rem 0.5rem', borderRadius: 100, background: 'rgba(255,68,85,0.15)', color: 'var(--red)', border: '1px solid rgba(255,68,85,0.25)', animation: 'pulse 2s infinite', whiteSpace: 'nowrap' } as const;
+  const finStyle  = { fontSize: '0.65rem', padding: '0.15rem 0.5rem', borderRadius: 100, background: 'rgba(107,114,148,0.15)', color: 'var(--muted)', border: '1px solid rgba(107,114,148,0.25)' } as const;
+  return (
+    <div
+      onClick={onClick}
+      className="glass"
+      style={{ borderRadius: 14, padding: '1.2rem 1.4rem', cursor: 'pointer', transition: 'transform 0.2s', borderLeft: '3px solid #22c55e' }}
+      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
+      onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}
+    >
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.8rem' }}>
+        <div>
+          <div style={{ fontSize: '0.72rem', color: '#22c55e', marginBottom: '0.25rem' }}>
+            {match.competition.emoji} {match.competition.name}
+          </div>
+          <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.95rem', lineHeight: 1.2 }}>
+            {match.venue ?? match.competition.name}
+          </div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem', flexShrink: 0, marginLeft: '0.8rem' }}>
+          {match.status === 'live'     && <span style={liveStyle}>🔴 {lang === 'es' ? 'EN VIVO' : 'LIVE'}</span>}
+          {match.status === 'finished' && <span style={finStyle}>{lang === 'es' ? 'FIN' : 'Final'}</span>}
+          {match.round && <span style={{ fontSize: '0.72rem', color: 'var(--muted)', textAlign: 'right' }}>{match.round}</span>}
+          {!match.round && <span style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>{dateStr}</span>}
+        </div>
+      </div>
+
+      {/* Leaderboard */}
+      {match.leaderboard && match.leaderboard.length > 0 ? (
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.62rem', color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.4rem', padding: '0 0.3rem' }}>
+            <span>{lang === 'es' ? 'Pos · Jugador' : 'Pos · Player'}</span>
+            <span>Score · {lang === 'es' ? 'Hoyo' : 'Thru'}</span>
+          </div>
+          {match.leaderboard.slice(0, 6).map((p, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', padding: '0.2rem 0.3rem', borderRadius: 6, background: i === 0 ? 'rgba(201,168,76,0.1)' : i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent', marginBottom: '0.08rem' }}>
+              <span style={{ fontSize: '0.68rem', color: 'var(--muted)', minWidth: 30, fontWeight: i === 0 ? 700 : 400 }}>{p.pos}</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: i === 0 ? 700 : 400, flex: 1, color: i === 0 ? 'var(--gold)' : 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: 700, color: parseGolfScoreColor(p.score), minWidth: 34, textAlign: 'right' }}>{p.score}</span>
+              <span style={{ fontSize: '0.68rem', color: 'var(--muted)', minWidth: 28, textAlign: 'right' }}>{p.thru}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div style={{ textAlign: 'center', padding: '0.8rem 0', color: 'var(--muted)', fontSize: '0.82rem' }}>
+          {match.status === 'scheduled'
+            ? `⏳ ${lang === 'es' ? 'Torneo por comenzar' : 'Tournament upcoming'}`
+            : lang === 'es' ? 'Sin datos de clasificación' : 'No leaderboard data'}
+        </div>
+      )}
+
+      {/* Footer */}
+      <div style={{ marginTop: '0.8rem', paddingTop: '0.6rem', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>
+          {match.totalPlayers ? `${match.totalPlayers} ${lang === 'es' ? 'jugadores' : 'players'}` : dateStr}
+        </span>
+        <span style={{ fontSize: '0.75rem', color: '#22c55e', fontWeight: 500 }}>
+          {lang === 'es' ? 'Ver clasificación →' : 'View leaderboard →'}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 // ── MATCH CARD ──
 function MatchCard({ match, query, onClick }: { match: Match; query: string; onClick: () => void }) {
   const sport = SPORT_CONFIG[match.sport];
@@ -168,6 +247,12 @@ function MatchCard({ match, query, onClick }: { match: Match; query: string; onC
       )}
     </div>
   );
+}
+
+// ── EVENT CARD — routes to GolfCard or MatchCard based on sport ──
+function EventCard({ match, query, onClick }: { match: Match; query: string; onClick: () => void }) {
+  if (match.sport === 'golf') return <GolfCard match={match} onClick={onClick} />;
+  return <MatchCard match={match} query={query} onClick={onClick} />;
 }
 
 // ══════════════════════════════════════
@@ -570,7 +655,7 @@ export function MatchesPage() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
             {visibleMatches.map(match => (
-              <MatchCard key={match.id} match={match} query={query} onClick={() => navigate(`/matches/${match.id}`, { state: { match } })} />
+              <EventCard key={match.id} match={match} query={query} onClick={() => navigate(`/matches/${match.id}`, { state: { match } })} />
             ))}
           </div>
         </>
@@ -631,7 +716,7 @@ export function MatchesPage() {
                           )}
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '0.8rem', marginBottom: played.length > 0 ? '1rem' : 0 }}>
                             {pending.map(match => (
-                              <MatchCard key={match.id} match={match} query="" onClick={() => navigate(`/matches/${match.id}`, { state: { match } })} />
+                              <EventCard key={match.id} match={match} query="" onClick={() => navigate(`/matches/${match.id}`, { state: { match } })} />
                             ))}
                           </div>
                         </>
@@ -647,7 +732,7 @@ export function MatchesPage() {
                           )}
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '0.8rem', opacity: 0.7 }}>
                             {played.map(match => (
-                              <MatchCard key={match.id} match={match} query="" onClick={() => navigate(`/matches/${match.id}`, { state: { match } })} />
+                              <EventCard key={match.id} match={match} query="" onClick={() => navigate(`/matches/${match.id}`, { state: { match } })} />
                             ))}
                           </div>
                         </>
