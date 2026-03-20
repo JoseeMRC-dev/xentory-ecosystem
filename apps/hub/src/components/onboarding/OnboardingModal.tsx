@@ -58,13 +58,22 @@ export function OnboardingModal({ onComplete }: OnboardingProps) {
     setSelected(id);
   };
 
+  const savePreferences = (sels: string[]) => {
+    // sels[0] = platform preference (market|sports|both)
+    // sels[1] = first analysis interest (btc|match|portfolio)
+    try {
+      if (sels[0]) localStorage.setItem('xentory_pref_platform', sels[0]);
+      if (sels[1]) localStorage.setItem('xentory_pref_analysis', sels[1]);
+    } catch { /**/ }
+  };
+
   const handleNext = () => {
     if (!selected) return;
     const newSelections = [...selections, selected];
     setSelections(newSelections);
 
-    // Handle actions on last step
     if (isLast) {
+      savePreferences(newSelections);
       if (selected === 'telegram') {
         onComplete();
         navigate('/telegram');
@@ -72,12 +81,11 @@ export function OnboardingModal({ onComplete }: OnboardingProps) {
         onComplete();
         navigate('/pricing');
       } else {
-        // Redirect based on first selection
+        // Redirect to the actual analysis chosen in step 2
         onComplete();
-        const first = newSelections[0];
-        if (first === 'market') window.location.href = MARKET_URL;
-        else if (first === 'sports') window.location.href = BET_URL;
-        else navigate('/dashboard');
+        const analysis = newSelections[1];
+        if (analysis === 'match') window.location.href = BET_URL + '/analysis';
+        else window.location.href = MARKET_URL;
       }
       return;
     }
