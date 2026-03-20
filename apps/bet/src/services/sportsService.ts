@@ -809,8 +809,9 @@ export async function fetchNonFootballStats(
           const isHome = home.team?.id === String(teamId);
           const us   = isHome ? home : away;
           const them = isHome ? away : home;
-          const ourScore   = parseInt(us?.score   ?? '0');
-          const theirScore = parseInt(them?.score  ?? '0');
+          const ourScore   = Number(us?.score)   || 0;
+          const theirScore = Number(them?.score)  || 0;
+          if (ourScore === 0 && theirScore === 0) return null; // skip games with missing scores
           const result: FormMatch['result'] = ourScore > theirScore ? 'W' : ourScore < theirScore ? 'L' : 'D';
           return {
             opponent: them.team?.displayName ?? 'Opponent',
@@ -863,8 +864,8 @@ export async function fetchNonFootballStats(
             return {
               opponent: them.athlete?.displayName ?? them.team?.displayName ?? 'Opponent',
               result: isWinner ? 'W' : 'L',
-              goalsFor:     parseInt(us.score   ?? '0'),
-              goalsAgainst: parseInt(them.score ?? '0'),
+              goalsFor:     Number(us.score)   || 0,
+              goalsAgainst: Number(them.score) || 0,
               date:   ev.date ?? new Date().toISOString(),
               isHome: true,
             } as FormMatch;
@@ -1120,12 +1121,51 @@ function getMockTeamStats(teamId: number): TeamStats {
 }
 
 export function getMockStatsBySport(teamId: number, teamName: string, sport: string): TeamStats {
-  const shortName = teamName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 3);
-  const results: FormMatch['result'][] = ['W','W','L','W','W'];
-  const opponents: string[] = sport === 'tennis' ? ['Medvedev','Zverev','Rublev','Fritz','Tsitsipas'] : sport === 'basketball' ? ['Lakers','Celtics','Heat','Nuggets','Bucks'] : sport === 'f1' ? ['Verstappen','Hamilton','Leclerc','Norris','Sainz'] : ['Opponent A','Opponent B','Opponent C','Opponent D','Opponent E'];
+  const shortName = (teamName || 'TEM').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 3) || 'TEM';
+  // Vary form pattern by teamId
+  const formPatterns: FormMatch['result'][][] = [
+    ['W','W','L','W','W'],
+    ['W','L','W','W','D'],
+    ['D','W','W','L','W'],
+    ['L','W','W','D','W'],
+  ];
+  const results = formPatterns[teamId % formPatterns.length];
+  const opponents: string[] = sport === 'tennis'
+    ? ['Medvedev','Zverev','Rublev','Fritz','Tsitsipas']
+    : sport === 'basketball'
+    ? ['Lakers','Celtics','Heat','Nuggets','Bucks']
+    : sport === 'f1'
+    ? ['Verstappen','Hamilton','Leclerc','Norris','Sainz']
+    : ['Opponent A','Opponent B','Opponent C','Opponent D','Opponent E'];
   const now = Date.now();
-  const form: FormMatch[] = results.map((result, i) => ({ opponent: opponents[i] ?? 'Opponent', result, goalsFor: result === 'W' ? 2 : 1, goalsAgainst: result === 'L' ? 2 : 1, date: new Date(now - (i + 1) * 7 * 86400000).toISOString(), isHome: i % 2 === 0 }));
-  const scored   = sport === 'basketball' ? 108 : 1.8;
-  const conceded = sport === 'basketball' ? 102 : 1.2;
-  return { team: { id: teamId, name: teamName, shortName }, form, goalsScored: scored, goalsConceded: conceded, cleanSheets: 5, btts: 50, over25: 55, possession: undefined, shotsOnTarget: undefined, homeRecord: { w: 8, d: 0, l: 2 }, awayRecord: { w: 6, d: 0, l: 4 } };
+  // Sport-appropriate scores
+  const form: FormMatch[] = results.map((result, i) => {
+    let goalsFor: number, goalsAgainst: number;
+    if (sport === 'basketball') {
+      const base = 100 + (teamId % 12);
+      goalsFor     = result === 'W' ? base + 8 + (i % 5) : base - 4 + (i % 3);
+      goalsAgainst = result === 'L' ? base + 8 + (i % 4) : base - 5 + (i % 4);
+    } else {
+      goalsFor     = result === 'W' ? 2 : result === 'D' ? 1 : 0;
+      goalsAgainst = result === 'L' ? 2 : result === 'D' ? 1 : 0;
+    }
+    return { opponent: opponents[i] ?? 'Opponent', result, goalsFor, goalsAgainst, date: new Date(now - (i + 1) * 7 * 86400000).toISOString(), isHome: i % 2 === 0 };
+  });
+  const wins = results.filter(r => r === 'W').length;
+  const scored   = sport === 'basketball'
+    ? parseFloat((form.reduce((s, f) => s + f.goalsFor,     0) / form.length).toFixed(1))
+    : 1.4 + (wins / results.length) * 0.9;
+  const conceded = sport === 'basketball'
+    ? parseFloat((form.reduce((s, f) => s + f.goalsAgainst, 0) / form.length).toFixed(1))
+    : 1.8 - (wins / results.length) * 0.7;
+  return {
+    team: { id: teamId, name: teamName, shortName }, form,
+    goalsScored: scored, goalsConceded: conceded,
+    cleanSheets: sport === 'basketball' ? 0 : wins,
+    btts: sport === 'basketball' ? 95 : 45 + teamId % 20,
+    over25: sport === 'basketball' ? 100 : 48 + teamId % 25,
+    possession: undefined, shotsOnTarget: undefined,
+    homeRecord: { w: wins + 1, d: sport === 'basketball' ? 0 : 1, l: Math.max(0, results.length - wins - 1) },
+    awayRecord:  { w: Math.max(0, wins - 1), d: sport === 'basketball' ? 0 : 1, l: Math.min(results.length, results.length - wins + 1) },
+  };
 }

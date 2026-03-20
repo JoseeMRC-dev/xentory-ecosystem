@@ -5,46 +5,62 @@ const GEMINI_PRO   = 'gemini-2.5-pro';
 const API_KEY = (import.meta as any).env?.VITE_GEMINI_API_KEY ?? '';
 
 // ── DERIVE MARKETS FROM STATS ──
-function deriveMarkets(home: TeamStats, away: TeamStats): PredictionMarkets {
-  // 1X2
-  const homeStrength = home.goalsScored / Math.max(away.goalsConceded, 0.5);
-  const awayStrength = away.goalsScored / Math.max(home.goalsConceded, 0.5);
-  const total = homeStrength + awayStrength + 0.8;
+function deriveMarkets(home: TeamStats, away: TeamStats, sport = 'football'): PredictionMarkets {
+  const isSoccer     = sport === 'football';
+  const isBasketball = sport === 'basketball';
+
+  // Safe values — prevent NaN/Infinity
+  const hScored    = isFinite(home.goalsScored)    ? home.goalsScored    : (isBasketball ? 108 : 1.5);
+  const hConceded  = isFinite(home.goalsConceded)  ? home.goalsConceded  : (isBasketball ? 104 : 1.3);
+  const aScored    = isFinite(away.goalsScored)    ? away.goalsScored    : (isBasketball ? 105 : 1.3);
+  const aConceded  = isFinite(away.goalsConceded)  ? away.goalsConceded  : (isBasketball ? 107 : 1.5);
+
+  // 1X2 — normalize so extreme values (basketball 108 pts) don't skew probs
+  const homeStrength = hScored / Math.max(aConceded, 0.5);
+  const awayStrength = aScored / Math.max(hConceded, 0.5);
+  const total = homeStrength + awayStrength + (isSoccer ? 0.8 : 0.4);
   const homeProb  = Math.round((homeStrength / total) * 100);
   const awayProb  = Math.round((awayStrength / total) * 100);
-  const drawProb  = Math.max(5, 100 - homeProb - awayProb);
-  const adj = (100 - drawProb) / (homeProb + awayProb);
-  const hP = Math.round(homeProb * adj);
-  const aP = Math.round(awayProb * adj);
-  const dP = 100 - hP - aP;
+  // No draw for basketball/tennis
+  const drawProb  = isSoccer ? Math.max(5, 100 - homeProb - awayProb) : 0;
+  const adj = isSoccer ? (100 - drawProb) / Math.max(homeProb + awayProb, 1) : 100 / Math.max(homeProb + awayProb, 1);
+  const hP = Math.min(95, Math.max(5, Math.round(homeProb * adj)));
+  const aP = Math.min(95, Math.max(5, isSoccer ? Math.round(awayProb * adj) : 100 - hP));
+  const dP = isSoccer ? Math.max(0, 100 - hP - aP) : 0;
 
   const result1X2 = hP > aP && hP > dP ? 'home' : aP > hP && aP > dP ? 'away' : 'draw';
   const conf1X2   = Math.max(hP, aP, dP);
 
-  // Over/Under
-  const expGoals   = home.goalsScored + away.goalsScored;
-  const over25Prob = Math.min(95, Math.round((expGoals / 3.0) * 65 + (home.over25 + away.over25) / 4));
+  // Over/Under — basket uses pts total, football uses goals
+  const expTotal   = hScored + aScored;
+  // For basketball: normalize around 210.5 pts line
+  const over25Prob = isBasketball
+    ? Math.min(90, Math.max(10, Math.round(50 + (expTotal - 210.5) * 2)))
+    : Math.min(95, Math.round((expTotal / 3.0) * 65 + (home.over25 + away.over25) / 4));
   const over35Prob = Math.min(85, Math.round(over25Prob * 0.55));
 
-  // BTTS
-  const bttsProb = Math.round((home.btts + away.btts) / 2);
+  // BTTS — only meaningful for football
+  const bttsProb = isSoccer ? Math.round((home.btts + away.btts) / 2) : 50;
 
   // Handicap
   const diff = hP - aP;
   const hcLine = Math.abs(diff) > 25 ? (diff > 0 ? -1 : 1) : 0;
 
-  // Cuotas (1 / prob * 0.9 de margen)
-  const toOdds = (p: number) => parseFloat((1 / (p / 100) * 0.92).toFixed(2));
+  // Cuotas (1 / prob * margen)
+  const toOdds = (p: number) => {
+    const safeP = Math.max(5, Math.min(95, p));
+    return parseFloat((1 / (safeP / 100) * 0.92).toFixed(2));
+  };
 
   const markets: PredictionMarkets = {
     result: {
       home: hP, draw: dP, away: aP,
-      homeOdds: toOdds(hP), drawOdds: toOdds(dP), awayOdds: toOdds(aP),
+      homeOdds: toOdds(hP), drawOdds: isSoccer ? toOdds(dP) : 0, awayOdds: toOdds(aP),
       recommendation: result1X2,
       confidence: conf1X2,
     },
     overUnder25: {
-      line: 2.5,
+      line: isBasketball ? 210.5 : 2.5,
       over: over25Prob, under: 100 - over25Prob,
       recommendation: over25Prob >= 50 ? 'over' : 'under',
       confidence: Math.abs(over25Prob - 50) + 50,
@@ -70,14 +86,30 @@ function deriveMarkets(home: TeamStats, away: TeamStats): PredictionMarkets {
     bestBet: { market: '', pick: '', odds: 0, confidence: 0, reasoning: '' },
   };
 
-  // Best bet
-  const candidates = [
-    { market: 'Resultado 1X2', pick: result1X2 === 'home' ? `${home.team.name} gana` : result1X2 === 'away' ? `${away.team.name} gana` : 'Empate', odds: result1X2 === 'home' ? markets.result.homeOdds : result1X2 === 'away' ? markets.result.awayOdds : markets.result.drawOdds, confidence: conf1X2 },
-    { market: 'Más de 2.5 goles', pick: `Over 2.5 (${over25Prob}%)`, odds: toOdds(over25Prob), confidence: markets.overUnder25.confidence },
+  // Best bet — sport-aware candidates (no "goles"/"BTTS" para basket/tenis)
+  const winnerPick = result1X2 === 'home' ? `${home.team.name} gana` : result1X2 === 'away' ? `${away.team.name} gana` : 'Empate';
+  const winnerOdds = result1X2 === 'home' ? markets.result.homeOdds : result1X2 === 'away' ? markets.result.awayOdds : markets.result.drawOdds;
+
+  const candidates = isSoccer ? [
+    { market: 'Resultado 1X2',       pick: winnerPick, odds: winnerOdds, confidence: conf1X2 },
+    { market: 'Más de 2.5 goles',    pick: `Over 2.5 (${over25Prob}%)`, odds: toOdds(over25Prob), confidence: markets.overUnder25.confidence },
     { market: 'Ambos equipos marcan', pick: `BTTS ${bttsProb >= 50 ? 'Sí' : 'No'}`, odds: toOdds(bttsProb >= 50 ? bttsProb : 100 - bttsProb), confidence: markets.btts.confidence },
+  ] : isBasketball ? [
+    { market: 'Ganador del partido',      pick: winnerPick, odds: winnerOdds, confidence: conf1X2 },
+    { market: 'Puntos Over/Under 210.5',  pick: `${over25Prob >= 50 ? 'Over' : 'Under'} 210.5 (${over25Prob >= 50 ? over25Prob : 100 - over25Prob}%)`, odds: toOdds(Math.max(over25Prob, 100 - over25Prob)), confidence: markets.overUnder25.confidence },
+    { market: 'Hándicap', pick: `${hcLine <= 0 ? home.team.name : away.team.name} (${hcLine > 0 ? '+' : ''}${hcLine})`, odds: toOdds(Math.max(markets.handicap.home, markets.handicap.away)), confidence: markets.handicap.confidence },
+  ] : [
+    { market: 'Ganador del partido', pick: winnerPick, odds: winnerOdds, confidence: conf1X2 },
+    { market: 'Hándicap',            pick: `${hcLine <= 0 ? home.team.name : away.team.name} (${hcLine > 0 ? '+' : ''}${hcLine})`, odds: toOdds(Math.max(markets.handicap.home, markets.handicap.away)), confidence: markets.handicap.confidence },
   ];
+
   const best = candidates.reduce((a, b) => a.confidence > b.confidence ? a : b);
-  markets.bestBet = { ...best, reasoning: `Basado en el rendimiento reciente y estadísticas de los últimos 5 partidos. Confianza estadística: ${best.confidence}%` };
+  const sportReasoning = isSoccer
+    ? `Basado en el rendimiento goleador y estadísticas defensivas de los últimos partidos. Confianza estadística: ${best.confidence}%`
+    : isBasketball
+    ? `Basado en el diferencial de puntos y el historial de los últimos encuentros en la NBA. Confianza: ${best.confidence}%`
+    : `Basado en el historial reciente de resultados. Confianza estadística: ${best.confidence}%`;
+  markets.bestBet = { ...best, reasoning: sportReasoning };
 
   return markets;
 }
@@ -233,7 +265,7 @@ export async function generateMatchAnalysis(
 ): Promise<MatchAnalysis> {
   const isPro    = plan === 'pro' || plan === 'elite';
   const model    = isPro ? GEMINI_PRO : GEMINI_FLASH;
-  const markets  = deriveMarkets(homeStats, awayStats);
+  const markets  = deriveMarkets(homeStats, awayStats, match.sport);
   const prompt   = buildPrompt(match, homeStats, awayStats, markets, isPro);
 
   let summary        = '';
