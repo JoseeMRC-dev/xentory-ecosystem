@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { fetchTeamStats, getMockStatsBySport, fetchLiveMatchById, fetchWeekMatches, fetchTennisMatches, fetchBasketballMatches, fetchF1Matches, fetchGolfMatches } from '../../services/sportsService';
+import { fetchTeamStats, fetchNonFootballStats, fetchLiveMatchById, fetchWeekMatches, fetchTennisMatches, fetchBasketballMatches, fetchF1Matches, fetchGolfMatches } from '../../services/sportsService';
 import { generateMatchAnalysis } from '../../services/aiService';
 import { SPORT_CONFIG, FORM_COLORS, confidenceColor } from '../../constants';
 import { useLang } from '../../context/LanguageContext';
@@ -154,8 +154,10 @@ export function MatchAnalysisPage() {
           fetchTeamStats(match.awayTeam.id, match.competition.id),
         ]);
       } else {
-        homeStats = getMockStatsBySport(match.homeTeam.id, match.homeTeam.name, match.sport);
-        awayStats = getMockStatsBySport(match.awayTeam.id, match.awayTeam.name, match.sport);
+        [homeStats, awayStats] = await Promise.all([
+          fetchNonFootballStats(match.homeTeam.id, match.homeTeam.name, match.sport),
+          fetchNonFootballStats(match.awayTeam.id, match.awayTeam.name, match.sport),
+        ]);
       }
       if (!homeStats || !awayStats) throw new Error('No stats');
       // Always use the match team names — stats from mock/API may have wrong names
@@ -220,6 +222,13 @@ export function MatchAnalysisPage() {
             )}
           </div>
 
+          {analysis.prediction && (
+            <div className="glass" style={{ borderRadius:16, padding:'1.5rem', background:'linear-gradient(135deg, rgba(0,212,255,0.06), rgba(0,255,136,0.04))', border:'1px solid rgba(0,212,255,0.25)', borderLeft:'3px solid var(--cyan)' }}>
+              <div style={{ fontSize:'0.72rem', color:'var(--cyan)', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'0.6rem' }}>🔮 {t('Predicción del resultado','Result prediction')}</div>
+              <p style={{ color:'var(--text)', fontSize:'0.92rem', lineHeight:1.7, margin:0 }}>{analysis.prediction}</p>
+            </div>
+          )}
+
           <div className="glass" style={{ borderRadius:16, padding:'1.5rem', background:'linear-gradient(135deg, rgba(201,168,76,0.06), rgba(0,255,136,0.04))', border:'1px solid rgba(201,168,76,0.2)' }}>
             <div style={{ fontSize:'0.72rem', color:'var(--gold)', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'0.8rem' }}>🎯 {t('Mejor apuesta recomendada','Best recommended bet')}</div>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:'1rem' }}>
@@ -276,14 +285,32 @@ export function MatchAnalysisPage() {
               {[{ stats:analysis.homeStats, team:match.homeTeam }, { stats:analysis.awayStats, team:match.awayTeam }].map(({ stats, team }) => (
                 <div key={team.id}>
                   <div style={{ fontFamily:'Outfit', fontWeight:700, fontSize:'0.92rem', marginBottom:'0.8rem' }}>{team.name}</div>
-                  <div style={{ display:'flex', gap:'0.4rem', marginBottom:'1rem' }}>{stats.form.map((f, i) => <FormBadge key={i} result={f.result} />)}</div>
+                  <div style={{ display:'flex', gap:'0.4rem', marginBottom:'0.6rem' }}>{stats.form.map((f, i) => <FormBadge key={i} result={f.result} />)}</div>
+                  {stats.form.length > 0 && (
+                    <div style={{ display:'flex', flexDirection:'column', gap:'0.15rem', marginBottom:'0.8rem' }}>
+                      {stats.form.map((f, i) => (
+                        <div key={i} style={{ fontSize:'0.72rem', color:'var(--muted)', display:'flex', gap:'0.4rem', alignItems:'center' }}>
+                          <FormBadge result={f.result} />
+                          <span style={{ color:'var(--text2)' }}>{f.isHome ? t('vs','vs') : t('en','@')} {f.opponent}</span>
+                          <span style={{ marginLeft:'auto' }}>{f.goalsFor}-{f.goalsAgainst}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <div style={{ display:'flex', flexDirection:'column', gap:'0.4rem' }}>
-                    {[
+                    {match.sport === 'football' ? [
                       { label:t('Goles/partido','Goals/match'), value:stats.goalsScored.toFixed(1), color:'var(--green)' },
                       { label:t('Encajados/partido','Conceded/match'), value:stats.goalsConceded.toFixed(1), color:'var(--red)' },
                       { label:'BTTS hist.', value:`${stats.btts}%`, color:'var(--cyan)' },
                       { label:'Over 2.5 hist.', value:`${stats.over25}%`, color:'var(--gold)' },
-                    ].map(item => (
+                    ] : match.sport === 'basketball' ? [
+                      { label:t('Pts anotados/partido','Points scored/match'), value:stats.goalsScored.toFixed(0), color:'var(--green)' },
+                      { label:t('Pts encajados/partido','Points allowed/match'), value:stats.goalsConceded.toFixed(0), color:'var(--red)' },
+                      { label:t('Diferencial','Differential'), value:`${(stats.goalsScored - stats.goalsConceded) >= 0 ? '+' : ''}${(stats.goalsScored - stats.goalsConceded).toFixed(1)}`, color:(stats.goalsScored - stats.goalsConceded) >= 0 ? 'var(--green)' : 'var(--red)' },
+                    ] : [
+                      { label:t('% victorias','Win rate'), value:`${stats.form.length ? Math.round(stats.form.filter(f=>f.result==='W').length/stats.form.length*100) : 0}%`, color:'var(--green)' },
+                      { label:t('Victorias','Wins'), value:`${stats.form.filter(f=>f.result==='W').length}/${stats.form.length}`, color:'var(--cyan)' },
+                    ]}.map(item => (
                       <div key={item.label} style={{ display:'flex', justifyContent:'space-between', fontSize:'0.82rem' }}>
                         <span style={{ color:'var(--muted)' }}>{item.label}</span>
                         <span style={{ color:item.color, fontWeight:500 }}>{item.value}</span>
@@ -291,6 +318,19 @@ export function MatchAnalysisPage() {
                     ))}
                   </div>
                 </div>
+              ))}
+            </div>
+            {/* Form legend */}
+            <div style={{ display:'flex', gap:'1rem', marginTop:'1.2rem', paddingTop:'1rem', borderTop:'1px solid var(--border)', flexWrap:'wrap' }}>
+              <span style={{ fontSize:'0.72rem', color:'var(--muted)', marginRight:'0.3rem' }}>{t('Leyenda:','Legend:')}</span>
+              {[
+                { r:'W' as const, label: t('Victoria','Win') },
+                { r:'D' as const, label: t('Empate','Draw') },
+                { r:'L' as const, label: t('Derrota','Loss') },
+              ].map(({ r, label }) => (
+                <span key={r} style={{ display:'flex', alignItems:'center', gap:'0.3rem', fontSize:'0.72rem', color:'var(--muted)' }}>
+                  <FormBadge result={r} /> {label}
+                </span>
               ))}
             </div>
           </div>

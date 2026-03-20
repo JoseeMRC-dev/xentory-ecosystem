@@ -783,6 +783,116 @@ export async function fetchGolfMatches(): Promise<Match[]> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// NON-FOOTBALL STATS — real game log from ESPN (basketball / tennis)
+// ─────────────────────────────────────────────────────────────────────────────
+export async function fetchNonFootballStats(
+  teamId: number, teamName: string, sport: string
+): Promise<TeamStats> {
+  const shortName = (n: string) => n.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 3) || n.slice(0, 3).toUpperCase();
+
+  if (sport === 'basketball') {
+    try {
+      // ESPN team schedule includes completed game results
+      const json = await espnFetch(`/basketball/nba/teams/${teamId}/schedule`);
+      const events: any[] = json?.events ?? [];
+
+      const completed = events
+        .filter((ev: any) => ev.competitions?.[0]?.status?.type?.state === 'post')
+        .slice(-8); // take last 8, we'll use up to 5
+
+      if (completed.length >= 2) {
+        const form: FormMatch[] = completed.reverse().slice(0, 5).map((ev: any) => {
+          const comp = ev.competitions[0];
+          const home = comp.competitors?.find((c: any) => c.homeAway === 'home');
+          const away = comp.competitors?.find((c: any) => c.homeAway === 'away');
+          if (!home || !away) return null;
+          const isHome = home.team?.id === String(teamId);
+          const us   = isHome ? home : away;
+          const them = isHome ? away : home;
+          const ourScore   = parseInt(us?.score   ?? '0');
+          const theirScore = parseInt(them?.score  ?? '0');
+          const result: FormMatch['result'] = ourScore > theirScore ? 'W' : ourScore < theirScore ? 'L' : 'D';
+          return {
+            opponent: them.team?.displayName ?? 'Opponent',
+            result,
+            goalsFor:     ourScore,
+            goalsAgainst: theirScore,
+            date:   ev.date ?? new Date().toISOString(),
+            isHome,
+          } as FormMatch;
+        }).filter(Boolean) as FormMatch[];
+
+        if (form.length >= 2) {
+          const avgFor     = form.reduce((s, f) => s + f.goalsFor,     0) / form.length;
+          const avgAgainst = form.reduce((s, f) => s + f.goalsAgainst, 0) / form.length;
+          const wins       = form.filter(f => f.result === 'W').length;
+          return {
+            team: { id: teamId, name: teamName, shortName: shortName(teamName) },
+            form, goalsScored: avgFor, goalsConceded: avgAgainst,
+            cleanSheets: 0, btts: 95, over25: 100,
+            homeRecord: { w: wins, d: 0, l: form.length - wins },
+            awayRecord:  { w: wins, d: 0, l: form.length - wins },
+          };
+        }
+      }
+    } catch { /* fall through */ }
+  }
+
+  if (sport === 'tennis') {
+    // Try ESPN athlete schedule for ATP and WTA
+    const slugs = ['tennis/atp-singles', 'tennis/wta-singles', 'tennis/atp', 'tennis/wta'];
+    for (const slug of slugs) {
+      try {
+        const json = await espnFetch(`/${slug}/athletes/${teamId}/schedule`);
+        const events: any[] = json?.events ?? [];
+
+        const completed = events
+          .filter((ev: any) => ev.competitions?.[0]?.status?.type?.state === 'post')
+          .slice(-8).reverse().slice(0, 5);
+
+        if (completed.length >= 2) {
+          const form: FormMatch[] = completed.map((ev: any) => {
+            const comp = ev.competitions[0];
+            const p1 = comp.competitors?.[0];
+            const p2 = comp.competitors?.[1];
+            if (!p1 || !p2) return null;
+            const isP1 = p1.id === String(teamId) || p1.athlete?.id === String(teamId);
+            const us   = isP1 ? p1 : p2;
+            const them = isP1 ? p2 : p1;
+            const isWinner = us.winner === true;
+            return {
+              opponent: them.athlete?.displayName ?? them.team?.displayName ?? 'Opponent',
+              result: isWinner ? 'W' : 'L',
+              goalsFor:     parseInt(us.score   ?? '0'),
+              goalsAgainst: parseInt(them.score ?? '0'),
+              date:   ev.date ?? new Date().toISOString(),
+              isHome: true,
+            } as FormMatch;
+          }).filter(Boolean) as FormMatch[];
+
+          if (form.length >= 2) {
+            const wins = form.filter(f => f.result === 'W').length;
+            return {
+              team: { id: teamId, name: teamName, shortName: teamName.split(' ').pop()?.slice(0, 3).toUpperCase() ?? 'PLY' },
+              form,
+              goalsScored:  parseFloat((wins / form.length * 2).toFixed(2)),
+              goalsConceded: parseFloat(((form.length - wins) / form.length * 2).toFixed(2)),
+              cleanSheets: 0, btts: 80, over25: 70,
+              homeRecord: { w: wins, d: 0, l: form.length - wins },
+              awayRecord:  { w: wins, d: 0, l: form.length - wins },
+            };
+          }
+          break;
+        }
+      } catch { /* try next slug */ }
+    }
+  }
+
+  // Fall back to mock stats
+  return getMockStatsBySport(teamId, teamName, sport);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // TEAM STATS (api-sports via proxy — only called when user opens analysis)
 // ─────────────────────────────────────────────────────────────────────────────
 export async function getApiStatus() {
