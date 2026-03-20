@@ -395,9 +395,11 @@ function AnalysisWizardModal({ onClose }: { onClose: () => void }) {
   const btnBase: React.CSSProperties = {
     display: 'flex', alignItems: 'center', gap: '0.7rem',
     padding: '0.8rem 1rem', borderRadius: 12, cursor: 'pointer',
+    minHeight: 48,   // good touch target on mobile
     background: 'var(--card2)', border: '1px solid var(--border)',
     color: 'var(--text)', fontSize: '0.88rem', fontWeight: 500,
     transition: 'border-color 0.2s, background 0.2s', width: '100%',
+    WebkitTapHighlightColor: 'transparent',   // remove default tap flash on iOS
   };
 
   return (
@@ -405,13 +407,19 @@ function AnalysisWizardModal({ onClose }: { onClose: () => void }) {
     <div style={{
       position: 'fixed', inset: 0, zIndex: 200,
       background: 'rgba(5,8,16,0.9)', backdropFilter: 'blur(14px)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: 'clamp(0.4rem, 4vw, 1rem)',   // tighter on small screens
     }}>
       <div style={{
         background: 'var(--nav-bg)', border: '1px solid var(--border)',
-        borderRadius: 22, padding: '1.8rem', width: '100%', maxWidth: 440,
-        position: 'relative', maxHeight: '85vh', display: 'flex', flexDirection: 'column',
+        borderRadius: 'clamp(14px, 4vw, 22px)', padding: 'clamp(1.2rem, 4vw, 1.8rem)',
+        width: '100%', maxWidth: 440,
+        position: 'relative',
+        // flex column so the scrollable step div can grow/shrink correctly
+        display: 'flex', flexDirection: 'column',
+        maxHeight: 'min(85vh, 640px)',
         animation: 'slideDown 0.22s ease both',
+        overscrollBehavior: 'contain',
       }}>
 
         {/* Header row */}
@@ -433,7 +441,7 @@ function AnalysisWizardModal({ onClose }: { onClose: () => void }) {
 
         {/* ── STEP 1: Sport ── */}
         {step === 1 && (
-          <div style={{ overflowY: 'auto' }}>
+          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', overscrollBehavior: 'contain' }}>
             <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
               <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🧠</div>
               <h2 style={{ fontSize: '1.2rem', marginBottom: '0.3rem' }}>
@@ -462,7 +470,7 @@ function AnalysisWizardModal({ onClose }: { onClose: () => void }) {
 
         {/* ── STEP 2: Competition (football only) ── */}
         {step === 2 && (
-          <div style={{ overflowY: 'auto' }}>
+          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', overscrollBehavior: 'contain' }}>
             <div style={{ textAlign: 'center', marginBottom: '1.2rem' }}>
               <div style={{ fontSize: '1.8rem', marginBottom: '0.3rem' }}>⚽</div>
               <h2 style={{ fontSize: '1.1rem', marginBottom: '0.3rem' }}>
@@ -491,7 +499,7 @@ function AnalysisWizardModal({ onClose }: { onClose: () => void }) {
 
         {/* ── STEP 3: Match ── */}
         {step === 3 && (
-          <div style={{ overflowY: 'auto' }}>
+          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', overscrollBehavior: 'contain' }}>
             <div style={{ textAlign: 'center', marginBottom: '1.2rem' }}>
               {selComp && <div style={{ fontSize: '1.5rem', marginBottom: '0.3rem' }}>{selComp.emoji}</div>}
               <h2 style={{ fontSize: '1.1rem', marginBottom: '0.3rem' }}>
