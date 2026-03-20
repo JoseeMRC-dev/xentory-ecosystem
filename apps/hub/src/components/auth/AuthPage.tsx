@@ -34,11 +34,11 @@ function pwStrength(pw: string): { score: number; label: string; color: string }
   if (/[^A-Za-z0-9]/.test(pw)) score++;
   const levels = [
     { label: '', color: 'transparent' },
-    { label: 'Very weak', color: 'var(--red)' },
-    { label: 'Weak', color: '#f97316' },
-    { label: 'Fair', color: '#eab308' },
-    { label: 'Strong', color: 'var(--green)' },
-    { label: 'Very strong', color: 'var(--cyan)' },
+    { label: 'Muy débil',  color: 'var(--red)'   },
+    { label: 'Débil',      color: '#f97316'       },
+    { label: 'Regular',    color: '#eab308'       },
+    { label: 'Fuerte',     color: 'var(--green)'  },
+    { label: 'Muy fuerte', color: 'var(--cyan)'   },
   ];
   return { score, ...levels[score] };
 }
@@ -87,23 +87,23 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
     e?.preventDefault();
     setError('');
 
-    if (!email.trim()) { setError('Email is required.'); return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('Please enter a valid email.'); return; }
+    if (!email.trim()) { setError('El email es obligatorio.'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('Introduce un email válido.'); return; }
 
     try {
       if (tab === 'login') {
-        if (!password) { setError('Password is required.'); return; }
+        if (!password) { setError('La contraseña es obligatoria.'); return; }
 
         // Check CAPTCHA
         if (!captcha.isVerified) {
-          setError('Please complete the CAPTCHA verification.');
+          setError('Por favor, completa la verificación CAPTCHA.');
           return;
         }
 
         // Check brute-force lock
         const lock = checkLock(email);
         if (lock.locked) {
-          setError(`Too many failed attempts. Please wait ${lock.remainingSec}s before trying again.`);
+          setError(`Demasiados intentos fallidos. Espera ${lock.remainingSec}s e inténtalo de nuevo.`);
           setLockInfo({ locked: true, remainingSec: lock.remainingSec });
           return;
         }
@@ -116,12 +116,12 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
           captcha.reset(); // Force re-verification after each failed attempt
           const result = recordFailure(email);
           if (result.locked) {
-            setError(`Too many failed attempts. Account locked for ${Math.ceil(result.remainingMs / 1000)}s.`);
+            setError(`Demasiados intentos. Cuenta bloqueada por ${Math.ceil(result.remainingMs / 1000)}s.`);
             setLockInfo({ locked: true, remainingSec: Math.ceil(result.remainingMs / 1000) });
           } else if (result.attemptsLeft > 0) {
-            setError(`Invalid credentials. ${result.attemptsLeft} attempt${result.attemptsLeft !== 1 ? 's' : ''} remaining before temporary lock.`);
+            setError(`Credenciales incorrectas. ${result.attemptsLeft} intento${result.attemptsLeft !== 1 ? 's' : ''} restante${result.attemptsLeft !== 1 ? 's' : ''} antes del bloqueo temporal.`);
           } else {
-            setError(loginErr?.message || 'Login failed.');
+            setError(loginErr?.message || 'Error al iniciar sesión.');
           }
           return;
         }
@@ -129,11 +129,11 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
       } else if (tab === 'register') {
         // Check CAPTCHA
         if (!captcha.isVerified) {
-          setError('Please complete the CAPTCHA verification.');
+          setError('Por favor, completa la verificación CAPTCHA.');
           return;
         }
 
-        if (!name.trim())   { setError('Name is required.'); return; }
+        if (!name.trim())   { setError('El nombre es obligatorio.'); return; }
         if (password.length < 8) { setError('La contraseña debe tener al menos 8 caracteres.'); return; }
         if (!terms)         { setError('Debes aceptar los Términos de Uso para registrarte.'); return; }
         await register(email, password, name.trim());
@@ -148,7 +148,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
         setConfirm(true);
       } else {
         const msg = err?.message ?? '';
-        if (msg.includes('Invalid login credentials')) setError('Invalid email or password.');
+        if (msg.includes('Invalid login credentials')) setError('Email o contraseña incorrectos.');
         else if (msg.includes('Email already registered') || msg.includes('already been registered')) setError('Este email ya está registrado. Inicia sesión.');
         else if (msg.includes('Password should be')) setError('La contraseña debe tener al menos 6 caracteres.');
         else if (msg.includes('rate limit')) setError('Demasiados intentos. Espera un momento.');
@@ -180,8 +180,8 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
 
   const handleForgot = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!forgotEmail.trim()) { setForgotErr('Email is required.'); return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail)) { setForgotErr('Invalid email.'); return; }
+    if (!forgotEmail.trim()) { setForgotErr('El email es obligatorio.'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail)) { setForgotErr('Email no válido.'); return; }
     setForgotL(true);
     setForgotErr('');
     try {
@@ -237,7 +237,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
     <PageWrapper>
       {/* Tabs */}
       <div style={{ display: 'flex', background: 'var(--card2)', borderRadius: 10, padding: '0.25rem', marginBottom: '1.5rem', gap: '0.1rem' }}>
-        {(['login', 'register', 'magic'] as Tab[]).map(t => { const label = t === 'login' ? 'Sign in' : t === 'register' ? 'Sign up' : '✉ Magic Link'; return (
+        {(['login', 'register', 'magic'] as Tab[]).map(t => { const label = t === 'login' ? 'Iniciar sesión' : t === 'register' ? 'Registrarse' : '✉ Enlace mágico'; return (
           <button key={t} onClick={() => changeTab(t)} style={{
             flex: 1, padding: '0.5rem 0.3rem', borderRadius: 8, border: 'none', cursor: 'pointer',
             fontSize: '0.78rem', fontWeight: 500, transition: 'all 0.2s',
@@ -355,9 +355,9 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
         }}>
           <span style={{ fontSize: '1.1rem' }}>🔒</span>
           <div>
-            <div style={{ fontWeight: 600, fontSize: '0.82rem', color: 'var(--red)' }}>Account temporarily locked</div>
+            <div style={{ fontWeight: 600, fontSize: '0.82rem', color: 'var(--red)' }}>Cuenta bloqueada temporalmente</div>
             <div style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: '0.15rem' }}>
-              Too many failed attempts. Try again in <strong style={{ color: 'var(--text)' }}>{lockInfo.remainingSec}s</strong>.
+              Demasiados intentos fallidos. Inténtalo en <strong style={{ color: 'var(--text)' }}>{lockInfo.remainingSec}s</strong>.
             </div>
           </div>
         </div>
@@ -382,9 +382,9 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
         <button type="submit" disabled={isLoading} className="btn btn-gold btn-lg"
           style={{ justifyContent: 'center', marginTop: '0.2rem', opacity: isLoading ? 0.7 : 1 }}>
           {isLoading ? <Spinner /> : (
-            tab === 'login' ? 'Enter the ecosystem →' :
-            tab === 'register' ? 'Create account →' :
-'Send Magic Link →'
+            tab === 'login'    ? 'Entrar al ecosistema →' :
+            tab === 'register' ? 'Crear cuenta →' :
+                                 'Enviar enlace →'
           )}
         </button>
       </form>
@@ -392,10 +392,10 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
       {/* Footer links */}
       <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.75rem', color: 'var(--muted)' }}>
         {tab === 'login'
-          ? <>No account? <Link to="/register" style={{ color: 'var(--gold)', textDecoration: 'none' }}>Sign up free →</Link></>
+          ? <>¿No tienes cuenta? <Link to="/register" style={{ color: 'var(--gold)', textDecoration: 'none' }}>Regístrate gratis →</Link></>
           : tab === 'register'
-          ? <>Already have an account? <Link to="/login" style={{ color: 'var(--gold)', textDecoration: 'none' }}>Sign in</Link></>
-          : <>Remember: the link only works once · <button onClick={() => changeTab('login')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gold)', fontSize: '0.75rem', padding: 0 }}>Back to login</button></>
+          ? <>¿Ya tienes cuenta? <Link to="/login" style={{ color: 'var(--gold)', textDecoration: 'none' }}>Iniciar sesión</Link></>
+          : <>Recuerda: el enlace solo funciona una vez · <button onClick={() => changeTab('login')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gold)', fontSize: '0.75rem', padding: 0 }}>Volver al login</button></>
         }
       </p>
 
@@ -435,7 +435,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
                   Entendido
                 </button>
                 <button onClick={() => { setShowForgot(false); changeTab('login'); }} style={{ marginTop: '0.8rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gold)', fontSize: '0.78rem', width: '100%', padding: '0.4rem' }}>
-                  Go to login →
+                  Ir al login →
                 </button>
               </div>
             ) : (
