@@ -1127,8 +1127,10 @@ export async function getApiStatus() {
 }
 
 /**
- * Scans the ESPN football scoreboard backward up to 21 days to find real
- * completed games for the given team. Used when the api-sports proxy fails.
+ * Scans the ESPN football scoreboard backward up to 21 days across ALL
+ * configured leagues to find real completed games for the given team.
+ * Per-day we fetch all leagues in parallel so that games played in any
+ * competition (league, cups, continental) are captured in chronological order.
  */
 async function fetchFootballFormFromEspn(
   teamId: number, teamName: string, leagueId: number
@@ -1136,52 +1138,59 @@ async function fetchFootballFormFromEspn(
   const form: FormMatch[] = [];
   const seen = new Set<string>();
 
-  // Build slug list: team's own league first, then others as fallback
-  const ownSlug = FOOTBALL_LEAGUES.find(l => l.id === leagueId)?.slug ?? '';
-  const slugs = [
+  // Own league first so its scoreboard hits the cache when already loaded
+  const ownSlug = FOOTBALL_LEAGUES.find(l => l.id === leagueId)?.slug;
+  const allSlugs = [
     ...(ownSlug ? [ownSlug] : []),
-    ...FOOTBALL_LEAGUES.filter(l => l.id !== leagueId).map(l => l.slug),
+    ...FOOTBALL_LEAGUES.filter(l => l.slug !== ownSlug).map(l => l.slug),
   ];
 
-  for (const slug of slugs) {
-    if (form.length >= 5) break;
-    for (let d = 1; d <= 21 && form.length < 5; d++) {
-      try {
-        const json = await espnFetch(`/${slug}/scoreboard?dates=${espnDate(-d)}`);
-        const events: any[] = json?.events ?? [];
-        for (const ev of events) {
-          if (form.length >= 5) break;
-          const state = ev.status?.type?.state ?? ev.competitions?.[0]?.status?.type?.state;
-          if (state !== 'post') continue;
-          const comp = ev.competitions?.[0];
-          const home = comp?.competitors?.find((c: any) => c.homeAway === 'home');
-          const away = comp?.competitors?.find((c: any) => c.homeAway === 'away');
-          if (!home || !away) continue;
-          const homeEspnId = parseInt(home.team?.id ?? '0');
-          const awayEspnId = parseInt(away.team?.id ?? '0');
-          const isHomeTeam = (homeEspnId > 0 && homeEspnId === teamId) || teamNameMatch(home.team?.displayName, teamName);
-          const isAwayTeam = (awayEspnId > 0 && awayEspnId === teamId) || teamNameMatch(away.team?.displayName, teamName);
-          if (!isHomeTeam && !isAwayTeam) continue;
-          if (seen.has(ev.id)) continue;
-          seen.add(ev.id);
-          const isHome     = isHomeTeam;
-          const us         = isHome ? home : away;
-          const them       = isHome ? away : home;
-          const ourScore   = Number(us.score)   || 0;
-          const theirScore = Number(them.score) || 0;
-          if (ourScore === 0 && theirScore === 0) continue;
-          form.push({
-            opponent:     them.team?.displayName ?? 'Opponent',
-            result:       ourScore > theirScore ? 'W' : ourScore < theirScore ? 'L' : 'D',
-            goalsFor:     ourScore,
-            goalsAgainst: theirScore,
-            date:         ev.date ?? new Date().toISOString(),
-            isHome,
-          });
-        }
-      } catch { /* skip day */ }
+  // Iterate day by day (most recent first). For each day fetch ALL leagues
+  // concurrently so we don't miss a Champions League/Europa match played
+  // on the same day as a league fixture.
+  for (let d = 1; d <= 21 && form.length < 5; d++) {
+    const dateStr = espnDate(-d);
+    // Fetch all leagues for this day in parallel
+    const results = await Promise.allSettled(
+      allSlugs.map(slug => espnFetch(`/${slug}/scoreboard?dates=${dateStr}`))
+    );
+
+    for (const res of results) {
+      if (form.length >= 5) break;
+      if (res.status !== 'fulfilled' || !res.value) continue;
+      const events: any[] = res.value.events ?? [];
+
+      for (const ev of events) {
+        if (form.length >= 5) break;
+        const state = ev.status?.type?.state ?? ev.competitions?.[0]?.status?.type?.state;
+        if (state !== 'post') continue;
+        const comp = ev.competitions?.[0];
+        const home = comp?.competitors?.find((c: any) => c.homeAway === 'home');
+        const away = comp?.competitors?.find((c: any) => c.homeAway === 'away');
+        if (!home || !away) continue;
+        const homeEspnId = parseInt(home.team?.id ?? '0');
+        const awayEspnId = parseInt(away.team?.id ?? '0');
+        const isHomeTeam = (homeEspnId > 0 && homeEspnId === teamId) || teamNameMatch(home.team?.displayName, teamName);
+        const isAwayTeam = (awayEspnId > 0 && awayEspnId === teamId) || teamNameMatch(away.team?.displayName, teamName);
+        if (!isHomeTeam && !isAwayTeam) continue;
+        if (seen.has(ev.id)) continue;
+        seen.add(ev.id);
+        const isHome     = isHomeTeam;
+        const us         = isHome ? home : away;
+        const them       = isHome ? away : home;
+        const ourScore   = Number(us.score)   || 0;
+        const theirScore = Number(them.score) || 0;
+        if (ourScore === 0 && theirScore === 0) continue;
+        form.push({
+          opponent:     them.team?.displayName ?? 'Opponent',
+          result:       ourScore > theirScore ? 'W' : ourScore < theirScore ? 'L' : 'D',
+          goalsFor:     ourScore,
+          goalsAgainst: theirScore,
+          date:         ev.date ?? new Date().toISOString(),
+          isHome,
+        });
+      }
     }
-    if (form.length > 0) break; // found games in this league — stop
   }
   return form;
 }
