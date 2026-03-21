@@ -1195,15 +1195,52 @@ export function getMockStatsBySport(teamId: number, teamName: string, sport: str
     ['W','L','W','W','D'],
     ['D','W','W','L','W'],
     ['L','W','W','D','W'],
+    ['W','D','W','L','W'],
+    ['L','W','D','W','W'],
+    ['W','W','W','L','D'],
+    ['D','L','W','W','W'],
   ];
   const results = formPatterns[teamId % formPatterns.length];
+
+  // Large opponent pools — pick 5 unique opponents based on teamId so each team sees different opponents
+  const allBasketball = [
+    'Los Angeles Lakers','Boston Celtics','Miami Heat','Denver Nuggets','Milwaukee Bucks',
+    'Golden State Warriors','Phoenix Suns','Dallas Mavericks','Brooklyn Nets','Chicago Bulls',
+    'Philadelphia 76ers','Cleveland Cavaliers','Memphis Grizzlies','New Orleans Pelicans','Atlanta Hawks',
+    'Toronto Raptors','Minnesota Timberwolves','Sacramento Kings','Oklahoma City Thunder','Indiana Pacers',
+  ];
+  const allTennis = [
+    'D. Medvedev','A. Zverev','A. Rublev','T. Fritz','S. Tsitsipas',
+    'H. Hurkacz','C. Ruud','F. Auger-Aliassime','B. Shelton','U. Humbert',
+    'J. Sinner','C. Alcaraz','N. Djokovic','A. Musetti','G. Dimitrov',
+  ];
+  const allF1 = [
+    'M. Verstappen','L. Hamilton','C. Leclerc','L. Norris','C. Sainz',
+    'G. Russell','F. Alonso','O. Piastri','L. Stroll','V. Bottas',
+    'E. Ocon','P. Gasly','Y. Tsunoda','N. Hülkenberg','K. Magnussen',
+  ];
+
+  // Deterministic shuffle based on teamId — pick 5 opponents that are NOT this team's name
+  function pickOpponents(pool: string[], count: number): string[] {
+    const cleanSelf = teamName.toLowerCase().trim();
+    const available = pool.filter(p => !p.toLowerCase().includes(cleanSelf.split(' ').pop() ?? ''));
+    const start = (teamId * 7 + 3) % Math.max(1, available.length);
+    const picked: string[] = [];
+    for (let i = 0; picked.length < count && i < available.length; i++) {
+      picked.push(available[(start + i) % available.length]);
+    }
+    // If pool is too small, fill with generic names
+    while (picked.length < count) picked.push(`Rival ${picked.length + 1}`);
+    return picked;
+  }
+
   const opponents: string[] = sport === 'tennis'
-    ? ['Medvedev','Zverev','Rublev','Fritz','Tsitsipas']
+    ? pickOpponents(allTennis, 5)
     : sport === 'basketball'
-    ? ['Lakers','Celtics','Heat','Nuggets','Bucks']
+    ? pickOpponents(allBasketball, 5)
     : sport === 'f1'
-    ? ['Verstappen','Hamilton','Leclerc','Norris','Sainz']
-    : ['Opponent A','Opponent B','Opponent C','Opponent D','Opponent E'];
+    ? pickOpponents(allF1, 5)
+    : ['Rival A','Rival B','Rival C','Rival D','Rival E'];
   const now = Date.now();
   // Sport-appropriate scores
   const form: FormMatch[] = results.map((result, i) => {
