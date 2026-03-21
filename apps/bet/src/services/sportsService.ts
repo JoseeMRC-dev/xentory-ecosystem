@@ -1150,15 +1150,18 @@ async function fetchFootballFormFromEspn(
   // on the same day as a league fixture.
   for (let d = 1; d <= 21 && form.length < 5; d++) {
     const dateStr = espnDate(-d);
-    // Fetch all leagues for this day in parallel
+    // Fetch all leagues for this day in parallel, preserving slug context
     const results = await Promise.allSettled(
-      allSlugs.map(slug => espnFetch(`/${slug}/scoreboard?dates=${dateStr}`))
+      allSlugs.map(async slug => ({ slug, json: await espnFetch(`/${slug}/scoreboard?dates=${dateStr}`) }))
     );
 
     for (const res of results) {
       if (form.length >= 5) break;
-      if (res.status !== 'fulfilled' || !res.value) continue;
-      const events: any[] = res.value.events ?? [];
+      if (res.status !== 'fulfilled' || !res.value?.json) continue;
+      const { slug, json } = res.value;
+      const cfg = FOOTBALL_LEAGUES.find(l => l.slug === slug);
+      const competitionName = cfg?.name ?? slug.split('/').pop() ?? 'Cup';
+      const events: any[] = json.events ?? [];
 
       for (const ev of events) {
         if (form.length >= 5) break;
@@ -1188,6 +1191,7 @@ async function fetchFootballFormFromEspn(
           goalsAgainst: theirScore,
           date:         ev.date ?? new Date().toISOString(),
           isHome,
+          competition:  competitionName,
         });
       }
     }
@@ -1277,7 +1281,7 @@ function mapApiStatsToTeamStats(stats: any, fixtures: any[], teamId: number): Te
     else if (!isHome && f.teams.away.winner) result = 'W';
     else if (isHome && f.teams.away.winner) result = 'L';
     else if (!isHome && f.teams.home.winner) result = 'L';
-    return { opponent: isHome ? f.teams.away.name : f.teams.home.name, opponentLogo: isHome ? f.teams.away.logo : f.teams.home.logo, result, goalsFor: gf ?? 0, goalsAgainst: ga ?? 0, date: f.fixture.date, isHome };
+    return { opponent: isHome ? f.teams.away.name : f.teams.home.name, opponentLogo: isHome ? f.teams.away.logo : f.teams.home.logo, result, goalsFor: gf ?? 0, goalsAgainst: ga ?? 0, date: f.fixture.date, isHome, competition: f.league?.name as string | undefined };
   });
   const gs = stats?.goals?.for?.average?.total ?? '1.5';
   const gc = stats?.goals?.against?.average?.total ?? '1.2';
