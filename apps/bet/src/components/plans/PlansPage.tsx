@@ -93,7 +93,7 @@ export function PlansPage() {
               </div>
               <div style={{ color: 'var(--muted)', fontSize: '0.78rem', marginBottom: '1.3rem' }}>
                 {plan.price === 0
-                  ? t('Sin tarjeta de crédito', 'No credit card')
+                  ? t('Siempre gratis · sin pago requerido', 'Always free · no payment required')
                   : yearly
                     ? t(`al año (${Math.round(price / 12)}€/mes)`, `per year (${Math.round(price / 12)}€/mo)`)
                     : t('al mes · cancela cuando quieras', 'per month · cancel anytime')}
