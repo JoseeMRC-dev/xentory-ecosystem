@@ -787,6 +787,40 @@ export async function fetchGolfMatches(): Promise<Match[]> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
+ * Computes real historical percentages from a FormMatch array.
+ * - football  → btts (both scored), over25 (total > 2.5), cleanSheets (0 conceded)
+ * - basketball → over25 stores Over-210.5% (total pts > 210.5); btts is irrelevant
+ * - tennis    → over25 stores Over-2.5-sets% (total sets > 2); btts irrelevant
+ * All values are 0-100 integers. Returns 50/50 defaults when form is empty.
+ */
+function computeFormStats(
+  form: FormMatch[],
+  sport: string
+): { btts: number; over25: number; cleanSheets: number } {
+  if (form.length === 0) return { btts: 50, over25: 50, cleanSheets: 0 };
+  let btts = 0, over = 0, cs = 0;
+  for (const f of form) {
+    const total = f.goalsFor + f.goalsAgainst;
+    if (sport === 'basketball') {
+      if (total > 210.5) over++;
+    } else if (sport === 'tennis') {
+      if (total > 2) over++;   // 3-set match
+    } else {
+      // football
+      if (f.goalsFor > 0 && f.goalsAgainst > 0) btts++;
+      if (total > 2.5) over++;
+      if (f.goalsAgainst === 0) cs++;
+    }
+  }
+  const n = form.length;
+  return {
+    btts:        Math.round((btts / n) * 100),
+    over25:      Math.round((over / n) * 100),
+    cleanSheets: Math.round((cs   / n) * 100),
+  };
+}
+
+/**
  * Safe team-name comparison.
  * Strips punctuation, requires ≥4 chars for partial/last-word matches.
  * Never matches empty strings (avoids the classic `"any".includes("") === true` trap).
@@ -954,12 +988,15 @@ export async function fetchNonFootballStats(
       const wins       = form.filter(f => f.result === 'W').length;
       const homeGames  = form.filter(f => f.isHome);
       const awayGames  = form.filter(f => !f.isHome);
+      const bkFormStats = computeFormStats(form, 'basketball');
       return {
         team: { id: teamId, name: teamName, shortName: sn(teamName) },
         form,
         goalsScored:   parseFloat(avgFor.toFixed(1)),
         goalsConceded: parseFloat(avgAgainst.toFixed(1)),
-        cleanSheets: 0, btts: 95, over25: 100,
+        cleanSheets: 0,
+        btts:   bkFormStats.btts,    // % partidos con >210.5 pts combinados
+        over25: bkFormStats.over25,  // % partidos con >210.5 pts combinados
         homeRecord: { w: homeGames.filter(f => f.result === 'W').length, d: 0, l: homeGames.filter(f => f.result === 'L').length },
         awayRecord:  { w: awayGames.filter(f => f.result === 'W').length, d: 0, l: awayGames.filter(f => f.result === 'L').length },
       };
@@ -1061,12 +1098,15 @@ export async function fetchNonFootballStats(
 
     if (form.length >= 1) {
       const wins = form.filter(f => f.result === 'W').length;
+      const tnFormStats = computeFormStats(form, 'tennis');
       return {
         team: { id: teamId, name: teamName, shortName: teamName.split(' ').pop()?.slice(0, 3).toUpperCase() ?? 'PLY' },
         form,
         goalsScored:   parseFloat((wins / form.length * 2).toFixed(2)),
         goalsConceded: parseFloat(((form.length - wins) / form.length * 2).toFixed(2)),
-        cleanSheets: 0, btts: 80, over25: 70,
+        cleanSheets: 0,
+        btts:   tnFormStats.btts,    // % partidos a 3 sets
+        over25: tnFormStats.over25,  // % partidos a 3 sets
         homeRecord: { w: wins, d: 0, l: form.length - wins },
         awayRecord:  { w: wins, d: 0, l: form.length - wins },
       };
@@ -1146,10 +1186,14 @@ function mapApiStatsToTeamStats(stats: any, fixtures: any[], teamId: number): Te
   });
   const gs = stats?.goals?.for?.average?.total ?? '1.5';
   const gc = stats?.goals?.against?.average?.total ?? '1.2';
+  // Compute real BTTS% and Over-2.5% from the actual match results
+  const formStats = computeFormStats(form, 'football');
   return {
     team: { id: teamId, name: stats?.team?.name ?? 'Team', shortName: (stats?.team?.name ?? 'TEM').slice(0, 3).toUpperCase(), logo: stats?.team?.logo },
     form, goalsScored: parseFloat(gs), goalsConceded: parseFloat(gc),
-    cleanSheets: stats?.clean_sheet?.total ?? 0, btts: 48, over25: Math.round(parseFloat(gs) * 28),
+    cleanSheets: stats?.clean_sheet?.total ?? formStats.cleanSheets,
+    btts:  formStats.btts,
+    over25: formStats.over25,
     possession: stats?.ball_possession ? parseInt(stats.ball_possession) : undefined,
     shotsOnTarget: stats?.shots?.on?.total ?? undefined,
     homeRecord: { w: stats?.fixtures?.wins?.home ?? 5, d: stats?.fixtures?.draws?.home ?? 2, l: stats?.fixtures?.loses?.home ?? 2 },
@@ -1379,12 +1423,15 @@ export function getMockStatsBySport(teamId: number, teamName: string, sport: str
   const conceded = sport === 'basketball'
     ? parseFloat((form.reduce((s, f) => s + f.goalsAgainst, 0) / form.length).toFixed(1))
     : 1.8 - (wins / results.length) * 0.7;
+  // Even for mock data, compute stats from the generated form so the percentages
+  // reflect the W/L/score pattern rather than being hardcoded constants.
+  const mockFormStats = computeFormStats(form, sport);
   return {
     team: { id: teamId, name: teamName, shortName }, form,
     goalsScored: scored, goalsConceded: conceded,
-    cleanSheets: sport === 'basketball' ? 0 : wins,
-    btts: sport === 'basketball' ? 95 : 45 + teamId % 20,
-    over25: sport === 'basketball' ? 100 : 48 + teamId % 25,
+    cleanSheets: mockFormStats.cleanSheets,
+    btts:   mockFormStats.btts,
+    over25: mockFormStats.over25,
     possession: undefined, shotsOnTarget: undefined,
     homeRecord: { w: wins + 1, d: sport === 'basketball' ? 0 : 1, l: Math.max(0, results.length - wins - 1) },
     awayRecord:  { w: Math.max(0, wins - 1), d: sport === 'basketball' ? 0 : 1, l: Math.min(results.length, results.length - wins + 1) },
