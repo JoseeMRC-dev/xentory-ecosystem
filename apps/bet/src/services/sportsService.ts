@@ -783,112 +783,157 @@ export async function fetchGolfMatches(): Promise<Match[]> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// NON-FOOTBALL STATS — real game log from ESPN (basketball / tennis)
+// NON-FOOTBALL STATS — scan ESPN scoreboard by date (same source as match list)
+// Matches by team ID and by name so it works for both real and mock-ID matches.
 // ─────────────────────────────────────────────────────────────────────────────
 export async function fetchNonFootballStats(
   teamId: number, teamName: string, sport: string
 ): Promise<TeamStats> {
-  const shortName = (n: string) => n.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 3) || n.slice(0, 3).toUpperCase();
+  const sn = (n: string) =>
+    n.split(' ').length > 1
+      ? n.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 3)
+      : n.slice(0, 3).toUpperCase();
 
+  // Normalise team name for fuzzy matching (last name for tennis players)
+  const lastName = teamName.split(' ').pop()?.toLowerCase() ?? teamName.toLowerCase();
+
+  // ── BASKETBALL ──────────────────────────────────────────────────────────────
   if (sport === 'basketball') {
-    try {
-      // ESPN team schedule includes completed game results
-      const json = await espnFetch(`/basketball/nba/teams/${teamId}/schedule`);
-      const events: any[] = json?.events ?? [];
+    const form: FormMatch[] = [];
+    const seen = new Set<string>();
 
-      const completed = events
-        .filter((ev: any) => ev.competitions?.[0]?.status?.type?.state === 'post')
-        .slice(-8); // take last 8, we'll use up to 5
-
-      if (completed.length >= 2) {
-        const form: FormMatch[] = completed.reverse().slice(0, 5).map((ev: any) => {
-          const comp = ev.competitions[0];
-          const home = comp.competitors?.find((c: any) => c.homeAway === 'home');
-          const away = comp.competitors?.find((c: any) => c.homeAway === 'away');
-          if (!home || !away) return null;
-          const isHome = home.team?.id === String(teamId);
-          const us   = isHome ? home : away;
-          const them = isHome ? away : home;
-          const ourScore   = parseInt(us?.score   ?? '0');
-          const theirScore = parseInt(them?.score  ?? '0');
-          const result: FormMatch['result'] = ourScore > theirScore ? 'W' : ourScore < theirScore ? 'L' : 'D';
-          return {
-            opponent: them.team?.displayName ?? 'Opponent',
-            result,
-            goalsFor:     ourScore,
-            goalsAgainst: theirScore,
-            date:   ev.date ?? new Date().toISOString(),
-            isHome,
-          } as FormMatch;
-        }).filter(Boolean) as FormMatch[];
-
-        if (form.length >= 2) {
-          const avgFor     = form.reduce((s, f) => s + f.goalsFor,     0) / form.length;
-          const avgAgainst = form.reduce((s, f) => s + f.goalsAgainst, 0) / form.length;
-          const wins       = form.filter(f => f.result === 'W').length;
-          return {
-            team: { id: teamId, name: teamName, shortName: shortName(teamName) },
-            form, goalsScored: avgFor, goalsConceded: avgAgainst,
-            cleanSheets: 0, btts: 95, over25: 100,
-            homeRecord: { w: wins, d: 0, l: form.length - wins },
-            awayRecord:  { w: wins, d: 0, l: form.length - wins },
-          };
-        }
-      }
-    } catch { /* fall through */ }
-  }
-
-  if (sport === 'tennis') {
-    // Try ESPN athlete schedule for ATP and WTA
-    const slugs = ['tennis/atp-singles', 'tennis/wta-singles', 'tennis/atp', 'tennis/wta'];
-    for (const slug of slugs) {
+    // Scan last 21 days of NBA scoreboard (same endpoint used by match list)
+    for (let d = 1; d <= 21 && form.length < 5; d++) {
       try {
-        const json = await espnFetch(`/${slug}/athletes/${teamId}/schedule`);
+        const json = await espnFetch(`/basketball/nba/scoreboard?dates=${espnDate(-d)}`);
         const events: any[] = json?.events ?? [];
 
-        const completed = events
-          .filter((ev: any) => ev.competitions?.[0]?.status?.type?.state === 'post')
-          .slice(-8).reverse().slice(0, 5);
+        for (const ev of events) {
+          if (form.length >= 5) break;
+          if (ev.status?.type?.state !== 'post') continue;
+          const comp = ev.competitions?.[0];
+          const home = comp?.competitors?.find((c: any) => c.homeAway === 'home');
+          const away = comp?.competitors?.find((c: any) => c.homeAway === 'away');
+          if (!home || !away) continue;
 
-        if (completed.length >= 2) {
-          const form: FormMatch[] = completed.map((ev: any) => {
-            const comp = ev.competitions[0];
-            const p1 = comp.competitors?.[0];
-            const p2 = comp.competitors?.[1];
-            if (!p1 || !p2) return null;
-            const isP1 = p1.id === String(teamId) || p1.athlete?.id === String(teamId);
-            const us   = isP1 ? p1 : p2;
-            const them = isP1 ? p2 : p1;
-            const isWinner = us.winner === true;
-            return {
-              opponent: them.athlete?.displayName ?? them.team?.displayName ?? 'Opponent',
-              result: isWinner ? 'W' : 'L',
-              goalsFor:     parseInt(us.score   ?? '0'),
-              goalsAgainst: parseInt(them.score ?? '0'),
-              date:   ev.date ?? new Date().toISOString(),
-              isHome: true,
-            } as FormMatch;
-          }).filter(Boolean) as FormMatch[];
+          const homeId   = parseInt(home.team?.id ?? '0');
+          const awayId   = parseInt(away.team?.id ?? '0');
+          const homeName = (home.team?.displayName ?? '').toLowerCase();
+          const awayName = (away.team?.displayName ?? '').toLowerCase();
+          const searchName = teamName.toLowerCase();
 
-          if (form.length >= 2) {
-            const wins = form.filter(f => f.result === 'W').length;
-            return {
-              team: { id: teamId, name: teamName, shortName: teamName.split(' ').pop()?.slice(0, 3).toUpperCase() ?? 'PLY' },
-              form,
-              goalsScored:  parseFloat((wins / form.length * 2).toFixed(2)),
-              goalsConceded: parseFloat(((form.length - wins) / form.length * 2).toFixed(2)),
-              cleanSheets: 0, btts: 80, over25: 70,
-              homeRecord: { w: wins, d: 0, l: form.length - wins },
-              awayRecord:  { w: wins, d: 0, l: form.length - wins },
-            };
-          }
-          break;
+          const isHomeTeam = homeId === teamId || homeName === searchName || homeName.includes(searchName) || searchName.includes(homeName);
+          const isAwayTeam = awayId === teamId || awayName === searchName || awayName.includes(searchName) || searchName.includes(awayName);
+          if (!isHomeTeam && !isAwayTeam) continue;
+
+          if (seen.has(ev.id)) continue;
+          seen.add(ev.id);
+
+          const isHome    = isHomeTeam;
+          const us        = isHome ? home : away;
+          const them      = isHome ? away : home;
+          const ourScore  = Number(us.score)   || 0;
+          const theirScore = Number(them.score) || 0;
+          if (ourScore === 0 && theirScore === 0) continue;
+
+          form.push({
+            opponent:     them.team?.displayName ?? 'Opponent',
+            result:       ourScore > theirScore ? 'W' : ourScore < theirScore ? 'L' : 'D',
+            goalsFor:     ourScore,
+            goalsAgainst: theirScore,
+            date:         ev.date ?? new Date().toISOString(),
+            isHome,
+          });
         }
-      } catch { /* try next slug */ }
+      } catch { /* skip this day */ }
+    }
+
+    if (form.length >= 1) {
+      const avgFor     = form.reduce((s, f) => s + f.goalsFor,     0) / form.length;
+      const avgAgainst = form.reduce((s, f) => s + f.goalsAgainst, 0) / form.length;
+      const wins       = form.filter(f => f.result === 'W').length;
+      const homeGames  = form.filter(f => f.isHome);
+      const awayGames  = form.filter(f => !f.isHome);
+      return {
+        team: { id: teamId, name: teamName, shortName: sn(teamName) },
+        form,
+        goalsScored:   parseFloat(avgFor.toFixed(1)),
+        goalsConceded: parseFloat(avgAgainst.toFixed(1)),
+        cleanSheets: 0, btts: 95, over25: 100,
+        homeRecord: { w: homeGames.filter(f => f.result === 'W').length, d: 0, l: homeGames.filter(f => f.result === 'L').length },
+        awayRecord:  { w: awayGames.filter(f => f.result === 'W').length, d: 0, l: awayGames.filter(f => f.result === 'L').length },
+      };
     }
   }
 
-  // Fall back to mock stats
+  // ── TENNIS ──────────────────────────────────────────────────────────────────
+  if (sport === 'tennis') {
+    const form: FormMatch[] = [];
+    const seen = new Set<string>();
+    const tennisSlugs = ['tennis/atp-singles', 'tennis/wta-singles', 'tennis/atp', 'tennis/wta'];
+
+    for (let d = 1; d <= 21 && form.length < 5; d++) {
+      for (const slug of tennisSlugs) {
+        if (form.length >= 5) break;
+        try {
+          const json = await espnFetch(`/${slug}/scoreboard?dates=${espnDate(-d)}`);
+          const events: any[] = json?.events ?? [];
+
+          for (const ev of events) {
+            if (form.length >= 5) break;
+            const competitions: any[] = ev.competitions ?? [];
+
+            for (const comp of competitions) {
+              if (form.length >= 5) break;
+              if ((comp.status?.type?.state ?? ev.status?.type?.state) !== 'post') continue;
+              const p1 = comp.competitors?.[0];
+              const p2 = comp.competitors?.[1];
+              if (!p1 || !p2) continue;
+
+              const p1Id   = parseInt(p1.athlete?.id ?? p1.id ?? '0');
+              const p2Id   = parseInt(p2.athlete?.id ?? p2.id ?? '0');
+              const p1Name = (p1.athlete?.displayName ?? '').toLowerCase();
+              const p2Name = (p2.athlete?.displayName ?? '').toLowerCase();
+
+              const isP1 = p1Id === teamId || p1Name.includes(lastName) || teamName.toLowerCase().includes(p1Name.split(' ').pop() ?? '');
+              const isP2 = p2Id === teamId || p2Name.includes(lastName) || teamName.toLowerCase().includes(p2Name.split(' ').pop() ?? '');
+              if (!isP1 && !isP2) continue;
+
+              const key = `${comp.id ?? ev.id}-${p1Name}-${p2Name}`;
+              if (seen.has(key)) continue;
+              seen.add(key);
+
+              const us   = isP1 ? p1 : p2;
+              const them = isP1 ? p2 : p1;
+              form.push({
+                opponent:     them.athlete?.displayName ?? 'Opponent',
+                result:       us.winner === true ? 'W' : 'L',
+                goalsFor:     Number(us.score)   || 0,
+                goalsAgainst: Number(them.score) || 0,
+                date:         comp.date ?? ev.date ?? new Date().toISOString(),
+                isHome:       true,
+              });
+            }
+          }
+        } catch { /* skip */ }
+      }
+    }
+
+    if (form.length >= 1) {
+      const wins = form.filter(f => f.result === 'W').length;
+      return {
+        team: { id: teamId, name: teamName, shortName: teamName.split(' ').pop()?.slice(0, 3).toUpperCase() ?? 'PLY' },
+        form,
+        goalsScored:   parseFloat((wins / form.length * 2).toFixed(2)),
+        goalsConceded: parseFloat(((form.length - wins) / form.length * 2).toFixed(2)),
+        cleanSheets: 0, btts: 80, over25: 70,
+        homeRecord: { w: wins, d: 0, l: form.length - wins },
+        awayRecord:  { w: wins, d: 0, l: form.length - wins },
+      };
+    }
+  }
+
+  // Absolute last resort — only if ESPN returns zero data for all past 21 days
   return getMockStatsBySport(teamId, teamName, sport);
 }
 
@@ -1120,12 +1165,51 @@ function getMockTeamStats(teamId: number): TeamStats {
 }
 
 export function getMockStatsBySport(teamId: number, teamName: string, sport: string): TeamStats {
-  const shortName = teamName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 3);
-  const results: FormMatch['result'][] = ['W','W','L','W','W'];
-  const opponents: string[] = sport === 'tennis' ? ['Medvedev','Zverev','Rublev','Fritz','Tsitsipas'] : sport === 'basketball' ? ['Lakers','Celtics','Heat','Nuggets','Bucks'] : sport === 'f1' ? ['Verstappen','Hamilton','Leclerc','Norris','Sainz'] : ['Opponent A','Opponent B','Opponent C','Opponent D','Opponent E'];
+  const shortName = (teamName || 'TEM').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 3) || 'TEM';
+  // Vary form pattern by teamId
+  const formPatterns: FormMatch['result'][][] = [
+    ['W','W','L','W','W'],
+    ['W','L','W','W','D'],
+    ['D','W','W','L','W'],
+    ['L','W','W','D','W'],
+  ];
+  const results = formPatterns[teamId % formPatterns.length];
+  const opponents: string[] = sport === 'tennis'
+    ? ['Medvedev','Zverev','Rublev','Fritz','Tsitsipas']
+    : sport === 'basketball'
+    ? ['Lakers','Celtics','Heat','Nuggets','Bucks']
+    : sport === 'f1'
+    ? ['Verstappen','Hamilton','Leclerc','Norris','Sainz']
+    : ['Opponent A','Opponent B','Opponent C','Opponent D','Opponent E'];
   const now = Date.now();
-  const form: FormMatch[] = results.map((result, i) => ({ opponent: opponents[i] ?? 'Opponent', result, goalsFor: result === 'W' ? 2 : 1, goalsAgainst: result === 'L' ? 2 : 1, date: new Date(now - (i + 1) * 7 * 86400000).toISOString(), isHome: i % 2 === 0 }));
-  const scored   = sport === 'basketball' ? 108 : 1.8;
-  const conceded = sport === 'basketball' ? 102 : 1.2;
-  return { team: { id: teamId, name: teamName, shortName }, form, goalsScored: scored, goalsConceded: conceded, cleanSheets: 5, btts: 50, over25: 55, possession: undefined, shotsOnTarget: undefined, homeRecord: { w: 8, d: 0, l: 2 }, awayRecord: { w: 6, d: 0, l: 4 } };
+  // Sport-appropriate scores
+  const form: FormMatch[] = results.map((result, i) => {
+    let goalsFor: number, goalsAgainst: number;
+    if (sport === 'basketball') {
+      const base = 100 + (teamId % 12);
+      goalsFor     = result === 'W' ? base + 8 + (i % 5) : base - 4 + (i % 3);
+      goalsAgainst = result === 'L' ? base + 8 + (i % 4) : base - 5 + (i % 4);
+    } else {
+      goalsFor     = result === 'W' ? 2 : result === 'D' ? 1 : 0;
+      goalsAgainst = result === 'L' ? 2 : result === 'D' ? 1 : 0;
+    }
+    return { opponent: opponents[i] ?? 'Opponent', result, goalsFor, goalsAgainst, date: new Date(now - (i + 1) * 7 * 86400000).toISOString(), isHome: i % 2 === 0 };
+  });
+  const wins = results.filter(r => r === 'W').length;
+  const scored   = sport === 'basketball'
+    ? parseFloat((form.reduce((s, f) => s + f.goalsFor,     0) / form.length).toFixed(1))
+    : 1.4 + (wins / results.length) * 0.9;
+  const conceded = sport === 'basketball'
+    ? parseFloat((form.reduce((s, f) => s + f.goalsAgainst, 0) / form.length).toFixed(1))
+    : 1.8 - (wins / results.length) * 0.7;
+  return {
+    team: { id: teamId, name: teamName, shortName }, form,
+    goalsScored: scored, goalsConceded: conceded,
+    cleanSheets: sport === 'basketball' ? 0 : wins,
+    btts: sport === 'basketball' ? 95 : 45 + teamId % 20,
+    over25: sport === 'basketball' ? 100 : 48 + teamId % 25,
+    possession: undefined, shotsOnTarget: undefined,
+    homeRecord: { w: wins + 1, d: sport === 'basketball' ? 0 : 1, l: Math.max(0, results.length - wins - 1) },
+    awayRecord:  { w: Math.max(0, wins - 1), d: sport === 'basketball' ? 0 : 1, l: Math.min(results.length, results.length - wins + 1) },
+  };
 }
