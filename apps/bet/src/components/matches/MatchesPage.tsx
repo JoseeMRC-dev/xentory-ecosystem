@@ -286,12 +286,12 @@ export function MatchesPage() {
   const dayAfterStr = getDateStr(2);
 
   const getDayDisplayLabel = (dateStr: string): string => {
-    if (dateStr === todayStr)    return lang === 'es' ? 'HOY'            : 'TODAY';
-    if (dateStr === tomorrowStr) return lang === 'es' ? 'MAÑANA'         : 'TOMORROW';
-    if (dateStr === dayAfterStr) return lang === 'es' ? 'PASADO MAÑANA'  : 'DAY AFTER';
-    if (dateStr < todayStr)      return lang === 'es' ? 'ANTERIORES'     : 'PREVIOUS';
+    if (dateStr === todayStr)    return lang === 'es' ? 'HOY'         : 'TODAY';
+    if (dateStr === tomorrowStr) return lang === 'es' ? 'MAÑANA'      : 'TOMORROW';
+    if (dateStr < todayStr)      return lang === 'es' ? 'ANTERIORES'  : 'PREVIOUS';
     const d = new Date(dateStr + 'T12:00:00');
-    return d.toLocaleDateString(locale, { weekday: 'long', day: '2-digit', month: 'short' });
+    // Just the weekday name: LUNES, MARTES, MIÉRCOLES…
+    return d.toLocaleDateString(locale, { weekday: 'long' }).toUpperCase();
   };
 
   // Fetch when sport changes
@@ -672,9 +672,9 @@ export function MatchesPage() {
                 {/* Day header */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem', paddingBottom: '0.6rem', borderBottom: `2px solid ${dayKey === todayStr ? 'rgba(201,168,76,0.35)' : dayKey === tomorrowStr ? 'rgba(0,212,255,0.25)' : 'var(--border)'}` }}>
                   <span style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1rem', color: dayColor, letterSpacing: '0.04em' }}>{dayLabel}</span>
-                  {dayKey !== todayStr && (
+                  {dayKey !== 'ANTERIORES' && (
                     <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>
-                      · {new Date(dayKey + 'T12:00:00').toLocaleDateString(locale, { weekday: 'long', day: '2-digit', month: 'short' })}
+                      · {new Date(dayKey + 'T12:00:00').toLocaleDateString(locale, { day: '2-digit', month: 'short' })}
                     </span>
                   )}
                   <span style={{ fontSize: '0.72rem', color: 'var(--muted)', marginLeft: '0.2rem' }}>
