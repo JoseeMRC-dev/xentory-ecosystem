@@ -1126,13 +1126,99 @@ export async function getApiStatus() {
   return { remaining: json.response?.requests?.current ?? 0, limit: json.response?.requests?.limit_day ?? 100 };
 }
 
-export async function fetchTeamStats(teamId: number, leagueId: number): Promise<TeamStats | null> {
+/**
+ * Scans the ESPN football scoreboard backward up to 21 days to find real
+ * completed games for the given team. Used when the api-sports proxy fails.
+ */
+async function fetchFootballFormFromEspn(
+  teamId: number, teamName: string, leagueId: number
+): Promise<FormMatch[]> {
+  const form: FormMatch[] = [];
+  const seen = new Set<string>();
+
+  // Build slug list: team's own league first, then others as fallback
+  const ownSlug = FOOTBALL_LEAGUES.find(l => l.id === leagueId)?.slug ?? '';
+  const slugs = [
+    ...(ownSlug ? [ownSlug] : []),
+    ...FOOTBALL_LEAGUES.filter(l => l.id !== leagueId).map(l => l.slug),
+  ];
+
+  for (const slug of slugs) {
+    if (form.length >= 5) break;
+    for (let d = 1; d <= 21 && form.length < 5; d++) {
+      try {
+        const json = await espnFetch(`/${slug}/scoreboard?dates=${espnDate(-d)}`);
+        const events: any[] = json?.events ?? [];
+        for (const ev of events) {
+          if (form.length >= 5) break;
+          const state = ev.status?.type?.state ?? ev.competitions?.[0]?.status?.type?.state;
+          if (state !== 'post') continue;
+          const comp = ev.competitions?.[0];
+          const home = comp?.competitors?.find((c: any) => c.homeAway === 'home');
+          const away = comp?.competitors?.find((c: any) => c.homeAway === 'away');
+          if (!home || !away) continue;
+          const homeEspnId = parseInt(home.team?.id ?? '0');
+          const awayEspnId = parseInt(away.team?.id ?? '0');
+          const isHomeTeam = (homeEspnId > 0 && homeEspnId === teamId) || teamNameMatch(home.team?.displayName, teamName);
+          const isAwayTeam = (awayEspnId > 0 && awayEspnId === teamId) || teamNameMatch(away.team?.displayName, teamName);
+          if (!isHomeTeam && !isAwayTeam) continue;
+          if (seen.has(ev.id)) continue;
+          seen.add(ev.id);
+          const isHome     = isHomeTeam;
+          const us         = isHome ? home : away;
+          const them       = isHome ? away : home;
+          const ourScore   = Number(us.score)   || 0;
+          const theirScore = Number(them.score) || 0;
+          if (ourScore === 0 && theirScore === 0) continue;
+          form.push({
+            opponent:     them.team?.displayName ?? 'Opponent',
+            result:       ourScore > theirScore ? 'W' : ourScore < theirScore ? 'L' : 'D',
+            goalsFor:     ourScore,
+            goalsAgainst: theirScore,
+            date:         ev.date ?? new Date().toISOString(),
+            isHome,
+          });
+        }
+      } catch { /* skip day */ }
+    }
+    if (form.length > 0) break; // found games in this league — stop
+  }
+  return form;
+}
+
+export async function fetchTeamStats(teamId: number, teamName: string, leagueId: number): Promise<TeamStats | null> {
   const [statsJson, formJson] = await Promise.all([
     proxyFetch('football', `/teams/statistics?team=${teamId}&league=${leagueId}&season=${SEASON}`),
     proxyFetch('football', `/fixtures?team=${teamId}&league=${leagueId}&season=${SEASON}&last=5`),
   ]);
-  if (!statsJson) return getMockTeamStats(teamId);
-  return mapApiStatsToTeamStats(statsJson.response, formJson?.response ?? [], teamId);
+  // Primary: api-sports proxy returned stats
+  if (statsJson) {
+    return mapApiStatsToTeamStats(statsJson.response, formJson?.response ?? [], teamId);
+  }
+
+  // Secondary: proxy failed — try ESPN football scoreboard for real recent form
+  const espnForm = await fetchFootballFormFromEspn(teamId, teamName, leagueId);
+  if (espnForm.length >= 1) {
+    const scored   = espnForm.reduce((s, f) => s + f.goalsFor,     0) / espnForm.length;
+    const conceded = espnForm.reduce((s, f) => s + f.goalsAgainst, 0) / espnForm.length;
+    const sn       = teamName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 3) || 'TEM';
+    const fs       = computeFormStats(espnForm, 'football');
+    const hG       = espnForm.filter(f => f.isHome);
+    const aG       = espnForm.filter(f => !f.isHome);
+    return {
+      team: { id: teamId, name: teamName, shortName: sn },
+      form: espnForm,
+      goalsScored:   parseFloat(scored.toFixed(2)),
+      goalsConceded: parseFloat(conceded.toFixed(2)),
+      cleanSheets: fs.cleanSheets, btts: fs.btts, over25: fs.over25,
+      possession: undefined, shotsOnTarget: undefined,
+      homeRecord: { w: hG.filter(f => f.result === 'W').length, d: hG.filter(f => f.result === 'D').length, l: hG.filter(f => f.result === 'L').length },
+      awayRecord:  { w: aG.filter(f => f.result === 'W').length, d: aG.filter(f => f.result === 'D').length, l: aG.filter(f => f.result === 'L').length },
+    };
+  }
+
+  // Last resort — no data from any source
+  return getMockStatsBySport(teamId, teamName, 'football');
 }
 
 export async function fetchH2H(team1Id: number, team2Id: number): Promise<Match[]> {

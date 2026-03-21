@@ -150,8 +150,8 @@ export function MatchAnalysisPage() {
       let homeStats, awayStats;
       if (match.sport === 'football') {
         [homeStats, awayStats] = await Promise.all([
-          fetchTeamStats(match.homeTeam.id, match.competition.id),
-          fetchTeamStats(match.awayTeam.id, match.competition.id),
+          fetchTeamStats(match.homeTeam.id, match.homeTeam.name, match.competition.id),
+          fetchTeamStats(match.awayTeam.id, match.awayTeam.name, match.competition.id),
         ]);
       } else {
         [homeStats, awayStats] = await Promise.all([
