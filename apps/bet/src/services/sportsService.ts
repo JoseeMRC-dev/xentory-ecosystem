@@ -783,7 +783,7 @@ export async function fetchGolfMatches(): Promise<Match[]> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// NON-FOOTBALL STATS — scan ESPN scoreboard by date (same source as match list)
+// NON-FOOTBALL STATS — real per-team data from ESPN schedule/eventlog endpoints
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -799,14 +799,81 @@ function teamNameMatch(espnName: string, searchName: string): boolean {
   const b = clean(searchName);
   if (!a || !b) return false;
   if (a === b) return true;
-  // Containment with minimum-length guard
   if (a.length >= 4 && b.includes(a)) return true;
   if (b.length >= 4 && a.includes(b)) return true;
-  // Last significant word (e.g. "Lakers" links "Los Angeles Lakers" ↔ "LA Lakers")
   const sigLast = (s: string) => s.split(' ').filter(w => w.length >= 4).pop() ?? '';
   const aLast = sigLast(a);
   const bLast = sigLast(b);
   return !!aLast && !!bLast && aLast === bLast;
+}
+
+/**
+ * Resolves the real ESPN team/athlete ID by searching the ESPN roster.
+ * Returns 0 if not found.
+ */
+async function resolveEspnId(name: string, sport: string): Promise<number> {
+  try {
+    if (sport === 'basketball') {
+      const json = await espnFetch('/basketball/nba/teams?limit=100');
+      const teams: any[] = json?.sports?.[0]?.leagues?.[0]?.teams ?? [];
+      for (const t of teams) {
+        const team = t.team ?? t;
+        if (
+          teamNameMatch(team.displayName, name) ||
+          teamNameMatch(team.shortDisplayName, name) ||
+          teamNameMatch(team.name, name)
+        ) return parseInt(team.id ?? '0');
+      }
+    }
+    if (sport === 'tennis') {
+      for (const slug of ['tennis/atp-singles', 'tennis/wta-singles']) {
+        const json = await espnFetch(`/${slug}/athletes?limit=300`);
+        const athletes: any[] = json?.athletes ?? [];
+        for (const a of athletes) {
+          if (teamNameMatch(a.displayName, name) || teamNameMatch(a.shortName, name))
+            return parseInt(a.id ?? '0');
+        }
+      }
+    }
+  } catch { /* */ }
+  return 0;
+}
+
+/** Extract FormMatch entries from an NBA team schedule response. */
+function extractBasketballForm(events: any[], espnTeamId: number): FormMatch[] {
+  const form: FormMatch[] = [];
+  // Sort descending by date, take last 5 completed
+  const completed = [...events]
+    .filter((ev: any) => {
+      const state = ev.status?.type?.state ?? ev.competitions?.[0]?.status?.type?.state;
+      return state === 'post';
+    })
+    .sort((a: any, b: any) => new Date(b.date ?? 0).getTime() - new Date(a.date ?? 0).getTime())
+    .slice(0, 5);
+
+  for (const ev of completed) {
+    const comp = ev.competitions?.[0];
+    if (!comp) continue;
+    const home = comp.competitors?.find((c: any) => c.homeAway === 'home');
+    const away = comp.competitors?.find((c: any) => c.homeAway === 'away');
+    if (!home || !away) continue;
+    const homeId  = parseInt(home.team?.id ?? '0');
+    const isHome  = homeId === espnTeamId;
+    const us      = isHome ? home : away;
+    const them    = isHome ? away : home;
+    const ourScore   = Number(us.score)   || 0;
+    const theirScore = Number(them.score) || 0;
+    if (ourScore === 0 && theirScore === 0) continue;
+    form.push({
+      opponent:     them.team?.displayName ?? 'Opponent',
+      result:       ourScore > theirScore ? 'W' : ourScore < theirScore ? 'L' : 'D',
+      goalsFor:     ourScore,
+      goalsAgainst: theirScore,
+      date:         ev.date ?? comp.date ?? new Date().toISOString(),
+      isHome,
+    });
+  }
+  return form;
 }
 
 export async function fetchNonFootballStats(
@@ -819,53 +886,66 @@ export async function fetchNonFootballStats(
 
   // ── BASKETBALL ──────────────────────────────────────────────────────────────
   if (sport === 'basketball') {
-    const form: FormMatch[] = [];
-    const seen = new Set<string>();
+    let form: FormMatch[] = [];
 
-    for (let d = 1; d <= 21 && form.length < 5; d++) {
-      try {
-        const json = await espnFetch(`/basketball/nba/scoreboard?dates=${espnDate(-d)}`);
-        const events: any[] = json?.events ?? [];
+    // Strategy 1: Direct schedule endpoint with the given teamId
+    try {
+      const json = await espnFetch(`/basketball/nba/teams/${teamId}/schedule`);
+      const events: any[] = json?.events ?? [];
+      if (events.length > 0) form = extractBasketballForm(events, teamId);
+    } catch { /* */ }
 
-        for (const ev of events) {
-          if (form.length >= 5) break;
-          // Accept completed games (check both the event-level and competition-level status)
-          const state = ev.status?.type?.state ?? ev.competitions?.[0]?.status?.type?.state;
-          if (state !== 'post') continue;
+    // Strategy 2: Resolve real ESPN team ID by name, then fetch schedule
+    if (form.length === 0) {
+      const espnId = await resolveEspnId(teamName, 'basketball');
+      if (espnId > 0) {
+        try {
+          const json = await espnFetch(`/basketball/nba/teams/${espnId}/schedule`);
+          const events: any[] = json?.events ?? [];
+          if (events.length > 0) form = extractBasketballForm(events, espnId);
+        } catch { /* */ }
+      }
+    }
 
-          const comp = ev.competitions?.[0];
-          const home = comp?.competitors?.find((c: any) => c.homeAway === 'home');
-          const away = comp?.competitors?.find((c: any) => c.homeAway === 'away');
-          if (!home || !away) continue;
-
-          const homeId = parseInt(home.team?.id ?? '0');
-          const awayId = parseInt(away.team?.id ?? '0');
-
-          // Match by ESPN ID (reliable for real matches) OR by safe name comparison
-          const isHomeTeam = (homeId > 0 && homeId === teamId) || teamNameMatch(home.team?.displayName, teamName);
-          const isAwayTeam = (awayId > 0 && awayId === teamId) || teamNameMatch(away.team?.displayName, teamName);
-          if (!isHomeTeam && !isAwayTeam) continue;
-
-          if (seen.has(ev.id)) continue;
-          seen.add(ev.id);
-
-          const isHome     = isHomeTeam;
-          const us         = isHome ? home : away;
-          const them       = isHome ? away : home;
-          const ourScore   = Number(us.score)   || 0;
-          const theirScore = Number(them.score) || 0;
-          if (ourScore === 0 && theirScore === 0) continue;
-
-          form.push({
-            opponent:     them.team?.displayName ?? 'Opponent',
-            result:       ourScore > theirScore ? 'W' : ourScore < theirScore ? 'L' : 'D',
-            goalsFor:     ourScore,
-            goalsAgainst: theirScore,
-            date:         ev.date ?? new Date().toISOString(),
-            isHome,
-          });
-        }
-      } catch { /* skip this day */ }
+    // Strategy 3: Scoreboard day-by-day scan (backward up to 14 days)
+    if (form.length === 0) {
+      const seen = new Set<string>();
+      for (let d = 1; d <= 14 && form.length < 5; d++) {
+        try {
+          const json = await espnFetch(`/basketball/nba/scoreboard?dates=${espnDate(-d)}`);
+          const events: any[] = json?.events ?? [];
+          for (const ev of events) {
+            if (form.length >= 5) break;
+            const state = ev.status?.type?.state ?? ev.competitions?.[0]?.status?.type?.state;
+            if (state !== 'post') continue;
+            const comp = ev.competitions?.[0];
+            const home = comp?.competitors?.find((c: any) => c.homeAway === 'home');
+            const away = comp?.competitors?.find((c: any) => c.homeAway === 'away');
+            if (!home || !away) continue;
+            const homeEspnId = parseInt(home.team?.id ?? '0');
+            const awayEspnId = parseInt(away.team?.id ?? '0');
+            const isHomeTeam = (homeEspnId > 0 && homeEspnId === teamId) || teamNameMatch(home.team?.displayName, teamName);
+            const isAwayTeam = (awayEspnId > 0 && awayEspnId === teamId) || teamNameMatch(away.team?.displayName, teamName);
+            if (!isHomeTeam && !isAwayTeam) continue;
+            if (seen.has(ev.id)) continue;
+            seen.add(ev.id);
+            const isHome     = isHomeTeam;
+            const us         = isHome ? home : away;
+            const them       = isHome ? away : home;
+            const ourScore   = Number(us.score)   || 0;
+            const theirScore = Number(them.score) || 0;
+            if (ourScore === 0 && theirScore === 0) continue;
+            form.push({
+              opponent:     them.team?.displayName ?? 'Opponent',
+              result:       ourScore > theirScore ? 'W' : ourScore < theirScore ? 'L' : 'D',
+              goalsFor:     ourScore,
+              goalsAgainst: theirScore,
+              date:         ev.date ?? new Date().toISOString(),
+              isHome,
+            });
+          }
+        } catch { /* skip day */ }
+      }
     }
 
     if (form.length >= 1) {
@@ -890,44 +970,36 @@ export async function fetchNonFootballStats(
   if (sport === 'tennis') {
     const form: FormMatch[] = [];
     const seen = new Set<string>();
-    const tennisSlugs = ['tennis/atp-singles', 'tennis/wta-singles', 'tennis/atp', 'tennis/wta'];
+    const tennisSlugs = ['tennis/atp-singles', 'tennis/wta-singles'];
 
-    for (let d = 1; d <= 21 && form.length < 5; d++) {
+    // Strategy 1: Resolve athlete ID and fetch their event log
+    const espnAthleteId = teamId > 0 && teamId < 100000
+      ? teamId
+      : await resolveEspnId(teamName, 'tennis');
+
+    if (espnAthleteId > 0) {
       for (const slug of tennisSlugs) {
         if (form.length >= 5) break;
         try {
-          const json = await espnFetch(`/${slug}/scoreboard?dates=${espnDate(-d)}`);
-          const events: any[] = json?.events ?? [];
-
-          for (const ev of events) {
+          const json = await espnFetch(`/${slug}/athletes/${espnAthleteId}/eventlog`);
+          const events: any[] = json?.events?.previous ?? json?.events ?? [];
+          for (const ev of [...events].reverse()) {
             if (form.length >= 5) break;
-            const competitions: any[] = ev.competitions ?? [];
-
+            const competitions: any[] = ev.competitions ?? [ev];
             for (const comp of competitions) {
               if (form.length >= 5) break;
               const state = comp.status?.type?.state ?? ev.status?.type?.state;
               if (state !== 'post') continue;
-
               const p1 = comp.competitors?.[0];
               const p2 = comp.competitors?.[1];
               if (!p1 || !p2) continue;
-
               const p1Id = parseInt(p1.athlete?.id ?? p1.id ?? '0');
-              const p2Id = parseInt(p2.athlete?.id ?? p2.id ?? '0');
-              const p1DisplayName = p1.athlete?.displayName ?? '';
-              const p2DisplayName = p2.athlete?.displayName ?? '';
-
-              // Match by ESPN athlete ID (most reliable) or safe name comparison
-              const isP1 = (p1Id > 0 && p1Id === teamId) || teamNameMatch(p1DisplayName, teamName);
-              const isP2 = (p2Id > 0 && p2Id === teamId) || teamNameMatch(p2DisplayName, teamName);
-              if (!isP1 && !isP2) continue;
-
-              const key = `${ev.id ?? ''}-${p1DisplayName}-${p2DisplayName}`;
-              if (seen.has(key)) continue;
-              seen.add(key);
-
+              const isP1 = p1Id === espnAthleteId || teamNameMatch(p1.athlete?.displayName ?? '', teamName);
               const us   = isP1 ? p1 : p2;
               const them = isP1 ? p2 : p1;
+              const key  = `${ev.id ?? ''}-${them.athlete?.displayName}`;
+              if (seen.has(key)) continue;
+              seen.add(key);
               form.push({
                 opponent:     them.athlete?.displayName ?? 'Opponent',
                 result:       us.winner === true ? 'W' : 'L',
@@ -938,7 +1010,52 @@ export async function fetchNonFootballStats(
               });
             }
           }
-        } catch { /* skip */ }
+        } catch { /* try next slug */ }
+      }
+    }
+
+    // Strategy 2: Scoreboard day-by-day scan across all tennis slugs
+    if (form.length === 0) {
+      const allSlugs = ['tennis/atp-singles', 'tennis/wta-singles', 'tennis/atp', 'tennis/wta'];
+      for (let d = 1; d <= 21 && form.length < 5; d++) {
+        for (const slug of allSlugs) {
+          if (form.length >= 5) break;
+          try {
+            const json = await espnFetch(`/${slug}/scoreboard?dates=${espnDate(-d)}`);
+            const events: any[] = json?.events ?? [];
+            for (const ev of events) {
+              if (form.length >= 5) break;
+              for (const comp of (ev.competitions ?? [])) {
+                if (form.length >= 5) break;
+                const state = comp.status?.type?.state ?? ev.status?.type?.state;
+                if (state !== 'post') continue;
+                const p1 = comp.competitors?.[0];
+                const p2 = comp.competitors?.[1];
+                if (!p1 || !p2) continue;
+                const p1Id = parseInt(p1.athlete?.id ?? p1.id ?? '0');
+                const p2Id = parseInt(p2.athlete?.id ?? p2.id ?? '0');
+                const p1Name = p1.athlete?.displayName ?? '';
+                const p2Name = p2.athlete?.displayName ?? '';
+                const isP1 = (p1Id > 0 && p1Id === teamId) || teamNameMatch(p1Name, teamName);
+                const isP2 = (p2Id > 0 && p2Id === teamId) || teamNameMatch(p2Name, teamName);
+                if (!isP1 && !isP2) continue;
+                const key = `${ev.id ?? ''}-${p1Name}-${p2Name}`;
+                if (seen.has(key)) continue;
+                seen.add(key);
+                const us   = isP1 ? p1 : p2;
+                const them = isP1 ? p2 : p1;
+                form.push({
+                  opponent:     them.athlete?.displayName ?? 'Opponent',
+                  result:       us.winner === true ? 'W' : 'L',
+                  goalsFor:     Number(us.score)   || 0,
+                  goalsAgainst: Number(them.score) || 0,
+                  date:         comp.date ?? ev.date ?? new Date().toISOString(),
+                  isHome:       true,
+                });
+              }
+            }
+          } catch { /* skip */ }
+        }
       }
     }
 
@@ -956,7 +1073,7 @@ export async function fetchNonFootballStats(
     }
   }
 
-  // Absolute last resort — ESPN returned zero data for all past 21 days
+  // Absolute last resort — all ESPN strategies returned zero data
   return getMockStatsBySport(teamId, teamName, sport);
 }
 
