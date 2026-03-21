@@ -59,8 +59,15 @@ function AppRoutes() {
   );
 }
 
+function hasSession(): boolean {
+  try {
+    return !!(localStorage.getItem('xentory_bet_user') || sessionStorage.getItem('xentory_bet_session'));
+  } catch { return false; }
+}
+
 export default function App() {
-  const [appReady, setAppReady] = useState(false);
+  // Skip the intro loading screen if the user already has a cached session
+  const [appReady, setAppReady] = useState(hasSession);
 
   return (
     <ThemeProvider>

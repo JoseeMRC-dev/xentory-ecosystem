@@ -82,6 +82,12 @@ export function TurnstileWidget({
   useEffect(() => { onExpireRef.current  = onExpire;  }, [onExpire]);
   useEffect(() => { onErrorRef.current   = onError;   }, [onError]);
 
+  const resetWidget = useCallback(() => {
+    if (widgetIdRef.current && window.turnstile) {
+      try { window.turnstile.reset(widgetIdRef.current); } catch { /**/ }
+    }
+  }, []);
+
   useEffect(() => {
     injectScript();
 
@@ -94,8 +100,15 @@ export function TurnstileWidget({
       widgetIdRef.current = window.turnstile.render(containerRef.current, {
         sitekey:             SITE_KEY,
         callback:            (token) => onVerifyRef.current(token),
-        'error-callback':    () => onErrorRef.current?.(),
-        'expired-callback':  () => onExpireRef.current?.(),
+        'error-callback':    () => {
+          onErrorRef.current?.();
+          // Auto-reset after a short delay so user can retry
+          setTimeout(resetWidget, 1500);
+        },
+        'expired-callback':  () => {
+          onExpireRef.current?.();
+          resetWidget();
+        },
         theme,
         size: compact ? 'compact' : 'normal',
       });
@@ -131,10 +144,13 @@ export function TurnstileWidget({
 
 /** Hook: manages captcha token state in a parent component */
 export function useCaptcha() {
-  const [token, setToken] = useState('');
-  const onVerify  = useCallback((t: string) => setToken(t), []);
-  const onExpire  = useCallback(() => setToken(''), []);
-  const onError   = useCallback(() => setToken(''), []);
-  const reset     = useCallback(() => setToken(''), []);
-  return { token, isVerified: token.length > 0, onVerify, onExpire, onError, reset };
+  const [token,    setToken]    = useState('');
+  const [resetKey, setResetKey] = useState(0);
+  const onVerify = useCallback((t: string) => setToken(t), []);
+  const onExpire = useCallback(() => setToken(''), []);
+  const onError  = useCallback(() => setToken(''), []);
+  // reset() clears the token AND increments resetKey so the caller can
+  // pass it as `key` to <TurnstileWidget> — forcing a full remount.
+  const reset    = useCallback(() => { setToken(''); setResetKey(k => k + 1); }, []);
+  return { token, isVerified: token.length > 0, onVerify, onExpire, onError, reset, resetKey };
 }

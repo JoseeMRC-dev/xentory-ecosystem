@@ -122,7 +122,7 @@ function PlatformCard({
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
         {[
           { label: t('nav.dashboard'), value: isPaid ? t('pricing.active').replace('✓ ', '') : t('pricing.free.label'), vColor: isPaid ? 'var(--green)' : 'var(--muted)' },
-          { label: 'Telegram',         value: isPaid ? t('pricing.active').replace('✓ ', '') : t('pricing.free.sub'), vColor: isPaid ? 'var(--cyan)' : 'var(--muted)' },
+          { label: 'Telegram',         value: isPaid ? t('pricing.active').replace('✓ ', '') : (lang === 'es' ? 'No incluido' : 'Not included'), vColor: isPaid ? 'var(--cyan)' : 'var(--muted)' },
         ].map(s => (
           <div key={s.label} style={{ flex: 1, minWidth: 76, padding: '0.45rem 0.6rem', background: 'var(--card2)', borderRadius: 8, textAlign: 'center' }}>
             <div style={{ fontSize: '0.57rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.18rem' }}>{s.label}</div>
@@ -134,7 +134,7 @@ function PlatformCard({
       {/* Buttons */}
       <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>
         <button onClick={onLaunch} className="btn btn-outline btn-sm" style={{ flex: 1, justifyContent: 'center', borderColor: `${color}35`, color, gap: '0.4rem' }}>
-          {t('dash.market.btn').replace('Xentory Market', '').replace('Xentory Bet', '').replace('Open ', '').replace('Abrir ', '')} <ArrowIcon />
+          {lang === 'es' ? 'Acceder' : 'Open'} <ArrowIcon />
         </button>
         {!isPaid && (
           <button onClick={onUpgrade} className="btn btn-gold btn-sm" style={{ flex: 1, justifyContent: 'center', gap: '0.3rem' }}>

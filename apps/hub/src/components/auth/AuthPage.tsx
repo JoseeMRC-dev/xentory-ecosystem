@@ -372,6 +372,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
         {/* CAPTCHA — shown for login and register */}
         {(tab === 'login' || tab === 'register') && (
           <TurnstileWidget
+            key={captcha.resetKey}
             onVerify={captcha.onVerify}
             onExpire={captcha.onExpire}
             onError={captcha.onError}
