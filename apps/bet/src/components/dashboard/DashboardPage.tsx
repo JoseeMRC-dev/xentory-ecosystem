@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { fetchUpcomingMatches, fetchBasketballMatches, fetchTennisMatches } from '../../services/sportsService';
 import { calculateGlobalAccuracy } from '../../services/globalAccuracy';
+import { getTelegramConnection } from '../../services/alertService';
 import { SPORT_CONFIG, confidenceColor } from '../../constants';
 import { useLang } from '../../context/LanguageContext';
 import type { Match } from '../../types';
@@ -56,6 +57,7 @@ export function DashboardPage() {
   const [upcomingMatches, setUpcomingMatches] = useState<Match[] | null>(null);
   const [todayPicks, setTodayPicks] = useState<DayPick[]>([]);
   const [weeklyAcc, setWeeklyAcc] = useState<number | null>(null);
+  const [tgLinked, setTgLinked] = useState<boolean | null>(null); // null = loading
 
   useEffect(() => {
     let cancelled = false;
@@ -96,6 +98,12 @@ export function DashboardPage() {
       if (!cancelled && r.percent !== null) setWeeklyAcc(r.percent);
     });
 
+    if (user?.id) {
+      getTelegramConnection(user.id, 'bet').then(conn => {
+        if (!cancelled) setTgLinked(conn !== null);
+      });
+    }
+
     return () => { cancelled = true; };
   }, [lang]);
 
@@ -120,7 +128,38 @@ export function DashboardPage() {
         <StatCard icon="🎯" value={String(todayPicks.length || '—')} label={t('Picks del día', "Today's picks")} color="var(--gold)" />
         <StatCard icon="" value={weeklyAcc !== null ? `${weeklyAcc}%` : '—'} label={t('Acierto semanal', 'Weekly accuracy')} color="var(--green)" />
         <StatCard icon="" value="5" label={t('Deportes activos', 'Active sports')} color="var(--cyan)" />
-        <StatCard icon="✈️" value={user?.plan !== 'free' ? t('Activo', 'Active') : t('Inactivo', 'Inactive')} label={t('Canal Telegram', 'Telegram channel')} color={user?.plan !== 'free' ? 'var(--green)' : 'var(--muted)'} />
+        {/* Telegram card — reflects real connection state */}
+        <div
+          className="glass"
+          onClick={() => navigate(user?.plan === 'free' ? '/plans' : '/telegram')}
+          style={{ borderRadius: 14, padding: '1.4rem', position: 'relative', overflow: 'hidden', cursor: 'pointer', transition: 'border-color 0.2s' }}
+          onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--border2)')}
+          onMouseLeave={e => (e.currentTarget.style.borderColor = '')}
+        >
+          <div style={{ position: 'absolute', top: '1rem', right: '1rem', fontSize: '1.4rem', opacity: 0.4 }}>✈️</div>
+          <div style={{ fontSize: '0.72rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.4rem' }}>{t('Canal Telegram', 'Telegram channel')}</div>
+          {user?.plan === 'free' ? (
+            // Free plan: prompt to upgrade
+            <>
+              <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.4rem', color: 'var(--muted)', letterSpacing: '-0.03em', marginBottom: '0.35rem' }}>{t('No incluido', 'Not included')}</div>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.72rem', color: 'var(--gold)', fontWeight: 600 }}>
+                💎 {t('Mejorar plan →', 'Upgrade plan →')}
+              </div>
+            </>
+          ) : tgLinked === null ? (
+            // Loading
+            <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '2rem', color: 'var(--muted)', letterSpacing: '-0.04em' }}>…</div>
+          ) : tgLinked ? (
+            // Linked
+            <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '2rem', color: 'var(--green)', letterSpacing: '-0.04em' }}>{t('Activo', 'Active')}</div>
+          ) : (
+            // Paid plan but not yet linked
+            <>
+              <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.6rem', color: 'var(--gold)', letterSpacing: '-0.04em', marginBottom: '0.3rem' }}>{t('Pendiente', 'Pending')}</div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>{t('Vincular →', 'Link →')}</div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Best bets of the day */}

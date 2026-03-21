@@ -784,8 +784,31 @@ export async function fetchGolfMatches(): Promise<Match[]> {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // NON-FOOTBALL STATS — scan ESPN scoreboard by date (same source as match list)
-// Matches by team ID and by name so it works for both real and mock-ID matches.
 // ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Safe team-name comparison.
+ * Strips punctuation, requires ≥4 chars for partial/last-word matches.
+ * Never matches empty strings (avoids the classic `"any".includes("") === true` trap).
+ */
+function teamNameMatch(espnName: string, searchName: string): boolean {
+  if (!espnName || !searchName) return false;
+  const clean = (s: string) =>
+    s.toLowerCase().trim().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ');
+  const a = clean(espnName);
+  const b = clean(searchName);
+  if (!a || !b) return false;
+  if (a === b) return true;
+  // Containment with minimum-length guard
+  if (a.length >= 4 && b.includes(a)) return true;
+  if (b.length >= 4 && a.includes(b)) return true;
+  // Last significant word (e.g. "Lakers" links "Los Angeles Lakers" ↔ "LA Lakers")
+  const sigLast = (s: string) => s.split(' ').filter(w => w.length >= 4).pop() ?? '';
+  const aLast = sigLast(a);
+  const bLast = sigLast(b);
+  return !!aLast && !!bLast && aLast === bLast;
+}
+
 export async function fetchNonFootballStats(
   teamId: number, teamName: string, sport: string
 ): Promise<TeamStats> {
@@ -794,15 +817,11 @@ export async function fetchNonFootballStats(
       ? n.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 3)
       : n.slice(0, 3).toUpperCase();
 
-  // Normalise team name for fuzzy matching (last name for tennis players)
-  const lastName = teamName.split(' ').pop()?.toLowerCase() ?? teamName.toLowerCase();
-
   // ── BASKETBALL ──────────────────────────────────────────────────────────────
   if (sport === 'basketball') {
     const form: FormMatch[] = [];
     const seen = new Set<string>();
 
-    // Scan last 21 days of NBA scoreboard (same endpoint used by match list)
     for (let d = 1; d <= 21 && form.length < 5; d++) {
       try {
         const json = await espnFetch(`/basketball/nba/scoreboard?dates=${espnDate(-d)}`);
@@ -810,29 +829,30 @@ export async function fetchNonFootballStats(
 
         for (const ev of events) {
           if (form.length >= 5) break;
-          if (ev.status?.type?.state !== 'post') continue;
+          // Accept completed games (check both the event-level and competition-level status)
+          const state = ev.status?.type?.state ?? ev.competitions?.[0]?.status?.type?.state;
+          if (state !== 'post') continue;
+
           const comp = ev.competitions?.[0];
           const home = comp?.competitors?.find((c: any) => c.homeAway === 'home');
           const away = comp?.competitors?.find((c: any) => c.homeAway === 'away');
           if (!home || !away) continue;
 
-          const homeId   = parseInt(home.team?.id ?? '0');
-          const awayId   = parseInt(away.team?.id ?? '0');
-          const homeName = (home.team?.displayName ?? '').toLowerCase();
-          const awayName = (away.team?.displayName ?? '').toLowerCase();
-          const searchName = teamName.toLowerCase();
+          const homeId = parseInt(home.team?.id ?? '0');
+          const awayId = parseInt(away.team?.id ?? '0');
 
-          const isHomeTeam = homeId === teamId || homeName === searchName || homeName.includes(searchName) || searchName.includes(homeName);
-          const isAwayTeam = awayId === teamId || awayName === searchName || awayName.includes(searchName) || searchName.includes(awayName);
+          // Match by ESPN ID (reliable for real matches) OR by safe name comparison
+          const isHomeTeam = (homeId > 0 && homeId === teamId) || teamNameMatch(home.team?.displayName, teamName);
+          const isAwayTeam = (awayId > 0 && awayId === teamId) || teamNameMatch(away.team?.displayName, teamName);
           if (!isHomeTeam && !isAwayTeam) continue;
 
           if (seen.has(ev.id)) continue;
           seen.add(ev.id);
 
-          const isHome    = isHomeTeam;
-          const us        = isHome ? home : away;
-          const them      = isHome ? away : home;
-          const ourScore  = Number(us.score)   || 0;
+          const isHome     = isHomeTeam;
+          const us         = isHome ? home : away;
+          const them       = isHome ? away : home;
+          const ourScore   = Number(us.score)   || 0;
           const theirScore = Number(them.score) || 0;
           if (ourScore === 0 && theirScore === 0) continue;
 
@@ -885,21 +905,24 @@ export async function fetchNonFootballStats(
 
             for (const comp of competitions) {
               if (form.length >= 5) break;
-              if ((comp.status?.type?.state ?? ev.status?.type?.state) !== 'post') continue;
+              const state = comp.status?.type?.state ?? ev.status?.type?.state;
+              if (state !== 'post') continue;
+
               const p1 = comp.competitors?.[0];
               const p2 = comp.competitors?.[1];
               if (!p1 || !p2) continue;
 
-              const p1Id   = parseInt(p1.athlete?.id ?? p1.id ?? '0');
-              const p2Id   = parseInt(p2.athlete?.id ?? p2.id ?? '0');
-              const p1Name = (p1.athlete?.displayName ?? '').toLowerCase();
-              const p2Name = (p2.athlete?.displayName ?? '').toLowerCase();
+              const p1Id = parseInt(p1.athlete?.id ?? p1.id ?? '0');
+              const p2Id = parseInt(p2.athlete?.id ?? p2.id ?? '0');
+              const p1DisplayName = p1.athlete?.displayName ?? '';
+              const p2DisplayName = p2.athlete?.displayName ?? '';
 
-              const isP1 = p1Id === teamId || p1Name.includes(lastName) || teamName.toLowerCase().includes(p1Name.split(' ').pop() ?? '');
-              const isP2 = p2Id === teamId || p2Name.includes(lastName) || teamName.toLowerCase().includes(p2Name.split(' ').pop() ?? '');
+              // Match by ESPN athlete ID (most reliable) or safe name comparison
+              const isP1 = (p1Id > 0 && p1Id === teamId) || teamNameMatch(p1DisplayName, teamName);
+              const isP2 = (p2Id > 0 && p2Id === teamId) || teamNameMatch(p2DisplayName, teamName);
               if (!isP1 && !isP2) continue;
 
-              const key = `${comp.id ?? ev.id}-${p1Name}-${p2Name}`;
+              const key = `${ev.id ?? ''}-${p1DisplayName}-${p2DisplayName}`;
               if (seen.has(key)) continue;
               seen.add(key);
 
@@ -933,7 +956,7 @@ export async function fetchNonFootballStats(
     }
   }
 
-  // Absolute last resort — only if ESPN returns zero data for all past 21 days
+  // Absolute last resort — ESPN returned zero data for all past 21 days
   return getMockStatsBySport(teamId, teamName, sport);
 }
 
@@ -1085,7 +1108,7 @@ export function getMockMatchesBySport(sport: string): Match[] {
     { id: 2001, sport: 'basketball', competition: { id: 12, name: 'NBA', sport: 'basketball', country: 'USA', logo: '', emoji: '🏀' }, homeTeam: { id: 101, name: 'Oklahoma City Thunder', shortName: 'OKC' }, awayTeam: { id: 102, name: 'Cleveland Cavaliers', shortName: 'CLE' }, date: d(0, 20, 30), status: 'scheduled', venue: 'Paycom Center' },
     { id: 2002, sport: 'basketball', competition: { id: 12, name: 'NBA', sport: 'basketball', country: 'USA', logo: '', emoji: '🏀' }, homeTeam: { id: 103, name: 'Boston Celtics', shortName: 'BOS' }, awayTeam: { id: 104, name: 'Golden State Warriors', shortName: 'GSW' }, date: d(0, 22), status: 'scheduled', venue: 'TD Garden' },
     { id: 2003, sport: 'basketball', competition: { id: 12, name: 'NBA', sport: 'basketball', country: 'USA', logo: '', emoji: '🏀' }, homeTeam: { id: 105, name: 'Denver Nuggets', shortName: 'DEN' }, awayTeam: { id: 106, name: 'Minnesota Timberwolves', shortName: 'MIN' }, date: d(1, 21), status: 'scheduled', venue: 'Ball Arena' },
-    { id: 2004, sport: 'basketball', competition: { id: 12, name: 'NBA', sport: 'basketball', country: 'USA', logo: '', emoji: '🏀' }, homeTeam: { id: 107, name: 'LA Lakers', shortName: 'LAL' }, awayTeam: { id: 108, name: 'Memphis Grizzlies', shortName: 'MEM' }, date: d(1, 22, 30), status: 'scheduled', venue: 'Crypto.com Arena' },
+    { id: 2004, sport: 'basketball', competition: { id: 12, name: 'NBA', sport: 'basketball', country: 'USA', logo: '', emoji: '🏀' }, homeTeam: { id: 107, name: 'Los Angeles Lakers', shortName: 'LAL' }, awayTeam: { id: 108, name: 'Memphis Grizzlies', shortName: 'MEM' }, date: d(1, 22, 30), status: 'scheduled', venue: 'Crypto.com Arena' },
   ];
 
   if (sport === 'f1') return [
