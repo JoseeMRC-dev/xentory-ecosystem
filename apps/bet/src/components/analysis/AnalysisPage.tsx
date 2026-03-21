@@ -301,23 +301,26 @@ export function MatchAnalysisPage() {
               </div>
             ) : match.sport === 'basketball' ? (
               <div className="glass" style={{ borderRadius:16, padding:'1.5rem' }}>
-                <h3 style={{ fontSize:'0.9rem', marginBottom:'1rem' }}>🏀 {t('Ventaja local','Home advantage')}</h3>
+                <h3 style={{ fontSize:'0.9rem', marginBottom:'1rem' }}>🏀 {t('Totales y ventaja local','Totals & home advantage')}</h3>
                 <div style={{ color:'var(--text2)', fontSize:'0.85rem', lineHeight:1.6 }}>
-                  <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'0.5rem' }}>
-                    <span style={{ color:'var(--muted)' }}>{t('Factor cancha propia','Home court factor')}</span>
-                    <span style={{ color:'var(--green)', fontWeight:600 }}>+3–4 pts</span>
-                  </div>
-                  <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'0.5rem' }}>
-                    <span style={{ color:'var(--muted)' }}>{t('Total esperado','Expected total')}</span>
-                    <span style={{ color:'var(--gold)', fontWeight:600 }}>{Math.round(analysis.homeStats.goalsScored + analysis.awayStats.goalsScored)} pts</span>
-                  </div>
-                  <div style={{ display:'flex', justifyContent:'space-between' }}>
-                    <span style={{ color:'var(--muted)' }}>{t('Diff. puntuación','Score differential')}</span>
-                    <span style={{ color:analysis.homeStats.goalsScored > analysis.awayStats.goalsScored ? 'var(--green)' : 'var(--red)', fontWeight:600 }}>
-                      {(analysis.homeStats.goalsScored - analysis.awayStats.goalsScored) >= 0 ? '+' : ''}{(analysis.homeStats.goalsScored - analysis.awayStats.goalsScored).toFixed(1)}
-                    </span>
-                  </div>
+                  {[
+                    { label: t('Total esperado','Expected total'), value: `${Math.round(analysis.homeStats.goalsScored + analysis.awayStats.goalsScored)} pts`, color: 'var(--gold)' },
+                    { label: 'Over 210.5 hist.', value: `${Math.round((analysis.homeStats.over25 + analysis.awayStats.over25) / 2)}%`, color: 'var(--cyan)' },
+                    { label: t('Factor cancha propia','Home court factor'), value: '+3–4 pts', color: 'var(--green)' },
+                    { label: t('Diff. puntuación','Score differential'), value: `${(analysis.homeStats.goalsScored - analysis.awayStats.goalsScored) >= 0 ? '+' : ''}${(analysis.homeStats.goalsScored - analysis.awayStats.goalsScored).toFixed(1)} pts`, color: analysis.homeStats.goalsScored > analysis.awayStats.goalsScored ? 'var(--green)' : 'var(--red)' },
+                  ].map(row => (
+                    <div key={row.label} style={{ display:'flex', justifyContent:'space-between', marginBottom:'0.5rem' }}>
+                      <span style={{ color:'var(--muted)' }}>{row.label}</span>
+                      <span style={{ color:row.color, fontWeight:600 }}>{row.value}</span>
+                    </div>
+                  ))}
                 </div>
+              </div>
+            ) : match.sport === 'tennis' ? (
+              <div className="glass" style={{ borderRadius:16, padding:'1.5rem' }}>
+                <h3 style={{ fontSize:'0.9rem', marginBottom:'1rem' }}>🎾 {t('Partidos a 3 sets','3-set matches')}</h3>
+                <MarketRow label={t('Más de 2.5 sets','Over 2.5 sets')} prob={analysis.markets.btts.yes} recommendation="yes" isRec={analysis.markets.btts.recommendation==='yes'} />
+                <MarketRow label={t('2 sets exactos','Exactly 2 sets')} prob={analysis.markets.btts.no} recommendation="no" isRec={analysis.markets.btts.recommendation==='no'} />
               </div>
             ) : (
               <div className="glass" style={{ borderRadius:16, padding:'1.5rem' }}>
@@ -368,6 +371,11 @@ export function MatchAnalysisPage() {
                       { label:t('Pts anotados/partido','Points scored/match'), value:stats.goalsScored.toFixed(0), color:'var(--green)' },
                       { label:t('Pts encajados/partido','Points allowed/match'), value:stats.goalsConceded.toFixed(0), color:'var(--red)' },
                       { label:t('Diferencial','Differential'), value:`${(stats.goalsScored - stats.goalsConceded) >= 0 ? '+' : ''}${(stats.goalsScored - stats.goalsConceded).toFixed(1)}`, color:(stats.goalsScored - stats.goalsConceded) >= 0 ? 'var(--green)' : 'var(--red)' },
+                      { label:'Hist. +210.5', value:`${stats.over25}%`, color:'var(--gold)' },
+                    ] : match.sport === 'tennis' ? [
+                      { label:t('% victorias','Win rate'), value:`${stats.form.length ? Math.round(stats.form.filter(f=>f.result==='W').length/stats.form.length*100) : 0}%`, color:'var(--green)' },
+                      { label:t('Victorias','Wins'), value:`${stats.form.filter(f=>f.result==='W').length}/${stats.form.length}`, color:'var(--cyan)' },
+                      { label:t('Hist. 3 sets','Hist. 3 sets'), value:`${stats.over25}%`, color:'var(--gold)' },
                     ] : [
                       { label:t('% victorias','Win rate'), value:`${stats.form.length ? Math.round(stats.form.filter(f=>f.result==='W').length/stats.form.length*100) : 0}%`, color:'var(--green)' },
                       { label:t('Victorias','Wins'), value:`${stats.form.filter(f=>f.result==='W').length}/${stats.form.length}`, color:'var(--cyan)' },

@@ -33,14 +33,27 @@ function deriveMarkets(home: TeamStats, away: TeamStats, sport = 'football'): Pr
 
   // Over/Under — basket uses pts total, football uses goals
   const expTotal   = hScored + aScored;
-  // For basketball: normalize around 210.5 pts line
+  // Historical over% from real form data (0-100). Default 50 when not computed.
+  const histOver   = (home.over25 + away.over25) / 2;
+  const hasRealHist = home.over25 !== 50 || away.over25 !== 50; // not the empty-form default
+
   const over25Prob = isBasketball
-    ? Math.min(90, Math.max(10, Math.round(50 + (expTotal - 210.5) * 2)))
+    ? (() => {
+        // Blend: 60% points-based + 40% historical Over-210.5% from real form
+        const ptsBased = Math.round(50 + (expTotal - 210.5) * 2);
+        return Math.min(90, Math.max(10,
+          hasRealHist ? Math.round(ptsBased * 0.6 + histOver * 0.4) : ptsBased
+        ));
+      })()
     : Math.min(95, Math.round((expTotal / 3.0) * 65 + (home.over25 + away.over25) / 4));
   const over35Prob = Math.min(85, Math.round(over25Prob * 0.55));
 
-  // BTTS — only meaningful for football
-  const bttsProb = isSoccer ? Math.round((home.btts + away.btts) / 2) : 50;
+  // BTTS — meaningful for football (% games both scored); 3-set rate for tennis
+  const bttsProb = isSoccer
+    ? Math.round((home.btts + away.btts) / 2)
+    : sport === 'tennis'
+    ? Math.round((home.btts + away.btts) / 2)  // % going to 3 sets
+    : 50;
 
   // Handicap
   const diff = hP - aP;
