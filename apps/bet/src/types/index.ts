@@ -155,6 +155,7 @@ export interface User {
   name: string;
   plan: Plan;
   telegramLinked: boolean;
+  ageVerified: boolean;
   createdAt: string;
 }
 

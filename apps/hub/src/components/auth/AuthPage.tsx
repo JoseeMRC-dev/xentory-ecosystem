@@ -49,6 +49,8 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
   const [password, setPw]         = useState('');
   const [showPw, setShowPw]       = useState(false);
   const [name, setName]           = useState('');
+  const [dob, setDob]             = useState('');
+  const [ageConsent, setAgeConsent] = useState(false);
   const [terms, setTerms]         = useState(false);
   const [magicSent, setMagicSent]    = useState(false);
   const [showForgot, setShowForgot]  = useState(false);
@@ -135,8 +137,20 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
 
         if (!name.trim())   { setError('El nombre es obligatorio.'); return; }
         if (password.length < 8) { setError('La contraseña debe tener al menos 8 caracteres.'); return; }
+
+        // Verificación de edad +18 (obligatorio legal)
+        if (!dob) { setError('La fecha de nacimiento es obligatoria.'); return; }
+        const birthDate = new Date(dob);
+        const today = new Date();
+        const age = today.getFullYear() - birthDate.getFullYear() -
+          (today < new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate()) ? 1 : 0);
+        if (age < 18) {
+          setError('Debes ser mayor de 18 años para registrarte. El acceso a contenido de apuestas está prohibido para menores.');
+          return;
+        }
+        if (!ageConsent) { setError('Debes confirmar que eres mayor de 18 años.'); return; }
         if (!terms)         { setError('Debes aceptar los Términos de Uso para registrarte.'); return; }
-        await register(email, password, name.trim());
+        await register(email, password, name.trim(), dob);
         navigate('/dashboard');
 
       } else {
@@ -271,6 +285,22 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
           </Field>
         )}
 
+        {tab === 'register' && (
+          <Field label="Fecha de nacimiento">
+            <input
+              className="input"
+              type="date"
+              value={dob}
+              onChange={e => setDob(e.target.value)}
+              max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
+              autoComplete="bday"
+            />
+            <span style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '0.25rem', display: 'block' }}>
+              Debes ser mayor de 18 años para acceder a XentoryBet
+            </span>
+          </Field>
+        )}
+
         <Field label="Email">
           <input className="input" type="email" placeholder="your@email.com"
             value={email} onChange={e => setEmail(e.target.value)}
@@ -309,6 +339,30 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
               </div>
             )}
           </Field>
+        )}
+
+        {/* Age consent checkbox — register only */}
+        {tab === 'register' && (
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.65rem', cursor: 'pointer', padding: '0.75rem', borderRadius: 10, background: 'rgba(255,68,85,0.04)', border: `1px solid ${ageConsent ? 'rgba(201,168,76,0.3)' : 'rgba(255,68,85,0.2)'}`, transition: 'border-color 0.2s' }}>
+            <div
+              onClick={() => setAgeConsent(v => !v)}
+              style={{
+                width: 18, height: 18, borderRadius: 5, flexShrink: 0, marginTop: 2,
+                border: `2px solid ${ageConsent ? 'var(--gold)' : 'var(--red)'}`,
+                background: ageConsent ? 'var(--gold)' : 'transparent',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.18s', cursor: 'pointer',
+              }}
+            >
+              {ageConsent && <svg width="10" height="8" viewBox="0 0 10 8"><path d="M1 4l3 3 5-6" stroke="var(--bg)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>}
+            </div>
+            <span style={{ fontSize: '0.82rem', color: 'var(--text2)', lineHeight: 1.6 }}>
+              <strong style={{ color: 'var(--red)' }}>⚠️ Declaración obligatoria:</strong>{' '}
+              Confirmo que tengo <strong style={{ color: 'var(--text)' }}>18 años o más</strong> y soy consciente de que el juego puede crear adicción.
+              Puedes encontrar ayuda en{' '}
+              <a href="https://www.jugarbien.es" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--gold)', textDecoration: 'none' }}>jugarbien.es</a>.
+            </span>
+          </label>
         )}
 
         {/* Terms checkbox — register only */}

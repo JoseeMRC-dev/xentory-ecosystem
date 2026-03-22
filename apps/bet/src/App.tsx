@@ -8,6 +8,8 @@ import { MatchAnalysisPage, AnalysisPage } from './components/analysis/AnalysisP
 import { PlansPage } from './components/plans/PlansPage';
 import { TelegramPage, HistoryPage } from './components/telegram/TelegramPage';
 import { EducationPage } from './components/education/EducationPage';
+import { CasasPage } from './components/casas/CasasPage';
+import { AgeGate, hasAgeConfirmed } from './components/auth/AgeGate';
 import './styles/global.css';
 import { LoadingScreen } from './components/layout/LoadingScreen';
 import { ThemeProvider } from './context/ThemeContext';
@@ -15,12 +17,21 @@ import { LanguageProvider } from './context/LanguageContext';
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth();
+  const [ageOk, setAgeOk] = useState(() => hasAgeConfirmed());
+
   if (isLoading) return null;
   if (!user) {
     const HUB = (import.meta as any).env?.VITE_HUB_URL ?? 'https://x-eight-beryl.vercel.app';
     window.location.href = HUB;
     return null;
   }
+
+  // Si el usuario tiene ageVerified desde SSO, no mostramos el gate
+  const needsGate = !ageOk && !user.ageVerified;
+  if (needsGate) {
+    return <AgeGate onConfirm={() => setAgeOk(true)} />;
+  }
+
   return <>{children}</>;
 }
 
@@ -52,6 +63,7 @@ function AppRoutes() {
       <Route path="/telegram" element={<ProtectedRoute><AppLayout><TelegramPage /></AppLayout></ProtectedRoute>} />
       <Route path="/plans" element={<ProtectedRoute><AppLayout><PlansPage /></AppLayout></ProtectedRoute>} />
       <Route path="/education" element={<ProtectedRoute><AppLayout><EducationPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/casas" element={<ProtectedRoute><AppLayout><CasasPage /></AppLayout></ProtectedRoute>} />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

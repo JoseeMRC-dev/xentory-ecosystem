@@ -40,6 +40,11 @@ const IconPlans = () => (
     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
   </svg>
 );
+const IconCasas = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/>
+  </svg>
+);
 const IconSignOut = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
@@ -63,6 +68,7 @@ function NavContent({ onNav, hideSports }: { onNav?: () => void; hideSports?: bo
     { to: '/matches',   icon: <IconMatches />,   label: t('Partidos',        'Matches')      },
     { to: '/analysis',  icon: <IconAnalysis />,  label: t('Análisis IA',     'AI Analysis')  },
     { to: '/history',   icon: <IconHistory />,   label: t('Historial',       'History')      },
+    { to: '/casas',     icon: <IconCasas />,     label: t('Casas de Apuestas', 'Bookmakers'), badge: '🎁' },
     { to: '/education', icon: <IconEducation />, label: t('Formación',       'Education')    },
     { to: '/telegram',  icon: <IconTelegram />,  label: 'Telegram'                           },
     { to: '/plans',     icon: <IconPlans />,     label: t('Planes',          'Plans')        },
@@ -103,7 +109,10 @@ function NavContent({ onNav, hideSports }: { onNav?: () => void; hideSports?: bo
             })}
           >
             <span style={{ opacity: 0.75, flexShrink: 0, display: 'flex' }}>{item.icon}</span>
-            {item.label}
+            <span style={{ flex: 1 }}>{item.label}</span>
+            {(item as any).badge && (
+              <span style={{ fontSize: '0.7rem' }}>{(item as any).badge}</span>
+            )}
           </NavLink>
         ))}
       </nav>

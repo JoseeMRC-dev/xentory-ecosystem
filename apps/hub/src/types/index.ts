@@ -13,6 +13,8 @@ export interface User {
   };
   telegramLinked: boolean;
   telegramUsername?: string;
+  ageVerified: boolean;
+  dateOfBirth?: string;
   createdAt: string;
   lastLogin: string;
 }
