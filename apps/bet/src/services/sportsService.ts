@@ -458,7 +458,92 @@ async function fetchTennisMatchesFromESPN(): Promise<Match[]> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TENNIS — TheSportsDB (primary, free, no key) + ESPN fallback
+// TENNIS — Sofascore (primary: comprehensive, free, no key needed)
+// ─────────────────────────────────────────────────────────────────────────────
+const sofascoreCache = new Map<string, { data: any; ts: number }>();
+
+async function fetchTennisFromSofascore(): Promise<Match[]> {
+  const results: Match[] = [];
+  const seen = new Set<string>();
+
+  for (let d = -1; d <= 5 && results.length < 30; d++) {
+    const date = new Date();
+    date.setDate(date.getDate() + d);
+    const dateStr = date.toISOString().slice(0, 10);
+
+    const cacheKey = `sofascore-tennis-${dateStr}`;
+    const hit = sofascoreCache.get(cacheKey);
+    let json: any = hit && Date.now() - hit.ts < CACHE_TTL ? hit.data : null;
+
+    if (!json) {
+      try {
+        const res = await fetch(
+          `https://api.sofascore.com/api/v1/sport/tennis/scheduled-events/${dateStr}`,
+          { headers: { 'Cache-Control': 'no-cache' } }
+        );
+        if (!res.ok) continue;
+        json = await res.json();
+        sofascoreCache.set(cacheKey, { data: json, ts: Date.now() });
+      } catch { continue; }
+    }
+
+    for (const ev of json?.events ?? []) {
+      const home = ev.homeTeam;
+      const away = ev.awayTeam;
+      if (!home?.name || !away?.name) continue;
+
+      const key = `${home.name}-${away.name}-${dateStr}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      const statusType = ev.status?.type;
+      const status: Match['status'] =
+        statusType === 'finished' ? 'finished' :
+        statusType === 'inprogress' ? 'live' : 'scheduled';
+
+      const flag = (alpha2?: string) =>
+        alpha2 ? `https://flagcdn.com/w20/${alpha2.toLowerCase()}.png` : undefined;
+
+      results.push({
+        id: (ev.id ?? 0) + 60000,
+        espnEventId: String(ev.id ?? ''),
+        sport: 'tennis',
+        competition: {
+          id: ev.tournament?.id ?? 0,
+          name: ev.tournament?.name ?? 'Tennis',
+          sport: 'tennis',
+          country: ev.tournament?.category?.name ?? 'International',
+          logo: '',
+          emoji: '🎾',
+        },
+        homeTeam: {
+          id: home.id ?? 0,
+          name: home.name,
+          shortName: home.shortName ?? home.name.split(' ').pop()?.slice(0, 4).toUpperCase() ?? 'P1',
+          logo: flag(home.country?.alpha2),
+        },
+        awayTeam: {
+          id: away.id ?? 0,
+          name: away.name,
+          shortName: away.shortName ?? away.name.split(' ').pop()?.slice(0, 4).toUpperCase() ?? 'P2',
+          logo: flag(away.country?.alpha2),
+        },
+        date: ev.startTimestamp
+          ? new Date(ev.startTimestamp * 1000).toISOString()
+          : `${dateStr}T12:00:00`,
+        status,
+        homeScore: ev.homeScore?.current ?? undefined,
+        awayScore: ev.awayScore?.current ?? undefined,
+        round: ev.roundInfo?.name ?? ev.tournament?.name ?? undefined,
+      });
+    }
+  }
+
+  return results;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TENNIS — TheSportsDB (secondary, free, no key) + ESPN fallback
 // ─────────────────────────────────────────────────────────────────────────────
 const sdbCache = new Map<string, { data: any; ts: number }>();
 const SDB_BASE = 'https://www.thesportsdb.com/api/v1/json/3';
@@ -614,19 +699,23 @@ async function fetchTennisFromApiSports(): Promise<Match[]> {
 }
 
 export async function fetchTennisMatches(): Promise<Match[]> {
-  // 1. api-sports.io via Supabase proxy — same key as football, real data
+  // 1. Sofascore — comprehensive unofficial API, no key needed
+  const sofascore = await fetchTennisFromSofascore();
+  if (sofascore.length > 0) return sofascore;
+
+  // 2. api-sports.io via Supabase proxy
   const apiSports = await fetchTennisFromApiSports();
   if (apiSports.length > 0) return apiSports;
 
-  // 2. TheSportsDB — free public API
+  // 3. TheSportsDB — free public API
   const sdb = await fetchTennisFromSportsDB();
   if (sdb.length > 0) return sdb;
 
-  // 3. ESPN fallback
+  // 4. ESPN fallback
   const espn = await fetchTennisMatchesFromESPN();
   if (espn.length > 0) return espn;
 
-  // 4. Last resort: mocks
+  // 5. Last resort: mocks
   return getMockMatchesBySport('tennis');
 }
 
