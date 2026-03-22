@@ -1496,13 +1496,23 @@ export function getMockStatsBySport(teamId: number, teamName: string, sport: str
     return picked;
   }
 
+  const allFootball = [
+    'Real Madrid','FC Barcelona','Atletico Madrid','Sevilla FC','Real Betis',
+    'Villarreal','Athletic Club','Real Sociedad','Valencia','Getafe',
+    'Manchester City','Arsenal','Liverpool','Chelsea','Manchester United',
+    'Tottenham','Newcastle','Aston Villa','Inter Milan','AC Milan',
+    'Juventus','Napoli','Roma','Lazio','Bayern Munich',
+    'Borussia Dortmund','Bayer Leverkusen','RB Leipzig','Paris Saint-Germain','Marseille',
+    'Benfica','Porto','Sporting CP','Ajax','Feyenoord',
+    'Celtic','Rangers','Club Brugge','Galatasaray','Fenerbahce',
+  ];
   const opponents: string[] = sport === 'tennis'
     ? pickOpponents(allTennis, 5)
     : sport === 'basketball'
     ? pickOpponents(allBasketball, 5)
     : sport === 'f1'
     ? pickOpponents(allF1, 5)
-    : ['Rival A','Rival B','Rival C','Rival D','Rival E'];
+    : pickOpponents(allFootball, 5);
   const now = Date.now();
   // Sport-appropriate scores
   const form: FormMatch[] = results.map((result, i) => {

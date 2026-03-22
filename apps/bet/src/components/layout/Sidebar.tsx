@@ -187,8 +187,16 @@ export function Sidebar() {
       )}
       {isMobile && open && (
         <>
-          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 48, background: 'rgba(5,8,16,0.6)', backdropFilter: 'blur(3px)', touchAction: 'none' }} />
-          <div style={{ position: 'fixed', top: 52, left: 0, right: 0, bottom: 0, zIndex: 49, background: '#080d1a', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', overflowY: 'auto', animation: 'slideDown 0.18s ease both' }}>
+          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(5,8,16,0.6)', backdropFilter: 'blur(3px)', touchAction: 'none' }} />
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 51, background: '#080d1a', display: 'flex', flexDirection: 'column', overflowY: 'auto', animation: 'slideDown 0.18s ease both' }}>
+            {/* Drawer header — mirrors the mobile topbar so the user has a close target */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', height: 52, flexShrink: 0, borderBottom: '1px solid var(--border)' }}>
+              <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1.1rem', letterSpacing: '-0.02em', display: 'flex', alignItems: 'baseline' }}>
+                <a href={HUB_URL} style={{ textDecoration: 'none' }}><span className="text-gradient-gold">Xentory</span></a>
+                <Link to="/dashboard" onClick={() => setOpen(false)} style={{ textDecoration: 'none' }}><span style={{ color: '#4d9fff' }}>Bet</span></Link>
+              </div>
+              <button onClick={() => setOpen(false)} aria-label="Cerrar menú" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.4rem', color: 'var(--text)', fontSize: '1.4rem', lineHeight: 1 }}>✕</button>
+            </div>
             <NavContent onNav={() => setOpen(false)} hideSports />
           </div>
         </>
