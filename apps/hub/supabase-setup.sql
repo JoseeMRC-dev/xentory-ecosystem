@@ -14,9 +14,16 @@ create table if not exists public.profiles (
   plan_bets        text not null default 'free' check (plan_bets in ('free','pro','elite')),
   telegram_linked  boolean not null default false,
   telegram_username text,
+  -- Verificación de edad +18 (requerido por ley para acceso a contenido de apuestas)
+  date_of_birth    date,
+  age_verified     boolean not null default false,
   created_at       timestamptz not null default now(),
   updated_at       timestamptz not null default now()
 );
+
+-- Migración para bases de datos existentes (ejecutar si la tabla ya existe)
+alter table public.profiles add column if not exists date_of_birth date;
+alter table public.profiles add column if not exists age_verified boolean not null default false;
 
 -- 2. ROW LEVEL SECURITY — cada usuario solo ve sus propios datos
 alter table public.profiles enable row level security;
@@ -40,12 +47,14 @@ language plpgsql
 security definer set search_path = public
 as $$
 begin
-  insert into public.profiles (id, email, full_name, avatar_url)
+  insert into public.profiles (id, email, full_name, avatar_url, date_of_birth, age_verified)
   values (
     new.id,
     new.email,
     coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name'),
-    new.raw_user_meta_data->>'avatar_url'
+    new.raw_user_meta_data->>'avatar_url',
+    (new.raw_user_meta_data->>'date_of_birth')::date,
+    coalesce((new.raw_user_meta_data->>'age_verified')::boolean, false)
   );
   return new;
 end;

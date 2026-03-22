@@ -34,6 +34,7 @@ const _capturedSSO = (() => {
       uemail,
       uname:  qp.get('uname') ?? uemail.split('@')[0],
       uplan:  qp.get('uplan') ?? 'free',
+      uage:   qp.get('uage') ?? '0',
     };
     sessionStorage.setItem(SESSION_KEY, JSON.stringify({ ...sso, capturedAt: Date.now() }));
     console.log('[Bet] SSO captured at module level:', uemail);
@@ -52,13 +53,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (didInit.current) return;
     didInit.current = true;
 
-    function buildUser(data: { uid: string; uemail: string; uname: string; uplan: string }): User {
+    function buildUser(data: { uid: string; uemail: string; uname: string; uplan: string; uage?: string }): User {
       return {
         id:             data.uid,
         email:          data.uemail,
         name:           data.uname,
         plan:           (data.uplan as Plan) ?? 'free',
         telegramLinked: false,
+        ageVerified:    data.uage === '1',
         createdAt:      new Date().toISOString(),
       };
     }
@@ -92,6 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             uid, uemail,
             uname:  qp.get('uname') ?? uemail.split('@')[0],
             uplan:  qp.get('uplan') ?? 'free',
+            uage:   qp.get('uage') ?? '0',
           });
           saveUser(u);
           window.history.replaceState({}, '', window.location.pathname);

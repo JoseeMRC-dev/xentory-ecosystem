@@ -22,7 +22,7 @@ interface AuthContextType {
   ssoToken:         SSOToken | null;
   login:            (email: string, password: string) => Promise<void>;
   loginWithGoogle:  () => Promise<void>;
-  register:         (email: string, password: string, name: string) => Promise<void>;
+  register:         (email: string, password: string, name: string, dateOfBirth?: string) => Promise<void>;
   sendMagicLink:    (email: string) => Promise<void>;
   resetPassword:    (email: string) => Promise<void>;
   logout:           () => Promise<void>;
@@ -52,6 +52,8 @@ function sbToNexus(sbUser: any, prev?: User | null): User {
     subscriptions:    prev?.subscriptions ?? { market: 'free', bets: 'free' },
     telegramLinked:   prev?.telegramLinked   ?? false,
     telegramUsername: prev?.telegramUsername,
+    ageVerified:      sbUser.user_metadata?.age_verified === true || prev?.ageVerified === true,
+    dateOfBirth:      sbUser.user_metadata?.date_of_birth ?? prev?.dateOfBirth,
     createdAt:        sbUser.created_at ?? new Date().toISOString(),
     lastLogin:        new Date().toISOString(),
   };
@@ -66,7 +68,8 @@ function loadStoredUser(): User | null {
 const MOCK_BASE: User = {
   id: 'mock_001', email: 'demo@xentory.io', name: 'Demo User',
   subscriptions: { market: 'free', bets: 'free' },
-  telegramLinked: false, createdAt: '2025-01-01T00:00:00Z',
+  telegramLinked: false, ageVerified: true,
+  createdAt: '2025-01-01T00:00:00Z',
   lastLogin: new Date().toISOString(),
 };
 const delay = (ms = 1000) => new Promise(r => setTimeout(r, ms));
@@ -138,19 +141,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // ── Register ───────────────────────────────────────────────────────────
-  const register = useCallback(async (email: string, password: string, name: string) => {
+  const register = useCallback(async (email: string, password: string, name: string, dateOfBirth?: string) => {
     setLoading(true);
     try {
       const sb = await getSupabase();
       if (!sb) {
         await delay(1200);
-        setUser({ ...MOCK_BASE, email, name, createdAt: new Date().toISOString() });
+        setUser({ ...MOCK_BASE, email, name, ageVerified: true, dateOfBirth, createdAt: new Date().toISOString() });
         return;
       }
       const { data, error } = await sb.auth.signUp({
         email, password,
         options: {
-          data: { full_name: name },
+          data: {
+            full_name: name,
+            date_of_birth: dateOfBirth,
+            age_verified: !!dateOfBirth,
+          },
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
@@ -229,6 +236,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       uemail: user.email,
       uname: user.name ?? '',
       uplan: plan,
+      uage:  user.ageVerified ? '1' : '0',
       uts:   String(Date.now()),
     });
     const url = `${PLATFORM_URLS[platform]}?${params.toString()}`;
