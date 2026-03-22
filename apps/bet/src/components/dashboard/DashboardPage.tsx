@@ -241,8 +241,9 @@ export function DashboardPage() {
                       <div style={{ fontSize: '0.82rem', fontWeight: 500 }}>
                         {match.homeTeam.shortName} vs {match.awayTeam.shortName}
                       </div>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>
-                        {new Date(match.date).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB', { day: '2-digit', month: 'short' })}
+                      <div style={{ fontSize: '0.7rem', color: 'var(--muted)', textAlign: 'right' }}>
+                        <div>{new Date(match.date).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-GB', { weekday: 'short', day: '2-digit', month: 'short', timeZone: 'Europe/Madrid' })}</div>
+                        <div>{new Date(match.date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' })}</div>
                       </div>
                     </div>
                     <div style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '0.2rem' }}>
