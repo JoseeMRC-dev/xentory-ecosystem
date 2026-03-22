@@ -4,7 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { fetchTeamStats, fetchNonFootballStats, fetchLiveMatchById, fetchWeekMatches, fetchTennisMatches, fetchBasketballMatches, fetchF1Matches, fetchGolfMatches } from '../../services/sportsService';
 import { generateMatchAnalysis } from '../../services/aiService';
 import { fetchBookmakerOdds, BOOKMAKERS } from '../../services/oddsService';
-import type { MatchBookmakerOdds } from '../../services/oddsService';
+import type { MatchBookmakerOdds, MarketBookmakerOdds } from '../../services/oddsService';
 import { SPORT_CONFIG, FORM_COLORS, confidenceColor } from '../../constants';
 import { useLang } from '../../context/LanguageContext';
 import type { MatchAnalysis, FormMatch, Match } from '../../types';
@@ -42,7 +42,7 @@ function BookmakerOddsRow({
   marketOdds,
   recommendedSelectionUrl,
 }: {
-  marketOdds: MatchBookmakerOdds[keyof MatchBookmakerOdds];
+  marketOdds: MarketBookmakerOdds;
   recommendedSelectionUrl?: string;
 }) {
   return (
