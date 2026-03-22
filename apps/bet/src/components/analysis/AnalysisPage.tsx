@@ -354,7 +354,11 @@ export function MatchAnalysisPage() {
                 const competitions = [...new Set(stats.form.map(f => f.competition).filter((c): c is string => !!c))];
                 const isMultiComp  = competitions.length > 1;
                 const active       = formFilters[fk];
-                const visible      = active ? stats.form.filter(f => f.competition === active) : stats.form;
+                // Filter by competition first, then take the 5 most recent
+                const visible      = (active
+                  ? stats.form.filter(f => f.competition === active)
+                  : stats.form
+                ).slice(0, 5);
                 const pillStyle = (on: boolean) => ({
                   padding:'0.12rem 0.45rem', borderRadius:99, fontSize:'0.66rem', fontWeight:600, cursor:'pointer',
                   border:'1px solid', transition:'all 0.15s', background: on ? 'var(--primary)' : 'transparent',

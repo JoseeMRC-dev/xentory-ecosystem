@@ -1148,7 +1148,9 @@ async function fetchFootballFormFromEspn(
   // Iterate day by day (most recent first). For each day fetch ALL leagues
   // concurrently so we don't miss a Champions League/Europa match played
   // on the same day as a league fixture.
-  for (let d = 1; d <= 21 && form.length < 5; d++) {
+  // Collect up to 10 so that when filtering by one competition we can always
+  // show 5 matches even if the team also played in other cups/leagues.
+  for (let d = 1; d <= 35 && form.length < 10; d++) {
     const dateStr = espnDate(-d);
     // Fetch all leagues for this day in parallel, preserving slug context
     const results = await Promise.allSettled(
@@ -1156,7 +1158,7 @@ async function fetchFootballFormFromEspn(
     );
 
     for (const res of results) {
-      if (form.length >= 5) break;
+      if (form.length >= 10) break;
       if (res.status !== 'fulfilled' || !res.value?.json) continue;
       const { slug, json } = res.value;
       const cfg = FOOTBALL_LEAGUES.find(l => l.slug === slug);
@@ -1164,7 +1166,7 @@ async function fetchFootballFormFromEspn(
       const events: any[] = json.events ?? [];
 
       for (const ev of events) {
-        if (form.length >= 5) break;
+        if (form.length >= 10) break;
         const state = ev.status?.type?.state ?? ev.competitions?.[0]?.status?.type?.state;
         if (state !== 'post') continue;
         const comp = ev.competitions?.[0];
@@ -1202,7 +1204,7 @@ async function fetchFootballFormFromEspn(
 export async function fetchTeamStats(teamId: number, teamName: string, leagueId: number): Promise<TeamStats | null> {
   const [statsJson, formJson] = await Promise.all([
     proxyFetch('football', `/teams/statistics?team=${teamId}&league=${leagueId}&season=${SEASON}`),
-    proxyFetch('football', `/fixtures?team=${teamId}&league=${leagueId}&season=${SEASON}&last=5`),
+    proxyFetch('football', `/fixtures?team=${teamId}&season=${SEASON}&last=10`),
   ]);
   // Primary: api-sports proxy returned stats
   if (statsJson) {
