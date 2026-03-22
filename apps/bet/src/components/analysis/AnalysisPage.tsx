@@ -3,6 +3,8 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { fetchTeamStats, fetchNonFootballStats, fetchLiveMatchById, fetchWeekMatches, fetchTennisMatches, fetchBasketballMatches, fetchF1Matches, fetchGolfMatches } from '../../services/sportsService';
 import { generateMatchAnalysis } from '../../services/aiService';
+import { fetchBookmakerOdds, BOOKMAKERS } from '../../services/oddsService';
+import type { MatchBookmakerOdds } from '../../services/oddsService';
 import { SPORT_CONFIG, FORM_COLORS, confidenceColor } from '../../constants';
 import { useLang } from '../../context/LanguageContext';
 import type { MatchAnalysis, FormMatch, Match } from '../../types';
@@ -31,6 +33,74 @@ function MarketRow({ label, prob, recommendation, isRec, odds }: { label:string;
       <div style={{ width:120 }}><div className="conf-bar"><div className="conf-bar-fill" style={{ width:`${prob}%`, background:color }} /></div></div>
       <div style={{ minWidth:40, textAlign:'right', fontFamily:'Outfit', fontWeight:700, fontSize:'0.88rem', color }}>{prob}%</div>
       {odds && <div style={{ minWidth:40, textAlign:'right', fontSize:'0.8rem', color:'var(--gold)' }}>@{odds}</div>}
+    </div>
+  );
+}
+
+/** Fila de cuotas por casa de apuestas para un mercado concreto */
+function BookmakerOddsRow({
+  marketOdds,
+  recommendedSelectionUrl,
+}: {
+  marketOdds: MatchBookmakerOdds[keyof MatchBookmakerOdds];
+  recommendedSelectionUrl?: string;
+}) {
+  return (
+    <div style={{ marginTop: '0.75rem', paddingTop: '0.7rem', borderTop: '1px solid var(--border)' }}>
+      <div style={{
+        fontSize: '0.62rem', color: 'var(--muted)', textTransform: 'uppercase',
+        letterSpacing: '0.08em', marginBottom: '0.45rem', display: 'flex', alignItems: 'center', gap: '0.4rem',
+      }}>
+        Cuotas por casa
+        {!marketOdds.isRealtime && (
+          <span style={{ fontSize: '0.58rem', color: 'var(--muted)', background: 'var(--card2)', border: '1px solid var(--border)', borderRadius: 4, padding: '0.05rem 0.35rem' }}>estimadas</span>
+        )}
+        {marketOdds.isRealtime && (
+          <span style={{ fontSize: '0.58rem', color: 'var(--green)', background: 'rgba(0,255,136,0.08)', border: '1px solid rgba(0,255,136,0.2)', borderRadius: 4, padding: '0.05rem 0.35rem' }}>• en vivo</span>
+        )}
+      </div>
+      <div style={{
+        display: 'flex', gap: '0.4rem', flexWrap: 'wrap',
+      }}>
+        {BOOKMAKERS.map(bk => {
+          const odds = marketOdds.perBookmaker[bk.id];
+          if (!odds) return null;
+          const isBest = bk.id === marketOdds.bestBookmakerId;
+          return (
+            <a
+              key={bk.id}
+              href={recommendedSelectionUrl ?? bk.registerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
+                padding: '0.3rem 0.55rem', borderRadius: 7, textDecoration: 'none',
+                background: isBest ? `${bk.color}22` : 'var(--card2)',
+                border: `1px solid ${isBest ? bk.color + '66' : 'var(--border)'}`,
+                transition: 'all 0.15s', flexShrink: 0,
+              }}
+              title={`${bk.name}: @${odds}${isBest ? ' — Mejor cuota' : ''}`}
+            >
+              <img
+                src={bk.logo}
+                alt={bk.name}
+                width={14}
+                height={14}
+                style={{ borderRadius: 2, flexShrink: 0 }}
+                onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+              />
+              <span style={{
+                fontSize: '0.75rem', fontWeight: isBest ? 700 : 500,
+                color: isBest ? bk.color : 'var(--text2)',
+                fontFamily: 'Outfit, sans-serif',
+              }}>
+                @{odds}
+              </span>
+              {isBest && <span style={{ fontSize: '0.55rem', color: bk.color }}>★</span>}
+            </a>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -117,6 +187,7 @@ export function MatchAnalysisPage() {
   const { user } = useAuth();
   const { t, lang } = useLang();
   const [analysis, setAnalysis] = useState<MatchAnalysis | null>(null);
+  const [bkOdds, setBkOdds]     = useState<MatchBookmakerOdds | null>(null);
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState('');
   const [liveData, setLiveData] = useState<Partial<Match>|null>(null);
@@ -169,12 +240,30 @@ export function MatchAnalysisPage() {
       awayStats = { ...awayStats, team: { ...awayStats.team, name: match.awayTeam.name, shortName: match.awayTeam.shortName ?? match.awayTeam.name.slice(0, 3).toUpperCase() } };
       const result = await generateMatchAnalysis(match, homeStats, awayStats, user?.plan ?? 'free');
       setAnalysis(result);
+      // Fetch bookmaker odds (real or derived)
+      const odds = await fetchBookmakerOdds(
+        match.homeTeam.name,
+        match.awayTeam.name,
+        match.competition.id,
+        match.sport,
+        {
+          homeProb:     result.markets.result.home,
+          drawProb:     result.markets.result.draw,
+          awayProb:     result.markets.result.away,
+          over25Prob:   result.markets.overUnder25.over,
+          bttsProb:     result.markets.btts.yes,
+          handicapProb: result.markets.handicap.home,
+        },
+        String(match.id),
+      );
+      setBkOdds(odds);
     } catch { setError(t('Error al generar el análisis. Inténtalo de nuevo.', 'Error generating analysis. Please try again.')); }
     setLoading(false);
   };
 
   useEffect(() => {
     setAnalysis(null);
+    setBkOdds(null);
     setError('');
     if (match) generateAnalysis();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -242,8 +331,17 @@ export function MatchAnalysisPage() {
               </div>
               <div style={{ display:'flex', gap:'1rem', alignItems:'center' }}>
                 <div style={{ textAlign:'center' }}>
-                  <div style={{ fontFamily:'Outfit', fontWeight:800, fontSize:'1.8rem', color:'var(--gold)' }}>@{analysis.markets.bestBet.odds}</div>
-                  <div style={{ fontSize:'0.7rem', color:'var(--muted)' }}>{t('Cuota estimada','Estimated odds')}</div>
+                  {/* Mejor cuota real de las casas */}
+                  <div style={{ fontFamily:'Outfit', fontWeight:800, fontSize:'1.8rem', color:'var(--gold)' }}>
+                    @{bkOdds ? Math.max(
+                        bkOdds.result.home.best,
+                        bkOdds.result.draw.best,
+                        bkOdds.result.away.best,
+                      ).toFixed(2) : analysis.markets.bestBet.odds}
+                  </div>
+                  <div style={{ fontSize:'0.7rem', color:'var(--muted)' }}>
+                    {bkOdds?.result.home.isRealtime ? t('Mejor cuota real','Best real odds') : t('Mejor cuota est.','Best est. odds')}
+                  </div>
                 </div>
                 <div style={{ textAlign:'center' }}>
                   <div style={{ fontFamily:'Outfit', fontWeight:800, fontSize:'1.8rem', color:confidenceColor(analysis.markets.bestBet.confidence) }}>{analysis.markets.bestBet.confidence}%</div>
@@ -258,9 +356,15 @@ export function MatchAnalysisPage() {
             {/* 1X2 — todos los deportes, sin Empate para basket/tenis */}
             <div className="glass" style={{ borderRadius:16, padding:'1.5rem' }}>
               <h3 style={{ fontSize:'0.9rem', marginBottom:'1rem' }}>⚖️ {match.sport === 'football' ? t('Resultado 1X2','Result 1X2') : t('Ganador del partido','Match winner')}</h3>
-              <MarketRow label={`${match.homeTeam.name} ${t('gana','wins')}`} prob={analysis.markets.result.home} recommendation="home" isRec={analysis.markets.result.recommendation==='home'} odds={analysis.markets.result.homeOdds} />
-              {match.sport === 'football' && <MarketRow label={t('Empate','Draw')} prob={analysis.markets.result.draw} recommendation="draw" isRec={analysis.markets.result.recommendation==='draw'} odds={analysis.markets.result.drawOdds} />}
-              <MarketRow label={`${match.awayTeam.name} ${t('gana','wins')}`} prob={analysis.markets.result.away} recommendation="away" isRec={analysis.markets.result.recommendation==='away'} odds={analysis.markets.result.awayOdds} />
+              <MarketRow label={`${match.homeTeam.name} ${t('gana','wins')}`} prob={analysis.markets.result.home} recommendation="home" isRec={analysis.markets.result.recommendation==='home'} odds={bkOdds?.result.home.best ?? analysis.markets.result.homeOdds} />
+              {match.sport === 'football' && <MarketRow label={t('Empate','Draw')} prob={analysis.markets.result.draw} recommendation="draw" isRec={analysis.markets.result.recommendation==='draw'} odds={bkOdds?.result.draw.best ?? analysis.markets.result.drawOdds} />}
+              <MarketRow label={`${match.awayTeam.name} ${t('gana','wins')}`} prob={analysis.markets.result.away} recommendation="away" isRec={analysis.markets.result.recommendation==='away'} odds={bkOdds?.result.away.best ?? analysis.markets.result.awayOdds} />
+              {bkOdds && (
+                <BookmakerOddsRow
+                  marketOdds={analysis.markets.result.recommendation === 'home' ? bkOdds.result.home : analysis.markets.result.recommendation === 'away' ? bkOdds.result.away : bkOdds.result.draw}
+                  recommendedSelectionUrl={BOOKMAKERS[0].registerUrl}
+                />
+              )}
             </div>
 
             {/* Over/Under — adaptado al deporte */}
@@ -268,9 +372,15 @@ export function MatchAnalysisPage() {
               {match.sport === 'football' ? (
                 <>
                   <h3 style={{ fontSize:'0.9rem', marginBottom:'1rem' }}>📊 {t('Goles Over/Under','Goals Over/Under')}</h3>
-                  <MarketRow label={t('Over 2.5 goles','Over 2.5 goals')} prob={analysis.markets.overUnder25.over} recommendation="over" isRec={analysis.markets.overUnder25.recommendation==='over'} odds={parseFloat((1/(analysis.markets.overUnder25.over/100)*0.92).toFixed(2))} />
-                  <MarketRow label={t('Under 2.5 goles','Under 2.5 goals')} prob={analysis.markets.overUnder25.under} recommendation="under" isRec={analysis.markets.overUnder25.recommendation==='under'} />
-                  <div style={{ height:1, background:'var(--border)', margin:'0.5rem 0' }} />
+                  <MarketRow label={t('Over 2.5 goles','Over 2.5 goals')} prob={analysis.markets.overUnder25.over} recommendation="over" isRec={analysis.markets.overUnder25.recommendation==='over'} odds={bkOdds?.over25.best ?? parseFloat((1/(analysis.markets.overUnder25.over/100)*0.92).toFixed(2))} />
+                  <MarketRow label={t('Under 2.5 goles','Under 2.5 goals')} prob={analysis.markets.overUnder25.under} recommendation="under" isRec={analysis.markets.overUnder25.recommendation==='under'} odds={bkOdds?.under25.best} />
+                  {bkOdds && (
+                    <BookmakerOddsRow
+                      marketOdds={analysis.markets.overUnder25.recommendation === 'over' ? bkOdds.over25 : bkOdds.under25}
+                      recommendedSelectionUrl={BOOKMAKERS[0].registerUrl}
+                    />
+                  )}
+                  <div style={{ height:1, background:'var(--border)', margin:'0.8rem 0 0.5rem' }} />
                   {user?.plan !== 'free' ? (
                     <><MarketRow label={t('Over 3.5 goles','Over 3.5 goals')} prob={analysis.markets.overUnder35.over} recommendation="over" isRec={analysis.markets.overUnder35.recommendation==='over'} /><MarketRow label={t('Under 3.5 goles','Under 3.5 goals')} prob={analysis.markets.overUnder35.under} recommendation="under" isRec={analysis.markets.overUnder35.recommendation==='under'} /></>
                   ) : <div style={{ padding:'0.6rem', textAlign:'center', fontSize:'0.75rem', color:'var(--muted)' }}>🔒 Over/Under 3.5 — Plan Pro</div>}
@@ -300,8 +410,14 @@ export function MatchAnalysisPage() {
             {match.sport === 'football' ? (
               <div className="glass" style={{ borderRadius:16, padding:'1.5rem' }}>
                 <h3 style={{ fontSize:'0.9rem', marginBottom:'1rem' }}>🥅 BTTS — {t('Ambos marcan','Both teams score')}</h3>
-                <MarketRow label={t('BTTS — Sí','BTTS — Yes')} prob={analysis.markets.btts.yes} recommendation="yes" isRec={analysis.markets.btts.recommendation==='yes'} />
-                <MarketRow label={t('BTTS — No','BTTS — No')} prob={analysis.markets.btts.no} recommendation="no" isRec={analysis.markets.btts.recommendation==='no'} />
+                <MarketRow label={t('BTTS — Sí','BTTS — Yes')} prob={analysis.markets.btts.yes} recommendation="yes" isRec={analysis.markets.btts.recommendation==='yes'} odds={bkOdds?.bttsYes.best} />
+                <MarketRow label={t('BTTS — No','BTTS — No')} prob={analysis.markets.btts.no} recommendation="no" isRec={analysis.markets.btts.recommendation==='no'} odds={bkOdds?.bttsNo.best} />
+                {bkOdds && (
+                  <BookmakerOddsRow
+                    marketOdds={analysis.markets.btts.recommendation === 'yes' ? bkOdds.bttsYes : bkOdds.bttsNo}
+                    recommendedSelectionUrl={BOOKMAKERS[0].registerUrl}
+                  />
+                )}
               </div>
             ) : match.sport === 'basketball' ? (
               <div className="glass" style={{ borderRadius:16, padding:'1.5rem' }}>
@@ -342,7 +458,16 @@ export function MatchAnalysisPage() {
             <div className="glass" style={{ borderRadius:16, padding:'1.5rem' }}>
               <h3 style={{ fontSize:'0.9rem', marginBottom:'1rem' }}>⚡ {t('Hándicap','Handicap')} ({analysis.markets.handicap.line > 0 ? '+' : ''}{analysis.markets.handicap.line})</h3>
               {user?.plan !== 'free' ? (
-                <><MarketRow label={`${match.homeTeam.name} (${analysis.markets.handicap.line})`} prob={analysis.markets.handicap.home} recommendation="home" isRec={analysis.markets.handicap.recommendation==='home'} /><MarketRow label={`${match.awayTeam.name} (${analysis.markets.handicap.line>0?'-':'+'}${Math.abs(analysis.markets.handicap.line)})`} prob={analysis.markets.handicap.away} recommendation="away" isRec={analysis.markets.handicap.recommendation==='away'} /></>
+                <>
+                  <MarketRow label={`${match.homeTeam.name} (${analysis.markets.handicap.line})`} prob={analysis.markets.handicap.home} recommendation="home" isRec={analysis.markets.handicap.recommendation==='home'} odds={bkOdds?.handicap.best} />
+                  <MarketRow label={`${match.awayTeam.name} (${analysis.markets.handicap.line>0?'-':'+'}${Math.abs(analysis.markets.handicap.line)})`} prob={analysis.markets.handicap.away} recommendation="away" isRec={analysis.markets.handicap.recommendation==='away'} />
+                  {bkOdds && (
+                    <BookmakerOddsRow
+                      marketOdds={bkOdds.handicap}
+                      recommendedSelectionUrl={BOOKMAKERS[0].registerUrl}
+                    />
+                  )}
+                </>
               ) : <div style={{ padding:'2rem', textAlign:'center', color:'var(--muted)', fontSize:'0.85rem' }}>🔒 {t('Mercado de hándicap disponible en Plan Pro','Handicap market available on Pro Plan')}</div>}
             </div>
           </div>
