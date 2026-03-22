@@ -120,8 +120,12 @@ export function MatchAnalysisPage() {
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState('');
   const [liveData, setLiveData] = useState<Partial<Match>|null>(null);
+  const [formFilters, setFormFilters] = useState<{ home: string | null; away: string | null }>({ home: null, away: null });
   const pollRef = useRef<ReturnType<typeof setInterval>|null>(null);
   const match: Match|undefined  = location.state?.match;
+
+  // Reset form filters when the analysed match changes
+  useEffect(() => { setFormFilters({ home: null, away: null }); }, [match?.id]);
 
   // Live polling
   useEffect(() => {
@@ -150,8 +154,8 @@ export function MatchAnalysisPage() {
       let homeStats, awayStats;
       if (match.sport === 'football') {
         [homeStats, awayStats] = await Promise.all([
-          fetchTeamStats(match.homeTeam.id, match.competition.id),
-          fetchTeamStats(match.awayTeam.id, match.competition.id),
+          fetchTeamStats(match.homeTeam.id, match.homeTeam.name, match.competition.id),
+          fetchTeamStats(match.awayTeam.id, match.awayTeam.name, match.competition.id),
         ]);
       } else {
         [homeStats, awayStats] = await Promise.all([
@@ -346,16 +350,37 @@ export function MatchAnalysisPage() {
           <div className="glass" style={{ borderRadius:16, padding:'1.5rem' }}>
             <h3 style={{ fontSize:'0.9rem', marginBottom:'1.2rem' }}>📋 {t('Forma reciente','Recent form')}</h3>
             <div className="bet-form-grid" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'2rem' }}>
-              {[{ stats:analysis.homeStats, team:match.homeTeam }, { stats:analysis.awayStats, team:match.awayTeam }].map(({ stats, team }) => (
+              {([{ stats:analysis.homeStats, team:match.homeTeam, fk:'home' }, { stats:analysis.awayStats, team:match.awayTeam, fk:'away' }] as const).map(({ stats, team, fk }) => {
+                const competitions = [...new Set(stats.form.map(f => f.competition).filter((c): c is string => !!c))];
+                const isMultiComp  = competitions.length > 1;
+                const active       = formFilters[fk];
+                const visible      = active ? stats.form.filter(f => f.competition === active) : stats.form;
+                const pillStyle = (on: boolean) => ({
+                  padding:'0.12rem 0.45rem', borderRadius:99, fontSize:'0.66rem', fontWeight:600, cursor:'pointer',
+                  border:'1px solid', transition:'all 0.15s', background: on ? 'var(--primary)' : 'transparent',
+                  color: on ? '#fff' : 'var(--muted)', borderColor: on ? 'var(--primary)' : 'var(--border)',
+                });
+                return (
                 <div key={team.id}>
-                  <div style={{ fontFamily:'Outfit', fontWeight:700, fontSize:'0.92rem', marginBottom:'0.8rem' }}>{team.name}</div>
-                  <div style={{ display:'flex', gap:'0.4rem', marginBottom:'0.6rem' }}>{stats.form.map((f, i) => <FormBadge key={i} result={f.result} />)}</div>
-                  {stats.form.length > 0 && (
+                  <div style={{ fontFamily:'Outfit', fontWeight:700, fontSize:'0.92rem', marginBottom:'0.6rem' }}>{team.name}</div>
+                  {isMultiComp && (
+                    <div style={{ display:'flex', gap:'0.3rem', marginBottom:'0.55rem', flexWrap:'wrap' }}>
+                      <button style={pillStyle(!active)} onClick={() => setFormFilters(p => ({ ...p, [fk]: null }))}>{t('Todas','All')}</button>
+                      {competitions.map(c => (
+                        <button key={c} style={pillStyle(active === c)} onClick={() => setFormFilters(p => ({ ...p, [fk]: c }))}>{c}</button>
+                      ))}
+                    </div>
+                  )}
+                  <div style={{ display:'flex', gap:'0.4rem', marginBottom:'0.6rem' }}>{visible.map((f, i) => <FormBadge key={i} result={f.result} />)}</div>
+                  {visible.length > 0 && (
                     <div style={{ display:'flex', flexDirection:'column', gap:'0.15rem', marginBottom:'0.8rem' }}>
-                      {stats.form.map((f, i) => (
+                      {visible.map((f, i) => (
                         <div key={i} style={{ fontSize:'0.72rem', color:'var(--muted)', display:'flex', gap:'0.4rem', alignItems:'center' }}>
                           <FormBadge result={f.result} />
                           <span style={{ color:'var(--text2)' }}>{f.isHome ? t('vs','vs') : t('en','@')} {f.opponent}</span>
+                          {isMultiComp && !active && f.competition && (
+                            <span style={{ fontSize:'0.64rem', color:'var(--muted)', opacity:0.65, whiteSpace:'nowrap' }}>({f.competition})</span>
+                          )}
                           <span style={{ marginLeft:'auto' }}>{f.goalsFor}-{f.goalsAgainst}</span>
                         </div>
                       ))}
@@ -387,7 +412,8 @@ export function MatchAnalysisPage() {
                     ))}
                   </div>
                 </div>
-              ))}
+              );
+              })}
             </div>
             {/* Form legend */}
             <div style={{ display:'flex', gap:'1rem', marginTop:'1.2rem', paddingTop:'1rem', borderTop:'1px solid var(--border)', flexWrap:'wrap' }}>

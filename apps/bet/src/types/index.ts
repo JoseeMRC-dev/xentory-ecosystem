@@ -63,6 +63,8 @@ export interface FormMatch {
   goalsAgainst: number;
   date: string;
   isHome: boolean;
+  /** Competition name (e.g. "LaLiga", "Champions League"). Populated when the team plays in multiple competitions. */
+  competition?: string;
 }
 
 export interface TeamStats {
