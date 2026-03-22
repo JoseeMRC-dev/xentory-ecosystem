@@ -3,6 +3,7 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { fetchTeamStats, fetchNonFootballStats, fetchLiveMatchById, fetchWeekMatches, fetchTennisMatches, fetchBasketballMatches, fetchF1Matches, fetchGolfMatches } from '../../services/sportsService';
 import { generateMatchAnalysis } from '../../services/aiService';
+import { logActivity } from '../../services/activityStore';
 import { fetchBookmakerOdds, BOOKMAKERS } from '../../services/oddsService';
 import type { MatchBookmakerOdds, MarketBookmakerOdds } from '../../services/oddsService';
 import { SPORT_CONFIG, FORM_COLORS, confidenceColor } from '../../constants';
@@ -240,6 +241,12 @@ export function MatchAnalysisPage() {
       awayStats = { ...awayStats, team: { ...awayStats.team, name: match.awayTeam.name, shortName: match.awayTeam.shortName ?? match.awayTeam.name.slice(0, 3).toUpperCase() } };
       const result = await generateMatchAnalysis(match, homeStats, awayStats, user?.plan ?? 'free');
       setAnalysis(result);
+      logActivity({
+        type: 'analysis',
+        sport: SPORT_CONFIG[match.sport]?.emoji ?? '🎾',
+        title: `${match.homeTeam.name} vs ${match.awayTeam.name}`,
+        subtitle: match.competition.name,
+      });
       // Fetch bookmaker odds (real or derived)
       const odds = await fetchBookmakerOdds(
         match.homeTeam.name,

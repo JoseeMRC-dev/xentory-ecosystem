@@ -162,7 +162,7 @@ export const Topbar = memo(function Topbar() {
           position: fixed; top: 0;
           left: var(--sidebar-w); right: 0;
           height: var(--topbar-h);
-          background: rgba(4,6,15,0.94);
+          background: var(--nav-bg);
           border-bottom: 1px solid rgba(255,255,255,0.06);
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);

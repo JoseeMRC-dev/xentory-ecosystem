@@ -4,6 +4,8 @@ import { useAuth } from '../../hooks/useAuth';
 import { fetchUpcomingMatches, fetchBasketballMatches, fetchTennisMatches } from '../../services/sportsService';
 import { calculateGlobalAccuracy } from '../../services/globalAccuracy';
 import { getTelegramConnection } from '../../services/alertService';
+import { logActivity, getRecentActivity } from '../../services/activityStore';
+import type { Activity } from '../../services/activityStore';
 import { SPORT_CONFIG, confidenceColor } from '../../constants';
 import { useLang } from '../../context/LanguageContext';
 import type { Match } from '../../types';
@@ -49,6 +51,27 @@ function StatCard({ icon, value, label, color }: { icon: string; value: string; 
   );
 }
 
+function timeAgo(ts: number, lang: string): string {
+  const diff = Math.floor((Date.now() - ts) / 1000);
+  if (diff < 60) return lang === 'es' ? 'Ahora mismo' : 'Just now';
+  if (diff < 3600) { const m = Math.floor(diff / 60); return lang === 'es' ? `Hace ${m} min` : `${m}m ago`; }
+  if (diff < 86400) { const h = Math.floor(diff / 3600); return lang === 'es' ? `Hace ${h}h` : `${h}h ago`; }
+  const d = Math.floor(diff / 86400);
+  return lang === 'es' ? `Hace ${d}d` : `${d}d ago`;
+}
+
+const ACTIVITY_ICONS: Record<string, string> = {
+  analysis: '🧠',
+  match_view: '👁️',
+  pick: '🎯',
+};
+
+const ACTIVITY_LABELS: Record<string, { es: string; en: string }> = {
+  analysis: { es: 'Análisis generado', en: 'Analysis generated' },
+  match_view: { es: 'Partido visto', en: 'Match viewed' },
+  pick: { es: 'Pick guardado', en: 'Pick saved' },
+};
+
 export function DashboardPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -58,6 +81,7 @@ export function DashboardPage() {
   const [todayPicks, setTodayPicks] = useState<DayPick[]>([]);
   const [weeklyAcc, setWeeklyAcc] = useState<number | null>(null);
   const [tgLinked, setTgLinked] = useState<boolean | null>(null); // null = loading
+  const [recentActivity, setRecentActivity] = useState<Activity[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -106,6 +130,14 @@ export function DashboardPage() {
 
     return () => { cancelled = true; };
   }, [lang]);
+
+  // Load recent activity on mount and whenever window is focused (user returns from analysis)
+  useEffect(() => {
+    const refresh = () => setRecentActivity(getRecentActivity(8));
+    refresh();
+    window.addEventListener('focus', refresh);
+    return () => window.removeEventListener('focus', refresh);
+  }, []);
 
   const hour = new Date().getHours();
   const greeting = lang === 'es'
@@ -182,7 +214,11 @@ export function DashboardPage() {
             {todayPicks.map((pick, i) => (
               <div
                 key={i}
-                onClick={() => navigate(`/matches/${pick.matchId}`, { state: { match: pick.matchRef } })}
+                onClick={() => {
+                  logActivity({ type: 'match_view', sport: pick.sport, title: pick.match, subtitle: pick.competition });
+                  setRecentActivity(getRecentActivity(8));
+                  navigate(`/matches/${pick.matchId}`, { state: { match: pick.matchRef } });
+                }}
                 style={{
                   padding: '1rem 1.2rem',
                   background: 'var(--card2)', borderRadius: 12,
@@ -228,7 +264,11 @@ export function DashboardPage() {
               : upcomingMatches.slice(0, 5).map(match => (
                   <div
                     key={match.id}
-                    onClick={() => navigate(`/matches/${match.id}`, { state: { match } })}
+                    onClick={() => {
+                      logActivity({ type: 'match_view', sport: match.competition.emoji ?? SPORT_CONFIG[match.sport]?.emoji ?? '⚽', title: `${match.homeTeam.name} vs ${match.awayTeam.name}`, subtitle: match.competition.name });
+                      setRecentActivity(getRecentActivity(8));
+                      navigate(`/matches/${match.id}`, { state: { match } });
+                    }}
                     style={{
                       padding: '0.7rem 0.9rem', background: 'var(--card2)',
                       borderRadius: 10, cursor: 'pointer',
@@ -254,6 +294,52 @@ export function DashboardPage() {
             }
           </div>
         </div>
+      </div>
+
+      {/* ── Actividad reciente ───────────────────────────────── */}
+      <div className="glass" style={{ borderRadius: 16, padding: '1.5rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h2 style={{ fontSize: '1rem' }}>🕐 {t('Actividad reciente', 'Recent activity')}</h2>
+        </div>
+
+        {recentActivity.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '1.5rem 0', color: 'var(--muted)', fontSize: '0.85rem' }}>
+            <div style={{ fontSize: '2rem', marginBottom: '0.5rem', opacity: 0.4 }}>📭</div>
+            {t('Aquí aparecerá tu actividad. Empieza analizando un partido.', 'Your activity will appear here. Start by analysing a match.')}
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {recentActivity.map(act => (
+              <div
+                key={act.id}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.9rem',
+                  padding: '0.7rem 0.9rem', borderRadius: 10,
+                  background: 'var(--card2)', border: '1px solid var(--border)',
+                }}
+              >
+                {/* sport + action icon */}
+                <div style={{ position: 'relative', flexShrink: 0, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', background: 'var(--bg)', borderRadius: 8 }}>
+                  {act.sport}
+                  <span style={{ position: 'absolute', bottom: -2, right: -4, fontSize: '0.7rem' }}>
+                    {ACTIVITY_ICONS[act.type]}
+                  </span>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {act.title}
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginTop: '0.1rem' }}>
+                    {act.subtitle} · {ACTIVITY_LABELS[act.type]?.[lang as 'es' | 'en'] ?? act.type}
+                  </div>
+                </div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--muted)', flexShrink: 0 }}>
+                  {timeAgo(act.ts, lang)}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ── Football competitions slider ─────────────────────── */}
