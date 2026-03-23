@@ -177,7 +177,19 @@ interface OddsApiEvent {
 }
 
 function normTeamName(s: string): string {
-  return s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return s.toLowerCase()
+    // Remove common suffixes/prefixes that differ between data sources
+    .replace(/\b(fc|cf|sc|ac|bc|cd|rc|sd|ud|rcd|afc|utd|united|city|club|athletic|atlético|atletico|deportivo|sporting|calcio|football)\b/g, '')
+    .replace(/[^a-z0-9]/g, '');
+}
+
+/** Fuzzy team name match: handles cases where ESPN and Odds API differ slightly */
+function namesMatch(a: string, b: string): boolean {
+  if (!a || !b) return false;
+  if (a === b) return true;
+  // Inclusion check for names longer than 4 chars (avoids false positives on short names)
+  if (a.length > 4 && b.length > 4) return a.includes(b) || b.includes(a);
+  return false;
 }
 
 function oddsApiToBookmakerMap(event: OddsApiEvent): Partial<MatchBookmakerOdds> | null {
@@ -283,9 +295,15 @@ export async function fetchBookmakerOdds(
   let realtimeData: Partial<MatchBookmakerOdds> = {};
 
   // Try Odds API if key is configured
+  if (!ODDS_API_KEY) {
+    console.warn('[Odds API] VITE_ODDS_API_KEY not set — using derived odds');
+  }
   if (ODDS_API_KEY) {
     try {
       const sportKey = sport === 'basketball' ? NBA_KEY : (SPORT_KEYS[competitionId] ?? '');
+      if (!sportKey) {
+        console.warn('[Odds API] No sport key for competitionId', competitionId, '— using derived odds');
+      }
       if (sportKey) {
         const url = `${ODDS_API_BASE}/sports/${sportKey}/odds/?apiKey=${ODDS_API_KEY}&regions=eu&markets=h2h,totals,btts&bookmakers=bet365,williamhill,betfair_ex_eu,bwin`;
         const res = await fetch(url);
@@ -294,16 +312,24 @@ export async function fetchBookmakerOdds(
           const normHome = normTeamName(homeTeam);
           const normAway = normTeamName(awayTeam);
           const event = events.find(e =>
-            normTeamName(e.home_team) === normHome &&
-            normTeamName(e.away_team) === normAway
+            namesMatch(normTeamName(e.home_team), normHome) &&
+            namesMatch(normTeamName(e.away_team), normAway)
           );
           if (event) {
             const parsed = oddsApiToBookmakerMap(event);
-            if (parsed) realtimeData = parsed;
+            if (parsed) {
+              realtimeData = parsed;
+              console.log('[Odds API] ✅ Real odds found for', homeTeam, 'vs', awayTeam);
+            }
+          } else {
+            console.warn('[Odds API] ⚠️ No match for', homeTeam, 'vs', awayTeam,
+              '— available events:', events.map(e => `${e.home_team} vs ${e.away_team}`));
           }
         }
       }
-    } catch { /* fall back to derived */ }
+    } catch (err) {
+      console.error('[Odds API] ❌ Fetch error:', err);
+    }
   }
 
   CACHE.set(cacheKey, { data: realtimeData, at: Date.now() });
