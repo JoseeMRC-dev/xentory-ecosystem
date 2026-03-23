@@ -45,7 +45,7 @@ export const BOOKMAKERS: Bookmaker[] = [
   },
   {
     id: 'betfair', name: 'Betfair', shortName: 'BF',
-    logo: 'https://www.google.com/s2/favicons?domain=betfair.es&sz=32',
+    logo: 'https://www.google.com/s2/favicons?domain=betfair.com&sz=32',
     color: '#f5a623',
     // TODO: Reemplaza con tu link de afiliado
     registerUrl: 'https://register.betfair.es/',
@@ -72,7 +72,7 @@ export const BOOKMAKERS: Bookmaker[] = [
   },
   {
     id: 'codere', name: 'Codere', shortName: 'CDR',
-    logo: 'https://www.google.com/s2/favicons?domain=codere.es&sz=32',
+    logo: 'https://www.google.com/s2/favicons?domain=codere.com&sz=32',
     color: '#e30613',
     // TODO: Reemplaza con tu link de afiliado
     registerUrl: 'https://www.codere.es/registro',
