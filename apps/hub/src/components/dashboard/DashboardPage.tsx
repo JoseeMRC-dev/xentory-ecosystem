@@ -14,12 +14,6 @@ const PLAN_COLORS: Record<Plan, string> = {
   elite: '#3b9eff',
 };
 
-const MOCK_STATS = {
-  marketAnalysesRun: 12,
-  betsAnalysed: 8,
-  alertsTriggered: 3,
-  telegramSignalsReceived: 47,
-};
 
 // ── SVG ICONS ─────────────────────────────────────────────────────────
 const MarketIcon = () => (
@@ -32,22 +26,6 @@ const BetIcon = () => (
     <circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><line x1="2" y1="12" x2="22" y2="12"/>
   </svg>
 );
-const BrainIcon = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-    <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.46 2.5 2.5 0 0 1-1.07-4.73A3 3 0 0 1 4 11a3 3 0 0 1 3-3 2.5 2.5 0 0 1 2.5-6z"/>
-    <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.46 2.5 2.5 0 0 0 1.07-4.73A3 3 0 0 0 20 11a3 3 0 0 0-3-3 2.5 2.5 0 0 0-2.5-6z"/>
-  </svg>
-);
-const BellIcon = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-  </svg>
-);
-const SendIcon = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-    <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-  </svg>
-);
 const ArrowIcon = () => (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
     <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
@@ -56,11 +34,6 @@ const ArrowIcon = () => (
 const StarIcon = () => (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none">
     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-  </svg>
-);
-const ClockIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
   </svg>
 );
 const TelegramIcon = () => (
@@ -208,32 +181,6 @@ export function DashboardPage() {
     ? { emoji: '💱', label: lang === 'es' ? 'Continuar: Analizar EUR/USD'          : 'Continue: Analyse EUR/USD',           platform: 'market' as const }
     : null;
 
-  const STATS = [
-    { icon: <BrainIcon />,  label: lang === 'es' ? 'Análisis IA ejecutados'   : 'AI analyses run',      value: MOCK_STATS.marketAnalysesRun,          color: 'var(--gold)'   },
-    { icon: <BetIcon />,    label: lang === 'es' ? 'Partidos analizados'       : 'Matches analysed',     value: MOCK_STATS.betsAnalysed,               color: 'var(--cyan)'   },
-    { icon: <BellIcon />,   label: lang === 'es' ? 'Alertas activadas'         : 'Alerts triggered',     value: MOCK_STATS.alertsTriggered,            color: 'var(--orange)' },
-    { icon: <SendIcon />,   label: lang === 'es' ? 'Señales Telegram'          : 'Telegram signals',     value: MOCK_STATS.telegramSignalsReceived,     color: 'var(--green)'  },
-  ];
-
-  const RECENT_BASE = lang === 'es' ? [
-    { icon: <MarketIcon />, text: 'Análisis IA de BTC/USDT generado',   time: 'hace 2h',  platform: 'market' },
-    { icon: <BetIcon />,    text: 'Predicción: Real Madrid vs Barça',   time: 'hace 5h',  platform: 'bets'   },
-    { icon: <BellIcon />,   text: 'Alerta de precio NVDA activada',     time: 'hace 1d',  platform: 'market' },
-    { icon: <SendIcon />,   text: '12 señales recibidas en Telegram',   time: 'hace 1d',  platform: 'market' },
-    { icon: <BetIcon />,    text: 'Predicción: Champions League',       time: 'hace 2d',  platform: 'bets'   },
-  ] : [
-    { icon: <MarketIcon />, text: 'AI analysis of BTC/USDT generated',  time: '2h ago',   platform: 'market' },
-    { icon: <BetIcon />,    text: 'Prediction: Real Madrid vs Barça',   time: '5h ago',   platform: 'bets'   },
-    { icon: <BellIcon />,   text: 'NVDA price alert triggered',         time: '1d ago',   platform: 'market' },
-    { icon: <SendIcon />,   text: '12 signals received on Telegram',    time: '1d ago',   platform: 'market' },
-    { icon: <BetIcon />,    text: 'Prediction: Champions League',       time: '2d ago',   platform: 'bets'   },
-  ];
-  // Sort activity to surface preferred platform first
-  const RECENT = prefPlatform === 'sports'
-    ? [...RECENT_BASE].sort((a, b) => (a.platform === 'bets'   ? -1 : b.platform === 'bets'   ? 1 : 0))
-    : prefPlatform === 'market'
-    ? [...RECENT_BASE].sort((a, b) => (a.platform === 'market' ? -1 : b.platform === 'market' ? 1 : 0))
-    : RECENT_BASE;
 
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: 'calc(var(--bar-h) + 1.5rem) clamp(1rem,4vw,2rem) 3rem' }}>
@@ -312,28 +259,15 @@ export function DashboardPage() {
         )}
       </div>
 
-      {/* Stats + Activity */}
+      {/* Telegram status + Bundle CTA */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,300px),1fr))', gap: 'clamp(0.8rem,3vw,1.2rem)' }}>
 
-        {/* Stats card */}
+        {/* Telegram status */}
         <div className="glass" style={{ borderRadius: 18, padding: 'clamp(1rem,4vw,1.8rem)' }}>
           <h2 style={{ fontSize: '0.92rem', marginBottom: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'Outfit, sans-serif', color: 'var(--text2)' }}>
-            <BrainIcon /> {lang === 'es' ? 'Tu actividad' : 'Your activity'}
+            <TelegramIcon /> Telegram
           </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-            {STATS.map(stat => (
-              <div key={stat.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.6rem 0.85rem', background: 'var(--card2)', borderRadius: 9 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
-                  <span style={{ color: stat.color }}>{stat.icon}</span>
-                  <span style={{ fontSize: '0.82rem', color: 'var(--text2)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{stat.label}</span>
-                </div>
-                <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, color: stat.color, fontSize: '1.05rem', flexShrink: 0, marginLeft: '0.5rem' }}>{stat.value}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Telegram status */}
-          <div style={{ marginTop: '1.2rem', padding: '0.85rem 1rem', background: user.telegramLinked ? 'rgba(0,200,122,0.05)' : 'var(--card2)', borderRadius: 12, border: `1px solid ${user.telegramLinked ? 'rgba(0,200,122,0.12)' : 'var(--border)'}` }}>
+          <div style={{ padding: '0.85rem 1rem', background: user.telegramLinked ? 'rgba(0,200,122,0.05)' : 'var(--card2)', borderRadius: 12, border: `1px solid ${user.telegramLinked ? 'rgba(0,200,122,0.12)' : 'var(--border)'}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <div style={{ fontSize: '0.7rem', color: 'var(--muted)', marginBottom: '0.2rem', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Telegram</div>
@@ -346,46 +280,21 @@ export function DashboardPage() {
           </div>
         </div>
 
-        {/* Recent activity */}
-        <div className="glass" style={{ borderRadius: 18, padding: 'clamp(1rem,4vw,1.8rem)' }}>
-          <h2 style={{ fontSize: '0.92rem', marginBottom: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'Outfit, sans-serif', color: 'var(--text2)' }}>
-            <ClockIcon /> {lang === 'es' ? 'Actividad reciente' : 'Recent activity'}
-          </h2>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {RECENT.map((item, i) => (
-              <div key={i} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start', padding: '0.8rem 0', borderBottom: i < RECENT.length - 1 ? '1px solid var(--border)' : 'none' }}>
-                <div style={{ width: 30, height: 30, borderRadius: 8, flexShrink: 0, background: item.platform === 'market' ? 'var(--gold-dim)' : 'var(--green-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: item.platform === 'market' ? 'var(--gold)' : 'var(--green)' }}>
-                  {item.icon}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '0.83rem', marginBottom: '0.18rem', lineHeight: 1.4 }}>{item.text}</div>
-                  <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.68rem', color: 'var(--muted)' }}>{item.time}</span>
-                    <span style={{ fontSize: '0.6rem', padding: '0.08rem 0.38rem', borderRadius: 4, background: item.platform === 'market' ? 'var(--gold-dim)' : 'var(--green-dim)', color: item.platform === 'market' ? 'var(--gold)' : 'var(--green)' }}>
-                      {item.platform === 'market' ? 'Market' : 'Bet'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Bundle CTA */}
-          {(user.subscriptions.market === 'free' || user.subscriptions.bets === 'free') && (
-            <div onClick={() => navigate('/pricing')} style={{ marginTop: '1rem', padding: '0.9rem 1rem', background: 'linear-gradient(135deg,rgba(201,168,76,0.07),rgba(59,158,255,0.04))', border: '1px solid rgba(201,168,76,0.18)', borderRadius: 12, cursor: 'pointer', transition: 'border-color 0.2s' }}
-              onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.38)')}
-              onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.18)')}
-            >
-              <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.88rem', marginBottom: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <span style={{ color: 'var(--gold)' }}><StarIcon /></span>
-                {lang === 'es' ? 'Bundle Total — Ahorra 9€/mes' : 'Full Bundle — Save €9/mo'}
-              </div>
-              <div style={{ color: 'var(--muted)', fontSize: '0.78rem', lineHeight: 1.5 }}>
-                {lang === 'es' ? 'Market Pro + Bet Pro por solo 49€/mes en vez de 58€' : 'Market Pro + Bet Pro for just €49/mo instead of €58'}
-              </div>
+        {/* Bundle CTA */}
+        {(user.subscriptions.market === 'free' || user.subscriptions.bets === 'free') && (
+          <div onClick={() => navigate('/pricing')} style={{ borderRadius: 18, padding: 'clamp(1rem,4vw,1.8rem)', background: 'linear-gradient(135deg,rgba(201,168,76,0.07),rgba(59,158,255,0.04))', border: '1px solid rgba(201,168,76,0.18)', cursor: 'pointer', transition: 'border-color 0.2s', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
+            onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.38)')}
+            onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.18)')}
+          >
+            <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.95rem', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <span style={{ color: 'var(--gold)' }}><StarIcon /></span>
+              {lang === 'es' ? 'Bundle Total — Ahorra 9€/mes' : 'Full Bundle — Save €9/mo'}
             </div>
-          )}
-        </div>
+            <div style={{ color: 'var(--muted)', fontSize: '0.82rem', lineHeight: 1.5 }}>
+              {lang === 'es' ? 'Market Pro + Bet Pro por solo 49€/mes en vez de 58€' : 'Market Pro + Bet Pro for just €49/mo instead of €58'}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
