@@ -28,6 +28,34 @@
   --sport-dim: rgba(0,255,136,0.10);
 }
 
+/* ── Light mode palette ───────────────────────────────────────────────── */
+[data-theme="light"] {
+  --bg:        #f0f2f8;
+  --nav-bg:    #ffffff;
+  --bg2:       #ffffff;
+  --bg3:       #e8ecf5;
+  --gold:      #a87c20;
+  --gold-l:    #c9980a;
+  --gold-dim:  rgba(168,124,32,0.12);
+  --cyan:      #0088bb;
+  --cyan-dim:  rgba(0,136,187,0.10);
+  --green:     #00904a;
+  --green-dim: rgba(0,144,74,0.10);
+  --red:       #d42535;
+  --orange:    #d95e0a;
+  --text:      #141828;
+  --text2:     #404880;
+  --muted:     #8891b4;
+  --border:    rgba(0,0,0,0.08);
+  --border2:   rgba(0,0,0,0.13);
+  --card:      rgba(0,0,0,0.03);
+  --card2:     rgba(0,0,0,0.055);
+  --sport:     #00904a;
+  --sport-dim: rgba(0,144,74,0.10);
+}
+
+[data-theme="light"] body::after { opacity: 0.15; }
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: 16px; scroll-behavior: smooth; }
 body {
