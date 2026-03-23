@@ -16,7 +16,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, supabaseTokens } = useAuth();
   const [ageOk, setAgeOk] = useState(() => hasAgeConfirmed());
 
   if (isLoading) return null;
@@ -29,7 +29,7 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   // Si el usuario tiene ageVerified desde SSO, no mostramos el gate
   const needsGate = !ageOk && !user.ageVerified;
   if (needsGate) {
-    return <AgeGate onConfirm={() => setAgeOk(true)} />;
+    return <AgeGate onConfirm={() => setAgeOk(true)} userId={user.id} tokens={supabaseTokens} />;
   }
 
   return <>{children}</>;
