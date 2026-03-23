@@ -231,13 +231,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const plan = platform === 'market'
       ? (user.subscriptions?.market ?? 'free')
       : (user.subscriptions?.bets   ?? 'free');
+
+    // Include Supabase session tokens so sub-apps can persist age verification
+    const sb = getSupabase();
+    const { data: { session } } = await sb.auth.getSession();
+
     const params = new URLSearchParams({
-      uid:   user.id,
+      uid:    user.id,
       uemail: user.email,
-      uname: user.name ?? '',
-      uplan: plan,
-      uage:  user.ageVerified ? '1' : '0',
-      uts:   String(Date.now()),
+      uname:  user.name ?? '',
+      uplan:  plan,
+      uage:   user.ageVerified ? '1' : '0',
+      uts:    String(Date.now()),
+      ...(session ? { utoken: session.access_token, urefresh: session.refresh_token ?? '' } : {}),
     });
     const url = `${PLATFORM_URLS[platform]}?${params.toString()}`;
     console.log('[launch] navigating to', PLATFORM_URLS[platform]);

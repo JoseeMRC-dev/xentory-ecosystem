@@ -169,8 +169,17 @@ export function Sidebar() {
   // Lock body scroll when mobile menu is open
   useEffect(() => {
     if (!isMobile) return;
-    document.body.style.overflow = open ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
+    if (open) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
   }, [open, isMobile]);
 
   return (
@@ -197,7 +206,7 @@ export function Sidebar() {
       {isMobile && open && (
         <>
           <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(5,8,16,0.6)', backdropFilter: 'blur(3px)', touchAction: 'none' }} />
-          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 51, background: '#080d1a', display: 'flex', flexDirection: 'column', overflowY: 'auto', animation: 'slideDown 0.18s ease both' }}>
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 51, background: '#080d1a', display: 'flex', flexDirection: 'column', overflowY: 'auto', overscrollBehavior: 'contain', animation: 'slideDown 0.18s ease both' }}>
             {/* Drawer header — mirrors the mobile topbar so the user has a close target */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', height: 52, flexShrink: 0, borderBottom: '1px solid var(--border)' }}>
               <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1.1rem', letterSpacing: '-0.02em', display: 'flex', alignItems: 'baseline' }}>

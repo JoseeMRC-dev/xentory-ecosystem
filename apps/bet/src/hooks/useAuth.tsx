@@ -8,17 +8,19 @@ import { createContext, useContext, useState, useCallback, useEffect, useRef, ty
 import type { User, Plan } from '../types';
 
 interface AuthContextType {
-  user:        User | null;
-  isLoading:   boolean;
-  logout:      () => void;
-  upgradePlan: (plan: Plan) => void;
+  user:           User | null;
+  isLoading:      boolean;
+  logout:         () => void;
+  upgradePlan:    (plan: Plan) => void;
+  supabaseTokens: { access: string; refresh: string } | null;
 }
 
-const AuthContext   = createContext<AuthContextType | null>(null);
-const HUB_URL       = (import.meta as any).env?.VITE_HUB_URL ?? 'https://x-eight-beryl.vercel.app';
-const USER_KEY      = 'xentory_bet_user';
-const SESSION_KEY   = 'xentory_bet_session';
-const CACHE_MAX_AGE = 24 * 60 * 60 * 1000; // 24h
+const AuthContext    = createContext<AuthContextType | null>(null);
+const HUB_URL        = (import.meta as any).env?.VITE_HUB_URL ?? 'https://x-eight-beryl.vercel.app';
+const USER_KEY       = 'xentory_bet_user';
+const SESSION_KEY    = 'xentory_bet_session';
+const TOKENS_KEY     = 'xentory_bet_tokens';
+const CACHE_MAX_AGE  = 24 * 60 * 60 * 1000; // 24h
 
 // ── MODULE-LEVEL SSO CAPTURE ──────────────────────────────────────────────────
 const _capturedSSO = (() => {
@@ -32,11 +34,17 @@ const _capturedSSO = (() => {
     const sso = {
       uid,
       uemail,
-      uname:  qp.get('uname') ?? uemail.split('@')[0],
-      uplan:  qp.get('uplan') ?? 'free',
-      uage:   qp.get('uage') ?? '0',
+      uname:    qp.get('uname')    ?? uemail.split('@')[0],
+      uplan:    qp.get('uplan')    ?? 'free',
+      uage:     qp.get('uage')     ?? '0',
+      utoken:   qp.get('utoken')   ?? '',
+      urefresh: qp.get('urefresh') ?? '',
     };
     sessionStorage.setItem(SESSION_KEY, JSON.stringify({ ...sso, capturedAt: Date.now() }));
+    // Store tokens separately for AgeGate use
+    if (sso.utoken) {
+      try { localStorage.setItem(TOKENS_KEY, JSON.stringify({ access: sso.utoken, refresh: sso.urefresh, savedAt: Date.now() })); } catch { /**/ }
+    }
     console.log('[Bet] SSO captured at module level:', uemail);
     return sso;
   } catch {
@@ -44,9 +52,19 @@ const _capturedSSO = (() => {
   }
 })();
 
+function loadStoredTokens(): { access: string; refresh: string } | null {
+  try {
+    const s = localStorage.getItem(TOKENS_KEY);
+    if (!s) return null;
+    const t = JSON.parse(s);
+    return (t.access) ? { access: t.access, refresh: t.refresh ?? '' } : null;
+  } catch { return null; }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user,      setUser]    = useState<User | null>(null);
-  const [isLoading, setLoading] = useState(true);
+  const [user,           setUser]    = useState<User | null>(null);
+  const [isLoading,      setLoading] = useState(true);
+  const [supabaseTokens, setTokens]  = useState<{ access: string; refresh: string } | null>(loadStoredTokens);
   const didInit = useRef(false);
 
   useEffect(() => {
@@ -77,6 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (_capturedSSO) {
         const u = buildUser(_capturedSSO);
         saveUser(u);
+        if (_capturedSSO.utoken) setTokens({ access: _capturedSSO.utoken, refresh: _capturedSSO.urefresh });
         window.history.replaceState({}, '', window.location.pathname);
         console.log('[Bet] SSO OK (module capture):', u.email);
         setUser(u);
@@ -90,6 +109,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const uid    = qp.get('uid');
         const uemail = qp.get('uemail');
         if (uid && uemail) {
+          const utoken   = qp.get('utoken')   ?? '';
+          const urefresh = qp.get('urefresh') ?? '';
           const u = buildUser({
             uid, uemail,
             uname:  qp.get('uname') ?? uemail.split('@')[0],
@@ -97,6 +118,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             uage:   qp.get('uage') ?? '0',
           });
           saveUser(u);
+          if (utoken) {
+            const tokens = { access: utoken, refresh: urefresh };
+            setTokens(tokens);
+            try { localStorage.setItem(TOKENS_KEY, JSON.stringify({ ...tokens, savedAt: Date.now() })); } catch { /**/ }
+          }
           window.history.replaceState({}, '', window.location.pathname);
           console.log('[Bet] SSO OK (URL fallback):', u.email);
           setUser(u);
@@ -174,7 +200,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, logout, upgradePlan }}>
+    <AuthContext.Provider value={{ user, isLoading, logout, upgradePlan, supabaseTokens }}>
       {children}
     </AuthContext.Provider>
   );

@@ -11,12 +11,11 @@ import { EducationPage } from './components/education/EducationPage';
 import { CasasPage } from './components/casas/CasasPage';
 import { AgeGate, hasAgeConfirmed } from './components/auth/AgeGate';
 import './styles/global.css';
-import { LoadingScreen } from './components/layout/LoadingScreen';
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, supabaseTokens } = useAuth();
   const [ageOk, setAgeOk] = useState(() => hasAgeConfirmed());
 
   if (isLoading) return null;
@@ -29,7 +28,7 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   // Si el usuario tiene ageVerified desde SSO, no mostramos el gate
   const needsGate = !ageOk && !user.ageVerified;
   if (needsGate) {
-    return <AgeGate onConfirm={() => setAgeOk(true)} />;
+    return <AgeGate onConfirm={() => setAgeOk(true)} userId={user.id} tokens={supabaseTokens} />;
   }
 
   return <>{children}</>;
@@ -71,27 +70,15 @@ function AppRoutes() {
   );
 }
 
-function hasSession(): boolean {
-  try {
-    return !!(localStorage.getItem('xentory_bet_user') || sessionStorage.getItem('xentory_bet_session'));
-  } catch { return false; }
-}
-
 export default function App() {
-  // Skip the intro loading screen if the user already has a cached session
-  const [appReady, setAppReady] = useState(hasSession);
-
   return (
     <ThemeProvider>
       <LanguageProvider>
-        {!appReady && <LoadingScreen onDone={() => setAppReady(true)} />}
-        {appReady && (
-          <BrowserRouter>
-            <AuthProvider>
-              <AppRoutes />
-            </AuthProvider>
-          </BrowserRouter>
-        )}
+        <BrowserRouter>
+          <AuthProvider>
+            <AppRoutes />
+          </AuthProvider>
+        </BrowserRouter>
       </LanguageProvider>
     </ThemeProvider>
   );

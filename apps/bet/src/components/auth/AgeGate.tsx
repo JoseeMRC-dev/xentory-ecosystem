@@ -1,9 +1,10 @@
 /**
  * AgeGate — Verificación de edad +18
  * Se muestra a usuarios cuya sesión SSO no incluye confirmación de edad.
- * Tras confirmar, guarda en localStorage para no volver a mostrar.
+ * Tras confirmar, persiste en Supabase (age_verified) y en localStorage como fallback.
  */
 import { useState } from 'react';
+import { supabase } from '../../lib/supabase';
 
 const GATE_KEY = 'xentory_age_confirmed';
 const HUB_URL  = (import.meta as any).env?.VITE_HUB_URL ?? 'https://x-eight-beryl.vercel.app';
@@ -12,7 +13,13 @@ export function hasAgeConfirmed(): boolean {
   try { return localStorage.getItem(GATE_KEY) === '1'; } catch { return false; }
 }
 
-export function AgeGate({ onConfirm }: { onConfirm: () => void }) {
+interface AgeGateProps {
+  onConfirm: () => void;
+  userId?:   string;
+  tokens?:   { access: string; refresh: string } | null;
+}
+
+export function AgeGate({ onConfirm, userId, tokens }: AgeGateProps) {
   const [dob, setDob]           = useState('');
   const [agreed, setAgreed]     = useState(false);
   const [error, setError]       = useState('');
@@ -21,7 +28,7 @@ export function AgeGate({ onConfirm }: { onConfirm: () => void }) {
   maxDate.setFullYear(maxDate.getFullYear() - 18);
   const maxDateStr = maxDate.toISOString().split('T')[0];
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     setError('');
     if (!dob) { setError('Introduce tu fecha de nacimiento.'); return; }
 
@@ -36,7 +43,20 @@ export function AgeGate({ onConfirm }: { onConfirm: () => void }) {
     }
     if (!agreed) { setError('Debes aceptar la declaración de mayoría de edad.'); return; }
 
+    // Persist in localStorage as fallback
     try { localStorage.setItem(GATE_KEY, '1'); } catch { /**/ }
+
+    // Persist in Supabase so it works across devices/browsers
+    if (userId && tokens?.access) {
+      try {
+        await supabase.auth.setSession({ access_token: tokens.access, refresh_token: tokens.refresh });
+        await supabase.auth.updateUser({ data: { age_verified: true, date_of_birth: dob } });
+        console.log('[AgeGate] age_verified persisted in Supabase for', userId);
+      } catch (e) {
+        console.warn('[AgeGate] Supabase update failed (localStorage fallback active):', e);
+      }
+    }
+
     onConfirm();
   };
 
