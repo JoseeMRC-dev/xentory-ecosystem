@@ -34,7 +34,7 @@ const CASAS: Casa[] = [
   },
   {
     id: 'betfair', name: 'Betfair',
-    logo: 'https://www.google.com/s2/favicons?domain=betfair.es&sz=64',
+    logo: 'https://www.google.com/s2/favicons?domain=betfair.com&sz=64',
     color: '#f5a623',
     bonus: 'Hasta €100', bonusDetail: 'Oferta de bienvenida en apuestas',
     rating: 4.7,
@@ -46,7 +46,7 @@ const CASAS: Casa[] = [
   },
   {
     id: 'codere', name: 'Codere',
-    logo: 'https://www.google.com/s2/favicons?domain=codere.es&sz=64',
+    logo: 'https://www.google.com/s2/favicons?domain=codere.com&sz=64',
     color: '#e30613',
     bonus: '€10 gratis', bonusDetail: 'Sin depósito inicial',
     rating: 4.5,
@@ -106,7 +106,7 @@ const CASAS: Casa[] = [
   },
   {
     id: 'unibet', name: 'Unibet',
-    logo: 'https://www.google.com/s2/favicons?domain=unibet.es&sz=64',
+    logo: 'https://www.google.com/s2/favicons?domain=unibet.com&sz=64',
     color: '#147b45',
     bonus: 'Hasta €40', bonusDetail: 'Bono de bienvenida deportiva',
     rating: 4.2,
