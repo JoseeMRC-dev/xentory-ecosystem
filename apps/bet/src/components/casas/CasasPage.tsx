@@ -46,7 +46,7 @@ const CASAS: Casa[] = [
   },
   {
     id: 'codere', name: 'Codere',
-    logo: 'https://www.google.com/s2/favicons?domain=codere.es&sz=64',
+    logo: 'https://www.google.com/s2/favicons?domain=codere.com&sz=64',
     color: '#e30613',
     bonus: '€10 gratis', bonusDetail: 'Sin depósito inicial',
     rating: 4.5,
