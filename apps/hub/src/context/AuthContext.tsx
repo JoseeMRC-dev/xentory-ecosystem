@@ -232,9 +232,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ? (user.subscriptions?.market ?? 'free')
       : (user.subscriptions?.bets   ?? 'free');
 
-    // Include Supabase session tokens so sub-apps can persist age verification
-    const sb = getSupabase();
-    const { data: { session } } = await sb.auth.getSession();
+    // Include Supabase session tokens so sub-apps can persist age verification.
+    // Use a 800ms timeout so a slow Supabase response never delays the launch.
+    let session = null;
+    try {
+      const sb = getSupabase();
+      const race = await Promise.race([
+        sb.auth.getSession(),
+        new Promise<null>(r => setTimeout(() => r(null), 800)),
+      ]);
+      session = race ? (race as any).data?.session ?? null : null;
+    } catch { /**/ }
 
     const params = new URLSearchParams({
       uid:    user.id,
