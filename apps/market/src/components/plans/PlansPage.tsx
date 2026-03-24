@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import { useLang } from '../../context/LanguageContext';
 import { PLANS } from '../../constants';
 import type { Plan } from '../../types';
 
@@ -13,6 +14,7 @@ function CheckIcon({ included }: { included: boolean }) {
 
 export function PlansPage() {
   const { user, upgradePlan } = useAuth();
+  const { t } = useLang();
   const [loading, setLoading] = useState<Plan | null>(null);
   const [yearly, setYearly] = useState(false);
   const [success, setSuccess] = useState<Plan | null>(null);
@@ -183,7 +185,7 @@ export function PlansPage() {
                   )}
                 </div>
                 <div style={{ color: 'var(--muted)', fontSize: '0.8rem', marginTop: '0.3rem' }}>
-                  {plan.price === 0 ? 'No credit card required' : yearly ? `per year (${Math.round(price / 12)}€/mo)` : 'per month · cancel anytime'}
+                  {plan.price === 0 ? t('Sin tarjeta de crédito', 'No credit card required') : yearly ? t(`por año (${Math.round(price / 12)}€/mes)`, `per year (${Math.round(price / 12)}€/mo)`) : t('por mes · cancela cuando quieras', 'per month · cancel anytime')}
                 </div>
               </div>
 

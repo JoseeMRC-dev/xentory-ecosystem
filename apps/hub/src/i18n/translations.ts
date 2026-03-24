@@ -150,6 +150,8 @@ export const translations = {
   'pricing.free.sub':    { es: 'Sin tarjeta de crédito',   en: 'No credit card' },
   'pricing.per.month':   { es: 'por mes · cancela cuando quieras', en: 'per month · cancel anytime' },
   'pricing.per.year':    { es: 'por año',                  en: 'per year' },
+  'pricing.mo':          { es: '/mes',                     en: '/mo' },
+  'pricing.yr':          { es: '/año',                     en: '/yr' },
   'pricing.start.free':  { es: 'Empezar gratis',           en: 'Start free' },
   'pricing.activate':    { es: 'Activar',                  en: 'Activate' },
   'pricing.current':     { es: '✓ Plan actual',            en: '✓ Current plan' },

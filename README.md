@@ -1,6 +1,6 @@
-# 🌐 Nexus Ecosystem — Monorepo
+# 🌐 Xentory Ecosystem — Monorepo
 
-Plataforma SaaS de análisis financiero y deportivo con IA.  
+Plataforma SaaS de análisis financiero y deportivo con IA.
 **Una instalación. Tres apps. Un solo comando para arrancar todo.**
 
 ---
@@ -8,11 +8,11 @@ Plataforma SaaS de análisis financiero y deportivo con IA.
 ## 🗺️ Estructura
 
 ```
-nexus-ecosystem/
+xentory-ecosystem/
 ├── apps/
-│   ├── hub/       → NexusHub    (portal + SSO + blog)      :4000
-│   ├── market/    → NexusMarket (cripto + bolsa + forex)   :3000
-│   └── bet/       → NexusBet    (apuestas deportivas)      :3001
+│   ├── hub/       → XentoryHub    (portal + SSO + blog)      :4000
+│   ├── market/    → XentoryMarket (cripto + bolsa + forex)   :3000
+│   └── bet/       → XentoryBet    (apuestas deportivas)      :3001
 ├── packages/
 │   └── shared/    → Tipos y utilidades SSO compartidos
 ├── .env.example   → Variables de entorno unificadas
@@ -25,8 +25,8 @@ nexus-ecosystem/
 
 ```bash
 # 1. Descomprime y entra en la carpeta
-tar -xzf nexus-ecosystem.tar.gz
-cd nexus-ecosystem
+tar -xzf xentory-ecosystem.tar.gz
+cd xentory-ecosystem
 
 # 2. Instala TODAS las dependencias de golpe
 npm install
@@ -45,9 +45,9 @@ Las tres apps se lanzan en paralelo:
 
 | App | URL | Descripción |
 |-----|-----|-------------|
-| NexusHub | http://localhost:4000 | Portal central + SSO + Blog |
-| NexusMarket | http://localhost:3000 | Análisis financiero con IA |
-| NexusBet | http://localhost:3001 | Predicciones deportivas (en construcción) |
+| XentoryHub | http://localhost:4000 | Portal central + SSO + Blog |
+| XentoryMarket | http://localhost:3000 | Análisis financiero con IA |
+| XentoryBet | http://localhost:3001 | Predicciones deportivas (en construcción) |
 
 ---
 
@@ -55,9 +55,9 @@ Las tres apps se lanzan en paralelo:
 
 ```bash
 npm run dev            # Arranca las 3 apps a la vez
-npm run dev:hub        # Solo NexusHub
-npm run dev:market     # Solo NexusMarket
-npm run dev:bet        # Solo NexusBet
+npm run dev:hub        # Solo XentoryHub
+npm run dev:market     # Solo XentoryMarket
+npm run dev:bet        # Solo XentoryBet
 
 npm run build          # Build de producción de las 3 apps
 npm run build:hub      # Build solo de Hub
@@ -73,7 +73,7 @@ npm run clean          # Elimina node_modules y dist de todo el monorepo
 
 Edita el archivo `.env` en la raíz con tus claves reales:
 
-### Gemini AI (para NexusMarket y NexusBet)
+### Gemini AI (para XentoryMarket y XentoryBet)
 ```env
 VITE_GEMINI_API_KEY=AIza...
 ```
@@ -99,14 +99,14 @@ Crea tu bot con @BotFather en Telegram.
 ## 🔗 SSO — Cómo funciona la autenticación unificada
 
 ```
-Usuario hace login en NexusHub
+Usuario hace login en XentoryHub
     ↓
-NexusHub genera SSOToken (JWT temporal, 5 min)
+XentoryHub genera SSOToken (JWT temporal, 5 min)
     ↓
-Al pulsar "Abrir NexusMarket":
+Al pulsar "Abrir XentoryMarket":
   → Redirige a localhost:3000?sso=<TOKEN_BASE64>
     ↓
-NexusMarket lee el token, valida y loguea al usuario automáticamente
+XentoryMarket lee el token, valida y loguea al usuario automáticamente
     ↓
 Usuario ya está autenticado sin volver a escribir su contraseña
 ```
@@ -147,14 +147,14 @@ stripe listen --forward-to localhost:3000/api/stripe/webhook
 
 ## 📦 Apps en detalle
 
-### NexusHub (:4000)
+### XentoryHub (:4000)
 - Landing con hero, ticker en vivo y cards de plataformas
 - Login/Registro/Magic Link unificado (SSO)
 - Dashboard con estado de suscripciones de ambas plataformas
-- Comparador de precios NexusMarket vs NexusBet vs Bundle
+- Comparador de precios XentoryMarket vs XentoryBet vs Bundle
 - Blog con artículos de cripto, bolsa, forex y deportes
 
-### NexusMarket (:3000)
+### XentoryMarket (:3000)
 - Dashboard con semáforo de mercado 🟢🟡🔴
 - 16 activos: cripto (BTC, ETH, SOL...), bolsa (NVDA, AAPL...), forex (EUR/USD...)
 - Análisis IA con Gemini Flash (Free) o Gemini Pro + Grounding (Pro/Elite)
@@ -162,7 +162,7 @@ stripe listen --forward-to localhost:3000/api/stripe/webhook
 - Watchlist, alertas de precio, canal Telegram integrado
 - 3 planes: Explorador (gratis) / Pro (29€) / Elite (59€)
 
-### NexusBet (:3001) — En construcción
+### XentoryBet (:3001) — En construcción
 - Predicciones deportivas: fútbol, baloncesto, tenis
 - Análisis de últimos 5 partidos por equipo
 - Nivel de confianza estadística por predicción
@@ -173,6 +173,6 @@ stripe listen --forward-to localhost:3000/api/stripe/webhook
 
 ## ⚖️ Aviso legal
 
-Este software es de carácter informativo y educativo.  
-**No proporciona asesoramiento financiero ni de apuestas.**  
+Este software es de carácter informativo y educativo.
+**No proporciona asesoramiento financiero ni de apuestas.**
 Las decisiones de inversión y apuesta son responsabilidad exclusiva del usuario.
