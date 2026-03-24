@@ -159,7 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
-    ['xentory_bet_user','xentory_market_user'].forEach(k => {
+    ['xentory_bet_user','xentory_market_user','xentory_user','xentory_sso_token'].forEach(k => {
       try { localStorage.removeItem(k); } catch { /**/ }
     });
     ['xentory_bet_session','xentory_market_session'].forEach(k => {
