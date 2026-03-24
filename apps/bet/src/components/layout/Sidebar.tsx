@@ -117,6 +117,11 @@ function NavContent({ onNav, hideSports }: { onNav?: () => void; hideSports?: bo
         ))}
       </nav>
 
+      <div style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', borderTop: '1px solid var(--border)' }}>
+        <span style={{ fontSize: '0.7rem', fontWeight: 700, padding: '0.1rem 0.35rem', borderRadius: 4, background: 'rgba(255,68,85,0.12)', color: 'var(--red)', border: '1px solid rgba(255,68,85,0.3)', flexShrink: 0 }}>+18</span>
+        <span style={{ fontSize: '0.65rem', color: 'var(--muted)', lineHeight: 1.3 }}>{t('Las apuestas pueden causar adicción. Juega con responsabilidad.', 'Gambling can be addictive. Play responsibly.')}</span>
+      </div>
+
       {user && (
         <div style={{ padding: '0.8rem 1rem', borderTop: '1px solid var(--border)' }}>
           <div onClick={() => navigate('/plans')} style={{ padding: '0.6rem 0.8rem', borderRadius: 8, background: 'var(--card2)', border: `1px solid ${PLAN_COLORS[user.plan]}22`, cursor: 'pointer', marginBottom: '0.6rem' }}>

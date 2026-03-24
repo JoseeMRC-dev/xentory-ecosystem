@@ -157,6 +157,17 @@ export function Sidebar() {
   const [open, setOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => { const fn = () => setIsMobile(window.innerWidth <= 768); fn(); window.addEventListener('resize', fn); return () => window.removeEventListener('resize', fn); }, []);
+  useEffect(() => {
+    if (!isMobile) return;
+    if (open) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; document.documentElement.style.overflow = ''; };
+  }, [open, isMobile]);
 
   return (
     <>
@@ -182,8 +193,15 @@ export function Sidebar() {
       )}
       {isMobile && open && (
         <>
-          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, top: 52, zIndex: 48, background: 'rgba(5,8,16,0.6)', backdropFilter: 'blur(3px)' }} />
-          <div style={{ position: 'fixed', top: 52, left: 0, right: 0, bottom: 0, zIndex: 49, background: '#080d1a', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', overflowY: 'auto', animation: 'slideDown 0.18s ease both' }}>
+          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(5,8,16,0.6)', backdropFilter: 'blur(3px)', touchAction: 'none' }} />
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 51, background: '#080d1a', display: 'flex', flexDirection: 'column', overflowY: 'auto', overscrollBehavior: 'contain', animation: 'slideDown 0.18s ease both' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', height: 52, flexShrink: 0, borderBottom: '1px solid var(--border)' }}>
+              <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1.1rem', letterSpacing: '-0.02em' }}>
+                <a href={HUB_URL} style={{ textDecoration: 'none' }}><span className="text-gradient-gold">Xentory</span></a>
+                <Link to="/dashboard" onClick={() => setOpen(false)} style={{ textDecoration: 'none' }}><span style={{ color: '#4d9fff' }}>Market</span></Link>
+              </div>
+              <button onClick={() => setOpen(false)} aria-label="Cerrar menú" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.4rem', color: 'var(--text)', fontSize: '1.4rem', lineHeight: 1 }}>✕</button>
+            </div>
             <NavContent onNav={() => setOpen(false)} />
           </div>
         </>

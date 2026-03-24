@@ -178,15 +178,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
-    // Clear all xentory keys across all platforms
-    ['xentory_bet_user','xentory_market_user'].forEach(k => {
+    // Clear all xentory keys across all platforms (including hub)
+    ['xentory_bet_user','xentory_market_user','xentory_user','xentory_sso_token'].forEach(k => {
       try { localStorage.removeItem(k); } catch { /**/ }
     });
     ['xentory_bet_session','xentory_market_session'].forEach(k => {
       try { sessionStorage.removeItem(k); } catch { /**/ }
     });
     setUser(null);
-    // Small delay so React can re-render before redirect
     setTimeout(() => { window.location.replace(HUB_URL); }, 50);
   }, []);
 

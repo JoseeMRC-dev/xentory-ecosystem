@@ -5,6 +5,8 @@ import { useLang } from '../../context/LanguageContext';
 import { PLANS } from '../../constants';
 import type { Plan } from '../../types';
 
+const HUB_URL = (import.meta as any).env?.VITE_HUB_URL ?? 'https://x-eight-beryl.vercel.app';
+
 export function PlansPage() {
   const { user, upgradePlan } = useAuth();
   const navigate = useNavigate();
@@ -136,6 +138,26 @@ export function PlansPage() {
         })}
       </div>
 
+      {/* Bundle upsell */}
+      <a href={`${HUB_URL}/pricing?tab=bundle`} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', display: 'block', marginBottom: '1.5rem' }}>
+        <div style={{ borderRadius: 14, padding: '1.2rem 1.5rem', background: 'linear-gradient(135deg,rgba(201,168,76,0.08),rgba(77,159,255,0.06))', border: '1px solid rgba(201,168,76,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', cursor: 'pointer', transition: 'border-color 0.2s' }}
+          onMouseEnter={e => ((e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(201,168,76,0.5)')}
+          onMouseLeave={e => ((e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(201,168,76,0.25)')}
+        >
+          <div>
+            <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.95rem', marginBottom: '0.2rem' }}>
+              🎁 {t('¿Quieres Market + Bet? Bundle Pro por solo 49€/mes', 'Want Market + Bet? Bundle Pro for just €49/mo')}
+            </div>
+            <div style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>
+              {t('Ahorra 9€/mes vs contratar por separado · Dos canales Telegram incluidos', 'Save €9/mo vs separate plans · Two Telegram channels included')}
+            </div>
+          </div>
+          <span style={{ padding: '0.4rem 1rem', borderRadius: 8, background: 'var(--gold)', color: '#050810', fontWeight: 700, fontSize: '0.82rem', whiteSpace: 'nowrap', flexShrink: 0 }}>
+            {t('Ver bundle →', 'View bundle →')}
+          </span>
+        </div>
+      </a>
+
       <div style={{ textAlign: 'center', color: 'var(--muted)', fontSize: '0.78rem', lineHeight: 1.9 }}>
         🔒 {t('Pagos seguros procesados por Stripe · Cifrado SSL', 'Secure payments processed by Stripe · SSL Encrypted')}<br />
         {t(
@@ -144,7 +166,20 @@ export function PlansPage() {
         )}<br />
         <a href="#" style={{ color: 'var(--gold)', textDecoration: 'none' }}>{t('Política de reembolso', 'Refund policy')}</a> ·{' '}
         <a href="#" style={{ color: 'var(--gold)', textDecoration: 'none' }}>{t('Términos de uso', 'Terms of use')}</a> ·{' '}
-        <a href="#" style={{ color: 'var(--gold)', textDecoration: 'none' }}>{t('Juego responsable', 'Responsible gambling')}</a>
+        <a href="https://www.jugarbien.es" target="_blank" rel="noreferrer" style={{ color: 'var(--gold)', textDecoration: 'none' }}>{t('Juego responsable', 'Responsible gambling')}</a>
+      </div>
+
+      {/* +18 legal notice */}
+      <div style={{ marginTop: '1.5rem', padding: '1rem 1.2rem', borderRadius: 10, background: 'rgba(255,68,85,0.05)', border: '1px solid rgba(255,68,85,0.2)', display: 'flex', gap: '0.8rem', alignItems: 'flex-start' }}>
+        <span style={{ fontSize: '0.85rem', fontWeight: 800, padding: '0.15rem 0.4rem', borderRadius: 5, background: 'rgba(255,68,85,0.15)', color: 'var(--red)', border: '1px solid rgba(255,68,85,0.35)', flexShrink: 0 }}>+18</span>
+        <p style={{ fontSize: '0.72rem', color: 'var(--muted)', lineHeight: 1.6, margin: 0 }}>
+          {t(
+            'XentoryBet está destinado exclusivamente a mayores de 18 años. Las apuestas deportivas pueden causar dependencia. Si crees que tienes un problema con el juego, busca ayuda en ',
+            'XentoryBet is intended exclusively for users aged 18 and over. Sports betting can be addictive. If you think you have a gambling problem, seek help at '
+          )}
+          <a href="https://www.jugarbien.es" target="_blank" rel="noreferrer" style={{ color: 'var(--red)' }}>jugarbien.es</a>
+          {t(' · Ley 13/2011 de Regulación del Juego.', ' · Gambling Regulation Act 13/2011.')}
+        </p>
       </div>
     </div>
   );

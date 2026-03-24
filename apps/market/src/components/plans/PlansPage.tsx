@@ -4,6 +4,8 @@ import { useLang } from '../../context/LanguageContext';
 import { PLANS } from '../../constants';
 import type { Plan } from '../../types';
 
+const HUB_URL = (import.meta as any).env?.VITE_HUB_URL ?? 'https://x-eight-beryl.vercel.app';
+
 function CheckIcon({ included }: { included: boolean }) {
   return (
     <span style={{ color: included ? 'var(--green)' : 'rgba(255,255,255,0.18)', fontWeight: 700, fontSize: '0.85rem', flexShrink: 0 }}>
@@ -234,6 +236,26 @@ export function PlansPage() {
           );
         })}
       </div>
+
+      {/* Bundle upsell */}
+      <a href={`${HUB_URL}/pricing?tab=bundle`} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', display: 'block', marginTop: '2rem' }}>
+        <div style={{ borderRadius: 14, padding: '1.2rem 1.5rem', background: 'linear-gradient(135deg,rgba(201,168,76,0.08),rgba(77,159,255,0.06))', border: '1px solid rgba(201,168,76,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', cursor: 'pointer', transition: 'border-color 0.2s' }}
+          onMouseEnter={e => ((e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(201,168,76,0.5)')}
+          onMouseLeave={e => ((e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(201,168,76,0.25)')}
+        >
+          <div>
+            <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.95rem', marginBottom: '0.2rem' }}>
+              🎁 {t('¿Quieres Market + Bet? Bundle Pro por solo 49€/mes', 'Want Market + Bet? Bundle Pro for just €49/mo')}
+            </div>
+            <div style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>
+              {t('Ahorra 9€/mes vs contratar por separado · Dos canales Telegram incluidos', 'Save €9/mo vs separate plans · Two Telegram channels included')}
+            </div>
+          </div>
+          <span style={{ padding: '0.4rem 1rem', borderRadius: 8, background: 'var(--gold)', color: '#050810', fontWeight: 700, fontSize: '0.82rem', whiteSpace: 'nowrap', flexShrink: 0 }}>
+            {t('Ver bundle →', 'View bundle →')}
+          </span>
+        </div>
+      </a>
 
       {/* Stripe notice */}
       <div style={{ textAlign: 'center', marginTop: '2.5rem', color: 'var(--muted)', fontSize: '0.8rem', lineHeight: 1.7 }}>
