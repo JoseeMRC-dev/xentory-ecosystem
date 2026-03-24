@@ -8,22 +8,16 @@ import type { Plan } from '../../types';
 const HUB_URL = (import.meta as any).env?.VITE_HUB_URL ?? 'https://x-eight-beryl.vercel.app';
 
 export function PlansPage() {
-  const { user, upgradePlan } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { t } = useLang();
   const [yearly, setYearly] = useState(false);
-  const [loading, setLoading] = useState<Plan | null>(null);
-  const [success, setSuccess] = useState(false);
 
-  const handleSubscribe = async (planId: Plan) => {
+  // Redirige al Hub para procesar el pago con Stripe
+  const handleSubscribe = (planId: Plan) => {
     if (!user) { navigate('/login'); return; }
     if (planId === 'free' || planId === user.plan) return;
-    setLoading(planId);
-    await new Promise(r => setTimeout(r, 1600));
-    upgradePlan(planId);
-    setLoading(null);
-    setSuccess(true);
-    setTimeout(() => setSuccess(false), 3500);
+    window.location.href = `${HUB_URL}/pricing?tab=bets&plan=${planId}&interval=${yearly ? 'yearly' : 'monthly'}`;
   };
 
   return (
@@ -54,16 +48,9 @@ export function PlansPage() {
         </div>
       </div>
 
-      {success && (
-        <div style={{ padding: '1rem 1.5rem', background: 'rgba(0,255,136,0.08)', border: '1px solid rgba(0,255,136,0.2)', borderRadius: 12, color: 'var(--green)', textAlign: 'center', marginBottom: '1.5rem' }}>
-          ✅ {t('¡Plan activado! Recibirás acceso al canal de Telegram en breve.', 'Plan activated! You will receive access to the Telegram channel shortly.')}
-        </div>
-      )}
-
       <div className="bet-plans-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.2rem', marginBottom: '2.5rem' }}>
         {PLANS.map(plan => {
           const isCurrent = user?.plan === plan.id;
-          const isBusy    = loading === plan.id;
           const price     = yearly && plan.price > 0 ? plan.yearlyPrice : plan.price;
 
           return (
@@ -114,7 +101,7 @@ export function PlansPage() {
 
               <button
                 onClick={() => handleSubscribe(plan.id as Plan)}
-                disabled={isCurrent || isBusy || plan.id === 'free'}
+                disabled={isCurrent || plan.id === 'free'}
                 style={{
                   width: '100%', padding: '0.8rem', borderRadius: 8,
                   border: plan.popular ? 'none' : `1px solid ${plan.color}30`,
@@ -127,9 +114,7 @@ export function PlansPage() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
                 }}
               >
-                {isBusy
-                  ? <span className="animate-spin" style={{ display: 'inline-block', width: 15, height: 15, border: '2px solid currentColor', borderTopColor: 'transparent', borderRadius: '50%' }} />
-                  : isCurrent ? `✓ ${t('Plan actual', 'Current plan')}`
+                {isCurrent ? `✓ ${t('Plan actual', 'Current plan')}`
                   : plan.price === 0 ? t('Plan gratuito', 'Free plan')
                   : `${t('Activar', 'Activate')} ${plan.name}`}
               </button>

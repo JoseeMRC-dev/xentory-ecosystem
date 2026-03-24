@@ -1,9 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useLang } from '../../context/LanguageContext';
 import { MARKET_PLANS, BETS_PLANS, BUNDLE } from '../../constants';
+import { supabase } from '../../lib/supabase';
 import type { Plan } from '../../types';
+
+const SUPABASE_FN = 'https://mtgatdmrpfysqphdgaue.supabase.co/functions/v1';
 
 type PlatformTab = 'market' | 'bets' | 'bundle';
 
@@ -41,34 +44,80 @@ export function PricingPage() {
   const { t } = useLang();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
   const initialTab = (['market','bets','bundle'] as PlatformTab[]).includes(searchParams.get('tab') as PlatformTab)
     ? searchParams.get('tab') as PlatformTab : 'market';
+  const initialPlan = searchParams.get('plan') as Plan | null;
+
   const [platform, setPlatform] = useState<PlatformTab>(initialTab);
-  const [yearly, setYearly] = useState(false);
-  const [loading, setLoading] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [yearly,   setYearly]   = useState(searchParams.get('interval') === 'yearly');
+  const [loading,  setLoading]  = useState<string | null>(null);
+  const [success,  setSuccess]  = useState<string | null>(null);
+  const [error,    setError]    = useState<string | null>(null);
+
+  // Detectar retorno desde Stripe (?success=true)
+  useEffect(() => {
+    if (searchParams.get('success') === 'true') {
+      const plt  = searchParams.get('platform') ?? 'market';
+      const plan = (searchParams.get('plan') ?? 'pro') as Plan;
+      setSuccess(`${plt}-${plan}`);
+      // Actualizar plan en el estado local inmediatamente (hasta que el webhook confirme)
+      if (plt === 'market' || plt === 'bundle') upgradeMarket(plan);
+      if (plt === 'bets'   || plt === 'bundle') upgradeBets(plan);
+      // Limpiar params de la URL
+      window.history.replaceState({}, '', '/pricing');
+    }
+  }, []);
 
   const plans = platform === 'market' ? MARKET_PLANS : platform === 'bets' ? BETS_PLANS : [];
 
-  const handleSubscribe = async (planId: Plan, plt: 'market' | 'bets') => {
+  // ── Llamar al Edge Function create-checkout ───────────────────────────
+  const startCheckout = async (plt: string, plan: string, interval: string) => {
     if (!user) { navigate('/register'); return; }
-    setLoading(`${plt}-${planId}`);
-    await new Promise(r => setTimeout(r, 1600));
-    if (plt === 'market') upgradeMarket(planId);
-    else upgradeBets(planId);
-    setLoading(null);
-    setSuccess(`${plt}-${planId}`);
-    setTimeout(() => setSuccess(null), 3500);
+
+    const key = `${plt}-${plan}`;
+    setLoading(key);
+    setError(null);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) { navigate('/login'); return; }
+
+      const res = await fetch(`${SUPABASE_FN}/create-checkout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          platform: plt,
+          plan,
+          interval,
+          success_url: `${window.location.origin}/pricing?success=true&platform=${plt}&plan=${plan}`,
+          cancel_url:  `${window.location.origin}/pricing?tab=${plt}`,
+        }),
+      });
+
+      const json = await res.json();
+      if (json.url) {
+        window.location.href = json.url;
+      } else {
+        setError(json.error ?? 'Error al iniciar el pago');
+        setLoading(null);
+      }
+    } catch (e) {
+      setError('Error de conexión. Inténtalo de nuevo.');
+      setLoading(null);
+    }
   };
 
-  const handleBundle = async () => {
-    if (!user) { navigate('/register'); return; }
-    setLoading('bundle');
-    await new Promise(r => setTimeout(r, 1800));
-    upgradeMarket('pro'); upgradeBets('pro');
-    setLoading(null);
-    setSuccess('bundle');
-    setTimeout(() => setSuccess(null), 3500);
+  const handleSubscribe = (planId: Plan, plt: 'market' | 'bets') => {
+    if (planId === 'free') return;
+    startCheckout(plt, planId, yearly ? 'yearly' : 'monthly');
+  };
+
+  const handleBundle = () => {
+    startCheckout('bundle', 'pro', yearly ? 'yearly' : 'monthly');
   };
 
   const currentPlan = (plt: 'market' | 'bets') =>
@@ -110,6 +159,13 @@ export function PricingPage() {
             <span style={{ fontSize: '0.72rem', color: 'var(--green)', background: 'var(--green-dim)', padding: '0.1rem 0.45rem', borderRadius: 4, border: '1px solid rgba(0,200,122,0.2)', fontWeight: 600 }}>{t('pricing.save')}</span>
           </span>
         </div>
+
+        {/* Error banner */}
+        {error && (
+          <div style={{ marginBottom: '1.5rem', padding: '0.8rem 1.2rem', borderRadius: 10, background: 'rgba(255,68,85,0.1)', border: '1px solid rgba(255,68,85,0.3)', color: 'var(--red)', fontSize: '0.85rem' }}>
+            ⚠️ {error}
+          </div>
+        )}
 
         {/* Platform tabs */}
         <div style={{ display: 'inline-flex', background: 'var(--card2)', borderRadius: 12, padding: '0.3rem', gap: '0.2rem', border: '1px solid var(--border)' }}>
