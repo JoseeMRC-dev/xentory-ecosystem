@@ -267,7 +267,7 @@ async function fetchPrices(symbols: string[]): Promise<Record<string, number>> {
     try {
       const qs  = JSON.stringify(crypto.map(s => BINANCE_MAP[s]));
       const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbols=${encodeURIComponent(qs)}`);
-      const arr: any[] = await res.json();
+      const arr = await res.json() as any[];
       arr.forEach(item => {
         const sym = Object.entries(BINANCE_MAP).find(([, v]) => v === item.symbol)?.[0];
         if (sym) prices[sym] = parseFloat(item.price);
@@ -279,7 +279,7 @@ async function fetchPrices(symbols: string[]): Promise<Record<string, number>> {
     try {
       const [base, quote] = sym.split('/');
       const res  = await fetch(`https://api.frankfurter.app/latest?from=${base}&to=${quote}`);
-      const data = await res.json();
+      const data = await res.json() as { rates?: Record<string, number> };
       if (data.rates?.[quote]) prices[sym] = data.rates[quote];
     } catch { /* skip */ }
   }
@@ -317,7 +317,7 @@ async function checkAlerts() {
 
     if ((a.notify_channel === 'telegram' || a.notify_channel === 'both') && chatId) {
       try {
-        await bot.telegram.sendMessage(chatId, msgAlert(a.symbol, a.condition, Number(a.target_price), price, a.category), { parse_mode: 'HTML', disable_web_page_preview: true });
+        await bot.telegram.sendMessage(chatId, msgAlert(a.symbol, a.condition, Number(a.target_price), price, a.category), { parse_mode: 'HTML', link_preview_options: { is_disabled: true } });
         await supabase.from('alert_notifications_log').insert({ alert_id: a.id, user_id: a.user_id, channel: 'telegram', status: 'sent', message: `${a.symbol} ${a.condition} $${a.target_price} → $${price}` });
         console.log(`[Bot] 🔔 Alerta: ${a.symbol} → chatId ${chatId}`);
       } catch (e: any) {

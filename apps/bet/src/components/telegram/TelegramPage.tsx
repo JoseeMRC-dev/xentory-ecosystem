@@ -40,6 +40,10 @@ export function TelegramPage() {
     const code = generateVerifyCode(user.id, 'bet');
     setVerifyCode(code);
     getTelegramConnection(user.id, 'bet').then(c => { setConn(c); setLoading(false); });
+    // Pre-save the code so the bot can validate it immediately when the user opens it
+    if (user.plan === 'pro' || user.plan === 'elite') {
+      upsertVerifyCode(user.id, user.email ?? '', 'bet', user.plan).catch(console.error);
+    }
   }, [user?.id]);
 
   const pollConnection = () => {
@@ -49,20 +53,21 @@ export function TelegramPage() {
       tries++;
       const c = await getTelegramConnection(user.id!, 'bet');
       if (c) { setConn(c); clearInterval(iv); return; }
-      if (tries >= 12) clearInterval(iv);
+      if (tries >= 20) clearInterval(iv); // poll 60s
     }, 3000);
   };
 
-  const handleConnect = async () => {
+  // Synchronous handler — window.open() MUST be called in the same tick as
+  // the user gesture, otherwise browsers (especially mobile) block the popup.
+  const handleConnect = () => {
     if (!isPaid) { navigate('/plans'); return; }
-    if (!user)   return;
-    setConnecting(true);
-    try {
-      await upsertVerifyCode(user.id, user.email, 'bet', user.plan);
-      window.open(`https://t.me/XentoryBot?start=${verifyCode}`, '_blank');
-      pollConnection();
-    } catch (e) { console.error(e); }
-    finally { setConnecting(false); }
+    window.open(`https://t.me/XentoryBot?start=${verifyCode}`, '_blank');
+    pollConnection();
+  };
+
+  const handleReconnect = () => {
+    setConn(null);
+    handleConnect();
   };
 
   return (
@@ -124,14 +129,19 @@ export function TelegramPage() {
               💎 {t('Activar plan', 'Activate plan')}
             </button>
           ) : !conn ? (
-            <button onClick={handleConnect} disabled={connecting} className="btn btn-gold" style={{ width: '100%', justifyContent: 'center' }}>
-              {connecting ? `⏳ ${t('Abriendo bot…','Opening bot…')}` : `🔗 ${t('Vincular Telegram','Link Telegram')}`}
+            <button onClick={handleConnect} className="btn btn-gold" style={{ width: '100%', justifyContent: 'center' }}>
+              🔗 {t('Vincular Telegram', 'Link Telegram')}
             </button>
           ) : (
-            <a href={`https://t.me/${channel.name.replace('@','')}`} target="_blank" rel="noreferrer"
-              className="btn btn-gold" style={{ display: 'flex', width: '100%', justifyContent: 'center', textDecoration: 'none' }}>
-              ✈️ {t('Ir al canal', 'Go to channel')}
-            </a>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <a href={`https://t.me/${channel.name.replace('@','')}`} target="_blank" rel="noreferrer"
+                className="btn btn-gold" style={{ display: 'flex', width: '100%', justifyContent: 'center', textDecoration: 'none' }}>
+                ✈️ {t('Ir al canal', 'Go to channel')}
+              </a>
+              <button onClick={handleReconnect} className="btn btn-outline btn-sm" style={{ width: '100%', justifyContent: 'center' }}>
+                🔄 {t('Reconectar', 'Reconnect')}
+              </button>
+            </div>
           )}
 
           {conn && (
