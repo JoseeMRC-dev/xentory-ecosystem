@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useLang } from '../../context/LanguageContext';
 import { MARKET_PLANS, BETS_PLANS, BUNDLE } from '../../constants';
@@ -40,7 +40,10 @@ export function PricingPage() {
   const { user, upgradeMarket, upgradeBets } = useAuth();
   const { t } = useLang();
   const navigate = useNavigate();
-  const [platform, setPlatform] = useState<PlatformTab>('market');
+  const [searchParams] = useSearchParams();
+  const initialTab = (['market','bets','bundle'] as PlatformTab[]).includes(searchParams.get('tab') as PlatformTab)
+    ? searchParams.get('tab') as PlatformTab : 'market';
+  const [platform, setPlatform] = useState<PlatformTab>(initialTab);
   const [yearly, setYearly] = useState(false);
   const [loading, setLoading] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
