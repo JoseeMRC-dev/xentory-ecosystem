@@ -157,21 +157,21 @@ export function PricingPage() {
                 <div>
                   <div style={{ fontSize: '0.65rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.3rem' }}>{t('pricing.bundle.individual')}</div>
                   <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '1.4rem', textDecoration: 'line-through', color: 'var(--muted)' }}>
-                    {yearly ? `${Math.round(58 * 12 * 0.8)}€/yr` : '58€/mo'}
+                    {yearly ? `${Math.round(58 * 12 * 0.8)}€${t('pricing.yr')}` : `58€${t('pricing.mo')}`}
                   </div>
                 </div>
                 <div>
                   <div style={{ fontSize: '0.65rem', color: 'var(--green)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.3rem' }}>{t('pricing.bundle.price')}</div>
                   <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '2.4rem', color: 'var(--gold)', letterSpacing: '-0.04em', lineHeight: 1, display: 'flex', alignItems: 'baseline', gap: '0.2rem' }}>
                     {yearly
-                      ? <>{Math.round(BUNDLE.monthlyPrice * 12 * 0.8)}€<span style={{ fontSize: '1rem', color: 'var(--muted)', fontWeight: 300 }}>/yr</span></>
-                      : <>{BUNDLE.monthlyPrice}€<span style={{ fontSize: '1rem', color: 'var(--muted)', fontWeight: 300 }}>/mo</span></>}
+                      ? <>{Math.round(BUNDLE.monthlyPrice * 12 * 0.8)}€<span style={{ fontSize: '1rem', color: 'var(--muted)', fontWeight: 300 }}>{t('pricing.yr')}</span></>
+                      : <>{BUNDLE.monthlyPrice}€<span style={{ fontSize: '1rem', color: 'var(--muted)', fontWeight: 300 }}>{t('pricing.mo')}</span></>}
                   </div>
                 </div>
               </div>
 
               <div style={{ background: 'rgba(0,200,122,0.06)', border: '1px solid rgba(0,200,122,0.15)', borderRadius: 9, padding: '0.7rem 1rem', marginBottom: '2rem', fontSize: '0.88rem', color: 'var(--green)', fontWeight: 600 }}>
-                {t('pricing.bundle.save')} {BUNDLE.saving}€/mo vs individual
+                {t('pricing.bundle.save')} {BUNDLE.saving}€{t('pricing.mo')} vs individual
               </div>
 
               <div style={{ textAlign: 'left', marginBottom: '2rem' }}>
@@ -224,7 +224,7 @@ export function PricingPage() {
                     {plan.price === 0 ? t('pricing.free.label') : <><sup style={{ fontSize: '0.9rem', fontWeight: 400, verticalAlign: 'super' }}>€</sup>{price}</>}
                   </div>
                   <div style={{ color: 'var(--muted)', fontSize: '0.76rem', marginBottom: '1.4rem', lineHeight: 1.4 }}>
-                    {plan.price === 0 ? t('pricing.free.sub') : yearly ? `${t('pricing.per.year')} (${Math.round(price / 12)}€/mo)` : t('pricing.per.month')}
+                    {plan.price === 0 ? t('pricing.free.sub') : yearly ? `${t('pricing.per.year')} (${Math.round(price / 12)}€${t('pricing.mo')})` : t('pricing.per.month')}
                   </div>
 
                   <div style={{ height: 1, background: 'var(--border)', marginBottom: '1.3rem' }} />
