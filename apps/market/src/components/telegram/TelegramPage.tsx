@@ -27,7 +27,6 @@ export function TelegramPage() {
 
   const [conn,       setConn]       = useState<TelegramConnection | null>(null);
   const [loading,    setLoading]    = useState(true);
-  const [connecting, setConnecting] = useState(false);
   const [verifyCode, setVerifyCode] = useState('');
   const [copied,     setCopied]     = useState(false);
 
@@ -43,6 +42,10 @@ export function TelegramPage() {
       setConn(c);
       setLoading(false);
     });
+    // Pre-save the code so the bot can validate it immediately when the user opens it
+    if (user.plan === 'pro' || user.plan === 'elite') {
+      upsertVerifyCode(user.id, user.email ?? '', 'market', user.plan).catch(console.error);
+    }
   }, [user?.id]);
 
   // ── Poll after opening bot ───────────────────────────────────
@@ -57,17 +60,11 @@ export function TelegramPage() {
     }, 3000);
   };
 
-  // ── Connect: save code → open bot ───────────────────────────
-  const handleConnect = async () => {
+  // ── Connect: open bot synchronously (code already saved on mount)
+  const handleConnect = () => {
     if (!isPaid) { navigate('/plans'); return; }
-    if (!user)   return;
-    setConnecting(true);
-    try {
-      await upsertVerifyCode(user.id, user.email, 'market', user.plan);
-      window.open(`https://t.me/XentoryBot?start=${verifyCode}`, '_blank');
-      pollConnection();
-    } catch (e) { console.error(e); }
-    finally { setConnecting(false); }
+    window.open(`https://t.me/XentoryBot?start=${verifyCode}`, '_blank');
+    pollConnection();
   };
 
   const handleCopyCode = () => {
@@ -132,8 +129,8 @@ export function TelegramPage() {
                 💎 Activar plan para acceder
               </button>
             ) : !conn ? (
-              <button onClick={handleConnect} disabled={connecting} className="btn btn-gold" style={{ width: '100%', justifyContent: 'center' }}>
-                {connecting ? '⏳ Abriendo…' : '🔗 Vincular Telegram'}
+              <button onClick={handleConnect} className="btn btn-gold" style={{ width: '100%', justifyContent: 'center' }}>
+                🔗 Vincular Telegram
               </button>
             ) : (
               <a href={`https://t.me/${channel.name.replace('@','')}`} target="_blank" rel="noreferrer"
