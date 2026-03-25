@@ -139,6 +139,16 @@ export function DashboardPage() {
     catch { setLaunching(null); }
   };
 
+  // When the user presses Back from a sub-app, the browser restores this page
+  // from the bfcache with `launching` still set. Reset it so the overlay disappears.
+  useEffect(() => {
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setLaunching(null);
+    };
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, []);
+
   useEffect(() => {
     const done = localStorage.getItem(ONBOARDING_KEY);
     if (!done) {
