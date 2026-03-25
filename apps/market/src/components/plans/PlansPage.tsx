@@ -15,33 +15,14 @@ function CheckIcon({ included }: { included: boolean }) {
 }
 
 export function PlansPage() {
-  const { user, upgradePlan } = useAuth();
+  const { user } = useAuth();
   const { t } = useLang();
-  const [loading, setLoading] = useState<Plan | null>(null);
   const [yearly, setYearly] = useState(false);
-  const [success, setSuccess] = useState<Plan | null>(null);
 
-  const handleSubscribe = async (planId: Plan) => {
-    if (planId === 'free') {
-      upgradePlan('free');
-      return;
-    }
-    setLoading(planId);
-
-    // In production: redirect to Stripe Checkout
-    // const res = await fetch('/api/stripe/create-checkout', {
-    //   method: 'POST',
-    //   body: JSON.stringify({ planId, userId: user?.id }),
-    // });
-    // const { url } = await res.json();
-    // window.location.href = url;
-
-    // DEMO: simulate Stripe flow
-    await new Promise(r => setTimeout(r, 1800));
-    upgradePlan(planId);
-    setLoading(null);
-    setSuccess(planId);
-    setTimeout(() => setSuccess(null), 4000);
+  // Redirige al Hub para procesar el pago con Stripe
+  const handleSubscribe = (planId: Plan) => {
+    if (planId === 'free' || !user) return;
+    window.location.href = `${HUB_URL}/pricing?tab=market&plan=${planId}&interval=${yearly ? 'yearly' : 'monthly'}`;
   };
 
   return (
@@ -95,28 +76,11 @@ export function PlansPage() {
         </div>
       </div>
 
-      {/* Success banner */}
-      {success && (
-        <div style={{
-          padding: '1rem 1.5rem',
-          background: 'rgba(0,255,136,0.1)',
-          border: '1px solid rgba(0,255,136,0.25)',
-          borderRadius: 12,
-          color: 'var(--green)',
-          marginBottom: '1.5rem',
-          textAlign: 'center',
-          fontWeight: 500,
-        }}>
-          ✅ ¡Plan {PLANS.find(p => p.id === success)?.name} activado! Recibirás acceso al canal de Telegram en breve.
-        </div>
-      )}
-
       {/* Plans grid */}
       <div className="mkt-plans-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
         {PLANS.map(plan => {
           const isCurrentPlan = user?.plan === plan.id;
           const price = yearly && plan.price > 0 ? Math.round(plan.price * 12 * 0.8) : plan.price;
-          const isBusy = loading === plan.id;
 
           return (
             <div
@@ -211,7 +175,7 @@ export function PlansPage() {
               {/* CTA */}
               <button
                 onClick={() => handleSubscribe(plan.id as Plan)}
-                disabled={isCurrentPlan || isBusy}
+                disabled={isCurrentPlan}
                 className="btn"
                 style={{
                   width: '100%',
@@ -228,9 +192,7 @@ export function PlansPage() {
                   cursor: isCurrentPlan ? 'not-allowed' : 'pointer',
                 }}
               >
-                {isBusy ? (
-                  <span className="animate-spin" style={{ display: 'inline-block', width: 16, height: 16, border: '2px solid currentColor', borderTopColor: 'transparent', borderRadius: '50%' }} />
-                ) : isCurrentPlan ? '✓ Plan actual' : plan.price === 0 ? 'Start free' : `Activate ${plan.name}`}
+                {isCurrentPlan ? '✓ Plan actual' : plan.price === 0 ? 'Start free' : `Activate ${plan.name}`}
               </button>
             </div>
           );
@@ -238,11 +200,14 @@ export function PlansPage() {
       </div>
 
       {/* Bundle upsell */}
-      <style>{`@keyframes bundleGlow{0%,100%{box-shadow:0 0 0px rgba(201,168,76,0)}50%{box-shadow:0 0 18px rgba(201,168,76,0.22),0 0 6px rgba(201,168,76,0.1)}}`}</style>
+      <style>{`
+        @keyframes bundleGlow{0%,100%{box-shadow:0 0 0px rgba(201,168,76,0)}50%{box-shadow:0 0 28px rgba(201,168,76,0.45),0 0 10px rgba(201,168,76,0.2)}}
+        @keyframes bundleShake{0%,82%,100%{transform:none}85%{transform:translateX(-5px)}88%{transform:translateX(5px)}91%{transform:translateX(-4px)}94%{transform:translateX(4px)}97%{transform:translateX(-2px)}}
+      `}</style>
       <a href={`${HUB_URL}/pricing?tab=bundle`} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', display: 'block', marginTop: '2rem' }}>
-        <div style={{ borderRadius: 14, padding: '1.2rem 1.5rem', background: 'linear-gradient(135deg,rgba(201,168,76,0.08),rgba(77,159,255,0.06))', border: '1px solid rgba(201,168,76,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', cursor: 'pointer', transition: 'border-color 0.2s', animation: 'bundleGlow 3.5s ease-in-out infinite' }}
-          onMouseEnter={e => ((e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(201,168,76,0.5)')}
-          onMouseLeave={e => ((e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(201,168,76,0.25)')}
+        <div style={{ borderRadius: 14, padding: '1.2rem 1.5rem', background: 'linear-gradient(135deg,rgba(201,168,76,0.08),rgba(77,159,255,0.06))', border: '1px solid rgba(201,168,76,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', cursor: 'pointer', transition: 'border-color 0.2s', animation: 'bundleGlow 3.5s ease-in-out infinite, bundleShake 6s ease-in-out infinite' }}
+          onMouseEnter={e => ((e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(201,168,76,0.7)')}
+          onMouseLeave={e => ((e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(201,168,76,0.4)')}
         >
           <div>
             <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.95rem', marginBottom: '0.2rem', color: 'var(--text)' }}>

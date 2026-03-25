@@ -8,22 +8,16 @@ import type { Plan } from '../../types';
 const HUB_URL = (import.meta as any).env?.VITE_HUB_URL ?? 'https://x-eight-beryl.vercel.app';
 
 export function PlansPage() {
-  const { user, upgradePlan } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { t } = useLang();
   const [yearly, setYearly] = useState(false);
-  const [loading, setLoading] = useState<Plan | null>(null);
-  const [success, setSuccess] = useState(false);
 
-  const handleSubscribe = async (planId: Plan) => {
+  // Redirige al Hub para procesar el pago con Stripe
+  const handleSubscribe = (planId: Plan) => {
     if (!user) { navigate('/login'); return; }
     if (planId === 'free' || planId === user.plan) return;
-    setLoading(planId);
-    await new Promise(r => setTimeout(r, 1600));
-    upgradePlan(planId);
-    setLoading(null);
-    setSuccess(true);
-    setTimeout(() => setSuccess(false), 3500);
+    window.location.href = `${HUB_URL}/pricing?tab=bets&plan=${planId}&interval=${yearly ? 'yearly' : 'monthly'}`;
   };
 
   return (
@@ -54,16 +48,9 @@ export function PlansPage() {
         </div>
       </div>
 
-      {success && (
-        <div style={{ padding: '1rem 1.5rem', background: 'rgba(0,255,136,0.08)', border: '1px solid rgba(0,255,136,0.2)', borderRadius: 12, color: 'var(--green)', textAlign: 'center', marginBottom: '1.5rem' }}>
-          ✅ {t('¡Plan activado! Recibirás acceso al canal de Telegram en breve.', 'Plan activated! You will receive access to the Telegram channel shortly.')}
-        </div>
-      )}
-
       <div className="bet-plans-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.2rem', marginBottom: '2.5rem' }}>
         {PLANS.map(plan => {
           const isCurrent = user?.plan === plan.id;
-          const isBusy    = loading === plan.id;
           const price     = yearly && plan.price > 0 ? plan.yearlyPrice : plan.price;
 
           return (
@@ -114,7 +101,7 @@ export function PlansPage() {
 
               <button
                 onClick={() => handleSubscribe(plan.id as Plan)}
-                disabled={isCurrent || isBusy || plan.id === 'free'}
+                disabled={isCurrent || plan.id === 'free'}
                 style={{
                   width: '100%', padding: '0.8rem', borderRadius: 8,
                   border: plan.popular ? 'none' : `1px solid ${plan.color}30`,
@@ -127,9 +114,7 @@ export function PlansPage() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
                 }}
               >
-                {isBusy
-                  ? <span className="animate-spin" style={{ display: 'inline-block', width: 15, height: 15, border: '2px solid currentColor', borderTopColor: 'transparent', borderRadius: '50%' }} />
-                  : isCurrent ? `✓ ${t('Plan actual', 'Current plan')}`
+                {isCurrent ? `✓ ${t('Plan actual', 'Current plan')}`
                   : plan.price === 0 ? t('Plan gratuito', 'Free plan')
                   : `${t('Activar', 'Activate')} ${plan.name}`}
               </button>
@@ -139,11 +124,14 @@ export function PlansPage() {
       </div>
 
       {/* Bundle upsell */}
-      <style>{`@keyframes bundleGlow{0%,100%{box-shadow:0 0 0px rgba(201,168,76,0)}50%{box-shadow:0 0 18px rgba(201,168,76,0.22),0 0 6px rgba(201,168,76,0.1)}}`}</style>
+      <style>{`
+        @keyframes bundleGlow{0%,100%{box-shadow:0 0 0px rgba(201,168,76,0)}50%{box-shadow:0 0 28px rgba(201,168,76,0.45),0 0 10px rgba(201,168,76,0.2)}}
+        @keyframes bundleShake{0%,82%,100%{transform:none}85%{transform:translateX(-5px)}88%{transform:translateX(5px)}91%{transform:translateX(-4px)}94%{transform:translateX(4px)}97%{transform:translateX(-2px)}}
+      `}</style>
       <a href={`${HUB_URL}/pricing?tab=bundle`} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', display: 'block', marginBottom: '1.5rem' }}>
-        <div style={{ borderRadius: 14, padding: '1.2rem 1.5rem', background: 'linear-gradient(135deg,rgba(201,168,76,0.08),rgba(77,159,255,0.06))', border: '1px solid rgba(201,168,76,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', cursor: 'pointer', transition: 'border-color 0.2s', animation: 'bundleGlow 3.5s ease-in-out infinite' }}
-          onMouseEnter={e => ((e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(201,168,76,0.5)')}
-          onMouseLeave={e => ((e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(201,168,76,0.25)')}
+        <div style={{ borderRadius: 14, padding: '1.2rem 1.5rem', background: 'linear-gradient(135deg,rgba(201,168,76,0.08),rgba(77,159,255,0.06))', border: '1px solid rgba(201,168,76,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', cursor: 'pointer', transition: 'border-color 0.2s', animation: 'bundleGlow 3.5s ease-in-out infinite, bundleShake 6s ease-in-out infinite' }}
+          onMouseEnter={e => ((e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(201,168,76,0.7)')}
+          onMouseLeave={e => ((e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(201,168,76,0.4)')}
         >
           <div>
             <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.95rem', marginBottom: '0.2rem', color: 'var(--text)' }}>

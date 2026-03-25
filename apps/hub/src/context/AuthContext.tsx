@@ -59,6 +59,28 @@ function sbToNexus(sbUser: any, prev?: User | null): User {
   };
 }
 
+/** Lee los planes activos desde user_subscriptions y los fusiona en el usuario */
+async function fetchSubscriptions(userId: string): Promise<{ market: Plan; bets: Plan }> {
+  try {
+    const sb = getSupabase();
+    const { data } = await sb
+      .from('user_subscriptions')
+      .select('platform, plan, status')
+      .eq('user_id', userId)
+      .in('status', ['active', 'trialing']);
+
+    const find = (platforms: string[]) =>
+      data?.find(r => platforms.includes(r.platform))?.plan as Plan ?? 'free';
+
+    return {
+      market: find(['market', 'bundle']),
+      bets:   find(['bets',   'bundle']),
+    };
+  } catch {
+    return { market: 'free', bets: 'free' };
+  }
+}
+
 function loadStoredUser(): User | null {
   try { const s = localStorage.getItem(USER_KEY); return s ? JSON.parse(s) : null; }
   catch { return null; }
@@ -93,12 +115,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!sb) { setLoading(false); return; }
 
       const { data: { session } } = await sb.auth.getSession();
-      if (session?.user && alive) setUser(sbToNexus(session.user, loadStoredUser()));
+      if (session?.user && alive) {
+        const base = sbToNexus(session.user, loadStoredUser());
+        const subs = await fetchSubscriptions(session.user.id);
+        if (alive) setUser({ ...base, subscriptions: subs });
+      }
 
-      const { data: { subscription } } = sb.auth.onAuthStateChange((_e: string, sess: any) => {
+      const { data: { subscription } } = sb.auth.onAuthStateChange(async (_e: string, sess: any) => {
         if (!alive) return;
-        if (sess?.user) setUser(sbToNexus(sess.user, loadStoredUser()));
-        else setUser(null);
+        if (sess?.user) {
+          const base = sbToNexus(sess.user, loadStoredUser());
+          const subs = await fetchSubscriptions(sess.user.id);
+          setUser({ ...base, subscriptions: subs });
+        } else {
+          setUser(null);
+        }
       });
 
       if (alive) setLoading(false);

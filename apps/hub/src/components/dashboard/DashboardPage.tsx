@@ -282,7 +282,7 @@ export function DashboardPage() {
 
         {/* Bundle CTA */}
         {(user.subscriptions.market === 'free' || user.subscriptions.bets === 'free') && (
-          <div onClick={() => navigate('/pricing')} style={{ borderRadius: 18, padding: 'clamp(1rem,4vw,1.8rem)', background: 'linear-gradient(135deg,rgba(201,168,76,0.07),rgba(59,158,255,0.04))', border: '1px solid rgba(201,168,76,0.18)', cursor: 'pointer', transition: 'border-color 0.2s', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
+          <div onClick={() => navigate('/pricing?tab=bundle')} style={{ borderRadius: 18, padding: 'clamp(1rem,4vw,1.8rem)', background: 'linear-gradient(135deg,rgba(201,168,76,0.07),rgba(59,158,255,0.04))', border: '1px solid rgba(201,168,76,0.18)', cursor: 'pointer', transition: 'border-color 0.2s', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
             onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.38)')}
             onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.18)')}
           >
