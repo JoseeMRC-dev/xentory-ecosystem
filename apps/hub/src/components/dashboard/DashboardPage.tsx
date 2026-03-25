@@ -282,18 +282,24 @@ export function DashboardPage() {
 
         {/* Bundle CTA */}
         {(user.subscriptions.market === 'free' || user.subscriptions.bets === 'free') && (
-          <div onClick={() => navigate('/pricing?tab=bundle')} style={{ borderRadius: 18, padding: 'clamp(1rem,4vw,1.8rem)', background: 'linear-gradient(135deg,rgba(201,168,76,0.07),rgba(59,158,255,0.04))', border: '1px solid rgba(201,168,76,0.18)', cursor: 'pointer', transition: 'border-color 0.2s', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
-            onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.38)')}
-            onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.18)')}
-          >
-            <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.95rem', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <span style={{ color: 'var(--gold)' }}><StarIcon /></span>
-              {lang === 'es' ? 'Bundle Total — Ahorra 9€/mes' : 'Full Bundle — Save €9/mo'}
+          <>
+            <style>{`
+              @keyframes bundleGlow{0%,100%{box-shadow:0 0 0px rgba(201,168,76,0)}50%{box-shadow:0 0 28px rgba(201,168,76,0.45),0 0 10px rgba(201,168,76,0.2)}}
+              @keyframes bundleShake{0%,82%,100%{transform:none}85%{transform:translateX(-5px)}88%{transform:translateX(5px)}91%{transform:translateX(-4px)}94%{transform:translateX(4px)}97%{transform:translateX(-2px)}}
+            `}</style>
+            <div onClick={() => navigate('/pricing?tab=bundle')} style={{ borderRadius: 18, padding: 'clamp(1rem,4vw,1.8rem)', background: 'linear-gradient(135deg,rgba(201,168,76,0.07),rgba(59,158,255,0.04))', border: '1px solid rgba(201,168,76,0.4)', cursor: 'pointer', transition: 'border-color 0.2s', display: 'flex', flexDirection: 'column', justifyContent: 'center', animation: 'bundleGlow 3.5s ease-in-out infinite, bundleShake 6s ease-in-out infinite' }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.7)')}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.4)')}
+            >
+              <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.95rem', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text)' }}>
+                <span style={{ color: 'var(--gold)' }}><StarIcon /></span>
+                {lang === 'es' ? 'Bundle Total — Ahorra 9€/mes' : 'Full Bundle — Save €9/mo'}
+              </div>
+              <div style={{ color: 'var(--muted)', fontSize: '0.82rem', lineHeight: 1.5 }}>
+                {lang === 'es' ? 'Market Pro + Bet Pro por solo 49€/mes en vez de 58€' : 'Market Pro + Bet Pro for just €49/mo instead of €58'}
+              </div>
             </div>
-            <div style={{ color: 'var(--muted)', fontSize: '0.82rem', lineHeight: 1.5 }}>
-              {lang === 'es' ? 'Market Pro + Bet Pro por solo 49€/mes en vez de 58€' : 'Market Pro + Bet Pro for just €49/mo instead of €58'}
-            </div>
-          </div>
+          </>
         )}
       </div>
     </div>
