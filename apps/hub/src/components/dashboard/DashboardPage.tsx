@@ -253,13 +253,13 @@ export function DashboardPage() {
         {/* Launch overlay */}
         {launching && (
           <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'var(--bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', animation: 'fadeIn 0.3s ease' }}>
-            <div style={{ position: 'absolute', width: 400, height: 400, borderRadius: '50%', background: launching === 'market' ? 'radial-gradient(circle,rgba(201,168,76,0.08),transparent 70%)' : 'radial-gradient(circle,rgba(0,200,122,0.08),transparent 70%)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', width: 400, height: 400, borderRadius: '50%', background: launching === 'market' ? 'radial-gradient(circle,rgba(201,168,76,0.08),transparent 70%)' : 'radial-gradient(circle,rgba(59,158,255,0.08),transparent 70%)', pointerEvents: 'none' }} />
             <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(2rem,6vw,2.8rem)', letterSpacing: '-0.04em', marginBottom: '2.5rem' }}>
               <span className="text-gradient-gold">Xentory</span>
-              <span style={{ color: launching === 'market' ? 'var(--cyan)' : 'var(--green)' }}> {launching === 'market' ? 'Market' : 'Bet'}</span>
+              <span style={{ color: 'var(--cyan)' }}> {launching === 'market' ? 'Market' : 'Bet'}</span>
             </div>
             <div style={{ position: 'relative', width: 64, height: 64, marginBottom: '2rem' }}>
-              <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '2px solid transparent', borderTopColor: launching === 'market' ? 'var(--gold)' : 'var(--green)', animation: 'spin 1.1s linear infinite' }} />
+              <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '2px solid transparent', borderTopColor: launching === 'market' ? 'var(--gold)' : 'var(--cyan)', animation: 'spin 1.1s linear infinite' }} />
               <div style={{ position: 'absolute', inset: 10, borderRadius: '50%', border: '2px solid transparent', borderTopColor: 'var(--cyan)', animation: 'spin 0.75s linear infinite reverse' }} />
             </div>
             <p style={{ color: 'var(--muted)', fontSize: '0.75rem', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
