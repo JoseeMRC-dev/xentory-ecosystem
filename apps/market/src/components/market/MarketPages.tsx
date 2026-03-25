@@ -10,12 +10,24 @@ import {
   type PriceAlert, type AlertCategory, type AlertCondition, type AlertChannel,
 } from '../../services/alertService';
 
+// ── WATCHLIST PERSISTENCE (per user, localStorage) ───────────────
+const DEFAULT_WATCHLIST = ['btc', 'eth', 'nvda'];
+function watchlistKey(userId?: string) { return userId ? `xentory_watchlist_${userId}` : null; }
+function loadWatchlist(userId?: string): string[] {
+  const k = watchlistKey(userId);
+  if (!k) return DEFAULT_WATCHLIST;
+  try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : DEFAULT_WATCHLIST; } catch { return DEFAULT_WATCHLIST; }
+}
+function saveWatchlist(userId: string, list: string[]) {
+  try { localStorage.setItem(watchlistKey(userId)!, JSON.stringify(list)); } catch { /* noop */ }
+}
+
 // ── WATCHLIST PAGE ──
 export function WatchlistPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [assets, setAssets] = useState<Asset[]>([]);
-  const [watchlist, setWatchlist] = useState<string[]>(['btc', 'eth', 'nvda']);
+  const [watchlist, setWatchlist] = useState<string[]>(() => loadWatchlist(user?.id));
   const [searchQ, setSearchQ] = useState('');
   const [allAssets, setAllAssets] = useState<Asset[]>([]);
   // Track which assets flashed green/red on update
@@ -61,12 +73,25 @@ export function WatchlistPage() {
     a.name.toLowerCase().includes(searchQ.toLowerCase())
   ) : [];
 
+  // Load watchlist from storage when user changes
+  useEffect(() => {
+    setWatchlist(loadWatchlist(user?.id));
+  }, [user?.id]);
+
   const toggle = (id: string) => {
-    if (watchlist.includes(id)) {
-      setWatchlist(w => w.filter(x => x !== id));
-    } else if (canAdd) {
-      setWatchlist(w => [...w, id]);
-    }
+    if (!user?.id) return;
+    setWatchlist(prev => {
+      let next: string[];
+      if (prev.includes(id)) {
+        next = prev.filter(x => x !== id);
+      } else if (canAdd) {
+        next = [...prev, id];
+      } else {
+        return prev;
+      }
+      saveWatchlist(user.id, next);
+      return next;
+    });
   };
 
   return (

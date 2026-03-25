@@ -75,6 +75,22 @@ export function AssetDetailPage() {
     </div>
   );
 
+  // Forex is locked for free users
+  if (asset.category === 'forex' && user?.plan === 'free') {
+    return (
+      <div style={{ maxWidth: 500, margin: '6rem auto', textAlign: 'center', padding: '0 1.5rem' }}>
+        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔒</div>
+        <h2 style={{ fontFamily: 'Outfit', fontWeight: 800, marginBottom: '0.5rem' }}>{asset.name}</h2>
+        <p style={{ color: 'var(--muted)', marginBottom: '1.5rem', lineHeight: 1.6 }}>
+          Los activos Forex están incluidos en el plan Pro. Actualiza para acceder a EUR/USD, GBP/USD, XAU/USD y más en tiempo real.
+        </p>
+        <button onClick={() => navigate('/plans')} className="btn btn-gold" style={{ margin: '0 auto' }}>
+          💎 Ver planes Pro →
+        </button>
+      </div>
+    );
+  }
+
   const isUp = asset.changePercent24h >= 0;
   const chartColor = isUp ? '#00ff88' : '#ff4455';
   const chartData = history.map(p => ({ time: p.timestamp, price: p.close, volume: p.volume }));

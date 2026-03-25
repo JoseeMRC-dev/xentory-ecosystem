@@ -52,3 +52,14 @@ export function getLastWeekPicks(): StoredPick[] {
     return d >= weekAgo && d <= now;
   });
 }
+
+/** Returns picks for upcoming matches (match date in the future) */
+export function getUpcomingPicks(): StoredPick[] {
+  const now = Date.now();
+  return load().filter(p => new Date(p.matchDate).getTime() > now);
+}
+
+/** Find a stored pick for a specific match ID */
+export function getPickForMatch(matchId: string | number): StoredPick | undefined {
+  return load().find(p => p.matchId === String(matchId));
+}

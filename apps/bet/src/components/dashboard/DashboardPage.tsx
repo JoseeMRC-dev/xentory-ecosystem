@@ -6,6 +6,7 @@ import { calculateGlobalAccuracy } from '../../services/globalAccuracy';
 import { getTelegramConnection } from '../../services/alertService';
 import { logActivity, getRecentActivity } from '../../services/activityStore';
 import type { Activity } from '../../services/activityStore';
+import { getPickForMatch } from '../../services/predictionStore';
 import { SPORT_CONFIG, confidenceColor } from '../../constants';
 import { useLang } from '../../context/LanguageContext';
 import type { Match } from '../../types';
@@ -22,21 +23,34 @@ const FOOTBALL_COMPETITIONS = [
   { id: 'libertadores', emoji: '🌎', name: 'Copa Libertadores', shortName: 'Lib', color: '#00a651' },
 ];
 
-type DayPick = { sport: string; match: string; competition: string; pick: string; confidence: number; odds: number; market: string; matchId: number; matchRef: Match; };
+type DayPick = { sport: string; match: string; competition: string; pick: string; confidence: number; odds: number; market: string; matchId: number; matchRef: Match; isAI?: boolean; };
 
 function buildPick(m: Match | undefined, lang: string): DayPick | null {
   if (!m) return null;
+
+  // Use stored AI prediction if available
+  const stored = getPickForMatch(m.id);
   const seed = ((m.id % 97) + 97) % 97;
-  const confidence = 62 + (seed % 18);
-  const base = { matchId: m.id, matchRef: m };
+  const confidence = stored?.confidence ?? (62 + (seed % 18));
+  const base = { matchId: m.id, matchRef: m, isAI: !!stored };
+
   if (m.sport === 'football') {
-    return { ...base, sport: '⚽', match: `${m.homeTeam.name} vs ${m.awayTeam.name}`, competition: m.competition.name, pick: lang === 'es' ? `${m.homeTeam.shortName} gana` : `${m.homeTeam.shortName} wins`, confidence, odds: parseFloat((1.50 + (seed % 60) / 100).toFixed(2)), market: '1X2' };
+    const pickLabel = stored
+      ? (stored.pick === 'home' ? (lang === 'es' ? `${m.homeTeam.shortName} gana` : `${m.homeTeam.shortName} wins`)
+        : stored.pick === 'away' ? (lang === 'es' ? `${m.awayTeam.shortName} gana` : `${m.awayTeam.shortName} wins`)
+        : (lang === 'es' ? 'Empate' : 'Draw'))
+      : (lang === 'es' ? `${m.homeTeam.shortName} gana` : `${m.homeTeam.shortName} wins`);
+    const market = stored?.market === 'overUnder25' ? 'Over/Under 2.5' : stored?.market === 'btts' ? 'BTTS' : '1X2';
+    return { ...base, sport: '⚽', match: `${m.homeTeam.name} vs ${m.awayTeam.name}`, competition: m.competition.name, pick: pickLabel, confidence, odds: parseFloat((1.50 + (seed % 60) / 100).toFixed(2)), market };
   }
   if (m.sport === 'basketball') {
     return { ...base, sport: '🏀', match: `${m.homeTeam.shortName} vs ${m.awayTeam.shortName}`, competition: m.competition.name, pick: `Over ${210 + (seed % 25)}.5`, confidence, odds: parseFloat((1.80 + (seed % 20) / 100).toFixed(2)), market: 'Over/Under' };
   }
   if (m.sport === 'tennis') {
-    return { ...base, sport: '🎾', match: `${m.homeTeam.name} vs ${m.awayTeam.name}`, competition: m.competition.name, pick: lang === 'es' ? `${m.homeTeam.shortName} gana` : `${m.homeTeam.shortName} wins`, confidence, odds: parseFloat((1.45 + (seed % 55) / 100).toFixed(2)), market: lang === 'es' ? 'Resultado' : 'Result' };
+    const pickLabel = stored
+      ? (stored.pick === 'home' ? (lang === 'es' ? `${m.homeTeam.shortName} gana` : `${m.homeTeam.shortName} wins`) : (lang === 'es' ? `${m.awayTeam.shortName} gana` : `${m.awayTeam.shortName} wins`))
+      : (lang === 'es' ? `${m.homeTeam.shortName} gana` : `${m.homeTeam.shortName} wins`);
+    return { ...base, sport: '🎾', match: `${m.homeTeam.name} vs ${m.awayTeam.name}`, competition: m.competition.name, pick: pickLabel, confidence, odds: parseFloat((1.45 + (seed % 55) / 100).toFixed(2)), market: lang === 'es' ? 'Resultado' : 'Result' };
   }
   return null;
 }
@@ -231,7 +245,10 @@ export function DashboardPage() {
               >
                 <div style={{ fontSize: '1.5rem', flexShrink: 0 }}>{pick.sport}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 500, fontSize: '0.88rem', marginBottom: '0.15rem' }}>{pick.match}</div>
+                  <div style={{ fontWeight: 500, fontSize: '0.88rem', marginBottom: '0.15rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    {pick.match}
+                    {pick.isAI && <span style={{ fontSize: '0.58rem', padding: '0.1rem 0.35rem', borderRadius: 4, background: 'rgba(0,212,255,0.1)', color: 'var(--cyan)', border: '1px solid rgba(0,212,255,0.2)', flexShrink: 0 }}>IA</span>}
+                  </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>{pick.competition} · {pick.market}</div>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
