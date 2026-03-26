@@ -546,18 +546,21 @@ function PageWrapper({ children, onClose }: { children: React.ReactNode; onClose
     <div style={{
       minHeight: '100svh', display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'flex-start',
-      padding: 'clamp(1rem,4vw,2rem) clamp(0.75rem,4vw,1.5rem)',
+      paddingTop: 'calc(var(--bar-h) + 1.5rem)',
+      paddingBottom: '2rem',
+      paddingLeft: 'clamp(0.75rem,4vw,1.5rem)',
+      paddingRight: 'clamp(0.75rem,4vw,1.5rem)',
       background: 'radial-gradient(ellipse at 30% 50%,rgba(201,168,76,0.05) 0%,transparent 55%),radial-gradient(ellipse at 75% 20%,rgba(0,212,255,0.04) 0%,transparent 50%)',
     }}>
-      <div className="glass animate-fadeUp" style={{ width: '100%', maxWidth: 440, borderRadius: 20, padding: 'clamp(1.5rem,4vw,2.5rem)', margin: 'auto 0', position: 'relative' }}>
+      <div className="glass animate-fadeUp" style={{ width: '100%', maxWidth: 440, borderRadius: 20, padding: 'clamp(1.5rem,4vw,2.5rem)', position: 'relative' }}>
         {/* Close button */}
         {onClose && (
           <button
             onClick={onClose}
             aria-label="Cerrar"
-            style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: '1.1rem', lineHeight: 1, padding: '0.3rem 0.5rem', borderRadius: 6, transition: 'color 0.2s', zIndex: 1 }}
-            onMouseEnter={e => (e.currentTarget.style.color = 'var(--text)')}
-            onMouseLeave={e => (e.currentTarget.style.color = 'var(--muted)')}
+            style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border)', cursor: 'pointer', color: 'var(--text2)', fontSize: '0.9rem', lineHeight: 1, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, transition: 'all 0.2s', zIndex: 1 }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; e.currentTarget.style.color = 'var(--text)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'var(--text2)'; }}
           >✕</button>
         )}
         {/* Logo */}
