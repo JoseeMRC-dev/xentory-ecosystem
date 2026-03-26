@@ -250,10 +250,10 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
   return (
     <PageWrapper onClose={() => navigate('/')}>
       {/* Tabs */}
-      <div style={{ display: 'flex', background: 'var(--card2)', borderRadius: 10, padding: '0.25rem', marginBottom: '1.5rem', gap: '0.1rem' }}>
+      <div style={{ display: 'flex', background: 'var(--card2)', borderRadius: 10, padding: '0.2rem', marginBottom: '0.85rem', gap: '0.1rem' }}>
         {(['login', 'register', 'magic'] as Tab[]).map(t => { const label = t === 'login' ? 'Iniciar sesión' : t === 'register' ? 'Registrarse' : '✉ Enlace mágico'; return (
           <button key={t} onClick={() => changeTab(t)} style={{
-            flex: 1, padding: '0.5rem 0.3rem', borderRadius: 8, border: 'none', cursor: 'pointer',
+            flex: 1, padding: '0.4rem 0.3rem', borderRadius: 8, border: 'none', cursor: 'pointer',
             fontSize: '0.78rem', fontWeight: 500, transition: 'all 0.2s',
             background: tab === t ? 'var(--card)' : 'transparent',
             color: tab === t ? 'var(--text)' : 'var(--muted)',
@@ -267,7 +267,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
         onClick={handleGoogle}
         disabled={googleLoading}
         className="btn btn-outline"
-        style={{ width: '100%', justifyContent: 'center', marginBottom: '1.2rem', opacity: googleLoading ? 0.7 : 1 }}
+        style={{ width: '100%', justifyContent: 'center', marginBottom: '0.7rem', opacity: googleLoading ? 0.7 : 1 }}
       >
         {googleLoading
           ? <Spinner /> : <><GoogleIcon /> Continuar con Google</>
@@ -277,7 +277,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
       <Divider />
 
       {/* Form */}
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         {tab === 'register' && (
           <Field label="Nombre completo">
             <input className="input" placeholder="Alex Martínez" value={name}
@@ -295,9 +295,6 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
               max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
               autoComplete="bday"
             />
-            <span style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '0.25rem', display: 'block' }}>
-              Debes ser mayor de 18 años para acceder a XentoryBet
-            </span>
           </Field>
         )}
 
@@ -343,7 +340,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
 
         {/* Age consent checkbox — register only */}
         {tab === 'register' && (
-          <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.65rem', cursor: 'pointer', padding: '0.75rem', borderRadius: 10, background: 'rgba(255,68,85,0.04)', border: `1px solid ${ageConsent ? 'rgba(201,168,76,0.3)' : 'rgba(255,68,85,0.2)'}`, transition: 'border-color 0.2s' }}>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', cursor: 'pointer', padding: '0.5rem 0.65rem', borderRadius: 8, background: 'rgba(255,68,85,0.04)', border: `1px solid ${ageConsent ? 'rgba(201,168,76,0.3)' : 'rgba(255,68,85,0.2)'}`, transition: 'border-color 0.2s' }}>
             <div
               onClick={() => setAgeConsent(v => !v)}
               style={{
@@ -356,18 +353,16 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
             >
               {ageConsent && <svg width="10" height="8" viewBox="0 0 10 8"><path d="M1 4l3 3 5-6" stroke="var(--bg)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>}
             </div>
-            <span style={{ fontSize: '0.82rem', color: 'var(--text2)', lineHeight: 1.6 }}>
-              <strong style={{ color: 'var(--red)' }}>⚠️ Declaración obligatoria:</strong>{' '}
-              Confirmo que tengo <strong style={{ color: 'var(--text)' }}>18 años o más</strong> y soy consciente de que el juego puede crear adicción.
-              Puedes encontrar ayuda en{' '}
-              <a href="https://www.jugarbien.es" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--gold)', textDecoration: 'none' }}>jugarbien.es</a>.
+            <span style={{ fontSize: '0.75rem', color: 'var(--text2)', lineHeight: 1.45 }}>
+              <strong style={{ color: 'var(--red)' }}>⚠️</strong>{' '}
+              Confirmo que tengo <strong>18 años o más</strong> y entiendo que el juego puede crear adicción. Ayuda: <a href="https://www.jugarbien.es" target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ color: 'var(--gold)', textDecoration: 'none' }}>jugarbien.es</a>
             </span>
           </label>
         )}
 
         {/* Terms checkbox — register only */}
         {tab === 'register' && (
-          <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.65rem', cursor: 'pointer', padding: '0.75rem', borderRadius: 10, background: 'var(--card2)', border: `1px solid ${terms ? 'rgba(201,168,76,0.3)' : 'var(--border)'}`, transition: 'border-color 0.2s' }}>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', cursor: 'pointer', padding: '0.5rem 0.65rem', borderRadius: 8, background: 'var(--card2)', border: `1px solid ${terms ? 'rgba(201,168,76,0.3)' : 'var(--border)'}`, transition: 'border-color 0.2s' }}>
             <div
               onClick={() => setTerms(v => !v)}
               style={{
@@ -380,14 +375,8 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
             >
               {terms && <svg width="10" height="8" viewBox="0 0 10 8"><path d="M1 4l3 3 5-6" stroke="var(--bg)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>}
             </div>
-            <span style={{ fontSize: '0.82rem', color: 'var(--text2)', lineHeight: 1.6 }}>
-              He leído y acepto los{' '}
-              <Link to="/terminos" target="_blank" style={{ color: 'var(--gold)', textDecoration: 'none', fontWeight: 600 }}>
-                Términos de Uso
-              </Link>
-              , incluyendo el aviso sobre la{' '}
-              <strong style={{ color: 'var(--text)' }}>naturaleza informativa</strong> de los análisis
-              y los riesgos asociados a inversiones y apuestas.
+            <span style={{ fontSize: '0.75rem', color: 'var(--text2)', lineHeight: 1.45 }}>
+              He leído y acepto los <Link to="/terminos" target="_blank" onClick={e => e.stopPropagation()} style={{ color: 'var(--gold)', textDecoration: 'none', fontWeight: 600 }}>Términos de Uso</Link>, incluyendo los riesgos asociados a inversiones y apuestas.
             </span>
           </label>
         )}
@@ -445,7 +434,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
       </form>
 
       {/* Footer links */}
-      <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.75rem', color: 'var(--muted)' }}>
+      <p style={{ textAlign: 'center', marginTop: '0.75rem', fontSize: '0.75rem', color: 'var(--muted)' }}>
         {tab === 'login'
           ? <>¿No tienes cuenta? <Link to="/register" style={{ color: 'var(--gold)', textDecoration: 'none' }}>Regístrate gratis →</Link></>
           : tab === 'register'
@@ -532,9 +521,9 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
       )}
 
       {/* AI disclaimer at bottom */}
-      <div style={{ marginTop: '1.5rem', padding: '0.8rem', borderRadius: 8, background: 'var(--card2)', border: '1px solid var(--border)', fontSize: '0.72rem', color: 'var(--muted)', lineHeight: 1.65, textAlign: 'center' }}>
-        ⚠️ Xentory es una herramienta de análisis informativa. No garantiza rentabilidad ni resultados. Consulta los <Link to="/terminos" style={{ color: 'var(--gold)', textDecoration: 'none' }}>Términos de Uso</Link> antes de operar.
-      </div>
+      <p style={{ marginTop: '0.6rem', fontSize: '0.68rem', color: 'var(--muted)', textAlign: 'center', lineHeight: 1.5 }}>
+        ⚠️ Herramienta informativa. No garantiza rentabilidad. <Link to="/terminos" style={{ color: 'var(--gold)', textDecoration: 'none' }}>Términos de Uso</Link>
+      </p>
     </PageWrapper>
   );
 }
@@ -546,35 +535,39 @@ function PageWrapper({ children, onClose }: { children: React.ReactNode; onClose
     <div style={{
       minHeight: '100svh', display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'flex-start',
-      paddingTop: 'calc(var(--bar-h) + 1.5rem)',
-      paddingBottom: '2rem',
-      paddingLeft: 'clamp(0.75rem,4vw,1.5rem)',
-      paddingRight: 'clamp(0.75rem,4vw,1.5rem)',
+      paddingTop: 'calc(var(--bar-h) + 0.5rem)',
+      paddingBottom: '0.5rem',
+      paddingLeft: 'clamp(0.5rem,3vw,1rem)',
+      paddingRight: 'clamp(0.5rem,3vw,1rem)',
       background: 'radial-gradient(ellipse at 30% 50%,rgba(201,168,76,0.05) 0%,transparent 55%),radial-gradient(ellipse at 75% 20%,rgba(0,212,255,0.04) 0%,transparent 50%)',
     }}>
-      <div className="glass animate-fadeUp" style={{ width: '100%', maxWidth: 440, borderRadius: 20, padding: 'clamp(1.5rem,4vw,2.5rem)', position: 'relative' }}>
+      <div className="glass animate-fadeUp" style={{
+        width: '100%', maxWidth: 440, borderRadius: 20,
+        padding: 'clamp(1rem,3vw,1.5rem)',
+        maxHeight: 'calc(100svh - var(--bar-h) - 1rem)',
+        overflowY: 'auto', position: 'relative',
+      }}>
         {/* Close button */}
         {onClose && (
           <button
             onClick={onClose}
             aria-label="Cerrar"
-            style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border)', cursor: 'pointer', color: 'var(--text2)', fontSize: '0.9rem', lineHeight: 1, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, transition: 'all 0.2s', zIndex: 1 }}
+            style={{ position: 'absolute', top: '0.75rem', right: '0.75rem', background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border)', cursor: 'pointer', color: 'var(--text2)', fontSize: '0.85rem', lineHeight: 1, width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 7, transition: 'all 0.2s', zIndex: 1 }}
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; e.currentTarget.style.color = 'var(--text)'; }}
             onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'var(--text2)'; }}
           >✕</button>
         )}
         {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: '1.8rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '0.9rem' }}>
           <Link to="/" style={{ textDecoration: 'none' }}>
-            <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.7rem', letterSpacing: '-0.02em', marginBottom: '0.3rem' }}>
+            <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.45rem', letterSpacing: '-0.02em' }}>
               <span className="text-gradient-gold">Xen</span>
               <span style={{ color: 'var(--cyan)' }}>tory</span>
             </div>
           </Link>
-          {/* SSO badge */}
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.7rem', padding: '0.4rem 0.9rem', background: 'var(--card2)', borderRadius: 8, border: '1px solid var(--border)', marginTop: '0.5rem' }}>
-            {['📈 Market', '⚽ Bet'].map(p => <span key={p} style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>{p}</span>)}
-            <span style={{ color: 'var(--green)', fontSize: '0.7rem', padding: '0.1rem 0.45rem', background: 'rgba(0,255,136,0.08)', borderRadius: 4, border: '1px solid rgba(0,255,136,0.15)' }}>SSO ✓</span>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.3rem' }}>
+            {['📈 Market', '⚽ Bet'].map(p => <span key={p} style={{ fontSize: '0.68rem', color: 'var(--muted)' }}>{p}</span>)}
+            <span style={{ color: 'var(--green)', fontSize: '0.65rem', padding: '0.05rem 0.35rem', background: 'rgba(0,255,136,0.08)', borderRadius: 4, border: '1px solid rgba(0,255,136,0.15)' }}>SSO ✓</span>
           </div>
         </div>
         {children}
@@ -596,7 +589,7 @@ function Field({ label, children }: { label: React.ReactNode; children: React.Re
 
 function Divider() {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.2rem' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '0.7rem' }}>
       <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
       <span style={{ color: 'var(--muted)', fontSize: '0.78rem' }}>o</span>
       <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
