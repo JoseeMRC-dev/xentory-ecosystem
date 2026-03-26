@@ -210,7 +210,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
 
   // ── Confirm email screen ─────────────────────────────────────────────
   if (confirmEmail) return (
-    <PageWrapper>
+    <PageWrapper onClose={() => navigate('/')}>
       <div style={{ textAlign: 'center', padding: '1rem 0' }}>
         <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📬</div>
         <h2 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.4rem', marginBottom: '0.8rem' }}>Confirma tu email</h2>
@@ -228,7 +228,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
 
   // ── Magic link sent screen ────────────────────────────────────────────
   if (magicSent) return (
-    <PageWrapper>
+    <PageWrapper onClose={() => navigate('/')}>
       <div style={{ textAlign: 'center', padding: '1rem 0' }}>
         <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✉️</div>
         <h2 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.4rem', marginBottom: '0.8rem' }}>Revisa tu email</h2>
@@ -248,7 +248,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
   );
 
   return (
-    <PageWrapper>
+    <PageWrapper onClose={() => navigate('/')}>
       {/* Tabs */}
       <div style={{ display: 'flex', background: 'var(--card2)', borderRadius: 10, padding: '0.25rem', marginBottom: '1.5rem', gap: '0.1rem' }}>
         {(['login', 'register', 'magic'] as Tab[]).map(t => { const label = t === 'login' ? 'Iniciar sesión' : t === 'register' ? 'Registrarse' : '✉ Enlace mágico'; return (
@@ -541,14 +541,25 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
 
 // ── Sub-components ─────────────────────────────────────────────────────────
 
-function PageWrapper({ children }: { children: React.ReactNode }) {
+function PageWrapper({ children, onClose }: { children: React.ReactNode; onClose?: () => void }) {
   return (
     <div style={{
-      minHeight: '100vh', display: 'flex', alignItems: 'center',
-      justifyContent: 'center', padding: '2rem',
+      minHeight: '100svh', display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'flex-start',
+      padding: 'clamp(1rem,4vw,2rem) clamp(0.75rem,4vw,1.5rem)',
       background: 'radial-gradient(ellipse at 30% 50%,rgba(201,168,76,0.05) 0%,transparent 55%),radial-gradient(ellipse at 75% 20%,rgba(0,212,255,0.04) 0%,transparent 50%)',
     }}>
-      <div className="glass animate-fadeUp" style={{ width: '100%', maxWidth: 440, borderRadius: 20, padding: '2.5rem' }}>
+      <div className="glass animate-fadeUp" style={{ width: '100%', maxWidth: 440, borderRadius: 20, padding: 'clamp(1.5rem,4vw,2.5rem)', margin: 'auto 0', position: 'relative' }}>
+        {/* Close button */}
+        {onClose && (
+          <button
+            onClick={onClose}
+            aria-label="Cerrar"
+            style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: '1.1rem', lineHeight: 1, padding: '0.3rem 0.5rem', borderRadius: 6, transition: 'color 0.2s', zIndex: 1 }}
+            onMouseEnter={e => (e.currentTarget.style.color = 'var(--text)')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'var(--muted)')}
+          >✕</button>
+        )}
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '1.8rem' }}>
           <Link to="/" style={{ textDecoration: 'none' }}>
