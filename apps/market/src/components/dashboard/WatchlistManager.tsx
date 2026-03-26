@@ -6,6 +6,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getLiveAssets, formatPrice } from '../../services/marketService';
+import { useAuth } from '../../hooks/useAuth';
 import type { Asset } from '../../types';
 
 const STORAGE_KEY = 'xentory_watchlist_v2';
@@ -94,26 +95,40 @@ const CATEGORY_ICONS: Record<string, string> = {
   crypto: '₿', stocks: '📈', forex: '💱', commodities: '🪙', indices: '📊',
 };
 
-// ── Persist helpers ──────────────────────────────────────────────
-function loadWatchlist(): string[] {
+// ── Persist helpers (per-user) ────────────────────────────────────
+const FREE_DEFAULT  = ['btc', 'eth', 'nvda'];
+const PAID_DEFAULT  = ['btc', 'eth', 'nvda', 'eurusd'];
+
+function userKey(userId?: string) { return userId ? `${STORAGE_KEY}_${userId}` : STORAGE_KEY; }
+
+function loadWatchlist(userId?: string, isPaid = false): string[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : ['btc', 'eth', 'nvda', 'eurusd'];
-  } catch { return ['btc', 'eth', 'nvda', 'eurusd']; }
+    const raw = localStorage.getItem(userKey(userId));
+    const list: string[] = raw ? JSON.parse(raw) : (isPaid ? PAID_DEFAULT : FREE_DEFAULT);
+    // Strip forex for free users even if stored
+    return isPaid ? list : list.filter(id => ASSET_CATALOGUE.find(a => a.id === id)?.category !== 'forex');
+  } catch { return FREE_DEFAULT; }
 }
 
-function saveWatchlist(ids: string[]) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(ids)); } catch { /**/ }
+function saveWatchlist(ids: string[], userId?: string) {
+  try { localStorage.setItem(userKey(userId), JSON.stringify(ids)); } catch { /**/ }
 }
 
 // ── Main component ───────────────────────────────────────────────
 export function WatchlistManager() {
-  const [watchlistIds, setWatchlistIds] = useState<string[]>(loadWatchlist);
+  const { user }                        = useAuth();
+  const isPaid                          = user?.plan !== 'free';
+  const [watchlistIds, setWatchlistIds] = useState<string[]>(() => loadWatchlist(user?.id, isPaid));
   const [query, setQuery]               = useState('');
   const [showSearch, setShowSearch]     = useState(false);
   const [liveData, setLiveData]         = useState<Asset[]>(() => getLiveAssets());
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+
+  // Reload when user changes (e.g. login)
+  useEffect(() => {
+    setWatchlistIds(loadWatchlist(user?.id, isPaid));
+  }, [user?.id, isPaid]);
 
   // Live price updates
   useEffect(() => {
@@ -122,7 +137,7 @@ export function WatchlistManager() {
   }, []);
 
   // Persist on change
-  useEffect(() => { saveWatchlist(watchlistIds); }, [watchlistIds]);
+  useEffect(() => { saveWatchlist(watchlistIds, user?.id); }, [watchlistIds, user?.id]);
 
   // Focus input when search opens
   useEffect(() => {
@@ -130,10 +145,13 @@ export function WatchlistManager() {
   }, [showSearch]);
 
   const addAsset = useCallback((id: string) => {
+    const cat = ASSET_CATALOGUE.find(a => a.id === id);
+    if (!isPaid && cat?.category === 'forex') { navigate('/plans'); return; }
+    if (!isPaid && watchlistIds.length >= 3) return; // free: max 3
     setWatchlistIds(prev => prev.includes(id) ? prev : [...prev, id]);
     setQuery('');
     setShowSearch(false);
-  }, []);
+  }, [isPaid, watchlistIds.length, navigate]);
 
   const removeAsset = useCallback((id: string) => {
     setWatchlistIds(prev => prev.filter(x => x !== id));
@@ -215,12 +233,14 @@ export function WatchlistManager() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
             {results.map(asset => {
               const already = watchlistIds.includes(asset.id);
+              const isForexLocked = !isPaid && asset.category === 'forex';
               const color = CATEGORY_COLORS[asset.category] ?? 'var(--gold)';
               return (
                 <button
                   key={asset.id}
                   onClick={() => !already && addAsset(asset.id)}
                   disabled={already}
+                  title={isForexLocked ? 'Requiere plan Pro' : undefined}
                   style={{
                     display: 'flex', alignItems: 'center', gap: '0.75rem',
                     padding: '0.6rem 0.8rem', borderRadius: 8, border: 'none',
@@ -228,10 +248,10 @@ export function WatchlistManager() {
                     cursor: already ? 'default' : 'pointer',
                     color: 'var(--text)', textAlign: 'left', width: '100%',
                     transition: 'background 0.15s',
-                    opacity: already ? 0.5 : 1,
+                    opacity: already || isForexLocked ? 0.5 : 1,
                   }}
-                  onMouseEnter={e => { if (!already) (e.currentTarget as HTMLElement).style.background = 'var(--card)'; }}
-                  onMouseLeave={e => { if (!already) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                  onMouseEnter={e => { if (!already && !isForexLocked) (e.currentTarget as HTMLElement).style.background = 'var(--card)'; }}
+                  onMouseLeave={e => { if (!already && !isForexLocked) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                 >
                   <span style={{
                     width: 30, height: 30, borderRadius: 8, flexShrink: 0,
@@ -251,7 +271,8 @@ export function WatchlistManager() {
                   }}>
                     {asset.category}
                   </span>
-                  {already && <span style={{ fontSize: '0.75rem', color: 'var(--green)' }}>✓</span>}
+                  {isForexLocked && <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: 100, background: 'rgba(201,168,76,0.12)', color: 'var(--gold)' }}>Pro</span>}
+                  {already && !isForexLocked && <span style={{ fontSize: '0.75rem', color: 'var(--green)' }}>✓</span>}
                 </button>
               );
             })}

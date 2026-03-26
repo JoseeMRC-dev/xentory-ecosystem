@@ -7,10 +7,33 @@ import { SIGNAL_LABELS, STATUS_CONFIG, CATEGORY_LABELS } from '../../constants';
 import { useLang } from '../../context/LanguageContext';
 import type { Asset } from '../../types';
 
-const MARKET_SUMMARY_MOCK = {
-  bullish: 8, neutral: 4, bearish: 4, totalAssets: 16,
-  btcDominance: 54.2, fearGreed: 68, fearGreedLabel: { es: 'Codicia', en: 'Greed' },
+// Fear & Greed labels
+const FNG_LABELS: Record<number, { es: string; en: string }> = {
+  0:  { es: 'Miedo extremo', en: 'Extreme Fear' },
+  25: { es: 'Miedo',         en: 'Fear'          },
+  46: { es: 'Neutral',       en: 'Neutral'        },
+  55: { es: 'Codicia',       en: 'Greed'          },
+  76: { es: 'Codicia extrema', en: 'Extreme Greed' },
 };
+function fngLabel(value: number) {
+  const key = [76, 55, 46, 25, 0].find(k => value >= k) ?? 0;
+  return FNG_LABELS[key];
+}
+
+async function fetchMarketMeta(): Promise<{ btcDominance: number; fearGreed: number }> {
+  try {
+    const [cgRes, fngRes] = await Promise.all([
+      fetch('https://api.coingecko.com/api/v3/global', { signal: AbortSignal.timeout(5000) }),
+      fetch('https://api.alternative.me/fng/?limit=1', { signal: AbortSignal.timeout(5000) }),
+    ]);
+    const [cgData, fngData] = await Promise.all([cgRes.json(), fngRes.json()]);
+    const btcDominance = parseFloat((cgData?.data?.market_cap_percentage?.btc ?? 54).toFixed(1));
+    const fearGreed = parseInt(fngData?.data?.[0]?.value ?? '50', 10);
+    return { btcDominance, fearGreed };
+  } catch {
+    return { btcDominance: 54, fearGreed: 50 };
+  }
+}
 
 function StatCard({ title, value, sub, color }: { title: string; value: string; sub?: string; color?: string }) {
   return (
@@ -60,6 +83,8 @@ export function DashboardPage() {
   const { t, lang } = useLang();
   const [assets, setAssets] = useState<Asset[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [btcDominance, setBtcDominance] = useState<number | null>(null);
+  const [fearGreed, setFearGreed]     = useState<number | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -69,6 +94,14 @@ export function DashboardPage() {
       id = setInterval(() => setAssets(getLiveAssets()), 4000);
     });
     return () => { if (id) clearInterval(id); };
+  }, []);
+
+  // Fetch BTC dominance + Fear & Greed once on mount
+  useEffect(() => {
+    fetchMarketMeta().then(({ btcDominance: d, fearGreed: f }) => {
+      setBtcDominance(d);
+      setFearGreed(f);
+    });
   }, []);
 
   const filtered = activeCategory === 'all' ? assets : assets.filter(a => a.category === activeCategory);
@@ -96,17 +129,25 @@ export function DashboardPage() {
         </p>
       </div>
 
-      <div className="mkt-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
-        <StatCard title={t('Activos alcistas', 'Bullish assets')} value={`${MARKET_SUMMARY_MOCK.bullish}/${MARKET_SUMMARY_MOCK.totalAssets}`} sub={t('en tendencia alcista', 'in uptrend')} color="var(--green)" />
-        <StatCard title="BTC Dominance" value={`${MARKET_SUMMARY_MOCK.btcDominance}%`} sub={t('del mercado crypto', 'of crypto market')} color="var(--gold)" />
-        <StatCard title="Fear & Greed" value={`${MARKET_SUMMARY_MOCK.fearGreed}`} sub={MARKET_SUMMARY_MOCK.fearGreedLabel[lang === 'es' ? 'es' : 'en']} color="#f97316" />
-        <StatCard
-          title={t('Tu plan', 'Your plan')}
-          value={user?.plan === 'free' ? t('Básico', 'Basic') : user?.plan === 'pro' ? 'Pro' : 'Elite'}
-          sub={user?.plan === 'free' ? t('Actualiza para más funciones', 'Upgrade for more features') : t('Acceso completo activo', 'Full access active')}
-          color={user?.plan === 'free' ? 'var(--muted)' : user?.plan === 'pro' ? 'var(--gold)' : 'var(--cyan)'}
-        />
-      </div>
+      {(() => {
+        const bullishCount = assets.filter(a => a.status === 'bullish').length;
+        const totalCount   = assets.length || 16;
+        const fng          = fearGreed ?? null;
+        const fngLbl       = fng !== null ? fngLabel(fng)[lang === 'es' ? 'es' : 'en'] : '…';
+        return (
+          <div className="mkt-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+            <StatCard title={t('Activos alcistas', 'Bullish assets')} value={assets.length ? `${bullishCount}/${totalCount}` : '…'} sub={t('en tendencia alcista', 'in uptrend')} color="var(--green)" />
+            <StatCard title="BTC Dominance" value={btcDominance !== null ? `${btcDominance}%` : '…'} sub={t('del mercado crypto', 'of crypto market')} color="var(--gold)" />
+            <StatCard title="Fear & Greed" value={fng !== null ? String(fng) : '…'} sub={fngLbl} color="#f97316" />
+            <StatCard
+              title={t('Tu plan', 'Your plan')}
+              value={user?.plan === 'free' ? t('Básico', 'Basic') : user?.plan === 'pro' ? 'Pro' : 'Elite'}
+              sub={user?.plan === 'free' ? t('Actualiza para más funciones', 'Upgrade for more features') : t('Acceso completo activo', 'Full access active')}
+              color={user?.plan === 'free' ? 'var(--muted)' : user?.plan === 'pro' ? 'var(--gold)' : 'var(--cyan)'}
+            />
+          </div>
+        );
+      })()}
 
       <div className="glass" style={{ borderRadius: 16, padding: '1.5rem', marginBottom: '1.5rem', width: '100%' }}>
         <WatchlistManager />
@@ -138,9 +179,33 @@ export function DashboardPage() {
           <div>{t('Estado', 'Status')}</div>
         </div>
 
-        {filtered.map(asset => (
-          <AssetRow key={asset.id} asset={asset} onClick={() => navigate(`/market/${asset.id}`)} />
-        ))}
+        {filtered.map(asset => {
+          const isForexLocked = asset.category === 'forex' && user?.plan === 'free';
+          return isForexLocked ? (
+            <div
+              key={asset.id}
+              onClick={() => navigate('/plans')}
+              style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 1fr 0.8fr 0.8fr', alignItems: 'center', padding: '0.9rem 1.2rem', borderBottom: '1px solid var(--border)', cursor: 'pointer', transition: 'background 0.15s', gap: '0.5rem', opacity: 0.45, filter: 'blur(0.5px)' }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'var(--card2)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+              title={t('Requiere plan Pro', 'Requires Pro plan')}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--card2)', border: '1px solid var(--border2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem' }}>🔒</div>
+                <div>
+                  <div style={{ fontWeight: 500, fontSize: '0.85rem' }}>{asset.symbol}</div>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--muted)' }}>{asset.name}</div>
+                </div>
+              </div>
+              <div style={{ fontFamily: 'Outfit', fontWeight: 600, fontSize: '0.88rem', filter: 'blur(4px)', userSelect: 'none' }}>{'$' + asset.price.toFixed(4)}</div>
+              <div style={{ filter: 'blur(4px)', userSelect: 'none', fontSize: '0.82rem' }}>±0.00%</div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>Forex</div>
+              <div><span style={{ padding: '0.2rem 0.5rem', borderRadius: 100, fontSize: '0.65rem', background: 'rgba(201,168,76,0.1)', color: 'var(--gold)', border: '1px solid rgba(201,168,76,0.2)' }}>Pro</span></div>
+            </div>
+          ) : (
+            <AssetRow key={asset.id} asset={asset} onClick={() => navigate(`/market/${asset.id}`)} />
+          );
+        })}
       </div>
 
       {user?.plan === 'free' && (

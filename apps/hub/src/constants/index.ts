@@ -180,12 +180,12 @@ export const BLOG_POSTS: BlogPost[] = [
   },
 ];
 
-export const CATEGORY_LABELS: Record<string, { label: string; color: string; emoji: string }> = {
-  crypto:   { label: 'Cripto',    color: '#c9a84c', emoji: '₿' },
-  stocks:   { label: 'Bolsa',     color: '#00d4ff', emoji: '📈' },
-  forex:    { label: 'Forex',     color: '#00ff88', emoji: '💱' },
-  sports:   { label: 'Deportes',  color: '#f97316', emoji: '⚽' },
-  platform: { label: 'Plataforma',color: '#6b7294', emoji: '🔧' },
+export const CATEGORY_LABELS: Record<string, { label: string; labelEn?: string; color: string; emoji: string }> = {
+  crypto:   { label: 'Cripto',     labelEn: 'Crypto',    color: '#c9a84c', emoji: '₿' },
+  stocks:   { label: 'Bolsa',      labelEn: 'Stocks',    color: '#00d4ff', emoji: '📈' },
+  forex:    { label: 'Forex',      labelEn: 'Forex',     color: '#00ff88', emoji: '💱' },
+  sports:   { label: 'Deportes',   labelEn: 'Sports',    color: '#f97316', emoji: '⚽' },
+  platform: { label: 'Plataforma', labelEn: 'Platform',  color: '#6b7294', emoji: '🔧' },
 };
 
 export const PLAN_LABELS: Record<string, string> = {
