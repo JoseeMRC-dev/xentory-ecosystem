@@ -69,6 +69,23 @@ const ALL_QUERIES: Record<'es' | 'en', string> = {
   en: 'bitcoin OR stock market OR football OR champions OR trading OR crypto OR equities',
 };
 
+// ── localStorage cache (30-minute TTL) ─────────────────────────────────────
+const CACHE_TTL = 30 * 60 * 1000;
+
+function readCache(key: string): NewsArticle[] | null {
+  try {
+    const raw = localStorage.getItem(`news_cache_${key}`);
+    if (!raw) return null;
+    const { articles, ts } = JSON.parse(raw) as { articles: NewsArticle[]; ts: number };
+    if (Date.now() - ts > CACHE_TTL) { localStorage.removeItem(`news_cache_${key}`); return null; }
+    return articles;
+  } catch { return null; }
+}
+
+function writeCache(key: string, articles: NewsArticle[]) {
+  try { localStorage.setItem(`news_cache_${key}`, JSON.stringify({ articles, ts: Date.now() })); } catch {}
+}
+
 export function useNews() {
   const { lang } = useLang();
   const [articles,  setArticles]  = useState<NewsArticle[]>([]);
@@ -81,6 +98,15 @@ export function useNews() {
 
   const fetchByParams = useCallback(async (params: URLSearchParams, cacheKey: string) => {
     if (cacheKey === lastKey) return;
+
+    // Serve from cache if available
+    const cached = readCache(cacheKey);
+    if (cached) {
+      setLastKey(cacheKey);
+      setArticles(cached);
+      setError(null);
+      return;
+    }
 
     abortRef.current?.abort();
     abortRef.current = new AbortController();
@@ -108,6 +134,7 @@ export function useNews() {
           language:    a.language ?? lang,
         }));
 
+      writeCache(cacheKey, mapped);
       setArticles(mapped);
     } catch (e: any) {
       if (e.name === 'AbortError') return;
@@ -159,6 +186,10 @@ export function useNews() {
     if (last.type === 'category') {
       // Re-trigger after state update is committed
       const id = setTimeout(() => {
+        const cKey = `cat:${last.value}:${lang}`;
+        const cached = readCache(cKey);
+        if (cached) { setLastKey(cKey); setArticles(cached); setError(null); return; }
+
         const cfg = CATEGORY_QUERIES[last.value];
         const q   = last.value === 'all' ? ALL_QUERIES[lang] : cfg?.q[lang as 'es' | 'en'];
         const params = new URLSearchParams({
@@ -172,12 +203,12 @@ export function useNews() {
         abortRef.current = new AbortController();
         setLoading(true);
         setError(null);
-        setLastKey(`cat:${last.value}:${lang}`);
+        setLastKey(cKey);
         fetch(`${BASE_URL}?${params}`, { signal: abortRef.current.signal })
           .then(r => r.json())
           .then(data => {
             if (data.status !== 'success') throw new Error(data.message);
-            setArticles((data.results ?? []).filter((a: any) => a.title && a.link).map((a: any) => ({
+            const mapped: NewsArticle[] = (data.results ?? []).filter((a: any) => a.title && a.link).map((a: any) => ({
               id:          a.article_id ?? a.link,
               title:       a.title,
               description: a.description ?? null,
@@ -187,7 +218,9 @@ export function useNews() {
               imageUrl:    a.image_url ?? null,
               category:    Array.isArray(a.category) ? a.category[0] : (a.category ?? 'news'),
               language:    a.language ?? lang,
-            })));
+            }));
+            writeCache(cKey, mapped);
+            setArticles(mapped);
           })
           .catch(e => { if (e.name !== 'AbortError') setError(lang === 'es' ? 'No se pudieron cargar las noticias.' : 'Could not load news.'); })
           .finally(() => setLoading(false));
