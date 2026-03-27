@@ -154,13 +154,14 @@ async function fetchHN(query: string, signal: AbortSignal): Promise<NewsArticle[
     }));
 }
 
-// ── Filtro de frescura: descarta artículos más antiguos que maxDays ──────────
-const MAX_AGE_DAYS = 30;
+// ── Filtro de frescura: descarta artículos claramente viejos ─────────────────
+// Lenient: si la fecha no se puede parsear, se conserva el artículo.
+const MAX_AGE_DAYS = 90;
 function filterFresh(articles: NewsArticle[]): NewsArticle[] {
   const cutoff = Date.now() - MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
   return articles.filter(a => {
     const t = new Date(a.publishedAt).getTime();
-    return !isNaN(t) && t > cutoff;
+    return isNaN(t) || t > cutoff; // keep if date unknown OR if within cutoff
   });
 }
 
@@ -188,9 +189,15 @@ async function fetchForCategory(
     if (gu.length > 0) return gu;
   } catch { /**/ }
   try {
-    const hn = filterFresh(await fetchHN(GU_QUERY[category] ?? 'world news', signal));
+    const hn = await fetchHN(GU_QUERY[category] ?? 'world news', signal);
     if (hn.length > 0) return hn;
   } catch { /**/ }
+
+  // Last resort: retry without freshness filter so something is always shown
+  if (lang === 'es') {
+    try { const r = await fetchES(category, signal); if (r.length > 0) return r; } catch { /**/ }
+  }
+  try { const r = await fetchGuardian(category, signal); if (r.length > 0) return r; } catch { /**/ }
   return [];
 }
 

@@ -387,14 +387,14 @@ export function HomePage() {
             </div>
 
             {/* Bet card */}
-            <div className="glass platform-card" style={{ borderRadius: 22, padding: 'clamp(1.8rem,4vw,2.8rem)', borderLeft: '3px solid var(--green)', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(rgba(0,200,122,0.15), transparent 70%)', pointerEvents: 'none' }} />
+            <div className="glass platform-card" style={{ borderRadius: 22, padding: 'clamp(1.8rem,4vw,2.8rem)', borderLeft: '3px solid var(--cyan)', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(rgba(59,158,255,0.15), transparent 70%)', pointerEvents: 'none' }} />
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', marginBottom: '1rem' }}>
-                <div style={{ width: 40, height: 40, borderRadius: 11, background: 'var(--green-dim)', border: '1px solid rgba(0,200,122,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+                <div style={{ width: 40, height: 40, borderRadius: 11, background: 'var(--cyan-dim)', border: '1px solid rgba(59,158,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
                 </div>
                 <h3 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.15rem,2.5vw,1.45rem)' }}>
-                  Xentory <span className="text-gradient-green">{t('platforms.bet.title').replace('Xentory ', '')}</span>
+                  Xentory <span className="text-gradient-cyan">{t('platforms.bet.title').replace('Xentory ', '')}</span>
                 </h3>
               </div>
               <p style={{ color: 'var(--text2)', fontSize: '0.87rem', lineHeight: 1.8, marginBottom: '1.4rem' }}>
@@ -402,10 +402,10 @@ export function HomePage() {
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginBottom: '1.8rem' }}>
                 {BET_TAGS.map(tag => (
-                  <span key={tag} style={{ padding: '0.18rem 0.55rem', borderRadius: 100, fontSize: '0.68rem', background: 'var(--green-dim)', color: 'var(--green)', border: '1px solid rgba(0,200,122,0.2)', fontWeight: 500 }}>{tag}</span>
+                  <span key={tag} style={{ padding: '0.18rem 0.55rem', borderRadius: 100, fontSize: '0.68rem', background: 'var(--cyan-dim)', color: 'var(--cyan)', border: '1px solid rgba(59,158,255,0.2)', fontWeight: 500 }}>{tag}</span>
                 ))}
               </div>
-              <a href={user ? BET_URL : undefined} onClick={!user ? () => navigate('/register') : undefined} className="btn btn-green" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+              <a href={user ? BET_URL : undefined} onClick={!user ? () => navigate('/register') : undefined} className="btn btn-cyan" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
                 {user ? t('platforms.bet.cta.user') : t('platforms.bet.cta')}
               </a>
             </div>
