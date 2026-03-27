@@ -22,7 +22,7 @@ function mapPost(p: any): NewsArticle | null {
     title:       d.title,
     description: d.selftext?.trim() ? d.selftext.slice(0, 160) : null,
     url:         d.url_overridden_by_dest ?? d.url,
-    source:      `r/${d.subreddit}`,
+    source:      (d.domain && !d.domain.startsWith('self.')) ? d.domain : `r/${d.subreddit}`,
     publishedAt: new Date(d.created_utc * 1000).toISOString(),
     imageUrl:    preview ?? thumb,
     category:    d.subreddit,
