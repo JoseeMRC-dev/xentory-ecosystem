@@ -348,8 +348,9 @@ export function MatchesPage() {
 
   // Reorder competition tabs: "All" always first, then comps WITH matches sorted
   // by their earliest upcoming match, then comps without matches (original order).
+  // Sort as soon as any match data is available, even if still loading more.
   const competitionsBase = COMPETITIONS_BY_SPORT[activeSport] ?? [];
-  const competitions = loading
+  const competitions = allMatches.length === 0
     ? competitionsBase
     : [
         competitionsBase[0], // "All" pinned first

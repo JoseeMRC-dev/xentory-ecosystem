@@ -236,17 +236,17 @@ export function DashboardPage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,260px),1fr))', gap: 'clamp(0.8rem,3vw,1.2rem)', marginBottom: '1.5rem' }}>
         {(prefPlatform === 'sports'
           ? [
-              <PlatformCard key="bets"   icon={<BetIcon />}    name="Xentory Bet"    planKey="bets"   plan={user.subscriptions.bets}   color="var(--green)" onLaunch={() => handleLaunch('bets')}   onUpgrade={() => navigate('/pricing#bets')}   highlighted />,
+              <PlatformCard key="bets"   icon={<BetIcon />}    name="Xentory Bet"    planKey="bets"   plan={user.subscriptions.bets}   color="var(--cyan)" onLaunch={() => handleLaunch('bets')}   onUpgrade={() => navigate('/pricing#bets')}   highlighted />,
               <PlatformCard key="market" icon={<MarketIcon />} name="Xentory Market" planKey="market" plan={user.subscriptions.market} color="var(--gold)"  onLaunch={() => handleLaunch('market')} onUpgrade={() => navigate('/pricing#market')} />,
             ]
           : prefPlatform === 'market'
           ? [
               <PlatformCard key="market" icon={<MarketIcon />} name="Xentory Market" planKey="market" plan={user.subscriptions.market} color="var(--gold)"  onLaunch={() => handleLaunch('market')} onUpgrade={() => navigate('/pricing#market')} highlighted />,
-              <PlatformCard key="bets"   icon={<BetIcon />}    name="Xentory Bet"    planKey="bets"   plan={user.subscriptions.bets}   color="var(--green)" onLaunch={() => handleLaunch('bets')}   onUpgrade={() => navigate('/pricing#bets')} />,
+              <PlatformCard key="bets"   icon={<BetIcon />}    name="Xentory Bet"    planKey="bets"   plan={user.subscriptions.bets}   color="var(--cyan)" onLaunch={() => handleLaunch('bets')}   onUpgrade={() => navigate('/pricing#bets')} />,
             ]
           : [
               <PlatformCard key="market" icon={<MarketIcon />} name="Xentory Market" planKey="market" plan={user.subscriptions.market} color="var(--gold)"  onLaunch={() => handleLaunch('market')} onUpgrade={() => navigate('/pricing#market')} />,
-              <PlatformCard key="bets"   icon={<BetIcon />}    name="Xentory Bet"    planKey="bets"   plan={user.subscriptions.bets}   color="var(--green)" onLaunch={() => handleLaunch('bets')}   onUpgrade={() => navigate('/pricing#bets')} />,
+              <PlatformCard key="bets"   icon={<BetIcon />}    name="Xentory Bet"    planKey="bets"   plan={user.subscriptions.bets}   color="var(--cyan)" onLaunch={() => handleLaunch('bets')}   onUpgrade={() => navigate('/pricing#bets')} />,
             ]
         )}
 
