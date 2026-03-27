@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { fetchWeekMatches, getMockMatchesBySport, fetchTennisMatches, fetchBasketballMatches, fetchF1Matches, fetchGolfMatches } from '../../services/sportsService';
 import { SPORT_CONFIG } from '../../constants';
@@ -346,32 +346,28 @@ export function MatchesPage() {
     return () => window.removeEventListener('keydown', onKey);
   }, [showSearch]);
 
-  // Reorder competition tabs: "All" always first, then comps WITH matches sorted
-  // by their earliest upcoming match, then comps without matches (original order).
-  // Sort as soon as any match data is available, even if still loading more.
+  // Reorder competition tabs:
+  // - "All" always pinned first
+  // - Competitions WITH matches in the next 14 days → in their original priority order
+  // - Competitions WITHOUT active matches → at the end, in original order
   const competitionsBase = COMPETITIONS_BY_SPORT[activeSport] ?? [];
-  const competitions = allMatches.length === 0
-    ? competitionsBase
-    : [
-        competitionsBase[0], // "All" pinned first
-        ...competitionsBase.slice(1).sort((a, b) => {
-          const earliest = (id: string) => {
-            const dates = allMatches
-              .filter(m => String(m.competition.id) === id)
-              .map(m => new Date(m.date).getTime());
-            return dates.length ? Math.min(...dates) : Infinity;
-          };
-          const aT = earliest(a.id);
-          const bT = earliest(b.id);
-          // Both have matches → earliest first
-          if (aT !== Infinity && bT !== Infinity) return aT - bT;
-          // Only one has matches → it goes first
-          if (aT !== Infinity) return -1;
-          if (bT !== Infinity) return 1;
-          // Neither → keep original order
-          return competitionsBase.indexOf(a) - competitionsBase.indexOf(b);
-        }),
-      ];
+  const competitions = useMemo(() => {
+    if (allMatches.length === 0) return competitionsBase;
+    const now = Date.now();
+    const WINDOW = 14 * 24 * 60 * 60 * 1000;
+    const hasActive = (id: string) =>
+      allMatches.some(m => String(m.competition.id) === id && new Date(m.date).getTime() <= now + WINDOW);
+    return [
+      competitionsBase[0],
+      ...competitionsBase.slice(1).sort((a, b) => {
+        const aA = hasActive(a.id);
+        const bA = hasActive(b.id);
+        if (aA && !bA) return -1;
+        if (!aA && bA) return 1;
+        return competitionsBase.indexOf(a) - competitionsBase.indexOf(b);
+      }),
+    ];
+  }, [allMatches, competitionsBase]);
 
   // Filter: competition + status + date + search query
   const visibleMatches = allMatches
