@@ -1,10 +1,10 @@
 /**
- * useNews — noticias en tiempo real, sin API key, sin límite de requests
+ * useNews — noticias en tiempo real, sin límite práctico de requests
  *
- * Fuentes:
- *   • CryptoCompare News API — crypto/stocks/forex/platform  (gratis, sin clave)
- *   • Reddit JSON API         — sports + all + fallback       (gratis, sin clave)
- *   • Reddit Search           — búsquedas libres              (gratis, sin clave)
+ * Fuentes (todas soportan CORS desde el navegador):
+ *   • CryptoCompare News API — crypto / forex         (sin clave, sin límite)
+ *   • The Guardian API       — sports / stocks / all  (clave "test", 5000/día)
+ *   • Hacker News / Algolia  — fallback tech           (sin clave, sin límite)
  */
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useLang } from '../context/LanguageContext';
@@ -21,27 +21,64 @@ export interface NewsArticle {
   language:    string;
 }
 
-// ── CryptoCompare News ─────────────────────────────────────────────────────
-// https://min-api.cryptocompare.com/data/v2/news  – free, no key, 50 req/s
-const CC_URL = 'https://min-api.cryptocompare.com/data/v2/news/';
+// ── The Guardian (test key — 5000 req/día, CORS ✓) ────────────────────────
+const GU = 'https://content.guardianapis.com/search';
+const GU_KEY = 'test';
 
-// Category tags for CryptoCompare
-const CC_TAGS: Record<string, string> = {
-  crypto:   'BTC,ETH,Blockchain,DeFi',
-  stocks:   'Stocks,NASDAQ,Trading,Investing',
-  forex:    'Forex,USD,EUR,Currencies',
-  platform: 'Trading,Fintech,Regulation',
+const GU_SECTION: Record<string, string> = {
+  stocks:   'business',
+  platform: 'technology',
+  sports:   'sport',
+  all:      'world',
+};
+const GU_QUERY: Record<string, Record<'es'|'en', string>> = {
+  stocks:   { es: 'bolsa acciones mercado', en: 'stock market shares nasdaq' },
+  platform: { es: 'fintech inteligencia artificial trading', en: 'fintech AI trading investment' },
+  sports:   { es: 'fútbol champions laliga', en: 'football soccer champions league' },
+  all:      { es: 'economia deportes tecnologia', en: 'world news business sport' },
 };
 
-// Language filter IDs for CryptoCompare (EN only; ES content via Reddit)
-async function fetchCC(category: string, lang: string, signal: AbortSignal): Promise<NewsArticle[]> {
-  const params = new URLSearchParams({ lang: lang === 'es' ? 'ES' : 'EN', extraParams: 'xentory' });
-  if (CC_TAGS[category]) params.set('categories', CC_TAGS[category]);
-  const res  = await fetch(`${CC_URL}?${params}`, { signal });
-  if (!res.ok) throw new Error(`CC ${res.status}`);
+function mapGuardian(a: any, category: string): NewsArticle {
+  return {
+    id:          a.id,
+    title:       a.webTitle,
+    description: a.fields?.trailText ?? null,
+    url:         a.webUrl,
+    source:      'The Guardian',
+    publishedAt: a.webPublicationDate,
+    imageUrl:    a.fields?.thumbnail ?? null,
+    category,
+    language:    'en',
+  };
+}
+
+async function fetchGuardian(category: string, lang: 'es'|'en', signal: AbortSignal): Promise<NewsArticle[]> {
+  const section = GU_SECTION[category] ?? 'world';
+  const q       = GU_QUERY[category]?.[lang] ?? GU_QUERY.all[lang];
+  const params  = new URLSearchParams({
+    'api-key':    GU_KEY,
+    section,
+    q,
+    'show-fields': 'thumbnail,trailText',
+    'page-size':   '12',
+    'order-by':    'newest',
+  });
+  const res  = await fetch(`${GU}?${params}`, { signal });
+  if (!res.ok) throw new Error(`Guardian ${res.status}`);
   const data = await res.json();
-  if (data.Response === 'Error') throw new Error(data.Message);
-  return (data.Data ?? []).slice(0, 12).map((a: any): NewsArticle => ({
+  if (data.response?.status !== 'ok') throw new Error('Guardian error');
+  return (data.response?.results ?? []).map((a: any) => mapGuardian(a, category));
+}
+
+// ── CryptoCompare (sin clave, CORS ✓) ────────────────────────────────────
+const CC = 'https://min-api.cryptocompare.com/data/v2/news/';
+const CC_TAGS: Record<string, string> = {
+  crypto: 'BTC,ETH,Blockchain,DeFi,Altcoin',
+  forex:  'Forex,USD,EUR,GBP,Currency',
+};
+
+function mapCC(a: any, category: string, lang: string): NewsArticle {
+  return {
     id:          String(a.id),
     title:       a.title,
     description: a.body ? a.body.slice(0, 200) : null,
@@ -51,55 +88,71 @@ async function fetchCC(category: string, lang: string, signal: AbortSignal): Pro
     imageUrl:    a.imageurl ?? null,
     category,
     language:    lang,
-  }));
-}
-
-// ── Reddit JSON API ────────────────────────────────────────────────────────
-const RD = 'https://www.reddit.com/r';
-
-const RD_SUBS: Record<string, Record<'es'|'en', string>> = {
-  crypto:   { es: 'CryptoCurrency+Bitcoin+ethereum',          en: 'CryptoCurrency+Bitcoin+ethereum' },
-  stocks:   { es: 'stocks+investing+StockMarket+bolsa',       en: 'stocks+investing+StockMarket' },
-  forex:    { es: 'Forex+investing',                          en: 'Forex+currencies' },
-  sports:   { es: 'futbol+laliga+championsleague',            en: 'soccer+sports+nba+tennis' },
-  platform: { es: 'technology+fintech+investing',             en: 'technology+fintech' },
-  all:      { es: 'es+worldnews+CryptoCurrency+futbol',       en: 'worldnews+news+CryptoCurrency+soccer' },
-};
-
-function mapRD(p: any, category: string, lang: string): NewsArticle | null {
-  const d = p?.data;
-  if (!d?.title || d.stickied || !d.url) return null;
-  const preview = d.preview?.images?.[0]?.source?.url?.replace(/&amp;/g, '&') ?? null;
-  const thumb   = d.thumbnail?.startsWith('http') && !d.thumbnail.includes('redd.it') ? d.thumbnail : null;
-  // Show real domain as source when available (bbc.com, reuters.com, etc.)
-  const domain  = d.domain && !d.domain.startsWith('self.') ? d.domain : `r/${d.subreddit}`;
-  return {
-    id:          d.id,
-    title:       d.title,
-    description: d.selftext?.trim() ? d.selftext.slice(0, 200) : null,
-    url:         d.url_overridden_by_dest ?? d.url,
-    source:      domain,
-    publishedAt: new Date(d.created_utc * 1000).toISOString(),
-    imageUrl:    preview ?? thumb,
-    category,
-    language:    lang,
   };
 }
 
-async function fetchRD(category: string, lang: 'es'|'en', signal: AbortSignal, sort = 'hot'): Promise<NewsArticle[]> {
-  const subs = RD_SUBS[category]?.[lang] ?? RD_SUBS.all[lang];
-  const res  = await fetch(`${RD}/${subs}/${sort}.json?limit=15&raw_json=1`, { signal });
-  if (!res.ok) throw new Error(`Reddit ${res.status}`);
+async function fetchCC(category: string, lang: string, signal: AbortSignal): Promise<NewsArticle[]> {
+  const params = new URLSearchParams({
+    lang:        lang === 'es' ? 'ES' : 'EN',
+    extraParams: 'xentory',
+  });
+  if (CC_TAGS[category]) params.set('categories', CC_TAGS[category]);
+  const res  = await fetch(`${CC}?${params}`, { signal });
+  if (!res.ok) throw new Error(`CC ${res.status}`);
   const data = await res.json();
-  return (data?.data?.children ?? [])
-    .map((p: any) => mapRD(p, category, lang))
-    .filter(Boolean) as NewsArticle[];
+  if (data.Response === 'Error') throw new Error(data.Message);
+  return (data.Data ?? []).slice(0, 12).map((a: any) => mapCC(a, category, lang));
 }
 
-// Categories served by CryptoCompare (financial precision matters)
-const CC_CATEGORIES = new Set(['crypto', 'stocks', 'forex', 'platform']);
+// ── Hacker News via Algolia (sin clave, CORS ✓) — fallback ───────────────
+const HN = 'https://hn.algolia.com/api/v1/search';
 
-// ── Cache 30 min ───────────────────────────────────────────────────────────
+async function fetchHN(query: string, signal: AbortSignal): Promise<NewsArticle[]> {
+  const params = new URLSearchParams({ query, tags: 'story', hitsPerPage: '12' });
+  const res    = await fetch(`${HN}?${params}`, { signal });
+  if (!res.ok) throw new Error(`HN ${res.status}`);
+  const data   = await res.json();
+  return (data.hits ?? [])
+    .filter((h: any) => h.title && h.url)
+    .map((h: any): NewsArticle => ({
+      id:          h.objectID,
+      title:       h.title,
+      description: h.story_text ? h.story_text.slice(0, 200) : null,
+      url:         h.url,
+      source:      h.url ? new URL(h.url).hostname.replace('www.', '') : 'Hacker News',
+      publishedAt: new Date(h.created_at_i * 1000).toISOString(),
+      imageUrl:    null,
+      category:    'technology',
+      language:    'en',
+    }));
+}
+
+// ── Route by category ─────────────────────────────────────────────────────
+// crypto / forex  → CryptoCompare (then Guardian fallback)
+// others          → Guardian      (then HN fallback for platform/all)
+const CC_CATS  = new Set(['crypto', 'forex']);
+const GU_CATS  = new Set(['stocks', 'platform', 'sports', 'all']);
+
+async function fetchForCategory(
+  category: string, lang: 'es'|'en', signal: AbortSignal,
+): Promise<NewsArticle[]> {
+  if (CC_CATS.has(category)) {
+    try { return await fetchCC(category, lang, signal); } catch { /**/ }
+    // CC failed → Guardian fallback
+    const guCat = category === 'crypto' ? 'all' : 'stocks';
+    try { return await fetchGuardian(guCat, lang, signal); } catch { /**/ }
+  } else if (GU_CATS.has(category)) {
+    try { return await fetchGuardian(category, lang, signal); } catch { /**/ }
+    // Guardian failed → HN fallback
+    const q = GU_QUERY[category]?.[lang] ?? 'world news';
+    try { return await fetchHN(q, signal); } catch { /**/ }
+  }
+  // Default
+  try { return await fetchGuardian('all', lang, signal); } catch { /**/ }
+  return [];
+}
+
+// ── Cache 30 min ──────────────────────────────────────────────────────────
 const TTL = 30 * 60 * 1000;
 
 function readCache(key: string): NewsArticle[] | null {
@@ -116,7 +169,7 @@ function writeCache(key: string, articles: NewsArticle[]) {
   try { localStorage.setItem(`nc_${key}`, JSON.stringify({ a: articles, ts: Date.now() })); } catch {}
 }
 
-// ── Hook ───────────────────────────────────────────────────────────────────
+// ── Hook ──────────────────────────────────────────────────────────────────
 export function useNews() {
   const { lang } = useLang();
   const [articles, setArticles] = useState<NewsArticle[]>([]);
@@ -137,20 +190,9 @@ export function useNews() {
     setLoading(true); setError(null); setLastKey(cacheKey);
 
     try {
-      let mapped: NewsArticle[] = [];
-
-      if (CC_CATEGORIES.has(category)) {
-        // Try CryptoCompare first for financial categories
-        try { mapped = await fetchCC(category, lang, signal); } catch { /**/ }
-      }
-
-      // Reddit for sports/all, or as fallback
-      if (!mapped.length) {
-        mapped = await fetchRD(category, lang as 'es'|'en', signal);
-      }
-
+      const mapped = await fetchForCategory(category, lang as 'es'|'en', signal);
       if (mapped.length) { writeCache(cacheKey, mapped); setArticles(mapped); }
-      else { setArticles([]); }
+      else setArticles([]);
     } catch (e: any) {
       if (e.name === 'AbortError') return;
       setError(lang === 'es' ? 'No se pudieron cargar las noticias.' : 'Could not load news.');
@@ -180,15 +222,21 @@ export function useNews() {
     setLoading(true); setError(null); setLastKey(cacheKey);
 
     try {
-      const res  = await fetch(
-        `https://www.reddit.com/search.json?q=${encodeURIComponent(q)}&sort=relevance&limit=12&raw_json=1`,
-        { signal },
-      );
-      if (!res.ok) throw new Error(`Reddit search ${res.status}`);
-      const data   = await res.json();
-      const mapped = (data?.data?.children ?? [])
-        .map((p: any) => mapRD(p, 'search', lang))
-        .filter(Boolean) as NewsArticle[];
+      // Guardian search first, HN as fallback
+      let mapped: NewsArticle[] = [];
+      try {
+        const params = new URLSearchParams({
+          'api-key': GU_KEY, q, 'show-fields': 'thumbnail,trailText',
+          'page-size': '12', 'order-by': 'newest',
+        });
+        const res  = await fetch(`${GU}?${params}`, { signal });
+        const data = res.ok ? await res.json() : null;
+        if (data?.response?.status === 'ok') {
+          mapped = (data.response.results ?? []).map((a: any) => mapGuardian(a, 'search'));
+        }
+      } catch { /**/ }
+
+      if (!mapped.length) mapped = await fetchHN(q, signal);
       writeCache(cacheKey, mapped);
       setArticles(mapped);
     } catch (e: any) {
@@ -201,7 +249,6 @@ export function useNews() {
     }
   }, [lastKey, lang]);
 
-  // Re-fetch when language changes
   useEffect(() => {
     setLastKey('');
     const last = lastFetchRef.current;
