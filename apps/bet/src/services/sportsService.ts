@@ -178,29 +178,34 @@ function currentWeekRange(): { start: string; end: string } {
   return { start: fmt(mon), end: fmt(sun) };
 }
 
-/** All matches (finished + scheduled) for a league during the current Mon–Sun week,
- *  with a 30-day forward fallback so leagues on international break still show upcoming fixtures */
+/** All matches (finished + scheduled) for a league. Tries multiple windows
+ *  so leagues on international break still show their next fixtures. */
 export async function fetchWeekMatches(leagueId: number): Promise<Match[]> {
   const cfg = FOOTBALL_LEAGUES.find(l => l.id === leagueId);
   if (!cfg) return [];
+
+  const sort = (evs: any[]) =>
+    parseEspnFootballEvents(evs, cfg)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  // 1. Current Mon–Sun week
   const { start, end } = currentWeekRange();
-  const json = await espnFetch(`/${cfg.slug}/scoreboard?dates=${start}-${end}`);
-  const events: any[] = json?.events ?? [];
-  if (events.length > 0) {
-    return parseEspnFootballEvents(events, cfg)
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }
-  // Fallback: today's scoreboard (live + nearby)
+  const weekJson = await espnFetch(`/${cfg.slug}/scoreboard?dates=${start}-${end}`);
+  if ((weekJson?.events ?? []).length > 0) return sort(weekJson.events);
+
+  // 2. Today's scoreboard (live / nearby games ESPN pins automatically)
   const todayJson = await espnFetch(`/${cfg.slug}/scoreboard`);
-  const todayEvents: any[] = todayJson?.events ?? [];
-  if (todayEvents.length > 0) return parseEspnFootballEvents(todayEvents, cfg);
-  // Extended fallback: look 30 days ahead (handles international breaks)
-  const fwdJson = await espnFetch(`/${cfg.slug}/scoreboard?dates=${espnDate(1)}-${espnDate(30)}`);
-  const fwdEvents: any[] = fwdJson?.events ?? [];
-  if (fwdEvents.length > 0) {
-    return parseEspnFootballEvents(fwdEvents, cfg)
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  if ((todayJson?.events ?? []).length > 0) return sort(todayJson.events);
+
+  // 3. Next 4 calendar weeks one by one (ESPN scoreboard supports 7-day windows well)
+  for (let w = 1; w <= 4; w++) {
+    const ws = espnDate(w * 7);
+    const we = espnDate(w * 7 + 6);
+    const wJson = await espnFetch(`/${cfg.slug}/scoreboard?dates=${ws}-${we}`);
+    const wEvs: any[] = wJson?.events ?? [];
+    if (wEvs.length > 0) return sort(wEvs);
   }
+
   return getMockMatches(leagueId, 10);
 }
 
@@ -1412,32 +1417,34 @@ const MOCK_COMP_MAP: Record<number, Competition> = {
   61:  { id: 61,  name: 'Ligue 1',               sport: 'football', country: 'France',    logo: '', emoji: '🇫🇷' },
 };
 
+// Use relative dates so mock data always shows upcoming fixtures even in fallback
+const fd = (days: number, h = 20) => { const dt = new Date(); dt.setDate(dt.getDate() + days); dt.setHours(h, 0, 0, 0); return dt.toISOString(); };
 const MOCK_FIXTURES: Record<number, { home: string; away: string; date: string; round: string }[]> = {
   2:   [
-    { home: 'Arsenal',           away: 'Real Madrid',        date: '2026-03-18T20:00:00+00:00', round: 'Round of 16' },
-    { home: 'Bayern Munich',     away: 'Inter Milan',        date: '2026-04-09T20:00:00+01:00', round: 'Quarter-finals' },
-    { home: 'Manchester City',   away: 'PSG',                date: '2026-04-08T20:00:00+01:00', round: 'Quarter-finals' },
+    { home: 'Arsenal',           away: 'Real Madrid',        date: fd(5,  20), round: 'Quarter-finals' },
+    { home: 'Bayern Munich',     away: 'Inter Milan',        date: fd(6,  20), round: 'Quarter-finals' },
+    { home: 'Manchester City',   away: 'PSG',                date: fd(12, 20), round: 'Semi-finals'    },
   ],
   140: [
-    { home: 'Real Madrid',       away: 'Sevilla',            date: '2026-03-15T21:00:00+01:00', round: 'Jornada 28' },
-    { home: 'Barcelona',         away: 'Atletico Madrid',    date: '2026-03-16T21:00:00+01:00', round: 'Jornada 28' },
-    { home: 'Villarreal',        away: 'Real Sociedad',      date: '2026-03-16T18:30:00+01:00', round: 'Jornada 28' },
+    { home: 'Real Madrid',       away: 'Sevilla',            date: fd(8,  21), round: 'Próxima jornada' },
+    { home: 'Barcelona',         away: 'Atletico Madrid',    date: fd(8,  19), round: 'Próxima jornada' },
+    { home: 'Villarreal',        away: 'Real Sociedad',      date: fd(9,  18), round: 'Próxima jornada' },
   ],
   39:  [
-    { home: 'Arsenal',           away: 'Liverpool',          date: '2026-03-14T17:30:00+00:00', round: 'Matchweek 29' },
-    { home: 'Manchester City',   away: 'Chelsea',            date: '2026-03-14T15:00:00+00:00', round: 'Matchweek 29' },
-    { home: 'Tottenham',         away: 'Man United',         date: '2026-03-15T14:00:00+00:00', round: 'Matchweek 29' },
+    { home: 'Arsenal',           away: 'Liverpool',          date: fd(8,  17), round: 'Next matchweek' },
+    { home: 'Manchester City',   away: 'Chelsea',            date: fd(8,  15), round: 'Next matchweek' },
+    { home: 'Tottenham',         away: 'Man United',         date: fd(9,  14), round: 'Next matchweek' },
   ],
   78:  [
-    { home: 'Bayern Munich',     away: 'Bayer Leverkusen',   date: '2026-03-14T18:30:00+01:00', round: 'Spieltag 26' },
-    { home: 'Dortmund',          away: 'RB Leipzig',         date: '2026-03-14T15:30:00+01:00', round: 'Spieltag 26' },
+    { home: 'Bayern Munich',     away: 'Bayer Leverkusen',   date: fd(7,  18), round: 'Nächster Spieltag' },
+    { home: 'Dortmund',          away: 'RB Leipzig',         date: fd(7,  15), round: 'Nächster Spieltag' },
   ],
   135: [
-    { home: 'Inter Milan',       away: 'Juventus',           date: '2026-03-15T20:45:00+01:00', round: 'Giornata 29' },
-    { home: 'Napoli',            away: 'AC Milan',           date: '2026-03-15T18:00:00+01:00', round: 'Giornata 29' },
+    { home: 'Inter Milan',       away: 'Juventus',           date: fd(8,  20), round: 'Prossima giornata' },
+    { home: 'Napoli',            away: 'AC Milan',           date: fd(8,  18), round: 'Prossima giornata' },
   ],
   61:  [
-    { home: 'PSG',               away: 'Marseille',          date: '2026-03-15T21:00:00+01:00', round: 'Journee 27' },
+    { home: 'PSG',               away: 'Marseille',          date: fd(8,  21), round: 'Prochain match'   },
   ],
 };
 
