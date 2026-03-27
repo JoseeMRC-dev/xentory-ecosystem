@@ -11,10 +11,16 @@ import { useLang } from '../../context/LanguageContext';
 import type { MatchAnalysis, FormMatch, Match } from '../../types';
 
 const FOOTBALL_LEAGUE_SLUGS: Record<number, string> = {
-  2: 'soccer/uefa.champions', 3: 'soccer/uefa.europa',
-  39: 'soccer/eng.1', 135: 'soccer/ita.1', 140: 'soccer/esp.1',
-  141: 'soccer/esp.2', 78: 'soccer/ger.1', 61: 'soccer/fra.1',
-  94: 'soccer/por.1', 128: 'soccer/arg.1', 262: 'soccer/mex.1',
+  1: 'soccer/fifa.world',      // Mundial FIFA 2026
+  5: 'soccer/uefa.nations',    // UEFA Nations League
+  6: 'soccer/fifa.friendly',   // Amistosos internacionales
+  2: 'soccer/uefa.champions',  3: 'soccer/uefa.europa',
+  39: 'soccer/eng.1',  40: 'soccer/eng.2',
+  135: 'soccer/ita.1', 136: 'soccer/ita.2',
+  140: 'soccer/esp.1', 141: 'soccer/esp.2',
+  78:  'soccer/ger.1', 79:  'soccer/ger.2',
+  61:  'soccer/fra.1', 94:  'soccer/por.1',
+  128: 'soccer/arg.1', 262: 'soccer/mex.1',
 };
 
 function FormBadge({ result }: { result: FormMatch['result'] }) {

@@ -276,7 +276,9 @@ export function MatchesPage() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'upcoming' | 'played'>('all');
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showMoreComps, setShowMoreComps] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
+  const moreRef   = useRef<HTMLDivElement>(null);
 
   // Day helpers
   const getDateStr = (offsetDays: number) => {
@@ -505,41 +507,76 @@ export function MatchesPage() {
       </div>
 
       {/* ── COMPETITION SELECTOR ── */}
-      <div style={{ marginBottom: '1.5rem' }}>
-        <div style={{ display: 'flex', gap: '0.4rem', overflowX: 'auto', paddingBottom: '0.3rem', scrollbarWidth: 'none' }}>
-          {competitions.map(comp => {
+      <div style={{ marginBottom: '1.5rem', position: 'relative' }} ref={moreRef}>
+        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+          {/* Show first 5 competitions always (sorted: active first) */}
+          {competitions.slice(0, 5).map(comp => {
             const matchCount = allMatches.filter(m =>
               comp.id === 'all' ? true : String(m.competition.id) === comp.id
             ).length;
             const isActive = activeCompetition === comp.id;
             return (
-              <button
-                key={comp.id}
-                onClick={() => setComp(comp.id)}
+              <button key={comp.id} onClick={() => { setComp(comp.id); setShowMoreComps(false); }}
                 style={{
                   padding: '0.35rem 0.85rem', borderRadius: 100, cursor: 'pointer',
                   fontSize: '0.75rem', fontWeight: 500, flexShrink: 0,
                   background: isActive ? 'var(--gold-dim)' : 'var(--card2)',
                   color: isActive ? 'var(--gold)' : 'var(--muted)',
                   border: isActive ? '1px solid rgba(201,168,76,0.4)' : '1px solid var(--border)',
-                  transition: 'all 0.2s',
-                  display: 'flex', alignItems: 'center', gap: '0.3rem',
-                }}
-              >
+                  transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '0.3rem',
+                }}>
                 <span>{comp.emoji}</span>
                 <span>{comp.name}</span>
                 {!loading && matchCount > 0 && (
-                  <span style={{
-                    background: isActive ? 'rgba(201,168,76,0.25)' : 'var(--border)',
-                    color: isActive ? 'var(--gold)' : 'var(--muted)',
-                    borderRadius: 100, padding: '0 0.35rem', fontSize: '0.65rem', fontWeight: 700,
-                    minWidth: 16, textAlign: 'center',
-                  }}>{matchCount}</span>
+                  <span style={{ background: isActive ? 'rgba(201,168,76,0.25)' : 'var(--border)', color: isActive ? 'var(--gold)' : 'var(--muted)', borderRadius: 100, padding: '0 0.35rem', fontSize: '0.65rem', fontWeight: 700, minWidth: 16, textAlign: 'center' }}>{matchCount}</span>
                 )}
               </button>
             );
           })}
+
+          {/* "Ver más" button when there are more than 5 */}
+          {competitions.length > 5 && (
+            <button onClick={() => setShowMoreComps(p => !p)}
+              style={{
+                padding: '0.35rem 0.75rem', borderRadius: 100, cursor: 'pointer',
+                fontSize: '0.75rem', fontWeight: 600, flexShrink: 0,
+                background: showMoreComps ? 'var(--gold-dim)' : 'var(--card2)',
+                color: showMoreComps ? 'var(--gold)' : 'var(--muted)',
+                border: showMoreComps ? '1px solid rgba(201,168,76,0.4)' : '1px solid var(--border)',
+                transition: 'all 0.2s',
+              }}>
+              {showMoreComps ? '✕' : `+${competitions.length - 5} ${lang === 'es' ? 'más' : 'more'}`}
+            </button>
+          )}
         </div>
+
+        {/* Dropdown with remaining competitions */}
+        {showMoreComps && competitions.length > 5 && (
+          <div className="glass" style={{ position: 'absolute', top: 'calc(100% + 0.5rem)', left: 0, zIndex: 50, borderRadius: 14, padding: '0.75rem', display: 'flex', flexWrap: 'wrap', gap: '0.4rem', maxWidth: 480, boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
+            {competitions.slice(5).map(comp => {
+              const matchCount = allMatches.filter(m => String(m.competition.id) === comp.id).length;
+              const isActive = activeCompetition === comp.id;
+              return (
+                <button key={comp.id} onClick={() => { setComp(comp.id); setShowMoreComps(false); }}
+                  style={{
+                    padding: '0.35rem 0.85rem', borderRadius: 100, cursor: 'pointer',
+                    fontSize: '0.75rem', fontWeight: 500,
+                    background: isActive ? 'var(--gold-dim)' : 'var(--card2)',
+                    color: isActive ? 'var(--gold)' : 'var(--muted)',
+                    border: isActive ? '1px solid rgba(201,168,76,0.4)' : '1px solid var(--border)',
+                    transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '0.3rem',
+                  }}>
+                  <span>{comp.emoji}</span>
+                  <span>{comp.name}</span>
+                  {!loading && matchCount > 0 && (
+                    <span style={{ background: isActive ? 'rgba(201,168,76,0.25)' : 'var(--border)', color: isActive ? 'var(--gold)' : 'var(--muted)', borderRadius: 100, padding: '0 0.35rem', fontSize: '0.65rem', fontWeight: 700, minWidth: 16, textAlign: 'center' }}>{matchCount}</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
       </div>
 
       {/* ── STATUS FILTER + DATE PICKER ── */}
