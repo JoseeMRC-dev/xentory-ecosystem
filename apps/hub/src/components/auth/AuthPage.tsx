@@ -545,7 +545,7 @@ function PageWrapper({ children, onClose }: { children: React.ReactNode; onClose
         width: '100%', maxWidth: 440, borderRadius: 20,
         padding: 'clamp(1rem,3vw,1.5rem)',
         maxHeight: 'calc(100svh - var(--bar-h) - 1rem)',
-        overflowY: 'auto', position: 'relative',
+        overflowY: 'auto', overflowX: 'hidden', position: 'relative',
       }}>
         {/* Close button */}
         {onClose && (

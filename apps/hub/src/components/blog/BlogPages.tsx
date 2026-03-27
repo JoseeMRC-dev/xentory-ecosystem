@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CATEGORY_LABELS } from '../../constants';
 import { useNews } from '../../hooks/useNews';
+import { useTrending } from '../../hooks/useTrending';
 import { useLang } from '../../context/LanguageContext';
 import type { NewsArticle } from '../../hooks/useNews';
 
@@ -94,6 +95,69 @@ function NewsSkeleton() {
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+// ── Trending card (compact horizontal) ─────────────────────────────
+function TrendingCard({ article, rank, lang }: { article: NewsArticle; rank: number; lang: 'es'|'en' }) {
+  const [imgErr, setImgErr] = useState(false);
+  return (
+    <a
+      href={article.url} target="_blank" rel="noopener noreferrer"
+      className="glass"
+      style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start', minWidth: 260, maxWidth: 300, flexShrink: 0, padding: '0.85rem 1rem', borderRadius: 14, textDecoration: 'none', color: 'inherit', transition: 'transform 0.18s, border-color 0.18s', cursor: 'pointer' }}
+      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.borderColor = 'var(--border2)'; }}
+      onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
+    >
+      {/* Rank number */}
+      <span style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.4rem', color: rank <= 3 ? 'var(--gold)' : 'var(--border2)', lineHeight: 1, flexShrink: 0, width: 22, textAlign: 'center', paddingTop: 2 }}>{rank}</span>
+      <div style={{ minWidth: 0, flex: 1 }}>
+        {/* Thumbnail */}
+        {article.imageUrl && !imgErr && (
+          <div style={{ height: 80, borderRadius: 8, overflow: 'hidden', marginBottom: '0.5rem', background: 'var(--card2)' }}>
+            <img src={article.imageUrl} alt="" onError={() => setImgErr(true)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          </div>
+        )}
+        <p style={{ fontSize: '0.82rem', fontWeight: 600, lineHeight: 1.4, margin: 0, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+          {article.title}
+        </p>
+        <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', marginTop: '0.45rem' }}>
+          <span style={{ fontSize: '0.66rem', color: 'var(--cyan)', fontWeight: 600 }}>{article.source}</span>
+          <span style={{ fontSize: '0.6rem', color: 'var(--muted)' }}>· {timeAgo(article.publishedAt, lang)}</span>
+        </div>
+      </div>
+    </a>
+  );
+}
+
+// ── Trending section ────────────────────────────────────────────────
+function TrendingSection({ lang }: { lang: 'es'|'en' }) {
+  const { articles, loading } = useTrending();
+  if (loading) return (
+    <div style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+      {[0,1,2,3].map(i => (
+        <div key={i} className="glass" style={{ minWidth: 260, height: 140, borderRadius: 14, flexShrink: 0, animation: `pulse 1.5s ease-in-out ${i*0.1}s infinite` }} />
+      ))}
+    </div>
+  );
+  if (!articles.length) return null;
+  return (
+    <div style={{ marginBottom: '2.5rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.9rem' }}>
+        <span style={{ fontSize: '1.1rem' }}>🔥</span>
+        <span style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.95rem' }}>
+          {lang === 'es' ? 'Lo más popular hoy' : 'Trending today'}
+        </span>
+        <span style={{ fontSize: '0.68rem', padding: '0.15rem 0.5rem', borderRadius: 100, background: 'rgba(255,80,80,0.12)', color: '#ff5050', border: '1px solid rgba(255,80,80,0.25)', fontWeight: 600 }}>
+          {lang === 'es' ? 'EN VIVO' : 'LIVE'}
+        </span>
+      </div>
+      <div style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto', paddingBottom: '0.75rem', scrollbarWidth: 'thin' }}>
+        {articles.slice(0, 8).map((a, i) => (
+          <TrendingCard key={a.id} article={a} rank={i + 1} lang={lang} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -227,6 +291,9 @@ export function BlogPage() {
       </div>
 
       <div style={{ maxWidth: 1140, margin: '0 auto', padding: '0 clamp(1rem,4vw,2rem) 5rem' }}>
+
+        {/* Trending section — hidden while searching */}
+        {!isSearching && <TrendingSection lang={lang as 'es'|'en'} />}
 
         {/* Category tabs */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: '0.4rem', padding: '1rem 0 1.5rem', flexWrap: 'wrap' }}>
