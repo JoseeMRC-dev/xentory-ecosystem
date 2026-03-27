@@ -346,7 +346,31 @@ export function MatchesPage() {
     return () => window.removeEventListener('keydown', onKey);
   }, [showSearch]);
 
-  const competitions = COMPETITIONS_BY_SPORT[activeSport] ?? [];
+  // Reorder competition tabs: "All" always first, then comps WITH matches sorted
+  // by their earliest upcoming match, then comps without matches (original order).
+  const competitionsBase = COMPETITIONS_BY_SPORT[activeSport] ?? [];
+  const competitions = loading
+    ? competitionsBase
+    : [
+        competitionsBase[0], // "All" pinned first
+        ...competitionsBase.slice(1).sort((a, b) => {
+          const earliest = (id: string) => {
+            const dates = allMatches
+              .filter(m => String(m.competition.id) === id)
+              .map(m => new Date(m.date).getTime());
+            return dates.length ? Math.min(...dates) : Infinity;
+          };
+          const aT = earliest(a.id);
+          const bT = earliest(b.id);
+          // Both have matches → earliest first
+          if (aT !== Infinity && bT !== Infinity) return aT - bT;
+          // Only one has matches → it goes first
+          if (aT !== Infinity) return -1;
+          if (bT !== Infinity) return 1;
+          // Neither → keep original order
+          return competitionsBase.indexOf(a) - competitionsBase.indexOf(b);
+        }),
+      ];
 
   // Filter: competition + status + date + search query
   const visibleMatches = allMatches
