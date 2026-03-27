@@ -198,19 +198,21 @@ export function useNews() {
   const [articles, setArticles] = useState<NewsArticle[]>([]);
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState<string | null>(null);
-  const [lastKey,  setLastKey]  = useState('');
+  // useRef instead of useState so the guard never triggers re-renders or stale closures
+  const lastKeyRef   = useRef('');
   const abortRef     = useRef<AbortController | null>(null);
   const lastFetchRef = useRef<{ type: 'category'|'search'; value: string } | null>(null);
 
   const doFetch = useCallback(async (category: string, cacheKey: string) => {
-    if (cacheKey === lastKey) return;
+    if (cacheKey === lastKeyRef.current) return;
     const cached = readCache(cacheKey);
-    if (cached) { setLastKey(cacheKey); setArticles(cached); setError(null); return; }
+    if (cached) { lastKeyRef.current = cacheKey; setArticles(cached); setError(null); return; }
 
     abortRef.current?.abort();
     abortRef.current = new AbortController();
     const signal = abortRef.current.signal;
-    setLoading(true); setError(null); setLastKey(cacheKey);
+    lastKeyRef.current = cacheKey;
+    setLoading(true); setError(null);
 
     try {
       const mapped = await fetchForCategory(category, lang as 'es'|'en', signal);
@@ -223,7 +225,7 @@ export function useNews() {
     } finally {
       setLoading(false);
     }
-  }, [lastKey, lang]);
+  }, [lang]);
 
   const fetchCategory = useCallback(async (category: string) => {
     lastFetchRef.current = { type: 'category', value: category };
@@ -235,46 +237,31 @@ export function useNews() {
     if (!q || q.length < 2) return;
     lastFetchRef.current = { type: 'search', value: q };
     const cacheKey = `srch:${q}:${lang}`;
-    if (cacheKey === lastKey) return;
+    if (cacheKey === lastKeyRef.current) return;
     const cached = readCache(cacheKey);
-    if (cached) { setLastKey(cacheKey); setArticles(cached); setError(null); return; }
+    if (cached) { lastKeyRef.current = cacheKey; setArticles(cached); setError(null); return; }
 
     abortRef.current?.abort();
     abortRef.current = new AbortController();
     const signal = abortRef.current.signal;
-    setLoading(true); setError(null); setLastKey(cacheKey);
+    lastKeyRef.current = cacheKey;
+    setLoading(true); setError(null);
 
     try {
       let mapped: NewsArticle[] = [];
-      if (lang === 'es') {
-        // Buscar en feeds españoles (rss2json search no disponible → Guardian en español)
-        const params = new URLSearchParams({
-          'api-key': GU_KEY, q,
-          'show-fields': 'thumbnail,trailText',
-          'page-size': '12', 'order-by': 'newest',
-        });
-        try {
-          const res  = await fetch(`${GU}?${params}`, { signal });
-          const data = res.ok ? await res.json() : null;
-          if (data?.response?.status === 'ok') {
-            mapped = (data.response.results ?? []).map((a: any) => mapGuardian(a, 'search'));
-          }
-        } catch { /**/ }
-      } else {
-        const params = new URLSearchParams({
-          'api-key': GU_KEY, q,
-          'show-fields': 'thumbnail,trailText',
-          'page-size': '12', 'order-by': 'newest',
-        });
-        try {
-          const res  = await fetch(`${GU}?${params}`, { signal });
-          const data = res.ok ? await res.json() : null;
-          if (data?.response?.status === 'ok') {
-            mapped = (data.response.results ?? []).map((a: any) => mapGuardian(a, 'search'));
-          }
-        } catch { /**/ }
-        if (!mapped.length) mapped = await fetchHN(q, signal);
-      }
+      const params = new URLSearchParams({
+        'api-key': GU_KEY, q,
+        'show-fields': 'thumbnail,trailText',
+        'page-size': '12', 'order-by': 'newest',
+      });
+      try {
+        const res  = await fetch(`${GU}?${params}`, { signal });
+        const data = res.ok ? await res.json() : null;
+        if (data?.response?.status === 'ok') {
+          mapped = (data.response.results ?? []).map((a: any) => mapGuardian(a, 'search'));
+        }
+      } catch { /**/ }
+      if (!mapped.length && lang !== 'es') mapped = await fetchHN(q, signal);
       writeCache(cacheKey, mapped);
       setArticles(mapped);
     } catch (e: any) {
@@ -285,10 +272,11 @@ export function useNews() {
     } finally {
       setLoading(false);
     }
-  }, [lastKey, lang]);
+  }, [lang]);
 
+  // Re-fetch on lang change
   useEffect(() => {
-    setLastKey('');
+    lastKeyRef.current = '';
     const last = lastFetchRef.current;
     if (!last) return;
     if (last.type === 'category') {
@@ -299,7 +287,7 @@ export function useNews() {
   }, [lang]);
 
   const clear = useCallback(() => {
-    setArticles([]); setError(null); setLastKey('');
+    setArticles([]); setError(null); lastKeyRef.current = '';
     lastFetchRef.current = null;
   }, []);
 
