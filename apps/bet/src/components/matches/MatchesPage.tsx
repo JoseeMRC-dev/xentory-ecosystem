@@ -6,13 +6,16 @@ import { useLang } from '../../context/LanguageContext';
 import type { Match, Sport } from '../../types';
 
 // ── LEAGUE PRIORITY ORDER (for grouped display) ──
-// Champions → Europa → LaLiga 1/2 → Serie A/B → Bundesliga 1/2 → Premier/Championship → rest
-const LEAGUE_PRIORITY: number[] = [2, 3, 140, 141, 135, 136, 78, 79, 39, 40, 61, 94, 128, 262];
+// Mundial → Nations → Friendlies → Champions → Europa → LaLiga 1/2 → rest
+const LEAGUE_PRIORITY: number[] = [1, 5, 6, 2, 3, 140, 141, 135, 136, 78, 79, 39, 40, 61, 94, 128, 262];
 
 // ── COMPETITIONS ──
 const COMPETITIONS_BY_SPORT: Record<string, { id: string; name: string; emoji: string; country?: string }[]> = {
   football: [
     { id: 'all', name: 'All',              emoji: '🏆' },
+    { id: '1',   name: 'Mundial 2026',     emoji: '🌍', country: 'Mundial' },
+    { id: '5',   name: 'Nations League',   emoji: '🏴', country: 'Europa' },
+    { id: '6',   name: 'Amistosos',        emoji: '🤝', country: 'Mundial' },
     { id: '2',   name: 'Champions League', emoji: '🏆', country: 'Europe' },
     { id: '3',   name: 'Europa League',    emoji: '🟠', country: 'Europe' },
     { id: '140', name: 'LaLiga',           emoji: '🇪🇸', country: 'Spain' },
@@ -305,7 +308,7 @@ export function MatchesPage() {
     const load = async () => {
       let results: Match[] = [];
       if (activeSport === 'football') {
-        const ids = [2, 3, 140, 141, 135, 136, 78, 79, 39, 40, 61, 94, 128, 262];
+        const ids = [1, 5, 6, 2, 3, 140, 141, 135, 136, 78, 79, 39, 40, 61, 94, 128, 262];
         const all = await Promise.all(ids.map(id => fetchWeekMatches(id)));
         results = all.flat().sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       } else if (activeSport === 'tennis') {

@@ -90,6 +90,9 @@ function mapEspnStatus(s: string): Match['status'] {
 
 interface LeagueCfg { slug: string; name: string; emoji: string; country: string; id: number; }
 const FOOTBALL_LEAGUES: LeagueCfg[] = [
+  { id: 1,   slug: 'soccer/fifa.world',     name: 'Mundial FIFA 2026',     emoji: '🌍', country: 'Mundial'   },
+  { id: 6,   slug: 'soccer/fifa.friendly',  name: 'Amistosos Internac.',   emoji: '🤝', country: 'Mundial'   },
+  { id: 5,   slug: 'soccer/uefa.nations',   name: 'UEFA Nations League',   emoji: '🏴', country: 'Europa'    },
   { id: 2,   slug: 'soccer/uefa.champions', name: 'UEFA Champions League', emoji: '🏆', country: 'Europe'    },
   { id: 3,   slug: 'soccer/uefa.europa',    name: 'UEFA Europa League',    emoji: '🟠', country: 'Europe'    },
   { id: 140, slug: 'soccer/esp.1',          name: 'LaLiga',                emoji: '🇪🇸', country: 'Spain'    },
@@ -1408,6 +1411,9 @@ function mapApiStatsToTeamStats(stats: any, fixtures: any[], teamId: number): Te
 // MOCK FALLBACKS (curated real fixtures — used only when ESPN is unreachable)
 // ─────────────────────────────────────────────────────────────────────────────
 const MOCK_COMP_MAP: Record<number, Competition> = {
+  1:   { id: 1,   name: 'Mundial FIFA 2026',     sport: 'football', country: 'Mundial',   logo: '', emoji: '🌍' },
+  5:   { id: 5,   name: 'UEFA Nations League',   sport: 'football', country: 'Europa',    logo: '', emoji: '🏴' },
+  6:   { id: 6,   name: 'Amistosos Internac.',   sport: 'football', country: 'Mundial',   logo: '', emoji: '🤝' },
   2:   { id: 2,   name: 'UEFA Champions League', sport: 'football', country: 'Europe',    logo: '', emoji: '🏆' },
   3:   { id: 3,   name: 'UEFA Europa League',    sport: 'football', country: 'Europe',    logo: '', emoji: '🟠' },
   140: { id: 140, name: 'LaLiga',                sport: 'football', country: 'Spain',     logo: '', emoji: '🇪🇸' },
@@ -1420,6 +1426,21 @@ const MOCK_COMP_MAP: Record<number, Competition> = {
 // Use relative dates so mock data always shows upcoming fixtures even in fallback
 const fd = (days: number, h = 20) => { const dt = new Date(); dt.setDate(dt.getDate() + days); dt.setHours(h, 0, 0, 0); return dt.toISOString(); };
 const MOCK_FIXTURES: Record<number, { home: string; away: string; date: string; round: string }[]> = {
+  1:   [
+    { home: 'España',            away: 'Marruecos',          date: fd(75, 21), round: 'Grupo B' },
+    { home: 'Argentina',         away: 'Portugal',           date: fd(76, 18), round: 'Grupo D' },
+    { home: 'Francia',           away: 'Brasil',             date: fd(77, 21), round: 'Grupo A' },
+    { home: 'Alemania',          away: 'México',             date: fd(78, 18), round: 'Grupo F' },
+  ],
+  5:   [
+    { home: 'España',            away: 'Países Bajos',       date: fd(4,  20), round: 'Semifinal' },
+    { home: 'Francia',           away: 'Portugal',           date: fd(5,  20), round: 'Semifinal' },
+  ],
+  6:   [
+    { home: 'España',            away: 'Brasil',             date: fd(3,  21), round: 'Amistoso' },
+    { home: 'Argentina',         away: 'Alemania',           date: fd(4,  20), round: 'Amistoso' },
+    { home: 'Portugal',          away: 'Francia',            date: fd(5,  19), round: 'Amistoso' },
+  ],
   2:   [
     { home: 'Arsenal',           away: 'Real Madrid',        date: fd(5,  20), round: 'Quarter-finals' },
     { home: 'Bayern Munich',     away: 'Inter Milan',        date: fd(6,  20), round: 'Quarter-finals' },
