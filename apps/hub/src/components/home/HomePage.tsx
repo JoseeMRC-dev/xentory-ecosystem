@@ -61,9 +61,61 @@ const TESTIMONIALS_EN = [
   { name: 'Diego F.',     role: 'Day trader · Mexico City',avatar: 'DF', text: 'I tried the free plan and within 3 days understood why it\'s worth paying for.', result: 'Converted in 3 days',   plan: 'Pro' },
 ];
 
-// ── MINI DASHBOARD MOCKUP ────────────────────────────────────────────
+// ── MINI DASHBOARD — datos reales de Binance ─────────────────────────
 function MiniMockup() {
-  const bars = [62, 78, 55, 85, 70, 92, 68];
+  const [price,    setPrice]    = useState<number | null>(null);
+  const [change,   setChange]   = useState<number | null>(null);
+  const [bars,     setBars]     = useState<number[]>([62, 78, 55, 85, 70, 92, 68]);
+  const [rsi,      setRsi]      = useState<number | null>(null);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const [ticker, klines] = await Promise.all([
+          fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT').then(r => r.json()),
+          fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=15').then(r => r.json()),
+        ]);
+
+        setPrice(parseFloat(ticker.lastPrice));
+        setChange(parseFloat(ticker.priceChangePercent));
+
+        // 7 bars from last 7 daily closes, normalised to 20–90%
+        const closes: number[] = klines.map((k: any[]) => parseFloat(k[4]));
+        const last7 = closes.slice(-7);
+        const lo = Math.min(...last7), hi = Math.max(...last7);
+        const range = hi - lo || 1;
+        setBars(last7.map(c => Math.round(((c - lo) / range) * 70 + 20)));
+
+        // RSI(14) from 15 daily closes
+        if (closes.length >= 15) {
+          const deltas = closes.slice(1).map((c, i) => c - closes[i]);
+          const gains  = deltas.map(d => d > 0 ? d : 0);
+          const losses = deltas.map(d => d < 0 ? -d : 0);
+          const ag = gains.slice(-14).reduce((a, b) => a + b, 0) / 14;
+          const al = losses.slice(-14).reduce((a, b) => a + b, 0) / 14;
+          setRsi(Math.round(100 - 100 / (1 + (al === 0 ? 100 : ag / al))));
+        }
+      } catch { /* keep defaults */ }
+    }
+    load();
+    const id = setInterval(load, 30_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const up  = (change ?? 0) >= 0;
+  const chColor  = up ? 'var(--green)' : 'var(--red)';
+  const chBg     = up ? 'var(--green-dim)' : 'rgba(255,80,80,0.1)';
+  const chBorder = up ? 'rgba(0,200,122,0.2)' : 'rgba(255,80,80,0.2)';
+
+  const signal     = rsi === null ? 'BUY' : rsi < 40 ? 'BUY' : rsi > 60 ? 'SELL' : 'HOLD';
+  const sigColor   = signal === 'BUY' ? 'var(--green)' : signal === 'SELL' ? 'var(--red)' : 'var(--gold)';
+  const sigBg      = signal === 'BUY' ? 'rgba(0,200,122,0.1)' : signal === 'SELL' ? 'rgba(255,80,80,0.1)' : 'rgba(201,168,76,0.08)';
+  const sigBorder  = signal === 'BUY' ? 'rgba(0,200,122,0.2)' : signal === 'SELL' ? 'rgba(255,80,80,0.2)' : 'rgba(201,168,76,0.2)';
+  const conf       = rsi === null ? '—' :
+    signal === 'BUY'  ? `${Math.round((40 - rsi) / 40 * 45 + 55)}% conf.` :
+    signal === 'SELL' ? `${Math.round((rsi - 60) / 40 * 45 + 55)}% conf.` : '65% conf.';
+  const rsiColor   = rsi === null ? 'var(--gold)' : rsi < 30 ? 'var(--green)' : rsi > 70 ? 'var(--red)' : 'var(--gold)';
+
   return (
     <div style={{
       borderRadius: 16, overflow: 'hidden',
@@ -73,29 +125,35 @@ function MiniMockup() {
       padding: '1.2rem',
       width: '100%', maxWidth: 420,
     }}>
-      {/* Mini header */}
+      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '0.78rem', color: 'var(--text)' }}>BTC/USD</span>
-          <span style={{ fontSize: '0.65rem', color: 'var(--green)', background: 'var(--green-dim)', padding: '0.1rem 0.4rem', borderRadius: 4, border: '1px solid rgba(0,200,122,0.2)' }}>+4.2%</span>
+          {change !== null && (
+            <span style={{ fontSize: '0.65rem', color: chColor, background: chBg, padding: '0.1rem 0.4rem', borderRadius: 4, border: `1px solid ${chBorder}` }}>
+              {up ? '+' : ''}{change.toFixed(2)}%
+            </span>
+          )}
         </div>
-        <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1rem', color: 'var(--text)' }}>$67,420</span>
+        <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1rem', color: 'var(--text)' }}>
+          {price !== null ? `$${price.toLocaleString('en-US', { maximumFractionDigits: 0 })}` : '…'}
+        </span>
       </div>
-      {/* Mini chart */}
+      {/* 7-day chart */}
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: 48, marginBottom: '1rem' }}>
         {bars.map((h, i) => (
           <div key={i} style={{ flex: 1, borderRadius: '2px 2px 0 0', height: `${h}%`, background: i === bars.length - 1 ? 'var(--gold)' : 'var(--card3)', transition: 'height 0.3s' }} />
         ))}
       </div>
-      {/* Signal pill */}
+      {/* Signal + RSI */}
       <div style={{ display: 'flex', gap: '0.5rem' }}>
-        <div style={{ flex: 1, padding: '0.5rem 0.7rem', borderRadius: 8, background: 'rgba(0,200,122,0.1)', border: '1px solid rgba(0,200,122,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.7rem', color: 'var(--green)', fontWeight: 600 }}>BUY</span>
-          <span style={{ fontSize: '0.7rem', color: 'var(--green)' }}>87% conf.</span>
+        <div style={{ flex: 1, padding: '0.5rem 0.7rem', borderRadius: 8, background: sigBg, border: `1px solid ${sigBorder}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.7rem', color: sigColor, fontWeight: 600 }}>{signal}</span>
+          <span style={{ fontSize: '0.7rem', color: sigColor }}>{conf}</span>
         </div>
         <div style={{ flex: 1, padding: '0.5rem 0.7rem', borderRadius: 8, background: 'var(--card2)', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: '0.7rem', color: 'var(--text2)' }}>RSI</span>
-          <span style={{ fontSize: '0.7rem', color: 'var(--gold)', fontWeight: 600 }}>32</span>
+          <span style={{ fontSize: '0.7rem', color: rsiColor, fontWeight: 600 }}>{rsi ?? '…'}</span>
         </div>
       </div>
     </div>
@@ -387,14 +445,14 @@ export function HomePage() {
             </div>
 
             {/* Bet card */}
-            <div className="glass platform-card" style={{ borderRadius: 22, padding: 'clamp(1.8rem,4vw,2.8rem)', borderLeft: '3px solid var(--green)', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(rgba(0,200,122,0.15), transparent 70%)', pointerEvents: 'none' }} />
+            <div className="glass platform-card" style={{ borderRadius: 22, padding: 'clamp(1.8rem,4vw,2.8rem)', borderLeft: '3px solid var(--cyan)', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(rgba(59,158,255,0.15), transparent 70%)', pointerEvents: 'none' }} />
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', marginBottom: '1rem' }}>
-                <div style={{ width: 40, height: 40, borderRadius: 11, background: 'var(--green-dim)', border: '1px solid rgba(0,200,122,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+                <div style={{ width: 40, height: 40, borderRadius: 11, background: 'var(--cyan-dim)', border: '1px solid rgba(59,158,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
                 </div>
                 <h3 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.15rem,2.5vw,1.45rem)' }}>
-                  Xentory <span className="text-gradient-green">{t('platforms.bet.title').replace('Xentory ', '')}</span>
+                  Xentory <span className="text-gradient-cyan">{t('platforms.bet.title').replace('Xentory ', '')}</span>
                 </h3>
               </div>
               <p style={{ color: 'var(--text2)', fontSize: '0.87rem', lineHeight: 1.8, marginBottom: '1.4rem' }}>
@@ -402,10 +460,10 @@ export function HomePage() {
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginBottom: '1.8rem' }}>
                 {BET_TAGS.map(tag => (
-                  <span key={tag} style={{ padding: '0.18rem 0.55rem', borderRadius: 100, fontSize: '0.68rem', background: 'var(--green-dim)', color: 'var(--green)', border: '1px solid rgba(0,200,122,0.2)', fontWeight: 500 }}>{tag}</span>
+                  <span key={tag} style={{ padding: '0.18rem 0.55rem', borderRadius: 100, fontSize: '0.68rem', background: 'var(--cyan-dim)', color: 'var(--cyan)', border: '1px solid rgba(59,158,255,0.2)', fontWeight: 500 }}>{tag}</span>
                 ))}
               </div>
-              <a href={user ? BET_URL : undefined} onClick={!user ? () => navigate('/register') : undefined} className="btn btn-green" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+              <a href={user ? BET_URL : undefined} onClick={!user ? () => navigate('/register') : undefined} className="btn btn-cyan" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
                 {user ? t('platforms.bet.cta.user') : t('platforms.bet.cta')}
               </a>
             </div>
