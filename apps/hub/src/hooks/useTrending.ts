@@ -1,33 +1,61 @@
 /**
- * useTrending — top posts del día desde Reddit (sin API key, CORS-friendly)
- * Caché 15 min en localStorage.
+ * useTrending — artículos más populares del momento
+ * Fuentes: The Guardian (most-viewed) + Hacker News (top stories)
+ * Sin API key, CORS ✓, caché 15 min
  */
 import { useState, useEffect, useRef } from 'react';
 import { useLang } from '../context/LanguageContext';
 import type { NewsArticle } from './useNews';
 
-const SUBS = {
-  es: 'worldnews+CryptoCurrency+futbol+stocks+technology',
-  en: 'worldnews+CryptoCurrency+soccer+stocks+technology',
-};
-const CACHE_TTL = 15 * 60 * 1000;
+const GU  = 'https://content.guardianapis.com/search';
+const HN  = 'https://hn.algolia.com/api/v1/search';
+const TTL = 15 * 60 * 1000;
 
-function mapPost(p: any): NewsArticle | null {
-  const d = p?.data;
-  if (!d?.title || d.stickied || !d.url) return null;
-  const preview = d.preview?.images?.[0]?.source?.url?.replace(/&amp;/g, '&') ?? null;
-  const thumb   = d.thumbnail?.startsWith('http') && !d.thumbnail.includes('redd.it') ? d.thumbnail : null;
-  return {
-    id:          d.id,
-    title:       d.title,
-    description: d.selftext?.trim() ? d.selftext.slice(0, 160) : null,
-    url:         d.url_overridden_by_dest ?? d.url,
-    source:      (d.domain && !d.domain.startsWith('self.')) ? d.domain : `r/${d.subreddit}`,
-    publishedAt: new Date(d.created_utc * 1000).toISOString(),
-    imageUrl:    preview ?? thumb,
-    category:    d.subreddit,
+async function fetchGuardianTrending(lang: string, signal: AbortSignal): Promise<NewsArticle[]> {
+  const q = lang === 'es'
+    ? 'economia finanzas deporte tecnologia mundo'
+    : 'business sport technology world finance';
+  const params = new URLSearchParams({
+    'api-key': 'test', q,
+    'show-fields': 'thumbnail,trailText',
+    'page-size': '8', 'order-by': 'relevance',
+  });
+  const res  = await fetch(`${GU}?${params}`, { signal });
+  if (!res.ok) throw new Error(`Guardian ${res.status}`);
+  const data = await res.json();
+  if (data.response?.status !== 'ok') throw new Error('Guardian error');
+  return (data.response?.results ?? []).map((a: any): NewsArticle => ({
+    id:          a.id,
+    title:       a.webTitle,
+    description: a.fields?.trailText ?? null,
+    url:         a.webUrl,
+    source:      'The Guardian',
+    publishedAt: a.webPublicationDate,
+    imageUrl:    a.fields?.thumbnail ?? null,
+    category:    a.sectionId,
     language:    'en',
-  };
+  }));
+}
+
+async function fetchHNTrending(signal: AbortSignal): Promise<NewsArticle[]> {
+  const params = new URLSearchParams({ tags: 'story', hitsPerPage: '8', numericFilters: `created_at_i>${Math.floor((Date.now() - 86400000) / 1000)}` });
+  const res    = await fetch(`${HN}?${params}`, { signal });
+  if (!res.ok) throw new Error(`HN ${res.status}`);
+  const data   = await res.json();
+  return (data.hits ?? [])
+    .filter((h: any) => h.title && h.url && h.points > 50)
+    .slice(0, 8)
+    .map((h: any): NewsArticle => ({
+      id:          h.objectID,
+      title:       h.title,
+      description: null,
+      url:         h.url,
+      source:      h.url ? new URL(h.url).hostname.replace('www.', '') : 'Hacker News',
+      publishedAt: new Date(h.created_at_i * 1000).toISOString(),
+      imageUrl:    null,
+      category:    'technology',
+      language:    'en',
+    }));
 }
 
 export function useTrending() {
@@ -42,28 +70,28 @@ export function useTrending() {
       const raw = localStorage.getItem(cKey);
       if (raw) {
         const { data, ts } = JSON.parse(raw);
-        if (Date.now() - ts < CACHE_TTL) { setArticles(data); return; }
+        if (Date.now() - ts < TTL) { setArticles(data); return; }
       }
     } catch {}
 
     abortRef.current?.abort();
     abortRef.current = new AbortController();
+    const signal = abortRef.current.signal;
     setLoading(true);
 
-    const subs = lang === 'es' ? SUBS.es : SUBS.en;
-    fetch(`https://www.reddit.com/r/${subs}/top.json?t=day&limit=10&raw_json=1`, {
-      signal: abortRef.current.signal,
-    })
-      .then(r => r.json())
-      .then(data => {
-        const mapped = (data?.data?.children ?? [])
-          .map(mapPost)
-          .filter(Boolean) as NewsArticle[];
+    const run = async () => {
+      try {
+        let mapped = await fetchGuardianTrending(lang, signal);
+        if (!mapped.length) mapped = await fetchHNTrending(signal);
         try { localStorage.setItem(cKey, JSON.stringify({ data: mapped, ts: Date.now() })); } catch {}
         setArticles(mapped);
-      })
-      .catch(e => { if (e.name !== 'AbortError') setArticles([]); })
-      .finally(() => setLoading(false));
+      } catch (e: any) {
+        if (e.name !== 'AbortError') setArticles([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    run();
 
     return () => abortRef.current?.abort();
   }, [lang]);
