@@ -158,17 +158,15 @@ async function fetchHN(query: string, signal: AbortSignal): Promise<NewsArticle[
 async function fetchForCategory(
   category: string, lang: 'es'|'en', signal: AbortSignal,
 ): Promise<NewsArticle[]> {
+  // Español: intentar RSS feeds españoles primero
   if (lang === 'es') {
-    // Español: RSS feeds españoles, CoinTelegraph ES para crypto
-    try { return await fetchES(category, signal); } catch { /**/ }
-    // Fallback ES: CryptoCompare en español para financieras
-    if (category === 'crypto' || category === 'forex') {
-      try { return await fetchCC(category, signal); } catch { /**/ }
-    }
-    return [];
+    try {
+      const esArticles = await fetchES(category, signal);
+      if (esArticles.length > 0) return esArticles;
+    } catch { /**/ }
   }
 
-  // Inglés
+  // Inglés (o fallback cuando el RSS español falla / devuelve vacío)
   if (category === 'crypto' || category === 'forex') {
     try { return await fetchCC(category, signal); } catch { /**/ }
   }
