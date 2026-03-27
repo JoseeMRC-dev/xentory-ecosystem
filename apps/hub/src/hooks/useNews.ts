@@ -1,10 +1,8 @@
 /**
- * useNews — noticias en tiempo real, sin límite práctico de requests
+ * useNews — noticias en tiempo real, idioma-aware
  *
- * Fuentes (todas soportan CORS desde el navegador):
- *   • CryptoCompare News API — crypto / forex         (sin clave, sin límite)
- *   • The Guardian API       — sports / stocks / all  (clave "test", 5000/día)
- *   • Hacker News / Algolia  — fallback tech           (sin clave, sin límite)
+ * ES: RSS feeds españoles via rss2json.com (El País, Marca, CoinTelegraph ES…)
+ * EN: The Guardian (test key, 5000/día) + CryptoCompare + Hacker News
  */
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useLang } from '../context/LanguageContext';
@@ -21,8 +19,47 @@ export interface NewsArticle {
   language:    string;
 }
 
+function stripHtml(s: string): string {
+  return s.replace(/<[^>]*>/g, '').replace(/&(?:amp|lt|gt|quot|nbsp);/g, ' ').trim();
+}
+
+// ── RSS → JSON (rss2json.com — CORS ✓, sin clave, 10k req/mes gratis) ─────
+const RSS2J = 'https://api.rss2json.com/v1/api.json';
+
+const ES_FEEDS: Record<string, string> = {
+  crypto:   'https://es.cointelegraph.com/rss',
+  stocks:   'https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/seccion/economia/portada',
+  forex:    'https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/seccion/economia/portada',
+  sports:   'https://www.marca.com/rss/portada.xml',
+  platform: 'https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/seccion/tecnologia/portada',
+  all:      'https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada',
+};
+
+async function fetchES(category: string, signal: AbortSignal): Promise<NewsArticle[]> {
+  const url    = ES_FEEDS[category] ?? ES_FEEDS.all;
+  const params = new URLSearchParams({ rss_url: url, count: '12' });
+  const res    = await fetch(`${RSS2J}?${params}`, { signal });
+  if (!res.ok) throw new Error(`rss2json ${res.status}`);
+  const data = await res.json();
+  if (data.status !== 'ok') throw new Error('rss2json error');
+  const feedName = data.feed?.title ?? '';
+  return (data.items ?? [])
+    .filter((i: any) => i.title && i.link)
+    .map((i: any): NewsArticle => ({
+      id:          i.guid ?? i.link,
+      title:       stripHtml(i.title),
+      description: i.description ? stripHtml(i.description).slice(0, 200) || null : null,
+      url:         i.link,
+      source:      feedName || i.author || 'Noticias',
+      publishedAt: i.pubDate ?? new Date().toISOString(),
+      imageUrl:    i.enclosure?.link ?? i.thumbnail ?? null,
+      category,
+      language:    'es',
+    }));
+}
+
 // ── The Guardian (test key — 5000 req/día, CORS ✓) ────────────────────────
-const GU = 'https://content.guardianapis.com/search';
+const GU     = 'https://content.guardianapis.com/search';
 const GU_KEY = 'test';
 
 const GU_SECTION: Record<string, string> = {
@@ -31,11 +68,11 @@ const GU_SECTION: Record<string, string> = {
   sports:   'sport',
   all:      'world',
 };
-const GU_QUERY: Record<string, Record<'es'|'en', string>> = {
-  stocks:   { es: 'bolsa acciones mercado', en: 'stock market shares nasdaq' },
-  platform: { es: 'fintech inteligencia artificial trading', en: 'fintech AI trading investment' },
-  sports:   { es: 'fútbol champions laliga', en: 'football soccer champions league' },
-  all:      { es: 'economia deportes tecnologia', en: 'world news business sport' },
+const GU_QUERY: Record<string, string> = {
+  stocks:   'stock market shares nasdaq earnings',
+  platform: 'fintech AI trading investment technology',
+  sports:   'football soccer champions league NBA',
+  all:      'world news business finance sport',
 };
 
 function mapGuardian(a: any, category: string): NewsArticle {
@@ -52,16 +89,13 @@ function mapGuardian(a: any, category: string): NewsArticle {
   };
 }
 
-async function fetchGuardian(category: string, lang: 'es'|'en', signal: AbortSignal): Promise<NewsArticle[]> {
+async function fetchGuardian(category: string, signal: AbortSignal): Promise<NewsArticle[]> {
   const section = GU_SECTION[category] ?? 'world';
-  const q       = GU_QUERY[category]?.[lang] ?? GU_QUERY.all[lang];
+  const q       = GU_QUERY[category] ?? GU_QUERY.all;
   const params  = new URLSearchParams({
-    'api-key':    GU_KEY,
-    section,
-    q,
+    'api-key': GU_KEY, section, q,
     'show-fields': 'thumbnail,trailText',
-    'page-size':   '12',
-    'order-by':    'newest',
+    'page-size': '12', 'order-by': 'newest',
   });
   const res  = await fetch(`${GU}?${params}`, { signal });
   if (!res.ok) throw new Error(`Guardian ${res.status}`);
@@ -70,15 +104,21 @@ async function fetchGuardian(category: string, lang: 'es'|'en', signal: AbortSig
   return (data.response?.results ?? []).map((a: any) => mapGuardian(a, category));
 }
 
-// ── CryptoCompare (sin clave, CORS ✓) ────────────────────────────────────
-const CC = 'https://min-api.cryptocompare.com/data/v2/news/';
+// ── CryptoCompare (sin clave, CORS ✓) ─────────────────────────────────────
+const CC      = 'https://min-api.cryptocompare.com/data/v2/news/';
 const CC_TAGS: Record<string, string> = {
   crypto: 'BTC,ETH,Blockchain,DeFi,Altcoin',
   forex:  'Forex,USD,EUR,GBP,Currency',
 };
 
-function mapCC(a: any, category: string, lang: string): NewsArticle {
-  return {
+async function fetchCC(category: string, signal: AbortSignal): Promise<NewsArticle[]> {
+  const params = new URLSearchParams({ lang: 'EN', extraParams: 'xentory' });
+  if (CC_TAGS[category]) params.set('categories', CC_TAGS[category]);
+  const res  = await fetch(`${CC}?${params}`, { signal });
+  if (!res.ok) throw new Error(`CC ${res.status}`);
+  const data = await res.json();
+  if (data.Response === 'Error') throw new Error(data.Message);
+  return (data.Data ?? []).slice(0, 12).map((a: any): NewsArticle => ({
     id:          String(a.id),
     title:       a.title,
     description: a.body ? a.body.slice(0, 200) : null,
@@ -87,24 +127,11 @@ function mapCC(a: any, category: string, lang: string): NewsArticle {
     publishedAt: new Date(a.published_on * 1000).toISOString(),
     imageUrl:    a.imageurl ?? null,
     category,
-    language:    lang,
-  };
+    language:    'en',
+  }));
 }
 
-async function fetchCC(category: string, lang: string, signal: AbortSignal): Promise<NewsArticle[]> {
-  const params = new URLSearchParams({
-    lang:        lang === 'es' ? 'ES' : 'EN',
-    extraParams: 'xentory',
-  });
-  if (CC_TAGS[category]) params.set('categories', CC_TAGS[category]);
-  const res  = await fetch(`${CC}?${params}`, { signal });
-  if (!res.ok) throw new Error(`CC ${res.status}`);
-  const data = await res.json();
-  if (data.Response === 'Error') throw new Error(data.Message);
-  return (data.Data ?? []).slice(0, 12).map((a: any) => mapCC(a, category, lang));
-}
-
-// ── Hacker News via Algolia (sin clave, CORS ✓) — fallback ───────────────
+// ── Hacker News via Algolia (sin clave, CORS ✓) ───────────────────────────
 const HN = 'https://hn.algolia.com/api/v1/search';
 
 async function fetchHN(query: string, signal: AbortSignal): Promise<NewsArticle[]> {
@@ -117,9 +144,9 @@ async function fetchHN(query: string, signal: AbortSignal): Promise<NewsArticle[
     .map((h: any): NewsArticle => ({
       id:          h.objectID,
       title:       h.title,
-      description: h.story_text ? h.story_text.slice(0, 200) : null,
+      description: null,
       url:         h.url,
-      source:      h.url ? new URL(h.url).hostname.replace('www.', '') : 'Hacker News',
+      source:      (() => { try { return new URL(h.url).hostname.replace('www.', ''); } catch { return 'HN'; } })(),
       publishedAt: new Date(h.created_at_i * 1000).toISOString(),
       imageUrl:    null,
       category:    'technology',
@@ -127,28 +154,26 @@ async function fetchHN(query: string, signal: AbortSignal): Promise<NewsArticle[
     }));
 }
 
-// ── Route by category ─────────────────────────────────────────────────────
-// crypto / forex  → CryptoCompare (then Guardian fallback)
-// others          → Guardian      (then HN fallback for platform/all)
-const CC_CATS  = new Set(['crypto', 'forex']);
-const GU_CATS  = new Set(['stocks', 'platform', 'sports', 'all']);
-
+// ── Lógica de selección de fuente ─────────────────────────────────────────
 async function fetchForCategory(
   category: string, lang: 'es'|'en', signal: AbortSignal,
 ): Promise<NewsArticle[]> {
-  if (CC_CATS.has(category)) {
-    try { return await fetchCC(category, lang, signal); } catch { /**/ }
-    // CC failed → Guardian fallback
-    const guCat = category === 'crypto' ? 'all' : 'stocks';
-    try { return await fetchGuardian(guCat, lang, signal); } catch { /**/ }
-  } else if (GU_CATS.has(category)) {
-    try { return await fetchGuardian(category, lang, signal); } catch { /**/ }
-    // Guardian failed → HN fallback
-    const q = GU_QUERY[category]?.[lang] ?? 'world news';
-    try { return await fetchHN(q, signal); } catch { /**/ }
+  if (lang === 'es') {
+    // Español: RSS feeds españoles, CoinTelegraph ES para crypto
+    try { return await fetchES(category, signal); } catch { /**/ }
+    // Fallback ES: CryptoCompare en español para financieras
+    if (category === 'crypto' || category === 'forex') {
+      try { return await fetchCC(category, signal); } catch { /**/ }
+    }
+    return [];
   }
-  // Default
-  try { return await fetchGuardian('all', lang, signal); } catch { /**/ }
+
+  // Inglés
+  if (category === 'crypto' || category === 'forex') {
+    try { return await fetchCC(category, signal); } catch { /**/ }
+  }
+  try { return await fetchGuardian(category, signal); } catch { /**/ }
+  try { return await fetchHN(GU_QUERY[category] ?? 'world news', signal); } catch { /**/ }
   return [];
 }
 
@@ -222,21 +247,36 @@ export function useNews() {
     setLoading(true); setError(null); setLastKey(cacheKey);
 
     try {
-      // Guardian search first, HN as fallback
       let mapped: NewsArticle[] = [];
-      try {
+      if (lang === 'es') {
+        // Buscar en feeds españoles (rss2json search no disponible → Guardian en español)
         const params = new URLSearchParams({
-          'api-key': GU_KEY, q, 'show-fields': 'thumbnail,trailText',
+          'api-key': GU_KEY, q,
+          'show-fields': 'thumbnail,trailText',
           'page-size': '12', 'order-by': 'newest',
         });
-        const res  = await fetch(`${GU}?${params}`, { signal });
-        const data = res.ok ? await res.json() : null;
-        if (data?.response?.status === 'ok') {
-          mapped = (data.response.results ?? []).map((a: any) => mapGuardian(a, 'search'));
-        }
-      } catch { /**/ }
-
-      if (!mapped.length) mapped = await fetchHN(q, signal);
+        try {
+          const res  = await fetch(`${GU}?${params}`, { signal });
+          const data = res.ok ? await res.json() : null;
+          if (data?.response?.status === 'ok') {
+            mapped = (data.response.results ?? []).map((a: any) => mapGuardian(a, 'search'));
+          }
+        } catch { /**/ }
+      } else {
+        const params = new URLSearchParams({
+          'api-key': GU_KEY, q,
+          'show-fields': 'thumbnail,trailText',
+          'page-size': '12', 'order-by': 'newest',
+        });
+        try {
+          const res  = await fetch(`${GU}?${params}`, { signal });
+          const data = res.ok ? await res.json() : null;
+          if (data?.response?.status === 'ok') {
+            mapped = (data.response.results ?? []).map((a: any) => mapGuardian(a, 'search'));
+          }
+        } catch { /**/ }
+        if (!mapped.length) mapped = await fetchHN(q, signal);
+      }
       writeCache(cacheKey, mapped);
       setArticles(mapped);
     } catch (e: any) {

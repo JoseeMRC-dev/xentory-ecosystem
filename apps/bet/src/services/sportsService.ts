@@ -178,7 +178,8 @@ function currentWeekRange(): { start: string; end: string } {
   return { start: fmt(mon), end: fmt(sun) };
 }
 
-/** All matches (finished + scheduled) for a league during the current Mon–Sun week */
+/** All matches (finished + scheduled) for a league during the current Mon–Sun week,
+ *  with a 30-day forward fallback so leagues on international break still show upcoming fixtures */
 export async function fetchWeekMatches(leagueId: number): Promise<Match[]> {
   const cfg = FOOTBALL_LEAGUES.find(l => l.id === leagueId);
   if (!cfg) return [];
@@ -193,6 +194,13 @@ export async function fetchWeekMatches(leagueId: number): Promise<Match[]> {
   const todayJson = await espnFetch(`/${cfg.slug}/scoreboard`);
   const todayEvents: any[] = todayJson?.events ?? [];
   if (todayEvents.length > 0) return parseEspnFootballEvents(todayEvents, cfg);
+  // Extended fallback: look 30 days ahead (handles international breaks)
+  const fwdJson = await espnFetch(`/${cfg.slug}/scoreboard?dates=${espnDate(1)}-${espnDate(30)}`);
+  const fwdEvents: any[] = fwdJson?.events ?? [];
+  if (fwdEvents.length > 0) {
+    return parseEspnFootballEvents(fwdEvents, cfg)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }
   return getMockMatches(leagueId, 10);
 }
 
