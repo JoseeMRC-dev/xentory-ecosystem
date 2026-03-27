@@ -154,6 +154,16 @@ async function fetchHN(query: string, signal: AbortSignal): Promise<NewsArticle[
     }));
 }
 
+// ── Filtro de frescura: descarta artículos más antiguos que maxDays ──────────
+const MAX_AGE_DAYS = 30;
+function filterFresh(articles: NewsArticle[]): NewsArticle[] {
+  const cutoff = Date.now() - MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
+  return articles.filter(a => {
+    const t = new Date(a.publishedAt).getTime();
+    return !isNaN(t) && t > cutoff;
+  });
+}
+
 // ── Lógica de selección de fuente ─────────────────────────────────────────
 async function fetchForCategory(
   category: string, lang: 'es'|'en', signal: AbortSignal,
@@ -161,17 +171,26 @@ async function fetchForCategory(
   // Español: intentar RSS feeds españoles primero
   if (lang === 'es') {
     try {
-      const esArticles = await fetchES(category, signal);
+      const esArticles = filterFresh(await fetchES(category, signal));
       if (esArticles.length > 0) return esArticles;
     } catch { /**/ }
   }
 
   // Inglés (o fallback cuando el RSS español falla / devuelve vacío)
   if (category === 'crypto' || category === 'forex') {
-    try { return await fetchCC(category, signal); } catch { /**/ }
+    try {
+      const cc = filterFresh(await fetchCC(category, signal));
+      if (cc.length > 0) return cc;
+    } catch { /**/ }
   }
-  try { return await fetchGuardian(category, signal); } catch { /**/ }
-  try { return await fetchHN(GU_QUERY[category] ?? 'world news', signal); } catch { /**/ }
+  try {
+    const gu = filterFresh(await fetchGuardian(category, signal));
+    if (gu.length > 0) return gu;
+  } catch { /**/ }
+  try {
+    const hn = filterFresh(await fetchHN(GU_QUERY[category] ?? 'world news', signal));
+    if (hn.length > 0) return hn;
+  } catch { /**/ }
   return [];
 }
 

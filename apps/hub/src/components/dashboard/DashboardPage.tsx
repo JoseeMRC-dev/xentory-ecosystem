@@ -212,16 +212,16 @@ export function DashboardPage() {
           style={{
             marginBottom: '1.2rem', padding: '0.85rem 1.2rem', borderRadius: 14, cursor: 'pointer',
             background: quickAction.platform === 'market' ? 'linear-gradient(135deg,rgba(201,168,76,0.08),rgba(201,168,76,0.03))' : 'linear-gradient(135deg,rgba(0,200,122,0.08),rgba(0,200,122,0.03))',
-            border: `1px solid ${quickAction.platform === 'market' ? 'rgba(201,168,76,0.22)' : 'rgba(0,200,122,0.22)'}`,
+            border: `1px solid ${quickAction.platform === 'market' ? 'rgba(201,168,76,0.22)' : 'rgba(59,158,255,0.22)'}`,
             display: 'flex', alignItems: 'center', gap: '0.8rem',
             transition: 'border-color 0.2s, transform 0.2s',
           }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = quickAction.platform === 'market' ? 'rgba(201,168,76,0.45)' : 'rgba(0,200,122,0.45)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = quickAction.platform === 'market' ? 'rgba(201,168,76,0.22)' : 'rgba(0,200,122,0.22)'; e.currentTarget.style.transform = 'none'; }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = quickAction.platform === 'market' ? 'rgba(201,168,76,0.45)' : 'rgba(59,158,255,0.45)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = quickAction.platform === 'market' ? 'rgba(201,168,76,0.22)' : 'rgba(59,158,255,0.22)'; e.currentTarget.style.transform = 'none'; }}
         >
           <span style={{ fontSize: '1.4rem', flexShrink: 0 }}>{quickAction.emoji}</span>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: quickAction.platform === 'market' ? 'var(--gold)' : 'var(--green)' }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: quickAction.platform === 'market' ? 'var(--gold)' : 'var(--cyan)' }}>
               {quickAction.label}
             </div>
             <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginTop: '0.1rem' }}>
