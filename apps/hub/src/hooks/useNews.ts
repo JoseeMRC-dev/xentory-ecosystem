@@ -199,19 +199,21 @@ export function useNews() {
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState<string | null>(null);
   // useRef instead of useState so the guard never triggers re-renders or stale closures
-  const lastKeyRef   = useRef('');
+  const inflight = useRef('');   // key of the request currently in-flight
   const abortRef     = useRef<AbortController | null>(null);
   const lastFetchRef = useRef<{ type: 'category'|'search'; value: string } | null>(null);
 
   const doFetch = useCallback(async (category: string, cacheKey: string) => {
-    if (cacheKey === lastKeyRef.current) return;
+    // Serve from cache if still fresh
     const cached = readCache(cacheKey);
-    if (cached) { lastKeyRef.current = cacheKey; setArticles(cached); setError(null); return; }
+    if (cached) { inflight.current = ''; setArticles(cached); setError(null); return; }
+    // Deduplicate: skip only if the exact same request is already in-flight
+    if (cacheKey === inflight.current) return;
 
     abortRef.current?.abort();
     abortRef.current = new AbortController();
     const signal = abortRef.current.signal;
-    lastKeyRef.current = cacheKey;
+    inflight.current = cacheKey;
     setLoading(true); setError(null);
 
     try {
@@ -223,6 +225,7 @@ export function useNews() {
       setError(lang === 'es' ? 'No se pudieron cargar las noticias.' : 'Could not load news.');
       setArticles([]);
     } finally {
+      inflight.current = '';
       setLoading(false);
     }
   }, [lang]);
@@ -237,14 +240,14 @@ export function useNews() {
     if (!q || q.length < 2) return;
     lastFetchRef.current = { type: 'search', value: q };
     const cacheKey = `srch:${q}:${lang}`;
-    if (cacheKey === lastKeyRef.current) return;
     const cached = readCache(cacheKey);
-    if (cached) { lastKeyRef.current = cacheKey; setArticles(cached); setError(null); return; }
+    if (cached) { inflight.current = ''; setArticles(cached); setError(null); return; }
+    if (cacheKey === inflight.current) return;
 
     abortRef.current?.abort();
     abortRef.current = new AbortController();
     const signal = abortRef.current.signal;
-    lastKeyRef.current = cacheKey;
+    inflight.current = cacheKey;
     setLoading(true); setError(null);
 
     try {
@@ -270,13 +273,14 @@ export function useNews() {
         setArticles([]);
       }
     } finally {
+      inflight.current = '';
       setLoading(false);
     }
   }, [lang]);
 
   // Re-fetch on lang change
   useEffect(() => {
-    lastKeyRef.current = '';
+    inflight.current = '';
     const last = lastFetchRef.current;
     if (!last) return;
     if (last.type === 'category') {
@@ -287,7 +291,7 @@ export function useNews() {
   }, [lang]);
 
   const clear = useCallback(() => {
-    setArticles([]); setError(null); lastKeyRef.current = '';
+    setArticles([]); setError(null); inflight.current = '';
     lastFetchRef.current = null;
   }, []);
 
