@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useLang } from '../../context/LanguageContext';
 import { MARKET_PLANS, BETS_PLANS, BUNDLE } from '../../constants';
 import { supabase } from '../../lib/supabase';
+import { deviceFingerprint } from '../../lib/fingerprint';
 import type { Plan } from '../../types';
 
 const SUPABASE_FN = 'https://mtgatdmrpfysqphdgaue.supabase.co/functions/v1';
@@ -51,9 +52,25 @@ export function PricingPage() {
 
   const [platform, setPlatform] = useState<PlatformTab>(initialTab);
   const [yearly,   setYearly]   = useState(searchParams.get('interval') === 'yearly');
-  const [loading,  setLoading]  = useState<string | null>(null);
-  const [success,  setSuccess]  = useState<string | null>(null);
-  const [error,    setError]    = useState<string | null>(null);
+  const [loading,    setLoading]    = useState<string | null>(null);
+  const [success,    setSuccess]    = useState<string | null>(null);
+  const [error,      setError]      = useState<string | null>(null);
+  // plataformas donde este usuario YA usó el trial (comprobación por user_id)
+  const [trialUsed,  setTrialUsed]  = useState<Record<string, boolean>>({});
+
+  // Cargar historial de trial del usuario actual
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('trial_usage')
+      .select('platform')
+      .then(({ data }) => {
+        if (!data) return;
+        const used: Record<string, boolean> = {};
+        data.forEach((r: { platform: string }) => { used[r.platform] = true; });
+        setTrialUsed(used);
+      });
+  }, [user]);
 
   // Detectar retorno desde Stripe (?success=true)
   useEffect(() => {
@@ -83,6 +100,9 @@ export function PricingPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) { navigate('/login'); return; }
 
+      // Fingerprint del dispositivo para el control anti-abuso del trial
+      const fp = await deviceFingerprint();
+
       const res = await fetch(`${SUPABASE_FN}/create-checkout`, {
         method: 'POST',
         headers: {
@@ -90,9 +110,10 @@ export function PricingPage() {
           'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
-          platform: plt,
+          platform:    plt,
           plan,
           interval,
+          device_fp:   fp,
           success_url: `${window.location.origin}/pricing?success=true&platform=${plt}&plan=${plan}`,
           cancel_url:  `${window.location.origin}/pricing?tab=${plt}`,
         }),
@@ -256,6 +277,10 @@ export function PricingPage() {
               const isCurrent = current === plan.id;
               const isBusy = loading === `${plt}-${plan.id}`;
               const price = yearly && plan.price > 0 ? plan.yearlyPrice : plan.price;
+              const isPaid = plan.price > 0;
+              // Trial: disponible si el usuario no lo usó en esta plataforma
+              // (el dispositivo se comprueba en el backend)
+              const trialAvailable = isPaid && !trialUsed[plt] && !trialUsed['bundle'];
 
               return (
                 <div key={plan.id} style={{
@@ -275,6 +300,16 @@ export function PricingPage() {
                   <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.2rem', flexWrap: 'wrap', minHeight: 24 }}>
                     {plan.popular && <span style={{ padding: '0.18rem 0.55rem', background: 'var(--gold-dim)', color: 'var(--gold)', fontSize: '0.6rem', letterSpacing: '0.1em', borderRadius: 4, border: '1px solid rgba(201,168,76,0.2)', fontWeight: 700 }}>{t('pricing.popular')}</span>}
                     {isCurrent && <span style={{ padding: '0.18rem 0.55rem', background: `${plan.color}12`, color: plan.color, fontSize: '0.6rem', letterSpacing: '0.1em', borderRadius: 4, fontWeight: 700 }}>{t('pricing.active')}</span>}
+                    {trialAvailable && !isCurrent && (
+                      <span style={{ padding: '0.18rem 0.55rem', background: 'rgba(0,200,122,0.08)', color: 'var(--green)', fontSize: '0.6rem', letterSpacing: '0.08em', borderRadius: 4, border: '1px solid rgba(0,200,122,0.2)', fontWeight: 700 }}>
+                        7 días gratis
+                      </span>
+                    )}
+                    {isPaid && trialUsed[plt] && !isCurrent && (
+                      <span style={{ padding: '0.18rem 0.55rem', background: 'var(--card2)', color: 'var(--muted)', fontSize: '0.6rem', letterSpacing: '0.08em', borderRadius: 4, border: '1px solid var(--border)', fontWeight: 600 }}>
+                        Prueba utilizada
+                      </span>
+                    )}
                   </div>
 
                   <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '1.05rem', color: plan.color, marginBottom: '1rem' }}>{plan.name}</div>
@@ -306,7 +341,15 @@ export function PricingPage() {
                     opacity: isCurrent ? 0.65 : 1, transition: 'all 0.2s',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.45rem',
                   }}>
-                    {isBusy ? <SpinnerIcon /> : isCurrent ? t('pricing.current') : plan.price === 0 ? t('pricing.start.free') : `${t('pricing.activate')} ${plan.name}`}
+                    {isBusy
+                      ? <SpinnerIcon />
+                      : isCurrent
+                        ? t('pricing.current')
+                        : plan.price === 0
+                          ? t('pricing.start.free')
+                          : trialAvailable
+                            ? `Probar ${plan.name} gratis →`
+                            : `${t('pricing.activate')} ${plan.name}`}
                   </button>
                 </div>
               );

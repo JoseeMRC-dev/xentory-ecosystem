@@ -5,7 +5,7 @@
  * NO requiere autenticación de usuario (la verifica la firma de Stripe).
  *
  * Eventos manejados:
- *  - checkout.session.completed       → activa el plan
+ *  - checkout.session.completed       → activa el plan + registra trial si aplica
  *  - customer.subscription.updated   → sincroniza cambios de plan
  *  - customer.subscription.deleted   → cancela (vuelve a free)
  */
@@ -69,6 +69,7 @@ Deno.serve(async (req) => {
         const platform = session.metadata?.platform;
         const plan     = session.metadata?.plan;
         const interval = session.metadata?.interval;
+        const deviceFp = session.metadata?.device_fp || null;
         const subId    = session.subscription as string;
         const cusId    = session.customer    as string;
 
@@ -87,7 +88,34 @@ Deno.serve(async (req) => {
           current_period_end:    new Date(sub.current_period_end * 1000).toISOString(),
         }, { onConflict: 'user_id,platform' });
 
-        console.log(`✓ Plan activado: ${userId} → ${platform}/${plan}`);
+        // ── Registrar uso del trial (si la suscripción arrancó en período de prueba)
+        if (sub.status === 'trialing') {
+          // Obtener IP del cliente (Cloudflare / forwarded)
+          const ip =
+            req.headers.get('cf-connecting-ip') ??
+            req.headers.get('x-forwarded-for')?.split(',')[0].trim() ??
+            null;
+
+          // Insertar en trial_usage — ignorar si ya existe (ej. doble webhook)
+          const { error: trialErr } = await supabaseAdmin
+            .from('trial_usage')
+            .insert({
+              user_id:       userId,
+              platform,
+              device_fp:     deviceFp && /^[0-9a-f]{64}$/.test(deviceFp) ? deviceFp : null,
+              ip_address:    ip,
+              stripe_sub_id: subId,
+            });
+
+          if (trialErr && trialErr.code !== '23505') {
+            // 23505 = unique_violation (trial ya registrado — ok)
+            console.error('trial_usage insert error:', trialErr);
+          } else {
+            console.log(`✓ Trial registrado: ${userId} → ${platform} | device=${!!deviceFp} | ip=${ip}`);
+          }
+        }
+
+        console.log(`✓ Plan activado: ${userId} → ${platform}/${plan} (status=${sub.status})`);
         break;
       }
 
@@ -108,7 +136,7 @@ Deno.serve(async (req) => {
           })
           .eq('stripe_subscription_id', sub.id);
 
-        console.log(`↻ Suscripción actualizada: ${sub.id}`);
+        console.log(`↻ Suscripción actualizada: ${sub.id} (status=${sub.status})`);
         break;
       }
 
