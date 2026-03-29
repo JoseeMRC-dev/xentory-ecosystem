@@ -404,7 +404,7 @@ export function HomePage() {
   useEffect(() => {
     const io = new IntersectionObserver(entries => {
       entries.forEach(e => { if (e.isIntersecting) { (e.target as HTMLElement).classList.add('visible'); io.unobserve(e.target); } });
-    }, { threshold: 0.07, rootMargin: '0px 0px -30px 0px' });
+    }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
     const observe = () => document.querySelectorAll<HTMLElement>('.reveal:not(.visible)').forEach(el => io.observe(el));
     observe();
     const tid = setTimeout(observe, 120);
@@ -494,9 +494,9 @@ export function HomePage() {
       </section>
 
       {/* ══ PROBLEM → SOLUTION ═══════════════════════════════════════ */}
-      <section className="reveal" style={{ padding: 'clamp(4.5rem,9vw,7rem) clamp(1rem,5vw,2rem)', background: 'var(--bg2)' }}>
+      <section style={{ padding: 'clamp(4.5rem,9vw,7rem) clamp(1rem,5vw,2rem)', background: 'var(--bg2)' }}>
         <div className="section-container">
-          <div style={{ textAlign: 'center', marginBottom: 'clamp(2.5rem,5vw,4rem)' }}>
+          <div className="reveal" style={{ textAlign: 'center', marginBottom: 'clamp(2.5rem,5vw,4rem)' }}>
             <SectionLabel label={t('home.problem.badge')} />
             <h2 style={{ fontSize: 'clamp(1.8rem,5vw,2.8rem)', maxWidth: 640, margin: '0 auto' }}>
               {lang === 'es' ? 'Los datos existen. Interpretarlos no debería costarte horas.' : 'The data exists. Interpreting it shouldn\'t cost you hours.'}
@@ -508,7 +508,7 @@ export function HomePage() {
               { label: t('home.problem.sol'), title: t('prob.card2.title'), desc: t('home.problem.soldesc'), accent: 'var(--green)', top: 'var(--green)' },
               { label: t('home.problem.p3t'), title: t('prob.card3.title'), desc: t('home.problem.p3d'), accent: 'var(--gold)', top: 'var(--gold)' },
             ].map((c, i) => (
-              <div key={i} className="glass" style={{ borderRadius: 18, padding: 'clamp(1.5rem,3vw,2rem)', borderTop: `2px solid ${c.top}`, position: 'relative', overflow: 'hidden' }}>
+              <div key={i} className={`glass reveal reveal-scale d${i + 1}`} style={{ borderRadius: 18, padding: 'clamp(1.5rem,3vw,2rem)', borderTop: `2px solid ${c.top}`, position: 'relative', overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', top: 0, right: 0, width: 80, height: 80, borderRadius: '0 0 0 80px', background: `${c.accent}06` }} />
                 <div style={{ fontSize: '0.62rem', color: c.accent, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.7rem', fontWeight: 600 }}>{c.label}</div>
                 <h3 style={{ fontSize: 'clamp(0.95rem,2vw,1.05rem)', marginBottom: '0.7rem', fontFamily: 'Outfit, sans-serif' }}>{c.title}</h3>
@@ -520,9 +520,9 @@ export function HomePage() {
       </section>
 
       {/* ══ PLATFORMS ════════════════════════════════════════════════ */}
-      <section className="reveal" style={{ padding: 'clamp(4.5rem,9vw,7rem) clamp(1rem,5vw,2rem)' }}>
+      <section style={{ padding: 'clamp(4.5rem,9vw,7rem) clamp(1rem,5vw,2rem)' }}>
         <div className="section-container">
-          <div style={{ textAlign: 'center', marginBottom: 'clamp(2.5rem,5vw,4rem)' }}>
+          <div className="reveal" style={{ textAlign: 'center', marginBottom: 'clamp(2.5rem,5vw,4rem)' }}>
             <SectionLabel label={t('platforms.badge')} />
             <h2 style={{ fontSize: 'clamp(1.8rem,5vw,2.8rem)', marginBottom: '1rem' }}>
               {t('platforms.title')} <span className="text-gradient-gold">{t('platforms.title2')}</span>
@@ -534,7 +534,7 @@ export function HomePage() {
 
           <div className="feature-grid-2">
             {/* Market card */}
-            <div className="glass platform-card" style={{ borderRadius: 22, padding: 'clamp(1.8rem,4vw,2.8rem)', borderLeft: '3px solid var(--gold)', position: 'relative', overflow: 'hidden' }}>
+            <div className="glass platform-card reveal reveal-left d1" style={{ borderRadius: 22, padding: 'clamp(1.8rem,4vw,2.8rem)', borderLeft: '3px solid var(--gold)', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(var(--gold-glow), transparent 70%)', pointerEvents: 'none' }} />
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', marginBottom: '1rem' }}>
                 <div style={{ width: 40, height: 40, borderRadius: 11, background: 'var(--gold-dim)', border: '1px solid rgba(201,168,76,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -558,7 +558,7 @@ export function HomePage() {
             </div>
 
             {/* Bet card */}
-            <div className="glass platform-card" style={{ borderRadius: 22, padding: 'clamp(1.8rem,4vw,2.8rem)', borderLeft: '3px solid var(--cyan)', position: 'relative', overflow: 'hidden' }}>
+            <div className="glass platform-card reveal reveal-right d2" style={{ borderRadius: 22, padding: 'clamp(1.8rem,4vw,2.8rem)', borderLeft: '3px solid var(--cyan)', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(rgba(59,158,255,0.15), transparent 70%)', pointerEvents: 'none' }} />
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', marginBottom: '1rem' }}>
                 <div style={{ width: 40, height: 40, borderRadius: 11, background: 'var(--cyan-dim)', border: '1px solid rgba(59,158,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -585,15 +585,15 @@ export function HomePage() {
       </section>
 
       {/* ══ HOW IT WORKS ═════════════════════════════════════════════ */}
-      <section id="how" className="reveal" style={{ padding: 'clamp(4.5rem,9vw,7rem) clamp(1rem,5vw,2rem)', background: 'var(--bg2)' }}>
+      <section id="how" style={{ padding: 'clamp(4.5rem,9vw,7rem) clamp(1rem,5vw,2rem)', background: 'var(--bg2)' }}>
         <div className="section-container">
-          <div style={{ textAlign: 'center', marginBottom: 'clamp(2.5rem,5vw,4rem)' }}>
+          <div className="reveal" style={{ textAlign: 'center', marginBottom: 'clamp(2.5rem,5vw,4rem)' }}>
             <SectionLabel label={t('how.badge')} />
             <h2 style={{ fontSize: 'clamp(1.8rem,5vw,2.8rem)' }}>{t('how.title')}</h2>
           </div>
           <div className="how-grid">
             {HOW_STEPS.map((s, i) => (
-              <div key={i} className="glass" style={{ borderRadius: 18, padding: 'clamp(1.5rem,3vw,2rem)', position: 'relative', overflow: 'hidden' }}>
+              <div key={i} className={`glass reveal reveal-up d${i + 1}`} style={{ borderRadius: 18, padding: 'clamp(1.5rem,3vw,2rem)', position: 'relative', overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', top: '1.4rem', right: '1.4rem', fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '2.8rem', color: 'var(--border2)', lineHeight: 1, userSelect: 'none' }}>{s.num}</div>
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--gold-dim)', border: '1px solid rgba(201,168,76,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold)', marginBottom: '1.1rem' }}>
                   {s.icon}
@@ -612,44 +612,48 @@ export function HomePage() {
       </section>
 
       {/* ══ TESTIMONIALS ═════════════════════════════════════════════ */}
-      <section className="reveal" style={{ padding: 'clamp(4.5rem,9vw,7rem) clamp(1rem,5vw,2rem)' }}>
+      <section style={{ padding: 'clamp(4.5rem,9vw,7rem) clamp(1rem,5vw,2rem)' }}>
         <div className="section-container">
-          <div style={{ textAlign: 'center', marginBottom: 'clamp(2.5rem,5vw,4rem)' }}>
+          <div className="reveal" style={{ textAlign: 'center', marginBottom: 'clamp(2.5rem,5vw,4rem)' }}>
             <SectionLabel label={t('test.badge')} />
             <h2 style={{ fontSize: 'clamp(1.8rem,5vw,2.8rem)', marginBottom: '0.5rem' }}>{t('test.title')}</h2>
             <p style={{ color: 'var(--muted)', fontSize: '0.78rem' }}>{t('test.disclaimer')}</p>
           </div>
           <div className="testimonial-grid">
-            {TESTIMONIALS.map((item, i) => <TestimonialCard key={i} item={item} />)}
+            {TESTIMONIALS.map((item, i) => (
+              <div key={i} className={`reveal reveal-scale d${(i % 4) + 1}`}>
+                <TestimonialCard item={item} />
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* ══ FAQ ══════════════════════════════════════════════════════ */}
-      <section className="reveal" style={{ padding: 'clamp(4.5rem,9vw,7rem) clamp(1rem,5vw,2rem)', background: 'var(--bg2)' }}>
+      <section style={{ padding: 'clamp(4.5rem,9vw,7rem) clamp(1rem,5vw,2rem)', background: 'var(--bg2)' }}>
         <div style={{ maxWidth: 740, margin: '0 auto', padding: '0 clamp(0rem,2vw,1rem)' }}>
-          <div style={{ textAlign: 'center', marginBottom: 'clamp(2.5rem,5vw,3.5rem)' }}>
+          <div className="reveal" style={{ textAlign: 'center', marginBottom: 'clamp(2.5rem,5vw,3.5rem)' }}>
             <SectionLabel label={t('faq.badge')} />
             <h2 style={{ fontSize: 'clamp(1.8rem,5vw,2.8rem)' }}>{t('faq.title')}</h2>
           </div>
-          <div className="glass" style={{ borderRadius: 20, padding: 'clamp(1.2rem,3vw,2rem)' }}>
+          <div className="glass reveal reveal-up d1 slow" style={{ borderRadius: 20, padding: 'clamp(1.2rem,3vw,2rem)' }}>
             {FAQS.map((f, i) => <FaqItem key={i} q={f.q} a={f.a} />)}
           </div>
         </div>
       </section>
 
       {/* ══ FINAL CTA ════════════════════════════════════════════════ */}
-      <section className="reveal" style={{ padding: 'clamp(5rem,10vw,8rem) clamp(1rem,5vw,2rem)', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+      <section style={{ padding: 'clamp(5rem,10vw,8rem) clamp(1rem,5vw,2rem)', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(201,168,76,0.045) 0%, transparent 65%)', pointerEvents: 'none' }} />
         <div style={{ maxWidth: 580, margin: '0 auto', position: 'relative' }}>
-          <SectionLabel label={lang === 'es' ? 'Empieza hoy' : 'Get started'} />
-          <h2 style={{ fontSize: 'clamp(1.8rem,5vw,3rem)', marginBottom: '1.1rem' }}>
+          <div className="reveal"><SectionLabel label={lang === 'es' ? 'Empieza hoy' : 'Get started'} /></div>
+          <h2 className="reveal d1" style={{ fontSize: 'clamp(1.8rem,5vw,3rem)', marginBottom: '1.1rem' }}>
             {t('cta.title')}
           </h2>
-          <p style={{ color: 'var(--text2)', fontSize: 'clamp(0.9rem,2vw,1rem)', lineHeight: 1.8, marginBottom: '2.2rem' }}>
+          <p className="reveal d2" style={{ color: 'var(--text2)', fontSize: 'clamp(0.9rem,2vw,1rem)', lineHeight: 1.8, marginBottom: '2.2rem' }}>
             {t('cta.sub')}
           </p>
-          <div style={{ display: 'flex', gap: '0.7rem', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '1.8rem' }}>
+          <div className="reveal d3" style={{ display: 'flex', gap: '0.7rem', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '1.8rem' }}>
             <button onClick={() => navigate(user ? '/dashboard' : '/register')} className="btn btn-gold btn-xl" style={{ gap: '0.6rem' }}>
               {user ? t('hero.cta1.user') : t('cta.btn1')} <IconArrow />
             </button>
@@ -657,7 +661,7 @@ export function HomePage() {
               {t('cta.btn2')}
             </button>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 'clamp(0.8rem,2vw,2rem)', flexWrap: 'wrap' }}>
+          <div className="reveal d4" style={{ display: 'flex', justifyContent: 'center', gap: 'clamp(0.8rem,2vw,2rem)', flexWrap: 'wrap' }}>
             {[
               { icon: <IconShield />, text: t('cta.trust1') },
               { icon: <IconCheck />,  text: t('cta.trust2') },
