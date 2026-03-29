@@ -294,11 +294,34 @@ h1, h2, h3, h4, h5, h6 {
 /* ── SCROLL REVEAL ──────────────────────────────────────────── */
 .reveal {
   opacity: 0;
-  transform: translate3d(0, 28px, 0);
-  transition: opacity 0.65s cubic-bezier(0.16,1,0.3,1), transform 0.65s cubic-bezier(0.16,1,0.3,1);
+  transform: translate3d(0, 36px, 0);
+  transition: opacity 0.75s cubic-bezier(0.16,1,0.3,1),
+              transform 0.75s cubic-bezier(0.16,1,0.3,1);
   will-change: opacity, transform;
 }
-.reveal.visible { opacity: 1; transform: translate3d(0,0,0); will-change: auto; }
+/* Variantes de dirección */
+.reveal.reveal-up    { transform: translate3d(0, 36px, 0); }
+.reveal.reveal-left  { transform: translate3d(-40px, 0, 0); }
+.reveal.reveal-right { transform: translate3d( 40px, 0, 0); }
+.reveal.reveal-scale { transform: scale(0.92) translate3d(0, 20px, 0); }
+
+/* Estado visible — resetea cualquier variante */
+.reveal.visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  will-change: auto;
+}
+
+/* Stagger delays para grupos de elementos */
+.reveal.d1 { transition-delay: 0.08s; }
+.reveal.d2 { transition-delay: 0.16s; }
+.reveal.d3 { transition-delay: 0.24s; }
+.reveal.d4 { transition-delay: 0.32s; }
+.reveal.d5 { transition-delay: 0.40s; }
+
+/* Velocidades alternativas */
+.reveal.slow { transition-duration: 1.1s; }
+.reveal.fast { transition-duration: 0.45s; }
 
 /* ── SKELETON ───────────────────────────────────────────────── */
 .skeleton {
