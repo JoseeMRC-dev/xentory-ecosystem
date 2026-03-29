@@ -4,11 +4,12 @@
  * Verifica si la IP del cliente puede crear una nueva cuenta gratuita.
  * Se llama ANTES de supabase.auth.signUp() desde el frontend.
  *
- * Body JSON: { email: string }
+ * Body JSON: { email: string, device_fp?: string }
  * Respuesta: { allowed: boolean, reason?: string }
  *
  * Lógica:
  *  - Máx. 2 cuentas por IP (permite familia/hogar, bloquea granjas de cuentas)
+ *  - Máx. 1 cuenta por device fingerprint (SHA-256 del navegador/dispositivo)
  *  - Registra cada nuevo intento en account_ip_log
  *  - IPs de loopback/privadas siempre permitidas (dev)
  */
@@ -59,14 +60,15 @@ Deno.serve(async (req) => {
   );
 
   try {
-    const { email } = await req.json();
+    const { email, device_fp } = await req.json();
     if (!email || typeof email !== 'string') {
       return new Response(JSON.stringify({ allowed: false, reason: 'email_required' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const ip = getClientIP(req);
+    const ip        = getClientIP(req);
+    const validFp   = typeof device_fp === 'string' && /^[0-9a-f]{64}$/.test(device_fp);
 
     // Dev / IPs privadas: siempre permitidas
     if (isPrivateIP(ip)) {
@@ -75,34 +77,48 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Verificar cuántas cuentas hay desde esta IP
-    const { count, error } = await supabaseAdmin
+    // ── Capa 1: límite por IP ────────────────────────────────────
+    const { count: ipCount, error: ipErr } = await supabaseAdmin
       .from('account_ip_log')
       .select('*', { count: 'exact', head: true })
-      .eq('ip_address', ip);
+      .eq('ip_address', ip)
+      .in('status', ['pending', 'confirmed']);
 
-    if (error) {
-      // Si hay error de DB, dejamos pasar (fail-open para no bloquear usuarios legítimos)
-      console.warn('check-ip: DB error', error.message);
+    if (ipErr) {
+      console.warn('check-ip: DB error (IP)', ipErr.message);
       return new Response(JSON.stringify({ allowed: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    if ((count ?? 0) >= MAX_ACCOUNTS_PER_IP) {
-      console.log(`check-ip: bloqueado IP=${ip} count=${count}`);
-      return new Response(JSON.stringify({
-        allowed: false,
-        reason: 'ip_limit_reached',
-      }), {
+    if ((ipCount ?? 0) >= MAX_ACCOUNTS_PER_IP) {
+      console.log(`check-ip: bloqueado por IP=${ip} count=${ipCount}`);
+      return new Response(JSON.stringify({ allowed: false, reason: 'ip_limit_reached' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Registrar el intento (se marca como pendiente, se confirma en stripe-webhook tras verificar email)
+    // ── Capa 2: límite por device fingerprint ────────────────────
+    if (validFp) {
+      const { count: fpCount, error: fpErr } = await supabaseAdmin
+        .from('account_ip_log')
+        .select('*', { count: 'exact', head: true })
+        .eq('device_fp', device_fp)
+        .in('status', ['pending', 'confirmed']);
+
+      if (!fpErr && (fpCount ?? 0) >= 1) {
+        console.log(`check-ip: bloqueado por device_fp count=${fpCount}`);
+        return new Response(JSON.stringify({ allowed: false, reason: 'device_limit_reached' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    // Registrar el intento
     await supabaseAdmin.from('account_ip_log').insert({
       ip_address: ip,
       email:      email.toLowerCase().trim(),
+      device_fp:  validFp ? device_fp : null,
       status:     'pending',
     });
 

@@ -12,6 +12,9 @@ CREATE TABLE IF NOT EXISTS public.account_ip_log (
   -- Email registrado (en minúsculas, trimmed)
   email       text        NOT NULL,
 
+  -- Device fingerprint SHA-256 (canvas+WebGL+UA) — más granular que la IP
+  device_fp   text,
+
   -- user_id de Supabase auth — se rellena al confirmar el email (nullable hasta entonces)
   user_id     uuid        REFERENCES auth.users(id) ON DELETE SET NULL,
 
@@ -25,9 +28,11 @@ CREATE TABLE IF NOT EXISTS public.account_ip_log (
 );
 
 -- Índice principal para la consulta de conteo por IP
-CREATE INDEX IF NOT EXISTS idx_ip_log_ip      ON public.account_ip_log(ip_address);
-CREATE INDEX IF NOT EXISTS idx_ip_log_email   ON public.account_ip_log(email);
-CREATE INDEX IF NOT EXISTS idx_ip_log_user_id ON public.account_ip_log(user_id)
+CREATE INDEX IF NOT EXISTS idx_ip_log_ip        ON public.account_ip_log(ip_address);
+CREATE INDEX IF NOT EXISTS idx_ip_log_email     ON public.account_ip_log(email);
+CREATE INDEX IF NOT EXISTS idx_ip_log_device_fp ON public.account_ip_log(device_fp)
+  WHERE device_fp IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_ip_log_user_id   ON public.account_ip_log(user_id)
   WHERE user_id IS NOT NULL;
 
 -- RLS: solo service_role puede leer/escribir (datos internos, nunca expuestos al cliente)
