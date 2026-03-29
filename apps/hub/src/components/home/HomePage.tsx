@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useLang } from '../../context/LanguageContext';
@@ -63,10 +64,12 @@ const TESTIMONIALS_EN = [
 
 // ── MINI DASHBOARD — datos reales de Binance ─────────────────────────
 function MiniMockup() {
-  const [price,    setPrice]    = useState<number | null>(null);
-  const [change,   setChange]   = useState<number | null>(null);
-  const [bars,     setBars]     = useState<number[]>([62, 78, 55, 85, 70, 92, 68]);
-  const [rsi,      setRsi]      = useState<number | null>(null);
+  const [price,        setPrice]        = useState<number | null>(null);
+  const [change,       setChange]       = useState<number | null>(null);
+  const [bars,         setBars]         = useState<number[]>([62, 78, 55, 85, 70, 92, 68]);
+  const [rsi,          setRsi]          = useState<number | null>(null);
+  const [rsiModal,     setRsiModal]     = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -75,18 +78,13 @@ function MiniMockup() {
           fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT').then(r => r.json()),
           fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=15').then(r => r.json()),
         ]);
-
         setPrice(parseFloat(ticker.lastPrice));
         setChange(parseFloat(ticker.priceChangePercent));
-
-        // 7 bars from last 7 daily closes, normalised to 20–90%
         const closes: number[] = klines.map((k: any[]) => parseFloat(k[4]));
         const last7 = closes.slice(-7);
         const lo = Math.min(...last7), hi = Math.max(...last7);
         const range = hi - lo || 1;
         setBars(last7.map(c => Math.round(((c - lo) / range) * 70 + 20)));
-
-        // RSI(14) from 15 daily closes
         if (closes.length >= 15) {
           const deltas = closes.slice(1).map((c, i) => c - closes[i]);
           const gains  = deltas.map(d => d > 0 ? d : 0);
@@ -102,81 +100,176 @@ function MiniMockup() {
     return () => clearInterval(id);
   }, []);
 
-  const up  = (change ?? 0) >= 0;
+  const openModal = () => {
+    setRsiModal(true);
+    // doble rAF para que el DOM monte antes de disparar la transición
+    requestAnimationFrame(() => requestAnimationFrame(() => setModalVisible(true)));
+  };
+  const closeModal = () => {
+    setModalVisible(false);
+    setTimeout(() => setRsiModal(false), 360);
+  };
+
+  const up       = (change ?? 0) >= 0;
   const chColor  = up ? 'var(--green)' : 'var(--red)';
   const chBg     = up ? 'var(--green-dim)' : 'rgba(255,80,80,0.1)';
   const chBorder = up ? 'rgba(0,200,122,0.2)' : 'rgba(255,80,80,0.2)';
 
-  const signal     = rsi === null ? 'BUY' : rsi < 40 ? 'BUY' : rsi > 60 ? 'SELL' : 'HOLD';
-  const sigColor   = signal === 'BUY' ? 'var(--green)' : signal === 'SELL' ? 'var(--red)' : 'var(--gold)';
-  const sigBg      = signal === 'BUY' ? 'rgba(0,200,122,0.1)' : signal === 'SELL' ? 'rgba(255,80,80,0.1)' : 'rgba(201,168,76,0.08)';
-  const sigBorder  = signal === 'BUY' ? 'rgba(0,200,122,0.2)' : signal === 'SELL' ? 'rgba(255,80,80,0.2)' : 'rgba(201,168,76,0.2)';
-  const conf       = rsi === null ? '—' :
+  const signal    = rsi === null ? 'BUY' : rsi < 40 ? 'BUY' : rsi > 60 ? 'SELL' : 'HOLD';
+  const sigColor  = signal === 'BUY' ? 'var(--green)' : signal === 'SELL' ? 'var(--red)' : 'var(--gold)';
+  const sigBg     = signal === 'BUY' ? 'rgba(0,200,122,0.1)' : signal === 'SELL' ? 'rgba(255,80,80,0.1)' : 'rgba(201,168,76,0.08)';
+  const sigBorder = signal === 'BUY' ? 'rgba(0,200,122,0.2)' : signal === 'SELL' ? 'rgba(255,80,80,0.2)' : 'rgba(201,168,76,0.2)';
+  const conf      = rsi === null ? '—' :
     signal === 'BUY'  ? `${Math.round((40 - rsi) / 40 * 45 + 55)}% conf.` :
     signal === 'SELL' ? `${Math.round((rsi - 60) / 40 * 45 + 55)}% conf.` : '65% conf.';
-  const rsiColor   = rsi === null ? 'var(--gold)' : rsi < 30 ? 'var(--green)' : rsi > 70 ? 'var(--red)' : 'var(--gold)';
-  const [rsiTip, setRsiTip] = useState(false);
+  const rsiColor  = rsi === null ? 'var(--gold)' : rsi < 30 ? 'var(--green)' : rsi > 70 ? 'var(--red)' : 'var(--gold)';
+  const rsiLabel  = rsi === null ? '—' : rsi < 30 ? 'Sobreventa' : rsi > 70 ? 'Sobrecompra' : 'Zona neutral';
 
   return (
-    <div style={{
-      borderRadius: 16, overflow: 'hidden',
-      border: '1px solid var(--border2)',
-      background: 'linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%)',
-      backdropFilter: 'blur(20px)',
-      padding: '1.2rem',
-      width: '100%', maxWidth: 420,
-    }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '0.78rem', color: 'var(--text)' }}>BTC/USD</span>
-          {change !== null && (
-            <span style={{ fontSize: '0.65rem', color: chColor, background: chBg, padding: '0.1rem 0.4rem', borderRadius: 4, border: `1px solid ${chBorder}` }}>
-              {up ? '+' : ''}{change.toFixed(2)}%
-            </span>
-          )}
-        </div>
-        <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1rem', color: 'var(--text)' }}>
-          {price !== null ? `$${price.toLocaleString('en-US', { maximumFractionDigits: 0 })}` : '…'}
-        </span>
-      </div>
-      {/* 7-day chart */}
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: 48, marginBottom: '1rem' }}>
-        {bars.map((h, i) => (
-          <div key={i} style={{ flex: 1, borderRadius: '2px 2px 0 0', height: `${h}%`, background: i === bars.length - 1 ? 'var(--gold)' : 'var(--card3)', transition: 'height 0.3s' }} />
-        ))}
-      </div>
-      {/* Signal + RSI */}
-      <div style={{ display: 'flex', gap: '0.5rem' }}>
-        <div style={{ flex: 1, padding: '0.5rem 0.7rem', borderRadius: 8, background: sigBg, border: `1px solid ${sigBorder}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.7rem', color: sigColor, fontWeight: 600 }}>{signal}</span>
-          <span style={{ fontSize: '0.7rem', color: sigColor }}>{conf}</span>
-        </div>
-        <div style={{ flex: 1, padding: '0.5rem 0.7rem', borderRadius: 8, background: 'var(--card2)', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-            <span style={{ fontSize: '0.7rem', color: 'var(--text2)' }}>RSI</span>
-            <button
-              onClick={() => setRsiTip(v => !v)}
-              style={{ width: 14, height: 14, borderRadius: '50%', border: '1px solid var(--border2)', background: 'var(--card3)', color: 'var(--muted)', fontSize: '0.55rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, padding: 0 }}
-              aria-label="¿Qué es el RSI?"
-            >?</button>
+    <>
+      <div style={{
+        borderRadius: 16, overflow: 'hidden',
+        border: '1px solid var(--border2)',
+        background: 'linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%)',
+        backdropFilter: 'blur(20px)',
+        padding: '1.2rem',
+        width: '100%', maxWidth: 420,
+      }}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '0.78rem', color: 'var(--text)' }}>BTC/USD</span>
+            {change !== null && (
+              <span style={{ fontSize: '0.65rem', color: chColor, background: chBg, padding: '0.1rem 0.4rem', borderRadius: 4, border: `1px solid ${chBorder}` }}>
+                {up ? '+' : ''}{change.toFixed(2)}%
+              </span>
+            )}
           </div>
-          <span style={{ fontSize: '0.7rem', color: rsiColor, fontWeight: 600 }}>{rsi ?? '…'}</span>
-          {rsiTip && (
-            <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, width: 220, padding: '0.7rem 0.85rem', borderRadius: 10, background: 'var(--card)', border: '1px solid var(--border2)', boxShadow: '0 8px 24px rgba(0,0,0,0.4)', zIndex: 10 }}>
-              <div style={{ position: 'absolute', top: -5, right: 18, width: 8, height: 8, background: 'var(--card)', border: '1px solid var(--border2)', borderBottom: 'none', borderRight: 'none', transform: 'rotate(45deg)' }} />
-              <p style={{ fontSize: '0.68rem', color: 'var(--text)', lineHeight: 1.6, margin: 0 }}>
-                <strong style={{ color: 'var(--gold)' }}>RSI (Índice de Fuerza Relativa)</strong><br/>
-                Oscilador de 0 a 100 que mide la velocidad y magnitud de los movimientos del precio.<br/><br/>
-                <span style={{ color: 'var(--green)' }}>{'< 30'}</span> — Sobreventa (posible rebote)<br/>
-                <span style={{ color: 'var(--gold)' }}>30 – 70</span> — Zona neutral<br/>
-                <span style={{ color: 'var(--red)' }}>{'> 70'}</span> — Sobrecompra (posible caída)
-              </p>
+          <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1rem', color: 'var(--text)' }}>
+            {price !== null ? `$${price.toLocaleString('en-US', { maximumFractionDigits: 0 })}` : '…'}
+          </span>
+        </div>
+        {/* 7-day chart */}
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: 48, marginBottom: '1rem' }}>
+          {bars.map((h, i) => (
+            <div key={i} style={{ flex: 1, borderRadius: '2px 2px 0 0', height: `${h}%`, background: i === bars.length - 1 ? 'var(--gold)' : 'var(--card3)', transition: 'height 0.3s' }} />
+          ))}
+        </div>
+        {/* Signal + RSI */}
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div style={{ flex: 1, padding: '0.5rem 0.7rem', borderRadius: 8, background: sigBg, border: `1px solid ${sigBorder}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.7rem', color: sigColor, fontWeight: 600 }}>{signal}</span>
+            <span style={{ fontSize: '0.7rem', color: sigColor }}>{conf}</span>
+          </div>
+          <div style={{ flex: 1, padding: '0.5rem 0.7rem', borderRadius: 8, background: 'var(--card2)', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+              <span style={{ fontSize: '0.7rem', color: 'var(--text2)' }}>RSI</span>
+              <button
+                onClick={openModal}
+                style={{ width: 14, height: 14, borderRadius: '50%', border: '1px solid var(--border2)', background: 'var(--card3)', color: 'var(--muted)', fontSize: '0.55rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, padding: 0 }}
+                aria-label="¿Qué es el RSI?"
+              >?</button>
             </div>
-          )}
+            <span style={{ fontSize: '0.7rem', color: rsiColor, fontWeight: 600 }}>{rsi ?? '…'}</span>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* ── RSI MODAL — portal al body, no recortado por nada ── */}
+      {rsiModal && createPortal(
+        <div
+          onClick={closeModal}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 99999,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '1.5rem',
+            background: `rgba(4,6,15,${modalVisible ? '0.72' : '0'})`,
+            backdropFilter: `blur(${modalVisible ? '14px' : '0px'})`,
+            WebkitBackdropFilter: `blur(${modalVisible ? '14px' : '0px'})`,
+            transition: 'background 0.35s ease, backdrop-filter 0.35s ease',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              width: '100%', maxWidth: 340,
+              borderRadius: 22,
+              background: 'linear-gradient(145deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))',
+              border: `1px solid ${rsiColor}40`,
+              boxShadow: `0 0 60px ${rsiColor}22, 0 24px 60px rgba(0,0,0,0.6)`,
+              padding: '2rem 1.8rem 1.6rem',
+              transform: modalVisible ? 'scale(1) translateY(0)' : 'scale(0.55) translateY(40px)',
+              opacity: modalVisible ? 1 : 0,
+              transition: 'transform 0.38s cubic-bezier(0.34,1.4,0.64,1), opacity 0.3s ease',
+            }}
+          >
+            {/* Close */}
+            <button onClick={closeModal} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '1.1rem', lineHeight: 1, padding: '0.2rem 0.4rem' }}>✕</button>
+
+            {/* Label */}
+            <div style={{ fontSize: '0.65rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '0.6rem', fontWeight: 600 }}>BTC/USD · RSI (14)</div>
+
+            {/* Big RSI number */}
+            <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '5rem', lineHeight: 1, color: rsiColor, letterSpacing: '-0.04em', marginBottom: '0.3rem', transition: 'color 0.3s' }}>
+              {rsi ?? '—'}
+            </div>
+            <div style={{ fontSize: '0.78rem', color: rsiColor, fontWeight: 600, marginBottom: '1.6rem', opacity: 0.85 }}>{rsiLabel}</div>
+
+            {/* Progress bar con zonas */}
+            <div style={{ marginBottom: '1.6rem' }}>
+              <div style={{ display: 'flex', borderRadius: 6, overflow: 'hidden', height: 8, marginBottom: '0.4rem' }}>
+                <div style={{ width: '30%', background: 'rgba(0,200,122,0.35)' }} />
+                <div style={{ width: '40%', background: 'rgba(201,168,76,0.35)' }} />
+                <div style={{ width: '30%', background: 'rgba(255,80,80,0.35)' }} />
+              </div>
+              {/* Indicador de posición */}
+              <div style={{ position: 'relative', height: 0 }}>
+                <div style={{
+                  position: 'absolute', top: -14,
+                  left: `${Math.min(Math.max((rsi ?? 50), 2), 98)}%`,
+                  transform: 'translateX(-50%)',
+                  width: 3, height: 14,
+                  background: rsiColor,
+                  borderRadius: 2,
+                  boxShadow: `0 0 6px ${rsiColor}`,
+                  transition: 'left 0.5s ease',
+                }} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', fontSize: '0.6rem', color: 'var(--muted)' }}>
+                <span style={{ color: 'var(--green)' }}>0 — Sobreventa</span>
+                <span style={{ color: 'var(--gold)' }}>Neutral</span>
+                <span style={{ color: 'var(--red)' }}>Sobrecompra — 100</span>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div style={{ height: 1, background: 'var(--border)', marginBottom: '1.2rem' }} />
+
+            {/* Explicación */}
+            <p style={{ fontSize: '0.75rem', color: 'var(--text2)', lineHeight: 1.7, margin: 0 }}>
+              El <strong style={{ color: 'var(--text)' }}>RSI (Índice de Fuerza Relativa)</strong> mide la velocidad y magnitud de los movimientos del precio en una escala de 0 a 100.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '0.9rem' }}>
+              {([
+                ['var(--green)', '< 30', 'Sobreventa — el activo puede rebotar al alza'],
+                ['var(--gold)',  '30–70','Zona neutral — sin señal clara'],
+                ['var(--red)',   '> 70', 'Sobrecompra — el activo puede corregir a la baja'],
+              ] as const).map(([color, range, desc]) => (
+                <div key={range} style={{ display: 'flex', gap: '0.6rem', alignItems: 'flex-start', fontSize: '0.72rem' }}>
+                  <span style={{ color, fontWeight: 700, flexShrink: 0, minWidth: 28 }}>{range}</span>
+                  <span style={{ color: 'var(--text2)' }}>{desc}</span>
+                </div>
+              ))}
+            </div>
+
+            <p style={{ fontSize: '0.62rem', color: 'var(--muted)', marginTop: '1.2rem', marginBottom: 0, textAlign: 'center' }}>
+              Pulsa fuera para cerrar · Datos: Binance · RSI(14) diario
+            </p>
+          </div>
+        </div>,
+        document.body,
+      )}
+    </>
   );
 }
 
