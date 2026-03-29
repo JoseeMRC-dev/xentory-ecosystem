@@ -158,8 +158,8 @@ const COMPETITORS = [
     trial: true,
   },
   {
-    name: 'Tipsters Telegram',
-    price: '€0–100/mes',
+    name: 'Canales de señales manuales',
+    price: 'Variable',
     ai: false,
     market: false,
     sports: true,
@@ -168,7 +168,7 @@ const COMPETITORS = [
     trial: false,
   },
   {
-    name: 'TradingView signals',
+    name: 'Herramientas de análisis técnico',
     price: '€15–60/mes',
     ai: false,
     market: true,
@@ -178,8 +178,8 @@ const COMPETITORS = [
     trial: false,
   },
   {
-    name: 'BetBurger / Arbs',
-    price: '€50–150/mes',
+    name: 'Seguimiento manual de estadísticas',
+    price: 'Tiempo propio',
     ai: false,
     market: false,
     sports: true,
@@ -529,7 +529,7 @@ export function MetodologiaPage() {
           </table>
         </div>
         <p style={{ marginTop: '1rem', fontSize: '0.72rem', color: 'var(--muted)' }}>
-          ✦ Xentory es la única plataforma que combina IA, mercados financieros y deportes con historial público verificable.
+          ✦ Xentory es la única herramienta que combina IA, mercados financieros y deportes con historial público verificable en una sola suscripción.
         </p>
       </div>
 
