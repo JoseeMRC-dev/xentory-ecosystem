@@ -115,6 +115,7 @@ function MiniMockup() {
     signal === 'BUY'  ? `${Math.round((40 - rsi) / 40 * 45 + 55)}% conf.` :
     signal === 'SELL' ? `${Math.round((rsi - 60) / 40 * 45 + 55)}% conf.` : '65% conf.';
   const rsiColor   = rsi === null ? 'var(--gold)' : rsi < 30 ? 'var(--green)' : rsi > 70 ? 'var(--red)' : 'var(--gold)';
+  const [rsiTip, setRsiTip] = useState(false);
 
   return (
     <div style={{
@@ -151,9 +152,28 @@ function MiniMockup() {
           <span style={{ fontSize: '0.7rem', color: sigColor, fontWeight: 600 }}>{signal}</span>
           <span style={{ fontSize: '0.7rem', color: sigColor }}>{conf}</span>
         </div>
-        <div style={{ flex: 1, padding: '0.5rem 0.7rem', borderRadius: 8, background: 'var(--card2)', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.7rem', color: 'var(--text2)' }}>RSI</span>
+        <div style={{ flex: 1, padding: '0.5rem 0.7rem', borderRadius: 8, background: 'var(--card2)', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text2)' }}>RSI</span>
+            <button
+              onClick={() => setRsiTip(v => !v)}
+              style={{ width: 14, height: 14, borderRadius: '50%', border: '1px solid var(--border2)', background: 'var(--card3)', color: 'var(--muted)', fontSize: '0.55rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, padding: 0 }}
+              aria-label="¿Qué es el RSI?"
+            >?</button>
+          </div>
           <span style={{ fontSize: '0.7rem', color: rsiColor, fontWeight: 600 }}>{rsi ?? '…'}</span>
+          {rsiTip && (
+            <div style={{ position: 'absolute', bottom: 'calc(100% + 6px)', right: 0, width: 220, padding: '0.7rem 0.85rem', borderRadius: 10, background: 'var(--card)', border: '1px solid var(--border2)', boxShadow: '0 8px 24px rgba(0,0,0,0.4)', zIndex: 10 }}>
+              <p style={{ fontSize: '0.68rem', color: 'var(--text)', lineHeight: 1.6, margin: 0 }}>
+                <strong style={{ color: 'var(--gold)' }}>RSI (Índice de Fuerza Relativa)</strong><br/>
+                Oscilador de 0 a 100 que mide la velocidad y magnitud de los movimientos del precio.<br/><br/>
+                <span style={{ color: 'var(--green)' }}>{'< 30'}</span> — Sobreventa (posible rebote)<br/>
+                <span style={{ color: 'var(--gold)' }}>30 – 70</span> — Zona neutral<br/>
+                <span style={{ color: 'var(--red)' }}>{'> 70'}</span> — Sobrecompra (posible caída)
+              </p>
+              <div style={{ position: 'absolute', bottom: -5, right: 18, width: 8, height: 8, background: 'var(--card)', border: '1px solid var(--border2)', borderTop: 'none', borderLeft: 'none', transform: 'rotate(45deg)' }} />
+            </div>
+          )}
         </div>
       </div>
     </div>
