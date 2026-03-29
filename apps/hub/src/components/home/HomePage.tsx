@@ -163,7 +163,8 @@ function MiniMockup() {
           </div>
           <span style={{ fontSize: '0.7rem', color: rsiColor, fontWeight: 600 }}>{rsi ?? '…'}</span>
           {rsiTip && (
-            <div style={{ position: 'absolute', bottom: 'calc(100% + 6px)', right: 0, width: 220, padding: '0.7rem 0.85rem', borderRadius: 10, background: 'var(--card)', border: '1px solid var(--border2)', boxShadow: '0 8px 24px rgba(0,0,0,0.4)', zIndex: 10 }}>
+            <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, width: 220, padding: '0.7rem 0.85rem', borderRadius: 10, background: 'var(--card)', border: '1px solid var(--border2)', boxShadow: '0 8px 24px rgba(0,0,0,0.4)', zIndex: 10 }}>
+              <div style={{ position: 'absolute', top: -5, right: 18, width: 8, height: 8, background: 'var(--card)', border: '1px solid var(--border2)', borderBottom: 'none', borderRight: 'none', transform: 'rotate(45deg)' }} />
               <p style={{ fontSize: '0.68rem', color: 'var(--text)', lineHeight: 1.6, margin: 0 }}>
                 <strong style={{ color: 'var(--gold)' }}>RSI (Índice de Fuerza Relativa)</strong><br/>
                 Oscilador de 0 a 100 que mide la velocidad y magnitud de los movimientos del precio.<br/><br/>
@@ -171,7 +172,6 @@ function MiniMockup() {
                 <span style={{ color: 'var(--gold)' }}>30 – 70</span> — Zona neutral<br/>
                 <span style={{ color: 'var(--red)' }}>{'> 70'}</span> — Sobrecompra (posible caída)
               </p>
-              <div style={{ position: 'absolute', bottom: -5, right: 18, width: 8, height: 8, background: 'var(--card)', border: '1px solid var(--border2)', borderTop: 'none', borderLeft: 'none', transform: 'rotate(45deg)' }} />
             </div>
           )}
         </div>
