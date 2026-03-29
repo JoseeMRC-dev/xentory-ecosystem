@@ -4,6 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useLang } from '../../context/LanguageContext';
 import { LiveTicker } from '../layout/LiveTicker';
+import { useAccuracyStats } from '../../hooks/useAccuracyStats';
 
 // ── SVG ICONS ────────────────────────────────────────────────────────
 const IconAPI = () => (
@@ -373,10 +374,14 @@ export function HomePage() {
 
   const TESTIMONIALS = lang === 'es' ? TESTIMONIALS_ES : TESTIMONIALS_EN;
 
+  // Real accuracy stat from DB — falls back to 68% if DB has no data yet
+  const { data: accData } = useAccuracyStats('both', 6);
+  const accuracyPct = accData?.stats.accuracy_pct ?? 68;
+
   const STATS = [
     { value: '4.2s',                 label: t('home.stats.analysis'), color: 'var(--gold)'  },
     { value: '5+',                   label: t('home.stats.markets'),  color: 'var(--cyan)'  },
-    { value: '68%',                  label: t('home.stats.accuracy'), color: 'var(--green)' },
+    { value: `${accuracyPct}%`,      label: t('home.stats.accuracy'), color: 'var(--green)' },
     { value: t('home.stats.freeVal'),label: t('home.stats.free'),     color: 'var(--text)'  },
   ];
 

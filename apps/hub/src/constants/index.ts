@@ -96,7 +96,9 @@ export const BUNDLE = {
   color: '#c9a84c',
 };
 
-// ── BLOG POSTS (mock) ──
+// ── BLOG POSTS — fallback estático cuando el DB está vacío ──
+// La fuente primaria es la tabla `blog_posts` en Supabase (useBlogPosts hook).
+// Estos datos sirven como seed/fallback de desarrollo.
 export const BLOG_POSTS: BlogPost[] = [
   {
     id: '1',

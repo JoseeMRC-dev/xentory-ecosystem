@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useLoginProtection } from '../../hooks/useLoginProtection';
 import { TurnstileWidget, useCaptcha } from './TurnstileWidget';
+import { deviceFingerprint } from '../../lib/fingerprint';
 
 type Tab = 'login' | 'register' | 'magic';
 
@@ -150,6 +151,27 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
         }
         if (!ageConsent) { setError('Debes confirmar que eres mayor de 18 años.'); return; }
         if (!terms)         { setError('Debes aceptar los Términos de Uso para registrarte.'); return; }
+
+        // ── Verificar límite de cuentas por IP + dispositivo ─────
+        try {
+          const fp = await deviceFingerprint();
+          const ipCheck = await fetch(
+            'https://mtgatdmrpfysqphdgaue.supabase.co/functions/v1/check-registration-ip',
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: email.trim().toLowerCase(), device_fp: fp }),
+            },
+          );
+          const ipResult = await ipCheck.json();
+          if (!ipResult.allowed) {
+            setError('No es posible crear más cuentas desde esta conexión o dispositivo. Si crees que es un error, contacta con soporte.');
+            return;
+          }
+        } catch {
+          // Si el check falla por red, dejamos pasar (fail-open)
+        }
+
         await register(email, password, name.trim(), dob);
         navigate('/dashboard');
 
