@@ -323,11 +323,10 @@ export function Navbar() {
           )}
         </div>
 
-        {/* Mobile right — controls + hamburger */}
+        {/* Mobile right — hamburger only (controls moved to drawer) */}
         <div className="nav-mobile-menu" style={{ display: 'none', alignItems: 'center', gap: '0.4rem' }}>
-          <QuickControls />
           <button onClick={() => setMob(o => !o)}
-            style={{ background: mob ? 'var(--card2)' : 'none', border: mob ? '1px solid var(--border2)' : 'none', borderRadius: 8, cursor: 'pointer', padding: '0.4rem 0.5rem', display: 'flex', flexDirection: 'column', gap: 5, transition: 'all 0.2s' }}
+            style={{ background: mob ? 'var(--card2)' : 'none', border: mob ? '1px solid var(--border2)' : 'none', borderRadius: 8, cursor: 'pointer', padding: '0.55rem 0.6rem', display: 'flex', flexDirection: 'column', gap: 5, transition: 'all 0.2s', minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
             aria-label="Menu" onMouseDown={e => e.stopPropagation()}
           >
             <span style={{ display: 'block', width: 22, height: 2, background: mob ? 'var(--gold)' : 'var(--text)', borderRadius: 2, transition: 'all 0.25s', transform: mob ? 'rotate(45deg) translate(5px,5px)' : 'none' }} />
@@ -351,17 +350,25 @@ export function Navbar() {
           }}>
             {navLinks.map(({ to, label }) => (
               <Link key={to} to={to} onClick={() => setMob(false)} style={{
-                textDecoration: 'none', padding: '0.75rem 0',
+                textDecoration: 'none', padding: '0.85rem 0',
                 borderBottom: '1px solid var(--border)',
-                fontSize: '1rem', color: isActive(to) ? 'var(--gold)' : 'var(--text)',
+                fontSize: '1.05rem', color: isActive(to) ? 'var(--gold)' : 'var(--text)',
                 fontWeight: isActive(to) ? 600 : 400,
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                minHeight: 48,
               }}>
                 {label}
-                <span style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>→</span>
+                <span style={{ color: isActive(to) ? 'var(--gold)' : 'var(--muted)', fontSize: '0.9rem' }}>→</span>
               </Link>
             ))}
-            <div style={{ paddingTop: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+            {/* Quick settings row in drawer */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '0.9rem', paddingBottom: '0.4rem' }}>
+              <span style={{ fontSize: '0.7rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                {lang === 'es' ? 'Ajustes rápidos' : 'Quick settings'}
+              </span>
+              <QuickControls />
+            </div>
+            <div style={{ paddingTop: '0.4rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
               {user ? (
                 <>
                   {/* User info chip */}
@@ -377,9 +384,9 @@ export function Navbar() {
                   {/* Dashboard CTA */}
                   <Link to="/dashboard" onClick={() => setMob(false)} style={{
                     textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-                    padding: '0.75rem 1rem', borderRadius: 10,
+                    padding: '0.9rem 1rem', borderRadius: 12, minHeight: 52,
                     background: 'linear-gradient(135deg,var(--gold),var(--gold-l))', color: 'var(--bg)',
-                    fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.92rem',
+                    fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.95rem',
                     boxShadow: '0 4px 20px rgba(201,168,76,0.3)',
                   }}>
                     <DashIcon /> {t('nav.dashboard')}
@@ -391,7 +398,7 @@ export function Navbar() {
                       { key: 'password' as const, label: t('settings.tab.password') },
                     ]).map(({ key, label }) => (
                       <button key={key} onClick={() => { setSettingsTab(key); setSettings(true); setSField(''); setSField2(''); setSMsg(null); setMob(false); }}
-                        style={{ flex: 1, padding: '0.5rem 0.4rem', borderRadius: 8, background: 'var(--card2)', border: '1px solid var(--border)', color: 'var(--text2)', fontSize: '0.78rem', cursor: 'pointer' }}>
+                        style={{ flex: 1, padding: '0.7rem 0.5rem', borderRadius: 10, background: 'var(--card2)', border: '1px solid var(--border)', color: 'var(--text2)', fontSize: '0.82rem', cursor: 'pointer', minHeight: 44 }}>
                         {label}
                       </button>
                     ))}
@@ -405,17 +412,17 @@ export function Navbar() {
                   {/* Logout */}
                   <button onClick={async () => { await logout(); navigate('/'); setMob(false); }} style={{
                     background: 'rgba(201,168,76,0.07)', border: '1px solid rgba(201,168,76,0.3)',
-                    borderRadius: 10, padding: '0.65rem 1rem', cursor: 'pointer',
-                    color: 'var(--gold)', fontSize: '0.88rem', fontWeight: 600,
+                    borderRadius: 12, padding: '0.8rem 1rem', cursor: 'pointer', minHeight: 48,
+                    color: 'var(--gold)', fontSize: '0.9rem', fontWeight: 600,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.2s',
                   }}>
                     <LogoutIcon /> {t('nav.signout')}
                   </button>
                 </>
               ) : (
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <Link to="/login"    onClick={() => setMob(false)} className="btn btn-outline btn-sm" style={{ flex: 1, justifyContent: 'center' }}>{t('nav.signin')}</Link>
-                  <Link to="/register" onClick={() => setMob(false)} className="btn btn-gold btn-sm"    style={{ flex: 1, justifyContent: 'center' }}>{t('nav.signup')}</Link>
+                <div style={{ display: 'flex', gap: '0.7rem' }}>
+                  <Link to="/login"    onClick={() => setMob(false)} className="btn btn-outline" style={{ flex: 1, justifyContent: 'center', minHeight: 48 }}>{t('nav.signin')}</Link>
+                  <Link to="/register" onClick={() => setMob(false)} className="btn btn-gold"    style={{ flex: 1, justifyContent: 'center', minHeight: 48, fontWeight: 700 }}>{t('nav.signup')}</Link>
                 </div>
               )}
             </div>
