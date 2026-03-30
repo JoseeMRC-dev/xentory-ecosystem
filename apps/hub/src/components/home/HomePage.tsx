@@ -701,6 +701,136 @@ export function HomePage() {
         </div>
       </section>
 
+      {/* ══ PRICING PREVIEW ══════════════════════════════════════════ */}
+      <section style={{ padding: 'clamp(4.5rem,9vw,7rem) clamp(1rem,5vw,2rem)', background: 'var(--bg2)' }}>
+        <div className="section-container">
+          <div className="reveal" style={{ textAlign: 'center', marginBottom: 'clamp(2.5rem,5vw,4rem)' }}>
+            <SectionLabel label={lang === 'es' ? 'Planes y precios' : 'Plans & pricing'} />
+            <h2 style={{ fontSize: 'clamp(1.8rem,5vw,2.8rem)', marginBottom: '0.7rem' }}>
+              {lang === 'es' ? 'Empieza gratis, escala cuando quieras' : 'Start free, scale when you\'re ready'}
+            </h2>
+            <p style={{ color: 'var(--text2)', maxWidth: 480, margin: '0 auto', fontSize: '0.9rem', lineHeight: 1.7 }}>
+              {lang === 'es'
+                ? 'Sin tarjeta de crédito. Sin compromisos. Upgrade o downgrade en cualquier momento.'
+                : 'No credit card. No commitment. Upgrade or downgrade at any time.'}
+            </p>
+          </div>
+
+          {/* 3-tier comparison */}
+          <div className="feature-grid-3 reveal d1" style={{ maxWidth: 860, margin: '0 auto 1.5rem' }}>
+            {[
+              {
+                name: lang === 'es' ? 'Gratis' : 'Free',
+                price: '€0',
+                period: '',
+                color: 'var(--muted)',
+                highlight: false,
+                tag: '',
+                perks: lang === 'es'
+                  ? ['Análisis básico de IA', 'Dashboard de precios', '3 predicciones/día', 'Historial de señales (48h)']
+                  : ['Basic AI analysis', 'Price dashboard', '3 predictions/day', 'Signal history (48h)'],
+              },
+              {
+                name: 'Pro',
+                price: '€29',
+                period: lang === 'es' ? '/mes' : '/mo',
+                color: 'var(--gold)',
+                highlight: true,
+                tag: lang === 'es' ? '★ Más popular' : '★ Most popular',
+                perks: lang === 'es'
+                  ? ['Todo lo de Gratis', 'IA Pro · Google Grounding', 'Señales ilimitadas', 'Canal Telegram PRO', '7 días de prueba gratis']
+                  : ['Everything in Free', 'Pro AI · Google Grounding', 'Unlimited signals', 'PRO Telegram channel', '7-day free trial'],
+              },
+              {
+                name: 'Elite',
+                price: '€49',
+                period: lang === 'es' ? '/mes' : '/mo',
+                color: 'var(--cyan)',
+                highlight: false,
+                tag: lang === 'es' ? 'Bundle Market + Bet' : 'Market + Bet bundle',
+                perks: lang === 'es'
+                  ? ['Todo lo de Pro', 'Ambas plataformas', 'Informes PDF semanales', 'Canal Telegram ELITE', 'Soporte prioritario 24/7']
+                  : ['Everything in Pro', 'Both platforms', 'Weekly PDF reports', 'ELITE Telegram channel', 'Priority support 24/7'],
+              },
+            ].map((tier, i) => (
+              <div key={i} style={{
+                borderRadius: 20, padding: 'clamp(1.5rem,3vw,2rem)',
+                background: tier.highlight ? 'var(--card2)' : 'var(--card)',
+                border: `1px solid ${tier.highlight ? 'rgba(201,168,76,0.35)' : 'var(--border)'}`,
+                position: 'relative', overflow: 'hidden',
+                boxShadow: tier.highlight ? '0 8px 40px rgba(201,168,76,0.12)' : 'none',
+              }}>
+                {tier.tag && (
+                  <div style={{ position: 'absolute', top: 14, right: 14, padding: '0.2rem 0.6rem', borderRadius: 100, fontSize: '0.62rem', fontWeight: 700, background: tier.highlight ? 'rgba(201,168,76,0.15)' : 'rgba(59,158,255,0.12)', color: tier.color, border: `1px solid ${tier.color}30` }}>
+                    {tier.tag}
+                  </div>
+                )}
+                <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.9rem', color: 'var(--muted)', marginBottom: '0.5rem' }}>{tier.name}</div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.2rem', marginBottom: '1.2rem' }}>
+                  <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.8rem,4vw,2.4rem)', color: tier.color, letterSpacing: '-0.04em' }}>{tier.price}</span>
+                  {tier.period && <span style={{ color: 'var(--muted)', fontSize: '0.82rem' }}>{tier.period}</span>}
+                </div>
+                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 1.5rem', display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
+                  {tier.perks.map((p, j) => (
+                    <li key={j} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.83rem', color: 'var(--text2)', lineHeight: 1.4 }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={tier.color} strokeWidth="2.5" strokeLinecap="round" style={{ flexShrink: 0, marginTop: 2 }}><polyline points="20 6 9 17 4 12"/></svg>
+                      {p}
+                    </li>
+                  ))}
+                </ul>
+                <Link to="/pricing" onClick={() => trackEvent('cta_click', { cta: 'pricing_preview', tier: tier.name })}
+                  className={tier.highlight ? 'btn btn-gold' : 'btn btn-outline'}
+                  style={{ display: 'flex', justifyContent: 'center', textDecoration: 'none', width: '100%' }}>
+                  {tier.price === '€0' ? (lang === 'es' ? 'Empezar gratis' : 'Start free') : (lang === 'es' ? 'Ver este plan →' : 'See this plan →')}
+                </Link>
+              </div>
+            ))}
+          </div>
+          <p className="reveal" style={{ textAlign: 'center', color: 'var(--muted)', fontSize: '0.75rem' }}>
+            {lang === 'es' ? 'El Bundle incluye ambas plataformas por €49/mes en lugar de €58/mes. ' : 'Bundle includes both platforms for €49/mo instead of €58/mo. '}
+            <Link to="/pricing" style={{ color: 'var(--gold)', textDecoration: 'none' }}>
+              {lang === 'es' ? 'Ver comparativa completa →' : 'See full comparison →'}
+            </Link>
+          </p>
+        </div>
+      </section>
+
+      {/* ══ TRUST / ABOUT STRIP ══════════════════════════════════════ */}
+      <section style={{ padding: 'clamp(3rem,7vw,5rem) clamp(1rem,5vw,2rem)' }}>
+        <div className="section-container">
+          <div className="reveal" style={{ display: 'flex', flexWrap: 'wrap', gap: 'clamp(1.5rem,4vw,3rem)', alignItems: 'center', justifyContent: 'space-between', padding: 'clamp(1.5rem,4vw,2.5rem)', borderRadius: 20, border: '1px solid var(--border)', background: 'var(--card)' }}>
+            <div style={{ maxWidth: 420 }}>
+              <div style={{ fontSize: '0.62rem', color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '0.5rem', fontWeight: 600 }}>
+                {lang === 'es' ? 'Quiénes somos' : 'Who we are'}
+              </div>
+              <h3 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.1rem,2.5vw,1.4rem)', marginBottom: '0.7rem' }}>
+                {lang === 'es' ? 'Traders, analistas e ingenieros de IA.' : 'Traders, analysts, and AI engineers.'}
+              </h3>
+              <p style={{ color: 'var(--text2)', fontSize: '0.87rem', lineHeight: 1.75, margin: 0 }}>
+                {lang === 'es'
+                  ? 'Xentory nació de la frustración de perder horas analizando datos que una IA puede procesar en segundos. Construimos la herramienta que nos hubiera gustado tener.'
+                  : 'Xentory was born from the frustration of spending hours on analysis that an AI can process in seconds. We built the tool we wished we had.'}
+              </p>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+              {[
+                { icon: '🔍', title: lang === 'es' ? 'Transparencia total' : 'Full transparency', desc: lang === 'es' ? 'Historial público de señales verificable por cualquier usuario.' : 'Public signal history verifiable by any user.' },
+                { icon: '🤖', title: lang === 'es' ? 'IA auditable' : 'Auditable AI', desc: lang === 'es' ? 'Cada señal incluye razonamiento, confianza y factores clave.' : 'Every signal includes reasoning, confidence, and key factors.' },
+                { icon: '🔓', title: lang === 'es' ? 'Sin lock-in' : 'No lock-in', desc: lang === 'es' ? 'Cancela cuando quieras. Sin penalizaciones.' : 'Cancel anytime. No penalties.' },
+              ].map((p, i) => (
+                <div key={i} style={{ display: 'flex', gap: '0.7rem', maxWidth: 200 }}>
+                  <span style={{ fontSize: '1.3rem', lineHeight: 1, flexShrink: 0, marginTop: 2 }}>{p.icon}</span>
+                  <div>
+                    <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.83rem', marginBottom: '0.2rem' }}>{p.title}</div>
+                    <div style={{ color: 'var(--muted)', fontSize: '0.75rem', lineHeight: 1.5 }}>{p.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ══ FINAL CTA ════════════════════════════════════════════════ */}
       <section style={{ padding: 'clamp(5rem,10vw,8rem) clamp(1rem,5vw,2rem)', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(201,168,76,0.045) 0%, transparent 65%)', pointerEvents: 'none' }} />
