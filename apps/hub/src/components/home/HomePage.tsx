@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useLang } from '../../context/LanguageContext';
 import { LiveTicker } from '../layout/LiveTicker';
 import { useAccuracyStats } from '../../hooks/useAccuracyStats';
+import { trackEvent } from '../../lib/analytics';
 
 // ── SVG ICONS ────────────────────────────────────────────────────────
 const IconAPI = () => (
@@ -465,10 +466,10 @@ export function HomePage() {
 
         {/* CTAs */}
         <div className="animate-fadeUp" style={{ display: 'flex', gap: '0.7rem', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '1rem', animationDelay: '0.24s' }}>
-          <button onClick={() => navigate(user ? '/dashboard' : '/register')} className="btn btn-gold btn-xl" style={{ gap: '0.6rem' }}>
+          <button onClick={() => { trackEvent('cta_click', { cta: 'hero_primary', destination: user ? 'dashboard' : 'register' }); navigate(user ? '/dashboard' : '/register'); }} className="btn btn-gold btn-xl" style={{ gap: '0.6rem' }}>
             {user ? t('hero.cta1.user') : t('hero.cta1')} <IconArrow />
           </button>
-          <button onClick={() => document.getElementById('how')?.scrollIntoView({ behavior: 'smooth' })} className="btn btn-outline btn-xl">
+          <button onClick={() => { trackEvent('cta_click', { cta: 'hero_secondary' }); document.getElementById('how')?.scrollIntoView({ behavior: 'smooth' }); }} className="btn btn-outline btn-xl">
             {t('hero.cta2')}
           </button>
         </div>
@@ -557,7 +558,7 @@ export function HomePage() {
                   <span key={tag} style={{ padding: '0.18rem 0.55rem', borderRadius: 100, fontSize: '0.68rem', background: 'var(--gold-dim)', color: 'var(--gold)', border: '1px solid rgba(201,168,76,0.2)', fontWeight: 500 }}>{tag}</span>
                 ))}
               </div>
-              <a href={user ? MARKET_URL : undefined} onClick={!user ? () => navigate('/register') : undefined} className="btn btn-gold" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+              <a href={user ? MARKET_URL : undefined} onClick={!user ? () => { trackEvent('cta_click', { cta: 'platform_market', destination: 'register' }); navigate('/register'); } : () => trackEvent('cta_click', { cta: 'platform_market', destination: 'market_app' })} className="btn btn-gold" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
                 {user ? t('platforms.market.cta.user') : t('platforms.market.cta')}
               </a>
             </div>
@@ -581,7 +582,7 @@ export function HomePage() {
                   <span key={tag} style={{ padding: '0.18rem 0.55rem', borderRadius: 100, fontSize: '0.68rem', background: 'var(--cyan-dim)', color: 'var(--cyan)', border: '1px solid rgba(59,158,255,0.2)', fontWeight: 500 }}>{tag}</span>
                 ))}
               </div>
-              <a href={user ? BET_URL : undefined} onClick={!user ? () => navigate('/register') : undefined} className="btn btn-cyan" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+              <a href={user ? BET_URL : undefined} onClick={!user ? () => { trackEvent('cta_click', { cta: 'platform_bet', destination: 'register' }); navigate('/register'); } : () => trackEvent('cta_click', { cta: 'platform_bet', destination: 'bet_app' })} className="btn btn-cyan" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
                 {user ? t('platforms.bet.cta.user') : t('platforms.bet.cta')}
               </a>
             </div>
@@ -659,10 +660,10 @@ export function HomePage() {
             {t('cta.sub')}
           </p>
           <div className="reveal d3" style={{ display: 'flex', gap: '0.7rem', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '1.8rem' }}>
-            <button onClick={() => navigate(user ? '/dashboard' : '/register')} className="btn btn-gold btn-xl" style={{ gap: '0.6rem' }}>
+            <button onClick={() => { trackEvent('cta_click', { cta: 'final_primary', destination: user ? 'dashboard' : 'register' }); navigate(user ? '/dashboard' : '/register'); }} className="btn btn-gold btn-xl" style={{ gap: '0.6rem' }}>
               {user ? t('hero.cta1.user') : t('cta.btn1')} <IconArrow />
             </button>
-            <button onClick={() => navigate('/pricing')} className="btn btn-outline btn-xl">
+            <button onClick={() => { trackEvent('cta_click', { cta: 'final_pricing' }); navigate('/pricing'); }} className="btn btn-outline btn-xl">
               {t('cta.btn2')}
             </button>
           </div>

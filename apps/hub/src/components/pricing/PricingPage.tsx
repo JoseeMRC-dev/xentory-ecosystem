@@ -5,6 +5,7 @@ import { useLang } from '../../context/LanguageContext';
 import { MARKET_PLANS, BETS_PLANS, BUNDLE } from '../../constants';
 import { supabase } from '../../lib/supabase';
 import { deviceFingerprint } from '../../lib/fingerprint';
+import { trackEvent } from '../../lib/analytics';
 import type { Plan } from '../../types';
 
 const SUPABASE_FN = 'https://mtgatdmrpfysqphdgaue.supabase.co/functions/v1';
@@ -90,6 +91,7 @@ export function PricingPage() {
 
   // ── Llamar al Edge Function create-checkout ───────────────────────────
   const startCheckout = async (plt: string, plan: string, interval: string) => {
+    trackEvent('begin_checkout', { platform: plt, plan, interval });
     if (!user) { navigate('/register'); return; }
 
     const key = `${plt}-${plan}`;
