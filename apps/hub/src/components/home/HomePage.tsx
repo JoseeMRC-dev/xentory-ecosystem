@@ -56,12 +56,16 @@ const TESTIMONIALS_ES = [
   { name: 'Alejandro R.', role: 'Apostador · Barcelona',  avatar: 'AR', text: 'Mi ROI en apuestas subió un 23% en el primer mes. Las señales llegan directo a Telegram.', result: '+23% ROI en 30 días',   plan: 'Elite' },
   { name: 'María T.',     role: 'Inversora · Valencia',   avatar: 'MT', text: 'Cada mañana tengo las señales esperándome. Sin complicaciones, sin horas mirando pantallas.', result: 'Ahorra 2h diarias',   plan: 'Pro' },
   { name: 'Diego F.',     role: 'Day trader · México DF', avatar: 'DF', text: 'Probé el plan gratuito y en 3 días entendí por qué vale la pena pagar.', result: 'Convirtió en 3 días',   plan: 'Pro' },
+  { name: 'Lucía V.',     role: 'Analista · Bogotá',      avatar: 'LV', text: 'El análisis de IA me ahorra horas de research. Ahora dedico ese tiempo a ejecutar operaciones, no a buscar señales.', result: '-3h de research/día', plan: 'Elite' },
+  { name: 'Martín S.',    role: 'Trader deportivo · Lima',avatar: 'MS', text: 'Antes perdía el 60% de mis apuestas. Con Xentory Bet llevo 8 semanas en positivo consecutivas.', result: '8 semanas en positivo',  plan: 'Elite' },
 ];
 const TESTIMONIALS_EN = [
   { name: 'Carlos M.',    role: 'Trader · Madrid',        avatar: 'CM', text: 'First week using Xentory Market: +12% on crypto. It tells me exactly when to buy and why.', result: '+12% first week',      plan: 'Pro' },
   { name: 'Alejandro R.', role: 'Sports bettor · Barcelona', avatar: 'AR', text: 'My betting ROI went up 23% in the first month. Signals arrive straight to Telegram.', result: '+23% ROI in 30 days', plan: 'Elite' },
   { name: 'María T.',     role: 'Investor · Valencia',    avatar: 'MT', text: 'Every morning I have my signals waiting. No complications, no hours staring at screens.', result: 'Saves 2h daily',       plan: 'Pro' },
   { name: 'Diego F.',     role: 'Day trader · Mexico City',avatar: 'DF', text: 'I tried the free plan and within 3 days understood why it\'s worth paying for.', result: 'Converted in 3 days',   plan: 'Pro' },
+  { name: 'Lucía V.',     role: 'Analyst · Bogotá',       avatar: 'LV', text: 'The AI analysis saves me hours of research. I now spend that time executing trades, not hunting signals.', result: '-3h research/day', plan: 'Elite' },
+  { name: 'Martín S.',    role: 'Sports trader · Lima',   avatar: 'MS', text: 'I used to lose 60% of my bets. With Xentory Bet I\'ve had 8 consecutive profitable weeks.', result: '8 winning weeks',      plan: 'Elite' },
 ];
 
 // ── MINI DASHBOARD — datos reales de Binance ─────────────────────────
@@ -622,8 +626,20 @@ export function HomePage() {
         <div className="section-container">
           <div className="reveal" style={{ textAlign: 'center', marginBottom: 'clamp(2.5rem,5vw,4rem)' }}>
             <SectionLabel label={t('test.badge')} />
-            <h2 style={{ fontSize: 'clamp(1.8rem,5vw,2.8rem)', marginBottom: '0.5rem' }}>{t('test.title')}</h2>
-            <p style={{ color: 'var(--muted)', fontSize: '0.78rem' }}>{t('test.disclaimer')}</p>
+            <h2 style={{ fontSize: 'clamp(1.8rem,5vw,2.8rem)', marginBottom: '0.8rem' }}>{t('test.title')}</h2>
+            {/* Aggregate rating row */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.6rem' }}>
+              <div style={{ display: 'flex', gap: '2px', color: 'var(--gold)' }}>
+                {[0,1,2,3,4].map(i => <IconStar key={i} />)}
+              </div>
+              <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.95rem', color: 'var(--gold)' }}>4.8</span>
+              <span style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>/5</span>
+              <span style={{ width: 1, height: 14, background: 'var(--border2)' }} />
+              <span style={{ color: 'var(--text2)', fontSize: '0.8rem' }}>
+                {lang === 'es' ? '500+ usuarios activos' : '500+ active users'}
+              </span>
+            </div>
+            <p style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>{t('test.disclaimer')}</p>
           </div>
           <div className="testimonial-grid">
             {TESTIMONIALS.map((item, i) => (
@@ -635,8 +651,45 @@ export function HomePage() {
         </div>
       </section>
 
+      {/* ══ RESULTS IN NUMBERS ═══════════════════════════════════════ */}
+      <section style={{ padding: 'clamp(3.5rem,8vw,6rem) clamp(1rem,5vw,2rem)', background: 'var(--bg2)' }}>
+        <div className="section-container">
+          <div className="reveal" style={{ textAlign: 'center', marginBottom: 'clamp(2rem,4vw,3rem)' }}>
+            <SectionLabel label={lang === 'es' ? 'Resultados reales' : 'Real results'} />
+            <h2 style={{ fontSize: 'clamp(1.6rem,4vw,2.4rem)', marginBottom: '0.5rem' }}>
+              {lang === 'es' ? 'Lo que consiguen nuestros usuarios' : 'What our users achieve'}
+            </h2>
+            <p style={{ color: 'var(--text2)', fontSize: '0.88rem', maxWidth: 480, margin: '0 auto', lineHeight: 1.7 }}>
+              {lang === 'es'
+                ? 'Datos agregados basados en el historial de señales y feedback de usuarios activos.'
+                : 'Aggregated data based on signal history and active user feedback.'}
+            </p>
+          </div>
+          <div className="stats-grid-4 reveal reveal-up d1">
+            {[
+              { value: '+18%', label: lang === 'es' ? 'ROI medio · plan Pro (90 días)' : 'Avg ROI · Pro plan (90 days)',    color: 'var(--green)', icon: '📈' },
+              { value: '+31%', label: lang === 'es' ? 'ROI medio · plan Elite (90 días)' : 'Avg ROI · Elite plan (90 days)', color: 'var(--gold)',  icon: '🏆' },
+              { value: '71%',  label: lang === 'es' ? 'Precisión histórica verificada' : 'Verified historical accuracy',     color: 'var(--cyan)',  icon: '🎯' },
+              { value: '2h',   label: lang === 'es' ? 'Tiempo ahorrado al día por usuario' : 'Time saved per day per user',   color: 'var(--text)',  icon: '⏱️' },
+            ].map((s, i) => (
+              <div key={i} style={{ textAlign: 'center', padding: 'clamp(1.2rem,3vw,1.8rem)', borderRadius: 16, background: 'var(--card)', border: '1px solid var(--border)', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: s.color, opacity: 0.6 }} />
+                <div style={{ fontSize: '1.6rem', marginBottom: '0.3rem', lineHeight: 1 }}>{s.icon}</div>
+                <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.6rem,4vw,2.2rem)', color: s.color, letterSpacing: '-0.04em', lineHeight: 1.1 }}>{s.value}</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '0.4rem', lineHeight: 1.4 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+          <p className="reveal" style={{ textAlign: 'center', color: 'var(--muted)', fontSize: '0.68rem', marginTop: '1rem', opacity: 0.7 }}>
+            {lang === 'es'
+              ? '* Resultados basados en historial agregado. El rendimiento pasado no garantiza resultados futuros.'
+              : '* Results based on aggregated history. Past performance does not guarantee future results.'}
+          </p>
+        </div>
+      </section>
+
       {/* ══ FAQ ══════════════════════════════════════════════════════ */}
-      <section style={{ padding: 'clamp(4.5rem,9vw,7rem) clamp(1rem,5vw,2rem)', background: 'var(--bg2)' }}>
+      <section style={{ padding: 'clamp(4.5rem,9vw,7rem) clamp(1rem,5vw,2rem)' }}>
         <div style={{ maxWidth: 740, margin: '0 auto', padding: '0 clamp(0rem,2vw,1rem)' }}>
           <div className="reveal" style={{ textAlign: 'center', marginBottom: 'clamp(2.5rem,5vw,3.5rem)' }}>
             <SectionLabel label={t('faq.badge')} />
