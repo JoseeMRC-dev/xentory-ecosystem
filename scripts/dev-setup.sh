@@ -1,6 +1,6 @@
 #!/bin/bash
 echo "╔══════════════════════════════════════════╗"
-echo "║     NexusHub — Actualizador              ║"
+echo "║     Xentory — Actualizador              ║"
 echo "╚══════════════════════════════════════════╝"
 echo ""
 

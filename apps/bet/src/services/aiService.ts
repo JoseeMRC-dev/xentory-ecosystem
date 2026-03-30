@@ -1,8 +1,9 @@
 import type { Match, TeamStats, MatchAnalysis, PredictionMarkets, Plan } from '../types';
+import { supabase } from '../lib/supabase';
 
 const GEMINI_FLASH = 'gemini-2.0-flash';
 const GEMINI_PRO   = 'gemini-2.5-pro';
-const API_KEY = (import.meta as any).env?.VITE_GEMINI_API_KEY ?? '';
+const PROXY_URL = `${(import.meta as any).env?.VITE_SUPABASE_URL ?? 'https://mtgatdmrpfysqphdgaue.supabase.co'}/functions/v1/gemini-proxy`;
 
 // ── DERIVE MARKETS FROM STATS ──
 function deriveMarkets(home: TeamStats, away: TeamStats, sport = 'football'): PredictionMarkets {
@@ -288,19 +289,23 @@ export async function generateMatchAnalysis(
   let risks: string[]      = [];
 
   try {
-    if (API_KEY && API_KEY !== 'demo') {
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${API_KEY}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      const res = await fetch(PROXY_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          model,
+          payload: {
             contents: [{ role: 'user', parts: [{ text: prompt }] }],
             generationConfig: { temperature: 0.4, maxOutputTokens: isPro ? 2500 : 1200, responseMimeType: 'application/json' },
             ...(isPro && { tools: [{ googleSearch: {} }] }),
-          }),
-        }
-      );
+          },
+        }),
+      });
       if (res.ok) {
         const data  = await res.json();
         const text  = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
