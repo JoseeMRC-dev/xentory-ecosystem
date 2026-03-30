@@ -7,7 +7,6 @@ import { generateAnalysis } from '../../services/aiService';
 import { SIGNAL_LABELS, STATUS_CONFIG, TIMEFRAMES } from '../../constants';
 import type { Asset, PricePoint, TechnicalIndicators, AIAnalysis, TimeframeOption } from '../../types';
 
-const API_KEY = (import.meta as any).env?.VITE_GEMINI_API_KEY ?? 'demo';
 
 function IndicatorBadge({ label, value, sub, highlight }: { label: string; value: string; sub?: string; highlight?: boolean }) {
   return (
@@ -62,7 +61,7 @@ export function AssetDetailPage() {
     if (user?.plan === 'free' && analysis) return; // free: 1 analysis only demo
     setIsAnalyzing(true);
     try {
-      const result = await generateAnalysis(asset, indicators, user?.plan ?? 'free', API_KEY);
+      const result = await generateAnalysis(asset, indicators, user?.plan ?? 'free');
       setAnalysis(result);
     } finally {
       setIsAnalyzing(false);

@@ -1,5 +1,8 @@
 import type { Asset, TechnicalIndicators, AIAnalysis, SignalStrength, Plan } from '../types';
 import { GEMINI_FLASH, GEMINI_PRO } from '../constants';
+import { supabase } from '../lib/supabase';
+
+const PROXY_URL = `${(import.meta as any).env?.VITE_SUPABASE_URL ?? 'https://mtgatdmrpfysqphdgaue.supabase.co'}/functions/v1/gemini-proxy`;
 
 function deriveSignal(indicators: TechnicalIndicators, asset: Asset): SignalStrength {
   let score = 0;
@@ -44,7 +47,6 @@ export async function generateAnalysis(
   asset: Asset,
   indicators: TechnicalIndicators,
   userPlan: Plan,
-  apiKey: string
 ): Promise<AIAnalysis> {
   const isPro = userPlan === 'pro' || userPlan === 'elite';
   const model = isPro ? GEMINI_PRO : GEMINI_FLASH;
@@ -83,17 +85,21 @@ Responde EXACTAMENTE en este formato JSON (sin markdown, solo JSON puro):
 }`;
 
   try {
-    // Check if API key is available
-    if (!apiKey || apiKey === 'demo') {
+    // Get current session token (required by the proxy for auth)
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
       return generateMockAnalysis(asset, indicators, signal, isPro);
     }
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+    const response = await fetch(PROXY_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({
+        model,
+        payload: {
           system_instruction: { parts: [{ text: systemPrompt }] },
           contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
           generationConfig: {
@@ -102,11 +108,11 @@ Responde EXACTAMENTE en este formato JSON (sin markdown, solo JSON puro):
             responseMimeType: 'application/json',
           },
           ...(isPro && {
-            tools: [{ googleSearch: {} }]
+            tools: [{ googleSearch: {} }],
           }),
-        }),
-      }
-    );
+        },
+      }),
+    });
 
     if (!response.ok) throw new Error('Gemini API error');
 

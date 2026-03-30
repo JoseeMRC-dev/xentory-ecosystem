@@ -2,7 +2,7 @@
   "name": "xentory-ecosystem",
   "version": "1.0.0",
   "private": true,
-  "description": "NexusHub + NexusMarket + NexusBet — Monorepo",
+  "description": "Xentory Hub · Market · Bet — Monorepo",
   "workspaces": [
     "apps/*",
     "packages/*"

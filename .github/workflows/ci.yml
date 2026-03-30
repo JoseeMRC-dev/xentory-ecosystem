@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  ci:
+    name: Lint · Type-check · Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      # ── Checkout ────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── Node.js setup ───────────────────────────────────────────
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # ── Install dependencies ─────────────────────────────────────
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      # ── Type-check (Hub) ─────────────────────────────────────────
+      - name: Type-check Hub
+        run: npx tsc --noEmit --project apps/hub/tsconfig.json
+        continue-on-error: false
+
+      # ── Type-check (Market) ──────────────────────────────────────
+      - name: Type-check Market
+        run: npx tsc --noEmit --project apps/market/tsconfig.json
+        continue-on-error: false
+
+      # ── Type-check (Bet) ─────────────────────────────────────────
+      - name: Type-check Bet
+        run: npx tsc --noEmit --project apps/bet/tsconfig.json
+        continue-on-error: false
+
+      # ── Build Hub (production artifact) ─────────────────────────
+      - name: Build Hub
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_TURNSTILE_SITE_KEY: ${{ secrets.VITE_TURNSTILE_SITE_KEY }}
+          VITE_MARKET_URL: ${{ vars.VITE_MARKET_URL || 'https://market.xentory.com' }}
+          VITE_BETS_URL:   ${{ vars.VITE_BETS_URL   || 'https://bet.xentory.com' }}
+        run: npm run build --workspace=apps/hub
+
+      # ── Upload build artifact ─────────────────────────────────────
+      - name: Upload Hub build
+        uses: actions/upload-artifact@v4
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        with:
+          name: hub-dist
+          path: apps/hub/dist/
+          retention-days: 7

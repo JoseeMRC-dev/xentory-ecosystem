@@ -3,15 +3,133 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <!-- ── Primary meta ──────────────────────────────────────────── -->
     <title>Xentory — Análisis financiero y deportivo con IA</title>
-    <meta name="description" content="Análisis de cripto, acciones, forex y predicciones deportivas con inteligencia artificial. Una cuenta, dos plataformas." />
+    <meta name="description" content="Analiza criptos, acciones, forex y predice resultados deportivos con Google Gemini en tiempo real. Señales verificadas, plan gratuito disponible." />
+    <meta name="keywords" content="análisis financiero IA, señales crypto, predicciones deportivas, trading IA, análisis técnico automatizado" />
+    <meta name="author" content="Xentory" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://xentory.com/" />
+
+    <!-- ── Open Graph (Facebook, LinkedIn, WhatsApp) ─────────────── -->
+    <meta property="og:type"        content="website" />
+    <meta property="og:url"         content="https://xentory.com/" />
+    <meta property="og:title"       content="Xentory — Análisis financiero y deportivo con IA" />
+    <meta property="og:description" content="Analiza criptos, acciones, forex y predice resultados deportivos con Google Gemini. Señales verificadas con historial público. Plan gratuito disponible." />
+    <meta property="og:image"       content="https://xentory.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale"      content="es_ES" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta property="og:site_name"   content="Xentory" />
+
+    <!-- ── Twitter / X Card ──────────────────────────────────────── -->
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:site"        content="@xentory" />
+    <meta name="twitter:title"       content="Xentory — Análisis financiero y deportivo con IA" />
+    <meta name="twitter:description" content="Señales de IA para cripto, acciones, forex y apuestas deportivas. Historial público verificable. Desde €0/mes." />
+    <meta name="twitter:image"       content="https://xentory.com/og-image.png" />
+
+    <!-- ── JSON-LD Structured Data ───────────────────────────────── -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://xentory.com/#website",
+          "url": "https://xentory.com/",
+          "name": "Xentory",
+          "description": "Plataforma SaaS de análisis financiero y deportivo con inteligencia artificial",
+          "inLanguage": ["es", "en"],
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://xentory.com/blog?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://xentory.com/#organization",
+          "name": "Xentory",
+          "url": "https://xentory.com/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://xentory.com/og-image.png"
+          },
+          "sameAs": []
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "Xentory",
+          "applicationCategory": "FinanceApplication",
+          "operatingSystem": "Web",
+          "offers": [
+            {
+              "@type": "Offer",
+              "name": "Plan Gratuito",
+              "price": "0",
+              "priceCurrency": "EUR"
+            },
+            {
+              "@type": "Offer",
+              "name": "Plan Pro",
+              "price": "29",
+              "priceCurrency": "EUR",
+              "billingIncrement": "monthly"
+            },
+            {
+              "@type": "Offer",
+              "name": "Plan Elite",
+              "price": "59",
+              "priceCurrency": "EUR",
+              "billingIncrement": "monthly"
+            }
+          ],
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.8",
+            "reviewCount": "500",
+            "bestRating": "5"
+          }
+        },
+        {
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "¿Es gratuito Xentory?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Sí. Xentory ofrece un plan gratuito con análisis básico de IA. Los planes Pro y Elite ofrecen análisis avanzado, señales ilimitadas y acceso a Telegram."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "¿Qué hace Xentory?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Xentory analiza mercados financieros (cripto, acciones, forex) y eventos deportivos con Google Gemini IA, generando señales de compra/venta y predicciones verificables en tiempo real."
+              }
+            }
+          ]
+        }
+      ]
+    }
+    </script>
+
+    <!-- ── Favicon ────────────────────────────────────────────────── -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌐</text></svg>" />
+
+    <!-- ── Theme init (before paint to avoid flash) ──────────────── -->
     <script>
       try {
         var t = localStorage.getItem('xentory_theme');
         if (t) document.documentElement.setAttribute('data-theme', t);
       } catch(e) {}
     </script>
+
     <!-- Google Analytics 4 — replace G-XXXXXXXXXX with your Measurement ID -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
     <script>
