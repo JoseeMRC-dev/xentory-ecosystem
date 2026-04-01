@@ -211,6 +211,7 @@ export function Navbar() {
         height: 'var(--nav-h)', zIndex: 300,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0 clamp(1rem, 4vw, 2.5rem)',
+        paddingTop: 'env(safe-area-inset-top)',
         background: (scrolled || mob) ? 'var(--nav-bg)' : 'transparent',
         borderBottom: (scrolled || mob) ? '1px solid var(--border)' : '1px solid transparent',
         backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
