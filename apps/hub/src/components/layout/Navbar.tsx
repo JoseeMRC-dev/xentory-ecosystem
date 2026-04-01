@@ -206,17 +206,23 @@ export function Navbar() {
   return (
     <>
       {/* ── NAV BAR ──────────────────────────────────────────────── */}
-      <nav style={{
+      <nav className="xentory-nav" style={{
         position: 'fixed', top: 0, left: 0, right: 0,
         height: 'var(--nav-h)', zIndex: 300,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '0 clamp(1rem, 4vw, 2.5rem)',
-        paddingTop: 'env(safe-area-inset-top)',
+        display: 'flex', flexDirection: 'column',
         background: (scrolled || mob) ? 'var(--nav-bg)' : 'transparent',
         borderBottom: (scrolled || mob) ? '1px solid var(--border)' : '1px solid transparent',
         backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
-        transition: 'all 0.3s',
+        transition: 'background 0.3s, border-color 0.3s',
       }}>
+        {/* Safe-area spacer — fills the Dynamic Island / notch with nav background */}
+        <div style={{ height: 'env(safe-area-inset-top, 0px)', flexShrink: 0 }} />
+
+        {/* Nav content row */}
+        <div style={{
+          flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '0 clamp(1rem, 4vw, 2.5rem)', position: 'relative',
+        }}>
         {/* Logo */}
         <Link to="/" style={{ textDecoration: 'none', flexShrink: 0 }}>
           <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.15rem,3vw,1.35rem)', letterSpacing: '-0.04em' }}>
@@ -335,6 +341,7 @@ export function Navbar() {
             <span style={{ display: 'block', width: 22, height: 2, background: mob ? 'var(--gold)' : 'var(--text)', borderRadius: 2, transition: 'all 0.25s', transform: mob ? 'rotate(-45deg) translate(5px,-5px)' : 'none' }} />
           </button>
         </div>
+        </div>{/* end nav content row */}
       </nav>
 
       {/* ── MOBILE DRAWER ────────────────────────────────────────── */}

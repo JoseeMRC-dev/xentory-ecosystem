@@ -411,6 +411,11 @@ h1, h2, h3, h4, h5, h6 {
   .nav-links       { display: none !important; }
   .nav-mobile-menu { display: flex !important; align-items: center; gap: 0.5rem; }
   :root { --nav-h: calc(56px + env(safe-area-inset-top, 0px)); --nav-h-base: 56px; --ticker-h: 28px; }
+  /* On mobile always show navbar background — no transparent-at-top */
+  .xentory-nav {
+    background: var(--nav-bg) !important;
+    border-bottom: 1px solid var(--border) !important;
+  }
 }
 
 @media (max-width: 640px) {
