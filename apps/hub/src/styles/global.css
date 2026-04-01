@@ -34,7 +34,8 @@
 
   /* UI */
   --nav-bg:     rgba(4,6,15,0.96);
-  --nav-h:      64px;
+  --nav-h:      calc(64px + env(safe-area-inset-top, 0px));
+  --nav-h-base: 64px;
   --ticker-h:   32px;
   --bar-h:      calc(var(--nav-h) + var(--ticker-h));
   --radius:     12px;
@@ -409,7 +410,7 @@ h1, h2, h3, h4, h5, h6 {
 @media (max-width: 900px) {
   .nav-links       { display: none !important; }
   .nav-mobile-menu { display: flex !important; align-items: center; gap: 0.5rem; }
-  :root { --nav-h: 56px; --ticker-h: 28px; }
+  :root { --nav-h: calc(56px + env(safe-area-inset-top, 0px)); --nav-h-base: 56px; --ticker-h: 28px; }
 }
 
 @media (max-width: 640px) {
@@ -418,7 +419,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @media (max-width: 420px) {
-  :root { --nav-h: 52px; --ticker-h: 26px; }
+  :root { --nav-h: calc(52px + env(safe-area-inset-top, 0px)); --nav-h-base: 52px; --ticker-h: 26px; }
 }
 
 /* Ticker hide */
