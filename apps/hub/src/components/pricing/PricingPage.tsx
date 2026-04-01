@@ -100,13 +100,17 @@ export function PricingPage() {
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) { navigate('/login'); return; }
+      if (!session?.access_token) { setLoading(null); navigate('/login'); return; }
 
       // Fingerprint del dispositivo para el control anti-abuso del trial
       const fp = await deviceFingerprint();
 
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15_000);
+
       const res = await fetch(`${SUPABASE_FN}/create-checkout`, {
         method: 'POST',
+        signal: controller.signal,
         headers: {
           'Content-Type':  'application/json',
           'Authorization': `Bearer ${session.access_token}`,
@@ -120,6 +124,7 @@ export function PricingPage() {
           cancel_url:  `${window.location.origin}/pricing?tab=${plt}`,
         }),
       });
+      clearTimeout(timeout);
 
       const json = await res.json();
       if (json.url) {
@@ -128,8 +133,11 @@ export function PricingPage() {
         setError(json.error ?? 'Error al iniciar el pago');
         setLoading(null);
       }
-    } catch (e) {
-      setError('Error de conexión. Inténtalo de nuevo.');
+    } catch (e: any) {
+      const msg = e?.name === 'AbortError'
+        ? 'Tiempo de espera agotado. Inténtalo de nuevo.'
+        : 'Error de conexión. Inténtalo de nuevo.';
+      setError(msg);
       setLoading(null);
     }
   };
@@ -265,8 +273,8 @@ export function PricingPage() {
                 ))}
               </div>
 
-              <button onClick={handleBundle} disabled={loading === 'bundle'} className="btn btn-gold btn-lg" style={{ width: '100%', justifyContent: 'center' }}>
-                {loading === 'bundle' ? <SpinnerIcon /> : t('pricing.bundle.cta')}
+              <button onClick={handleBundle} disabled={loading === 'bundle-pro' || loading === 'bundle-elite'} className="btn btn-gold btn-lg" style={{ width: '100%', justifyContent: 'center' }}>
+                {(loading === 'bundle-pro' || loading === 'bundle-elite') ? <SpinnerIcon /> : t('pricing.bundle.cta')}
               </button>
             </div>
           </div>
