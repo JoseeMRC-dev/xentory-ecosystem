@@ -98,48 +98,57 @@ export function PricingPage() {
     setLoading(key);
     setError(null);
 
+    let navigating = false;
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) { setLoading(null); navigate('/login'); return; }
+      if (!session?.access_token) { navigate('/login'); return; }
 
-      // Fingerprint del dispositivo para el control anti-abuso del trial
       const fp = await deviceFingerprint();
 
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 15_000);
+      const timeout = setTimeout(() => controller.abort(), 12_000);
 
-      const res = await fetch(`${SUPABASE_FN}/create-checkout`, {
-        method: 'POST',
-        signal: controller.signal,
-        headers: {
-          'Content-Type':  'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          platform:    plt,
-          plan,
-          interval,
-          device_fp:   fp,
-          success_url: `${window.location.origin}/pricing?success=true&platform=${plt}&plan=${plan}`,
-          cancel_url:  `${window.location.origin}/pricing?tab=${plt}`,
-        }),
-      });
-      clearTimeout(timeout);
+      let res: Response;
+      try {
+        res = await fetch(`${SUPABASE_FN}/create-checkout`, {
+          method: 'POST',
+          signal: controller.signal,
+          headers: {
+            'Content-Type':  'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            platform:    plt,
+            plan,
+            interval,
+            device_fp:   fp,
+            success_url: `${window.location.origin}/pricing?success=true&platform=${plt}&plan=${plan}`,
+            cancel_url:  `${window.location.origin}/pricing?tab=${plt}`,
+          }),
+        });
+      } finally {
+        clearTimeout(timeout);
+      }
 
-      const json = await res.json();
+      let json: any = {};
+      try { json = await res.json(); } catch { /* non-JSON body */ }
+
       if (json.url) {
+        navigating = true;
         window.location.href = json.url;
       } else {
         const detail = json.error || json.message || `HTTP ${res.status}`;
-        setError(`Error al iniciar el pago: ${detail}`);
-        setLoading(null);
+        console.error('[checkout]', res.status, json);
+        setError(`Error: ${detail}`);
       }
     } catch (e: any) {
+      console.error('[checkout] catch:', e);
       const msg = e?.name === 'AbortError'
-        ? 'Tiempo de espera agotado. Inténtalo de nuevo.'
-        : 'Error de conexión. Inténtalo de nuevo.';
+        ? 'Tiempo de espera agotado (12s). Inténtalo de nuevo.'
+        : `Error de conexión: ${e?.message ?? 'desconocido'}`;
       setError(msg);
-      setLoading(null);
+    } finally {
+      if (!navigating) setLoading(null);
     }
   };
 
