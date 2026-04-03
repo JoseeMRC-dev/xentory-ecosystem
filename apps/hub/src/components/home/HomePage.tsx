@@ -717,42 +717,54 @@ export function HomePage() {
           </div>
 
           {/* 3-tier comparison */}
-          <div className="feature-grid-3 reveal d1" style={{ maxWidth: 860, margin: '0 auto 1.5rem' }}>
-            {[
+          <div className="feature-grid-3 reveal d1" style={{ maxWidth: 920, margin: '0 auto 1.5rem' }}>
+            {([
               {
-                name: lang === 'es' ? 'Gratis' : 'Free',
-                price: '€0',
-                period: '',
-                color: 'var(--muted)',
-                highlight: false,
-                tag: '',
-                perks: lang === 'es'
-                  ? ['Análisis básico de IA', 'Dashboard de precios', '3 predicciones/día', 'Historial de señales (48h)']
-                  : ['Basic AI analysis', 'Price dashboard', '3 predictions/day', 'Signal history (48h)'],
-              },
-              {
+                platform: 'Xentory Market',
+                platformColor: 'var(--cyan)',
+                icon: '📈',
                 name: 'Pro',
                 price: '€29',
                 period: lang === 'es' ? '/mes' : '/mo',
                 color: 'var(--gold)',
                 highlight: true,
                 tag: lang === 'es' ? '★ Más popular' : '★ Most popular',
+                tab: 'market',
                 perks: lang === 'es'
-                  ? ['Todo lo de Gratis', 'IA Pro · Google Grounding', 'Señales ilimitadas', 'Canal Telegram PRO', '7 días de prueba gratis']
-                  : ['Everything in Free', 'Pro AI · Google Grounding', 'Unlimited signals', 'PRO Telegram channel', '7-day free trial'],
+                  ? ['Activos ilimitados en watchlist', 'IA Pro + Google Grounding', 'Todos los indicadores técnicos', 'Canal Telegram PRO', '7 días de prueba gratis']
+                  : ['Unlimited watchlist assets', 'Pro AI + Google Grounding', 'All technical indicators', 'PRO Telegram channel', '7-day free trial'],
               },
               {
-                name: 'Elite',
+                platform: 'Xentory Bet',
+                platformColor: 'var(--green)',
+                icon: '⚽',
+                name: 'Pro',
+                price: '€29',
+                period: lang === 'es' ? '/mes' : '/mo',
+                color: 'var(--gold)',
+                highlight: false,
+                tag: '',
+                tab: 'bets',
+                perks: lang === 'es'
+                  ? ['Predicciones ilimitadas', 'Análisis completo 5 partidos', 'Fútbol + Baloncesto + Tenis', 'Canal Telegram señales PRO', '7 días de prueba gratis']
+                  : ['Unlimited predictions', 'Full 5-match analysis', 'Football + Basketball + Tennis', 'PRO signals Telegram channel', '7-day free trial'],
+              },
+              {
+                platform: lang === 'es' ? 'Bundle completo' : 'Full bundle',
+                platformColor: 'var(--gold)',
+                icon: '🎯',
+                name: lang === 'es' ? 'Market + Bet' : 'Market + Bet',
                 price: '€49',
                 period: lang === 'es' ? '/mes' : '/mo',
-                color: 'var(--cyan)',
+                color: 'var(--gold)',
                 highlight: false,
-                tag: lang === 'es' ? 'Bundle Market + Bet' : 'Market + Bet bundle',
+                tag: lang === 'es' ? `Ahorra €9/mes vs individual` : `Save €9/mo vs individual`,
+                tab: 'bundle',
                 perks: lang === 'es'
-                  ? ['Todo lo de Pro', 'Ambas plataformas', 'Informes PDF semanales', 'Canal Telegram ELITE', 'Soporte prioritario 24/7']
-                  : ['Everything in Pro', 'Both platforms', 'Weekly PDF reports', 'ELITE Telegram channel', 'Priority support 24/7'],
+                  ? ['Todo Market Pro incluido', 'Todo Bet Pro incluido', '2 canales Telegram premium', 'Señales market + deportivas', 'Una sola suscripción']
+                  : ['All Market Pro included', 'All Bet Pro included', '2 premium Telegram channels', 'Market + sports signals', 'One single subscription'],
               },
-            ].map((tier, i) => (
+            ] as const).map((tier, i) => (
               <div key={i} style={{
                 borderRadius: 20, padding: 'clamp(1.5rem,3vw,2rem)',
                 background: tier.highlight ? 'var(--card2)' : 'var(--card)',
@@ -761,14 +773,19 @@ export function HomePage() {
                 boxShadow: tier.highlight ? '0 8px 40px rgba(201,168,76,0.12)' : 'none',
               }}>
                 {tier.tag && (
-                  <div style={{ position: 'absolute', top: 14, right: 14, padding: '0.2rem 0.6rem', borderRadius: 100, fontSize: '0.62rem', fontWeight: 700, background: tier.highlight ? 'rgba(201,168,76,0.15)' : 'rgba(59,158,255,0.12)', color: tier.color, border: `1px solid ${tier.color}30` }}>
+                  <div style={{ position: 'absolute', top: 14, right: 14, padding: '0.2rem 0.6rem', borderRadius: 100, fontSize: '0.62rem', fontWeight: 700, background: tier.highlight ? 'rgba(201,168,76,0.15)' : 'rgba(0,200,122,0.1)', color: tier.highlight ? 'var(--gold)' : 'var(--green)', border: `1px solid ${tier.highlight ? 'rgba(201,168,76,0.3)' : 'rgba(0,200,122,0.25)'}` }}>
                     {tier.tag}
                   </div>
                 )}
-                <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.9rem', color: 'var(--muted)', marginBottom: '0.5rem' }}>{tier.name}</div>
+                {/* Platform label */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.9rem' }}>
+                  <span style={{ fontSize: '0.9rem' }}>{tier.icon}</span>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: tier.platformColor, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{tier.platform}</span>
+                </div>
+                <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '1rem', color: 'var(--text)', marginBottom: '0.4rem' }}>{tier.name}</div>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.2rem', marginBottom: '1.2rem' }}>
                   <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.8rem,4vw,2.4rem)', color: tier.color, letterSpacing: '-0.04em' }}>{tier.price}</span>
-                  {tier.period && <span style={{ color: 'var(--muted)', fontSize: '0.82rem' }}>{tier.period}</span>}
+                  <span style={{ color: 'var(--muted)', fontSize: '0.82rem' }}>{tier.period}</span>
                 </div>
                 <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 1.5rem', display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
                   {tier.perks.map((p, j) => (
@@ -778,10 +795,10 @@ export function HomePage() {
                     </li>
                   ))}
                 </ul>
-                <Link to="/pricing" onClick={() => trackEvent('cta_click', { cta: 'pricing_preview', tier: tier.name })}
+                <Link to={`/pricing?tab=${tier.tab}`} onClick={() => trackEvent('cta_click', { cta: 'pricing_preview', tier: tier.name, platform: tier.tab })}
                   className={tier.highlight ? 'btn btn-gold' : 'btn btn-outline'}
                   style={{ display: 'flex', justifyContent: 'center', textDecoration: 'none', width: '100%' }}>
-                  {tier.price === '€0' ? (lang === 'es' ? 'Empezar gratis' : 'Start free') : (lang === 'es' ? 'Ver este plan →' : 'See this plan →')}
+                  {lang === 'es' ? 'Ver plan completo →' : 'See full plan →'}
                 </Link>
               </div>
             ))}
