@@ -43,7 +43,7 @@ const BundleIcon = () => (
 
 export function PricingPage() {
   const { user, upgradeMarket, upgradeBets } = useAuth();
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -338,7 +338,7 @@ export function PricingPage() {
                     {plan.features.map((f, i) => (
                       <div key={i} style={{ display: 'flex', gap: '0.55rem', alignItems: 'flex-start', fontSize: '0.83rem' }}>
                         <CheckIcon ok={f.included} />
-                        <span style={{ color: f.included ? (f.highlight ? 'var(--text)' : 'var(--text2)') : 'var(--muted)', fontWeight: f.highlight ? 500 : 400 }}>{f.label}</span>
+                        <span style={{ color: f.included ? (f.highlight ? 'var(--text)' : 'var(--text2)') : 'var(--muted)', fontWeight: f.highlight ? 500 : 400 }}>{lang === 'es' ? (f.labelEs ?? f.label) : f.label}</span>
                       </div>
                     ))}
                   </div>

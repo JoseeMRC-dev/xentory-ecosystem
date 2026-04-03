@@ -52,7 +52,7 @@ export interface PlatformPlan {
   platform: 'market' | 'bets';
   color: string;
   popular?: boolean;
-  features: { label: string; included: boolean; highlight?: boolean }[];
+  features: { label: string; labelEs?: string; included: boolean; highlight?: boolean }[];
 }
 
 // ── SUBSCRIPTION STATUS ──
