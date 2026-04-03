@@ -130,7 +130,8 @@ export function PricingPage() {
       if (json.url) {
         window.location.href = json.url;
       } else {
-        setError(json.error ?? 'Error al iniciar el pago');
+        const detail = json.error || json.message || `HTTP ${res.status}`;
+        setError(`Error al iniciar el pago: ${detail}`);
         setLoading(null);
       }
     } catch (e: any) {
