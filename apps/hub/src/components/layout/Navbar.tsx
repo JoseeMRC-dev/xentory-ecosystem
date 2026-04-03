@@ -152,7 +152,7 @@ export function Navbar() {
   const isHome   = location.pathname === '/';
 
   const navLinks = [
-    { to: '/pricing',     label: t('nav.pricing') },
+    ...(!user ? [{ to: '/pricing', label: t('nav.pricing') }] : []),
     { to: '/blog',        label: t('nav.blog') },
     { to: '/metodologia', label: t('nav.methodology') },
   ];
