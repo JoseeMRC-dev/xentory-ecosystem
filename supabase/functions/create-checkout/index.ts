@@ -138,7 +138,7 @@ Deno.serve(async (req) => {
       mode:        'subscription',
       line_items:  [{ price: priceId, quantity: 1 }],
       ...(embedded
-        ? { ui_mode: 'embedded', return_url: `${return_url}&session_id={CHECKOUT_SESSION_ID}` }
+        ? { ui_mode: 'embedded', return_url }
         : { success_url: `${success_url}&session_id={CHECKOUT_SESSION_ID}`, cancel_url }),
       metadata: {
         supabase_user_id: user.id,
