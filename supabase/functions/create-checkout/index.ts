@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
     }
 
     // ── Leer body ───────────────────────────────────────────────────
-    const { platform, plan, interval, success_url, cancel_url, device_fp } = await req.json();
+    const { platform, plan, interval, success_url, cancel_url, device_fp, embedded, return_url } = await req.json();
     const priceKey = `${platform}-${plan}-${interval}`;
     const priceId  = Deno.env.get(PRICE_ENV[priceKey] ?? '');
 
@@ -137,8 +137,9 @@ Deno.serve(async (req) => {
       customer:    customerId,
       mode:        'subscription',
       line_items:  [{ price: priceId, quantity: 1 }],
-      success_url: `${success_url}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url,
+      ...(embedded
+        ? { ui_mode: 'embedded', return_url: `${return_url}?session_id={CHECKOUT_SESSION_ID}` }
+        : { success_url: `${success_url}&session_id={CHECKOUT_SESSION_ID}`, cancel_url }),
       metadata: {
         supabase_user_id: user.id,
         platform,
@@ -164,7 +165,11 @@ Deno.serve(async (req) => {
       `checkout creado: ${user.id} → ${platform}/${plan} | trial_eligible=${trialEligible}${!trialEligible ? ` (bloqueado: user=${!!userTrial}, device=${deviceTrial})` : ''}`,
     );
 
-    return new Response(JSON.stringify({ url: session.url, trial_eligible: trialEligible }), {
+    return new Response(JSON.stringify({
+      url:            session.url,
+      clientSecret:   session.client_secret ?? null,
+      trial_eligible: trialEligible,
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
