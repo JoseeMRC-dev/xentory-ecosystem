@@ -101,7 +101,11 @@ export function PricingPage() {
     let navigating = false;
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) { navigate('/login'); return; }
+      // Refresh if token is about to expire or already invalid
+      const accessToken = session?.access_token
+        ? session.access_token
+        : (await supabase.auth.refreshSession()).data.session?.access_token;
+      if (!accessToken) { navigate('/login'); return; }
 
       const fp = await deviceFingerprint();
 
@@ -115,7 +119,7 @@ export function PricingPage() {
           signal: controller.signal,
           headers: {
             'Content-Type':  'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
+            'Authorization': `Bearer ${accessToken}`,
           },
           body: JSON.stringify({
             platform:    plt,
