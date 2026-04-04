@@ -6,6 +6,7 @@ import { MARKET_PLANS, BETS_PLANS, BUNDLE } from '../../constants';
 import { supabase } from '../../lib/supabase';
 import { deviceFingerprint } from '../../lib/fingerprint';
 import { trackEvent } from '../../lib/analytics';
+import { CheckoutModal } from './CheckoutModal';
 import type { Plan } from '../../types';
 
 const SUPABASE_FN = 'https://mtgatdmrpfysqphdgaue.supabase.co/functions/v1';
@@ -53,9 +54,10 @@ export function PricingPage() {
 
   const [platform, setPlatform] = useState<PlatformTab>(initialTab);
   const [yearly,   setYearly]   = useState(searchParams.get('interval') === 'yearly');
-  const [loading,    setLoading]    = useState<string | null>(null);
-  const [success,    setSuccess]    = useState<string | null>(null);
-  const [error,      setError]      = useState<string | null>(null);
+  const [loading,      setLoading]      = useState<string | null>(null);
+  const [success,      setSuccess]      = useState<string | null>(null);
+  const [error,        setError]        = useState<string | null>(null);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
   // plataformas donde este usuario YA usó el trial (comprobación por user_id)
   const [trialUsed,  setTrialUsed]  = useState<Record<string, boolean>>({});
 
@@ -98,10 +100,13 @@ export function PricingPage() {
     setLoading(key);
     setError(null);
 
-    let navigating = false;
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) { navigate('/login'); return; }
+      // Refresh if token is about to expire or already invalid
+      const accessToken = session?.access_token
+        ? session.access_token
+        : (await supabase.auth.refreshSession()).data.session?.access_token;
+      if (!accessToken) { navigate('/login'); return; }
 
       const fp = await deviceFingerprint();
 
@@ -115,15 +120,15 @@ export function PricingPage() {
           signal: controller.signal,
           headers: {
             'Content-Type':  'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
+            'Authorization': `Bearer ${accessToken}`,
           },
           body: JSON.stringify({
             platform:    plt,
             plan,
             interval,
             device_fp:   fp,
-            success_url: `${window.location.origin}/pricing?success=true&platform=${plt}&plan=${plan}`,
-            cancel_url:  `${window.location.origin}/pricing?tab=${plt}`,
+            embedded:    true,
+            return_url:  `${window.location.origin}/pricing?success=true&platform=${plt}&plan=${plan}`,
           }),
         });
       } finally {
@@ -133,9 +138,8 @@ export function PricingPage() {
       let json: any = {};
       try { json = await res.json(); } catch { /* non-JSON body */ }
 
-      if (json.url) {
-        navigating = true;
-        window.location.href = json.url;
+      if (json.clientSecret) {
+        setClientSecret(json.clientSecret);
       } else {
         const detail = json.error || json.message || `HTTP ${res.status}`;
         console.error('[checkout]', res.status, json);
@@ -148,7 +152,7 @@ export function PricingPage() {
         : `Error de conexión: ${e?.message ?? 'desconocido'}`;
       setError(msg);
     } finally {
-      if (!navigating) setLoading(null);
+      setLoading(null);
     }
   };
 
@@ -175,6 +179,7 @@ export function PricingPage() {
   ];
 
   return (
+    <>
     <div style={{ paddingTop: 'calc(var(--bar-h) + 32px)', minHeight: '100vh' }}>
 
       {/* ── HEADER ─────────────────────────────────────────────── */}
@@ -405,5 +410,14 @@ export function PricingPage() {
         </div>
       </div>
     </div>
+
+    {/* ── EMBEDDED CHECKOUT MODAL ──────────────────────────────── */}
+    {clientSecret && (
+      <CheckoutModal
+        clientSecret={clientSecret}
+        onClose={() => setClientSecret(null)}
+      />
+    )}
+    </>
   );
 }
