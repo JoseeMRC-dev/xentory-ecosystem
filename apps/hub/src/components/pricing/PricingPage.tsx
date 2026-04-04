@@ -179,6 +179,7 @@ export function PricingPage() {
   ];
 
   return (
+    <>
     <div style={{ paddingTop: 'calc(var(--bar-h) + 32px)', minHeight: '100vh' }}>
 
       {/* ── HEADER ─────────────────────────────────────────────── */}
@@ -417,5 +418,6 @@ export function PricingPage() {
         onClose={() => setClientSecret(null)}
       />
     )}
+    </>
   );
 }
