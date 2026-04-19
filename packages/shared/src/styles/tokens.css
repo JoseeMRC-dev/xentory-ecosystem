@@ -1,0 +1,105 @@
+/* ============================================
+   MERIDIAN DESIGN SYSTEM — XENTORY ECOSYSTEM
+   ============================================ */
+
+:root {
+  /* === PALETA BASE — MODO CLARO (DEFAULT) === */
+
+  /* Fondos */
+  --bg-primary: #F2EDE4;       /* Marfil cálido — fondo principal */
+  --bg-secondary: #FAF7F2;     /* Marfil claro — superficies, cards */
+  --bg-nav: #FAF7F2;           /* Navbar */
+  --bg-footer: #0F1A14;        /* Footer siempre oscuro */
+  --bg-ribbon: #1B4D3E;        /* Barra de anuncio */
+
+  /* Texto */
+  --text-primary: #0F1A14;     /* Casi negro verdoso — headings */
+  --text-secondary: #4A5C4E;   /* Texto body */
+  --text-muted: #6B7B6E;       /* Navegación, labels */
+  --text-caption: #9A8C7A;     /* Captions, fechas, metadatos */
+
+  /* Marca — Esmeralda institucional */
+  --accent-primary: #1B4D3E;   /* Color principal de marca */
+  --accent-hover: #163D31;     /* Hover de botones primarios */
+  --accent-light: #E8F5EE;     /* Fondo de badges/tags */
+  --accent-text: #1B4D3E;      /* Texto sobre accent-light */
+
+  /* Bordes y separadores */
+  --border-primary: #DDD5C8;   /* Bordes de cards */
+  --border-secondary: #E8E0D5; /* Bordes ligeros */
+  --border-rule: #C9B99A;      /* Líneas editoriales */
+  --border-heading: #0F1A14;   /* Línea bajo títulos */
+
+  /* Señales / Status */
+  --signal-buy-bg: #E8F5EE;
+  --signal-buy-text: #1B4D3E;
+  --signal-sell-bg: #FEF2F2;
+  --signal-sell-text: #991B1B;
+  --signal-hold-bg: #FFF7ED;
+  --signal-hold-text: #92400E;
+  --signal-pro-bg: #EEF2FF;
+  --signal-pro-text: #3730A3;
+
+  /* Live indicator */
+  --live-dot: #10B981;
+
+  /* Tipografía */
+  --font-editorial: 'Georgia', 'Times New Roman', serif;
+  --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Menlo', 'Monaco', 'Courier New', monospace;
+
+  /* Espaciado base */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+
+  /* Radio de bordes */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+
+  /* Transiciones */
+  --transition: all 0.25s ease;
+}
+
+/* === MODO OSCURO === */
+[data-theme="dark"] {
+  /* Fondos */
+  --bg-primary: #0D1A12;       /* Verde bosque muy oscuro */
+  --bg-secondary: #091410;     /* Más oscuro para nav/footer */
+  --bg-nav: #091410;
+  --bg-footer: #050D08;
+  --bg-ribbon: #091410;
+
+  /* Texto — ALTA LEGIBILIDAD */
+  --text-primary: #EDE8DF;     /* Marfil claro — máximo contraste */
+  --text-secondary: #A8BFB0;   /* Texto body — legible */
+  --text-muted: #8BAF96;       /* Navegación */
+  --text-caption: #5A8070;     /* Captions */
+
+  /* Marca */
+  --accent-primary: #2D6A5A;
+  --accent-hover: #245548;
+  --accent-light: rgba(45,106,90,0.15);
+  --accent-text: #6ECBA8;
+
+  /* Bordes */
+  --border-primary: rgba(255,255,255,0.07);
+  --border-secondary: rgba(255,255,255,0.05);
+  --border-rule: rgba(255,255,255,0.1);
+  --border-heading: rgba(255,255,255,0.15);
+
+  /* Señales */
+  --signal-buy-bg: rgba(52,211,153,0.12);
+  --signal-buy-text: #6ECBA8;
+  --signal-sell-bg: rgba(239,68,68,0.12);
+  --signal-sell-text: #FCA5A5;
+  --signal-hold-bg: rgba(245,158,11,0.12);
+  --signal-hold-text: #FCD34D;
+  --signal-pro-bg: rgba(99,102,241,0.12);
+  --signal-pro-text: #A5B4FC;
+}
