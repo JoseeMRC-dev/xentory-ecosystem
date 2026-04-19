@@ -11,13 +11,19 @@ const ThemeContext = createContext<ThemeContextType | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
-    try { return (localStorage.getItem('xentory_theme') as Theme) || 'dark'; }
-    catch { return 'dark'; }
+    try {
+      const saved = localStorage.getItem('xentory-theme') as Theme | null;
+      if (saved === 'light' || saved === 'dark') return saved;
+      // migrate old key
+      const old = localStorage.getItem('xentory_theme') as Theme | null;
+      if (old === 'light' || old === 'dark') return old;
+    } catch { /* ignore */ }
+    return 'light';
   });
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
-    try { localStorage.setItem('xentory_theme', theme); } catch { /* ignore */ }
+    try { localStorage.setItem('xentory-theme', theme); } catch { /* ignore */ }
   }, [theme]);
 
   const toggleTheme = useCallback(() => {
