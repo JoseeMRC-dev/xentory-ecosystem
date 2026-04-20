@@ -93,10 +93,10 @@ const XIcon = () => (
 
 // ── ICON BUTTON STYLE ─────────────────────────────────────────────────
 const IB: CSSProperties = {
-  width: 32, height: 32, borderRadius: 7, display: 'flex',
+  width: 32, height: 32, borderRadius: '50%', display: 'flex',
   alignItems: 'center', justifyContent: 'center',
-  background: 'var(--card2)', border: '1px solid var(--border)',
-  cursor: 'pointer', color: 'var(--text2)', transition: 'all 0.18s', flexShrink: 0,
+  background: 'transparent', border: '1px solid var(--border-rule, var(--border2))',
+  cursor: 'pointer', color: 'var(--muted)', transition: 'all 0.18s', flexShrink: 0,
 };
 
 // ── COMPONENT ─────────────────────────────────────────────────────────
@@ -212,7 +212,7 @@ export function Navbar() {
         display: 'flex', flexDirection: 'column',
         background: (scrolled || mob) ? 'var(--nav-bg)' : 'transparent',
         borderBottom: (scrolled || mob) ? '1px solid var(--border)' : '1px solid transparent',
-        backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+        backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
         transition: 'background 0.3s, border-color 0.3s',
       }}>
         {/* Safe-area spacer — fills the Dynamic Island / notch with nav background */}
@@ -225,9 +225,8 @@ export function Navbar() {
         }}>
         {/* Logo */}
         <Link to="/" style={{ textDecoration: 'none', flexShrink: 0 }}>
-          <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.15rem,3vw,1.35rem)', letterSpacing: '-0.04em' }}>
-            <span className="text-gradient-gold">Xen</span>
-            <span style={{ color: 'var(--cyan)' }}>tory</span>
+          <span style={{ fontFamily: 'Georgia, serif', fontWeight: 'normal', fontSize: 'clamp(1.15rem,3vw,1.3rem)', letterSpacing: '-0.01em', color: 'var(--text)' }}>
+            Xentory<span style={{ color: 'var(--accent-primary, var(--gold))' }}>.</span>
           </span>
         </Link>
 
@@ -260,10 +259,11 @@ export function Navbar() {
                 <button
                   onClick={() => setUserMenu(v => !v)}
                   style={{
-                    width: 34, height: 34, borderRadius: '50%', cursor: 'pointer', border: 'none',
-                    background: 'linear-gradient(135deg,var(--gold),var(--cyan))',
+                    width: 34, height: 34, borderRadius: '50%', cursor: 'pointer',
+                    border: '1px solid var(--border2)',
+                    background: 'var(--accent-primary, var(--gold))',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '0.8rem', color: 'var(--bg)',
+                    fontFamily: 'Figtree, sans-serif', fontWeight: 700, fontSize: '0.8rem', color: '#F2EDE4',
                     padding: 0,
                   }}>
                   {user.name.charAt(0).toUpperCase()}
@@ -324,7 +324,7 @@ export function Navbar() {
             </>
           ) : (
             <>
-              <Link to="/login"    className="btn btn-ghost btn-sm">{t('nav.signin')}</Link>
+              <Link to="/login"    className="btn btn-ghost btn-sm" style={{ fontSize: '0.82rem' }}>{t('nav.signin')}</Link>
               <Link to="/register" className="btn btn-gold btn-sm">{t('nav.signup')}</Link>
             </>
           )}
