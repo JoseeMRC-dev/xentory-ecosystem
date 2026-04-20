@@ -9,6 +9,7 @@ import { PlansPage } from './components/plans/PlansPage';
 import { TelegramPage } from './components/telegram/TelegramPage';
 import { EducationPage } from './components/education/EducationPage';
 import './styles/global.css';
+import './styles/market-tokens.css';
 import { LoadingScreen } from './components/layout/LoadingScreen';
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';

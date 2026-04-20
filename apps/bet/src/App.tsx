@@ -11,6 +11,7 @@ import { EducationPage } from './components/education/EducationPage';
 import { CasasPage } from './components/casas/CasasPage';
 import { AgeGate, hasAgeConfirmed } from './components/auth/AgeGate';
 import './styles/global.css';
+import './styles/bet-tokens.css';
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
 

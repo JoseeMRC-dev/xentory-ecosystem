@@ -1,0 +1,16 @@
+/* ============================================
+   MERIDIAN — MARKET ACCENT TOKENS
+   Blue slate: analytical, colder tone
+   ============================================ */
+
+:root {
+  --market-accent:       #1E3A5F;
+  --market-accent-light: #EEF3FA;
+  --market-accent-text:  #1E3A5F;
+}
+
+[data-theme="dark"] {
+  --market-accent:       #3A6EA5;
+  --market-accent-light: rgba(58,110,165,0.15);
+  --market-accent-text:  #93B8E0;
+}

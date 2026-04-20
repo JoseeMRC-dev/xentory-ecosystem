@@ -283,13 +283,14 @@ function MiniMockup() {
 function SectionLabel({ label }: { label: string }) {
   return (
     <div style={{
-      display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
-      padding: '0.22rem 0.75rem', borderRadius: 100,
-      background: 'var(--gold-dim)', border: '1px solid rgba(201,168,76,0.2)',
-      color: 'var(--gold)', fontSize: '0.62rem', letterSpacing: '0.1em',
+      display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+      color: 'var(--gold)', fontSize: '0.62rem', letterSpacing: '0.14em',
       textTransform: 'uppercase' as const, fontWeight: 600, marginBottom: '1rem',
+      fontFamily: 'system-ui, sans-serif',
     }}>
+      <span style={{ display: 'inline-block', width: 20, height: 1, background: 'var(--border-rule, var(--border2))' }} />
       {label}
+      <span style={{ display: 'inline-block', width: 20, height: 1, background: 'var(--border-rule, var(--border2))' }} />
     </div>
   );
 }
@@ -309,24 +310,24 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 
 function TestimonialCard({ item }: { item: typeof TESTIMONIALS_EN[0] }) {
   return (
-    <div className="glass" style={{ borderRadius: 16, padding: 'clamp(1.2rem,3vw,1.6rem)', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+    <div style={{ borderRadius: 'var(--radius-lg)', padding: 'clamp(1.2rem,3vw,1.6rem)', display: 'flex', flexDirection: 'column', gap: '1rem', border: '1px solid var(--border)', background: 'var(--card2)' }}>
       <div style={{ display: 'flex', gap: '2px', color: 'var(--gold)' }}>
         {[0,1,2,3,4].map(i => <IconStar key={i} />)}
       </div>
-      <p style={{ color: 'var(--text2)', fontSize: '0.87rem', lineHeight: 1.8, flex: 1, margin: 0 }}>
+      <p style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', color: 'var(--text2)', fontSize: '0.9rem', lineHeight: 1.8, flex: 1, margin: 0 }}>
         "{item.text}"
       </p>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '0.5rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '0.5rem', borderTop: '1px solid var(--border)', paddingTop: '0.8rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
-          <div style={{ width: 36, height: 36, borderRadius: '50%', flexShrink: 0, background: 'linear-gradient(135deg,var(--gold),var(--green))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '0.72rem', color: '#04060f' }}>
+          <div style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, background: 'var(--accent-primary, var(--gold))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui, sans-serif', fontWeight: 700, fontSize: '0.72rem', color: '#F2EDE4' }}>
             {item.avatar}
           </div>
           <div>
-            <div style={{ fontWeight: 500, fontSize: '0.84rem' }}>{item.name}</div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>{item.role}</div>
+            <div style={{ fontWeight: 600, fontSize: '0.84rem', fontFamily: 'system-ui, sans-serif' }}>{item.name}</div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--muted)', fontFamily: 'system-ui, sans-serif' }}>{item.role}</div>
           </div>
         </div>
-        <div style={{ padding: '0.18rem 0.65rem', borderRadius: 100, fontSize: '0.7rem', background: 'var(--green-dim)', color: 'var(--green)', border: '1px solid rgba(0,200,122,0.2)', fontWeight: 600 }}>
+        <div style={{ padding: '0.18rem 0.65rem', borderRadius: 'var(--radius-sm, 2px)', fontSize: '0.68rem', background: 'var(--signal-buy-bg, var(--green-dim))', color: 'var(--signal-buy-text, var(--green))', fontWeight: 600, fontFamily: 'system-ui, sans-serif' }}>
           {item.result}
         </div>
       </div>
@@ -439,68 +440,153 @@ export function HomePage() {
       {showExit && <ExitPopup onClose={() => setShowExit(false)} />}
       <LiveTicker />
 
+      {/* ══ ANNOUNCEMENT RIBBON ═══════════════════════════════════════ */}
+      <div style={{
+        position: 'fixed', top: 'var(--bar-h)', left: 0, right: 0, zIndex: 240,
+        background: 'var(--bg-ribbon, var(--gold))', height: 36,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <p style={{ color: 'rgba(242,237,228,0.82)', fontSize: '0.72rem', letterSpacing: '0.06em', margin: 0, fontFamily: 'system-ui, sans-serif' }}>
+          {lang === 'es'
+            ? 'Beta privada · Plazas limitadas · 7 días sin compromiso'
+            : 'Private beta · Limited spots · 7-day free trial'}
+        </p>
+      </div>
+
       {/* ══ HERO ══════════════════════════════════════════════════════ */}
       <section style={{
-        minHeight: '100vh', display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center', textAlign: 'center',
-        padding: 'calc(var(--bar-h) + 3rem) clamp(1rem,5vw,2rem) 5rem',
-        background: 'radial-gradient(ellipse 70% 50% at 20% 35%, rgba(201,168,76,0.055) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 80% 25%, rgba(59,158,255,0.045) 0%, transparent 60%)',
-        position: 'relative', overflow: 'hidden',
+        paddingTop: 'calc(var(--bar-h) + 36px + clamp(3rem,6vw,5rem))',
+        paddingBottom: 'clamp(4rem,8vw,6rem)',
+        paddingLeft: 'clamp(1rem,5vw,2.5rem)',
+        paddingRight: 'clamp(1rem,5vw,2.5rem)',
+        background: 'var(--bg)',
+        borderBottom: '1px solid var(--border)',
       }}>
-        {/* Subtle grid lines */}
-        <div style={{ position: 'absolute', inset: 0, opacity: 0.03, backgroundImage: 'linear-gradient(var(--border2) 1px, transparent 1px), linear-gradient(90deg, var(--border2) 1px, transparent 1px)', backgroundSize: '60px 60px', pointerEvents: 'none' }} />
+        <div style={{
+          maxWidth: 1100, margin: '0 auto',
+          display: 'grid',
+          gridTemplateColumns: 'clamp(280px,55%,600px) 1fr',
+          gap: 'clamp(2rem,5vw,4rem)',
+          alignItems: 'center',
+        }}>
 
-        {/* Beta badge */}
-        <div className="animate-fadeUp" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.28rem 0.9rem', borderRadius: 100, border: '1px solid rgba(59,158,255,0.28)', background: 'var(--cyan-dim)', color: 'var(--cyan)', fontSize: '0.68rem', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '1.8rem', fontWeight: 600 }}>
-          <span className="live-dot" style={{ background: 'var(--cyan)', boxShadow: '0 0 6px var(--cyan)' }} />
-          {t('hero.badge')}
-        </div>
+          {/* ── LEFT COLUMN — editorial text ── */}
+          <div className="animate-fadeUp">
+            {/* Eyebrow */}
+            <p style={{ fontSize: '0.68rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 600, fontFamily: 'system-ui, sans-serif', marginBottom: '1.2rem' }}>
+              {lang === 'es' ? 'Plataforma de análisis IA · 2025' : 'AI analysis platform · 2025'}
+            </p>
 
-        {/* Headline */}
-        <h1 className="animate-fadeUp" style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(2.2rem,6.5vw,4.8rem)', lineHeight: 1.05, letterSpacing: '-0.035em', maxWidth: 860, marginBottom: '1.2rem', animationDelay: '0.08s' }}>
-          {t('hero.title1')}{' '}
-          <span className="text-gradient-gold" style={{ fontFamily: 'Outfit, sans-serif' }}>{t('hero.title2')}</span><br />
-          {t('hero.title3')}
-        </h1>
-
-        {/* Sub */}
-        <p className="animate-fadeUp" style={{ fontSize: 'clamp(0.95rem,2.2vw,1.1rem)', color: 'var(--text2)', maxWidth: 560, lineHeight: 1.8, marginBottom: '2.5rem', animationDelay: '0.16s' }}>
-          {t('hero.sub')}
-        </p>
-
-        {/* CTAs */}
-        <div className="animate-fadeUp" style={{ display: 'flex', gap: '0.7rem', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '1rem', animationDelay: '0.24s' }}>
-          <button onClick={() => { trackEvent('cta_click', { cta: 'hero_primary', destination: user ? 'dashboard' : 'register' }); navigate(user ? '/dashboard' : '/register'); }} className="btn btn-gold btn-xl" style={{ gap: '0.6rem' }}>
-            {user ? t('hero.cta1.user') : t('hero.cta1')} <IconArrow />
-          </button>
-          <button onClick={() => { trackEvent('cta_click', { cta: 'hero_secondary' }); document.getElementById('how')?.scrollIntoView({ behavior: 'smooth' }); }} className="btn btn-outline btn-xl">
-            {t('hero.cta2')}
-          </button>
-        </div>
-
-        {/* Trust pills */}
-        <div className="animate-fadeUp" style={{ display: 'flex', gap: '1.2rem', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '4rem', animationDelay: '0.3s' }}>
-          {[t('hero.trust1'), t('hero.trust2'), t('hero.trust3')].map((s, i) => (
-            <span key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.74rem', color: 'var(--muted)' }}>
-              <IconCheck />{s}
-            </span>
-          ))}
-        </div>
-
-        {/* Stats row */}
-        <div className="animate-fadeUp stats-grid-4" style={{ maxWidth: 680, width: '100%', animationDelay: '0.36s' }}>
-          {STATS.map(s => (
-            <div key={s.label} style={{ textAlign: 'center', padding: '0.8rem', borderRadius: 12, background: 'var(--card)', border: '1px solid var(--border)' }}>
-              <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.4rem,3vw,2rem)', color: s.color, letterSpacing: '-0.04em', lineHeight: 1.1 }}>{s.value}</div>
-              <div style={{ fontSize: 'clamp(0.58rem,1.4vw,0.68rem)', color: 'var(--muted)', marginTop: '0.3rem', lineHeight: 1.3 }}>{s.label}</div>
+            {/* Editorial rule + H1 */}
+            <div style={{ position: 'relative', borderLeft: '2px solid var(--border-rule, var(--border2))', paddingLeft: '1.2rem', marginBottom: '1.4rem' }}>
+              <h1 style={{
+                fontFamily: 'Georgia, serif', fontWeight: 'normal',
+                fontSize: 'clamp(2rem,4.5vw,3.2rem)', lineHeight: 1.1,
+                color: 'var(--text)', margin: 0,
+              }}>
+                <em style={{ fontStyle: 'italic', color: 'var(--text)' }}>
+                  {lang === 'es' ? 'Análisis financiero' : 'Financial analysis'}
+                </em>
+                <br />
+                <strong style={{ fontWeight: 'normal', color: 'var(--gold)' }}>
+                  {lang === 'es' ? 'y deportivo con IA' : 'and sports with AI'}
+                </strong>
+              </h1>
             </div>
-          ))}
+
+            {/* Deck */}
+            <p style={{
+              fontFamily: 'Georgia, serif', fontStyle: 'italic',
+              fontSize: '1rem', color: 'var(--text2)', lineHeight: 1.8,
+              borderTop: '2px solid var(--border-heading, var(--text))',
+              paddingTop: '0.8rem', marginBottom: '0.7rem',
+            }}>
+              {t('hero.sub')}
+            </p>
+
+            {/* Byline */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', marginBottom: '2rem' }}>
+              <span style={{ fontSize: '0.68rem', color: 'var(--muted)', fontFamily: 'system-ui, sans-serif', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                {lang === 'es' ? 'Por el equipo Xentory' : 'By the Xentory team'}
+              </span>
+              <span style={{ flex: 1, height: 1, background: 'var(--border-rule, var(--border2))' }} />
+            </div>
+
+            {/* CTAs */}
+            <div style={{ display: 'flex', gap: '0.7rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
+              <button onClick={() => { trackEvent('cta_click', { cta: 'hero_primary', destination: user ? 'dashboard' : 'register' }); navigate(user ? '/dashboard' : '/register'); }} className="btn btn-gold btn-lg" style={{ gap: '0.6rem' }}>
+                {user ? t('hero.cta1.user') : t('hero.cta1')} <IconArrow />
+              </button>
+              <button onClick={() => { trackEvent('cta_click', { cta: 'hero_secondary' }); document.getElementById('how')?.scrollIntoView({ behavior: 'smooth' }); }} className="btn btn-outline btn-lg">
+                {t('hero.cta2')}
+              </button>
+            </div>
+
+            {/* Trust row */}
+            <div style={{ display: 'flex', gap: '1.2rem', flexWrap: 'wrap' }}>
+              {[t('hero.trust1'), t('hero.trust2'), t('hero.trust3')].map((s, i) => (
+                <span key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.72rem', color: 'var(--muted)', fontFamily: 'system-ui, sans-serif' }}>
+                  <IconCheck />{s}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* ── RIGHT COLUMN — live signals panel ── */}
+          <div className="animate-fadeUp" style={{ animationDelay: '0.15s' }}>
+            <div style={{
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-lg)',
+              background: 'var(--card2)',
+              overflow: 'hidden',
+            }}>
+              {/* Panel header */}
+              <div style={{ padding: '0.9rem 1.2rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg2)' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text)', fontFamily: 'system-ui, sans-serif', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                  {lang === 'es' ? 'Señales activas' : 'Active signals'}
+                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <span className="live-dot" />
+                  <span style={{ fontSize: '0.65rem', color: 'var(--green)', fontFamily: 'system-ui, sans-serif' }}>En vivo</span>
+                </div>
+              </div>
+
+              {/* Signal rows from MiniMockup data */}
+              <MiniMockup />
+
+              {/* Panel footer — metrics */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', borderTop: '1px solid var(--border)', background: 'var(--bg2)' }}>
+                {[
+                  { value: '+18%', label: 'ROI' },
+                  { value: '71%',  label: lang === 'es' ? 'Precisión' : 'Accuracy' },
+                  { value: '500+', label: lang === 'es' ? 'Usuarios' : 'Users' },
+                ].map((m, i) => (
+                  <div key={i} style={{ padding: '0.7rem 0.5rem', textAlign: 'center', borderRight: i < 2 ? '1px solid var(--border)' : 'none' }}>
+                    <div style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 600, fontSize: '0.95rem', color: 'var(--gold)', lineHeight: 1 }}>{m.value}</div>
+                    <div style={{ fontSize: '0.6rem', color: 'var(--muted)', marginTop: '0.25rem', fontFamily: 'system-ui, sans-serif', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{m.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Stats row below panel */}
+            <div className="stats-grid-4" style={{ marginTop: '1rem', gap: '0.6rem' }}>
+              {STATS.map(s => (
+                <div key={s.label} style={{ textAlign: 'center', padding: '0.65rem 0.4rem', borderRadius: 'var(--radius-md)', background: 'var(--card)', border: '1px solid var(--border)' }}>
+                  <div style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700, fontSize: 'clamp(1rem,2.5vw,1.3rem)', color: s.color, lineHeight: 1.1 }}>{s.value}</div>
+                  <div style={{ fontSize: '0.58rem', color: 'var(--muted)', marginTop: '0.25rem', lineHeight: 1.3, fontFamily: 'system-ui, sans-serif' }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
-        {/* Hero mockup — appears on wider screens */}
-        <div className="animate-fadeUp" style={{ marginTop: '3.5rem', animationDelay: '0.44s', width: '100%', display: 'flex', justifyContent: 'center' }}>
-          <MiniMockup />
-        </div>
+        {/* Mobile: stacked single column */}
+        <style>{`
+          @media (max-width: 768px) {
+            .hero-editorial-grid { grid-template-columns: 1fr !important; }
+          }
+        `}</style>
       </section>
 
       {/* ══ PROBLEM → SOLUTION ═══════════════════════════════════════ */}
@@ -515,13 +601,12 @@ export function HomePage() {
           <div className="feature-grid-3">
             {[
               { label: t('home.problem.p1t'), title: t('prob.card1.title'), desc: t('home.problem.p1d'), accent: 'var(--red)',  top: 'var(--red)'  },
-              { label: t('home.problem.sol'), title: t('prob.card2.title'), desc: t('home.problem.soldesc'), accent: 'var(--green)', top: 'var(--green)' },
-              { label: t('home.problem.p3t'), title: t('prob.card3.title'), desc: t('home.problem.p3d'), accent: 'var(--gold)', top: 'var(--gold)' },
+              { label: t('home.problem.sol'), title: t('prob.card2.title'), desc: t('home.problem.soldesc'), accent: 'var(--gold)', top: 'var(--gold)' },
+              { label: t('home.problem.p3t'), title: t('prob.card3.title'), desc: t('home.problem.p3d'), accent: 'var(--cyan)', top: 'var(--cyan)' },
             ].map((c, i) => (
-              <div key={i} className={`glass reveal reveal-scale d${i + 1}`} style={{ borderRadius: 18, padding: 'clamp(1.5rem,3vw,2rem)', borderTop: `2px solid ${c.top}`, position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', top: 0, right: 0, width: 80, height: 80, borderRadius: '0 0 0 80px', background: `${c.accent}06` }} />
-                <div style={{ fontSize: '0.62rem', color: c.accent, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.7rem', fontWeight: 600 }}>{c.label}</div>
-                <h3 style={{ fontSize: 'clamp(0.95rem,2vw,1.05rem)', marginBottom: '0.7rem', fontFamily: 'Outfit, sans-serif' }}>{c.title}</h3>
+              <div key={i} className={`reveal reveal-scale d${i + 1}`} style={{ borderRadius: 'var(--radius-lg)', padding: 'clamp(1.5rem,3vw,2rem)', borderTop: `2px solid ${c.top}`, border: `1px solid var(--border)`, borderTopColor: c.top, background: 'var(--card2)', position: 'relative' }}>
+                <div style={{ fontSize: '0.62rem', color: c.accent, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.7rem', fontWeight: 600, fontFamily: 'system-ui, sans-serif' }}>{c.label}</div>
+                <h3 style={{ fontSize: 'clamp(0.95rem,2vw,1.05rem)', marginBottom: '0.7rem', fontFamily: 'Georgia, serif', fontWeight: 'normal' }}>{c.title}</h3>
                 <p style={{ color: 'var(--text2)', fontSize: '0.86rem', lineHeight: 1.75, margin: 0 }}>{c.desc}</p>
               </div>
             ))}
@@ -544,14 +629,14 @@ export function HomePage() {
 
           <div className="feature-grid-2">
             {/* Market card */}
-            <div className="glass platform-card reveal reveal-left d1" style={{ borderRadius: 22, padding: 'clamp(1.8rem,4vw,2.8rem)', borderLeft: '3px solid var(--gold)', position: 'relative', overflow: 'hidden' }}>
+            <div className="platform-card reveal reveal-left d1" style={{ borderRadius: 'var(--radius-lg)', padding: 'clamp(1.8rem,4vw,2.8rem)', border: '1px solid var(--border)', borderLeft: '3px solid var(--gold)', background: 'var(--card2)', position: 'relative' }}>
               <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(var(--gold-glow), transparent 70%)', pointerEvents: 'none' }} />
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', marginBottom: '1rem' }}>
                 <div style={{ width: 40, height: 40, borderRadius: 11, background: 'var(--gold-dim)', border: '1px solid rgba(201,168,76,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.8" strokeLinecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
                 </div>
-                <h3 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.15rem,2.5vw,1.45rem)' }}>
-                  Xentory <span className="text-gradient-gold">{t('platforms.market.title').replace('Xentory ', '')}</span>
+                <h3 style={{ fontFamily: 'Georgia, serif', fontWeight: 'normal', fontSize: 'clamp(1.15rem,2.5vw,1.35rem)' }}>
+                  Xentory <em style={{ color: 'var(--gold)' }}>{t('platforms.market.title').replace('Xentory ', '')}</em>
                 </h3>
               </div>
               <p style={{ color: 'var(--text2)', fontSize: '0.87rem', lineHeight: 1.8, marginBottom: '1.4rem' }}>
@@ -568,14 +653,14 @@ export function HomePage() {
             </div>
 
             {/* Bet card */}
-            <div className="glass platform-card reveal reveal-right d2" style={{ borderRadius: 22, padding: 'clamp(1.8rem,4vw,2.8rem)', borderLeft: '3px solid var(--cyan)', position: 'relative', overflow: 'hidden' }}>
+            <div className="platform-card reveal reveal-right d2" style={{ borderRadius: 'var(--radius-lg)', padding: 'clamp(1.8rem,4vw,2.8rem)', border: '1px solid var(--border)', borderLeft: '3px solid var(--cyan)', background: 'var(--card2)', position: 'relative' }}>
               <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(rgba(59,158,255,0.15), transparent 70%)', pointerEvents: 'none' }} />
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', marginBottom: '1rem' }}>
                 <div style={{ width: 40, height: 40, borderRadius: 11, background: 'var(--cyan-dim)', border: '1px solid rgba(59,158,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
                 </div>
-                <h3 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.15rem,2.5vw,1.45rem)' }}>
-                  Xentory <span className="text-gradient-cyan">{t('platforms.bet.title').replace('Xentory ', '')}</span>
+                <h3 style={{ fontFamily: 'Georgia, serif', fontWeight: 'normal', fontSize: 'clamp(1.15rem,2.5vw,1.35rem)' }}>
+                  Xentory <em style={{ color: 'var(--cyan)' }}>{t('platforms.bet.title').replace('Xentory ', '')}</em>
                 </h3>
               </div>
               <p style={{ color: 'var(--text2)', fontSize: '0.87rem', lineHeight: 1.8, marginBottom: '1.4rem' }}>
@@ -603,12 +688,12 @@ export function HomePage() {
           </div>
           <div className="how-grid">
             {HOW_STEPS.map((s, i) => (
-              <div key={i} className={`glass reveal reveal-up d${i + 1}`} style={{ borderRadius: 18, padding: 'clamp(1.5rem,3vw,2rem)', position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', top: '1.4rem', right: '1.4rem', fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '2.8rem', color: 'var(--border2)', lineHeight: 1, userSelect: 'none' }}>{s.num}</div>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--gold-dim)', border: '1px solid rgba(201,168,76,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold)', marginBottom: '1.1rem' }}>
+              <div key={i} className={`reveal reveal-up d${i + 1}`} style={{ borderRadius: 'var(--radius-lg)', padding: 'clamp(1.5rem,3vw,2rem)', border: '1px solid var(--border)', background: 'var(--card2)', position: 'relative' }}>
+                <div style={{ position: 'absolute', top: '1.2rem', right: '1.4rem', fontFamily: 'Georgia, serif', fontWeight: 'normal', fontSize: '2.4rem', color: 'var(--border2)', lineHeight: 1, userSelect: 'none', fontStyle: 'italic' }}>{s.num}</div>
+                <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-md)', background: 'var(--gold-dim)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gold)', marginBottom: '1rem' }}>
                   {s.icon}
                 </div>
-                <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '1.05rem', marginBottom: '0.65rem' }}>{s.title}</h3>
+                <h3 style={{ fontFamily: 'Georgia, serif', fontWeight: 'normal', fontSize: '1.05rem', marginBottom: '0.65rem' }}>{s.title}</h3>
                 <p style={{ color: 'var(--text2)', fontSize: '0.86rem', lineHeight: 1.75, margin: 0 }}>{s.desc}</p>
               </div>
             ))}
@@ -667,16 +752,14 @@ export function HomePage() {
           </div>
           <div className="stats-grid-4 reveal reveal-up d1">
             {[
-              { value: '+18%', label: lang === 'es' ? 'ROI medio · plan Pro (90 días)' : 'Avg ROI · Pro plan (90 days)',    color: 'var(--green)', icon: '📈' },
-              { value: '+31%', label: lang === 'es' ? 'ROI medio · plan Elite (90 días)' : 'Avg ROI · Elite plan (90 days)', color: 'var(--gold)',  icon: '🏆' },
-              { value: '71%',  label: lang === 'es' ? 'Precisión histórica verificada' : 'Verified historical accuracy',     color: 'var(--cyan)',  icon: '🎯' },
-              { value: '2h',   label: lang === 'es' ? 'Tiempo ahorrado al día por usuario' : 'Time saved per day per user',   color: 'var(--text)',  icon: '⏱️' },
+              { value: '+18%', label: lang === 'es' ? 'ROI medio · plan Pro (90 días)' : 'Avg ROI · Pro plan (90 days)',    color: 'var(--green)' },
+              { value: '+31%', label: lang === 'es' ? 'ROI medio · plan Elite (90 días)' : 'Avg ROI · Elite plan (90 days)', color: 'var(--gold)'  },
+              { value: '71%',  label: lang === 'es' ? 'Precisión histórica verificada' : 'Verified historical accuracy',     color: 'var(--cyan)'  },
+              { value: '2h',   label: lang === 'es' ? 'Tiempo ahorrado al día por usuario' : 'Time saved per day per user',   color: 'var(--text)'  },
             ].map((s, i) => (
-              <div key={i} style={{ textAlign: 'center', padding: 'clamp(1.2rem,3vw,1.8rem)', borderRadius: 16, background: 'var(--card)', border: '1px solid var(--border)', position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: s.color, opacity: 0.6 }} />
-                <div style={{ fontSize: '1.6rem', marginBottom: '0.3rem', lineHeight: 1 }}>{s.icon}</div>
-                <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.6rem,4vw,2.2rem)', color: s.color, letterSpacing: '-0.04em', lineHeight: 1.1 }}>{s.value}</div>
-                <div style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '0.4rem', lineHeight: 1.4 }}>{s.label}</div>
+              <div key={i} style={{ textAlign: 'center', padding: 'clamp(1.2rem,3vw,1.8rem)', borderRadius: 'var(--radius-lg)', background: 'var(--card2)', border: '1px solid var(--border)', borderTop: `2px solid ${s.color}`, position: 'relative' }}>
+                <div style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 700, fontSize: 'clamp(1.6rem,4vw,2.2rem)', color: s.color, lineHeight: 1.1 }}>{s.value}</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '0.4rem', lineHeight: 1.4, fontFamily: 'system-ui, sans-serif' }}>{s.label}</div>
               </div>
             ))}
           </div>
@@ -695,7 +778,7 @@ export function HomePage() {
             <SectionLabel label={t('faq.badge')} />
             <h2 style={{ fontSize: 'clamp(1.8rem,5vw,2.8rem)' }}>{t('faq.title')}</h2>
           </div>
-          <div className="glass reveal reveal-up d1 slow" style={{ borderRadius: 20, padding: 'clamp(1.2rem,3vw,2rem)' }}>
+          <div className="reveal reveal-up d1 slow" style={{ borderRadius: 'var(--radius-lg)', padding: 'clamp(1.2rem,3vw,2rem)', border: '1px solid var(--border)', background: 'var(--card2)' }}>
             {FAQS.map((f, i) => <FaqItem key={i} q={f.q} a={f.a} />)}
           </div>
         </div>
@@ -721,7 +804,7 @@ export function HomePage() {
             {([
               {
                 platform: 'Xentory Market',
-                platformColor: 'var(--cyan)',
+                platformColor: 'var(--gold)',
                 icon: '📈',
                 name: 'Pro',
                 price: '€29',
@@ -766,11 +849,12 @@ export function HomePage() {
               },
             ] as const).map((tier, i) => (
               <div key={i} style={{
-                borderRadius: 20, padding: 'clamp(1.5rem,3vw,2rem)',
+                borderRadius: 'var(--radius-lg)', padding: 'clamp(1.5rem,3vw,2rem)',
                 background: tier.highlight ? 'var(--card2)' : 'var(--card)',
-                border: `1px solid ${tier.highlight ? 'rgba(201,168,76,0.35)' : 'var(--border)'}`,
+                border: tier.highlight
+                  ? '2px solid var(--accent-primary, var(--gold))'
+                  : '1px solid var(--border)',
                 position: 'relative', overflow: 'hidden',
-                boxShadow: tier.highlight ? '0 8px 40px rgba(201,168,76,0.12)' : 'none',
               }}>
                 {tier.tag && (
                   <div style={{ position: 'absolute', top: 14, right: 14, padding: '0.2rem 0.6rem', borderRadius: 100, fontSize: '0.62rem', fontWeight: 700, background: tier.highlight ? 'rgba(201,168,76,0.15)' : 'rgba(0,200,122,0.1)', color: tier.highlight ? 'var(--gold)' : 'var(--green)', border: `1px solid ${tier.highlight ? 'rgba(201,168,76,0.3)' : 'rgba(0,200,122,0.25)'}` }}>
@@ -849,21 +933,24 @@ export function HomePage() {
       </section>
 
       {/* ══ FINAL CTA ════════════════════════════════════════════════ */}
-      <section style={{ padding: 'clamp(5rem,10vw,8rem) clamp(1rem,5vw,2rem)', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(201,168,76,0.045) 0%, transparent 65%)', pointerEvents: 'none' }} />
+      <section style={{ padding: 'clamp(5rem,10vw,8rem) clamp(1rem,5vw,2rem)', textAlign: 'center', background: 'var(--accent-primary, var(--gold))', position: 'relative' }}>
         <div style={{ maxWidth: 580, margin: '0 auto', position: 'relative' }}>
-          <div className="reveal"><SectionLabel label={lang === 'es' ? 'Empieza hoy' : 'Get started'} /></div>
-          <h2 className="reveal d1" style={{ fontSize: 'clamp(1.8rem,5vw,3rem)', marginBottom: '1.1rem' }}>
+          <p style={{ fontSize: '0.68rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(242,237,228,0.65)', fontFamily: 'system-ui, sans-serif', marginBottom: '1.2rem' }}>
+            {lang === 'es' ? 'Empieza hoy' : 'Get started'}
+          </p>
+          <h2 className="reveal d1" style={{ fontFamily: 'Georgia, serif', fontWeight: 'normal', fontSize: 'clamp(1.8rem,5vw,3rem)', marginBottom: '1.1rem', color: '#F2EDE4' }}>
             {t('cta.title')}
           </h2>
-          <p className="reveal d2" style={{ color: 'var(--text2)', fontSize: 'clamp(0.9rem,2vw,1rem)', lineHeight: 1.8, marginBottom: '2.2rem' }}>
+          <p className="reveal d2" style={{ color: 'rgba(242,237,228,0.75)', fontSize: 'clamp(0.9rem,2vw,1rem)', lineHeight: 1.8, marginBottom: '2.2rem', fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>
             {t('cta.sub')}
           </p>
           <div className="reveal d3" style={{ display: 'flex', gap: '0.7rem', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '1.8rem' }}>
-            <button onClick={() => { trackEvent('cta_click', { cta: 'final_primary', destination: user ? 'dashboard' : 'register' }); navigate(user ? '/dashboard' : '/register'); }} className="btn btn-gold btn-xl" style={{ gap: '0.6rem' }}>
+            <button onClick={() => { trackEvent('cta_click', { cta: 'final_primary', destination: user ? 'dashboard' : 'register' }); navigate(user ? '/dashboard' : '/register'); }}
+              style={{ background: '#F2EDE4', color: 'var(--accent-primary, #1B4D3E)', fontWeight: 700, padding: '0.85rem 2.2rem', borderRadius: 'var(--radius-lg)', border: 'none', cursor: 'pointer', fontSize: '1rem', display: 'inline-flex', alignItems: 'center', gap: '0.6rem', transition: 'all 0.2s', fontFamily: 'Figtree, system-ui, sans-serif' }}>
               {user ? t('hero.cta1.user') : t('cta.btn1')} <IconArrow />
             </button>
-            <button onClick={() => { trackEvent('cta_click', { cta: 'final_pricing' }); navigate('/pricing'); }} className="btn btn-outline btn-xl">
+            <button onClick={() => { trackEvent('cta_click', { cta: 'final_pricing' }); navigate('/pricing'); }}
+              style={{ background: 'transparent', color: 'rgba(242,237,228,0.85)', padding: '0.85rem 2.2rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(242,237,228,0.35)', cursor: 'pointer', fontSize: '1rem', transition: 'all 0.2s', fontFamily: 'Figtree, system-ui, sans-serif' }}>
               {t('cta.btn2')}
             </button>
           </div>
@@ -873,8 +960,8 @@ export function HomePage() {
               { icon: <IconCheck />,  text: t('cta.trust2') },
               { icon: <IconCheck />,  text: t('cta.trust3') },
             ].map((s, i) => (
-              <span key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.74rem', color: 'var(--muted)' }}>
-                <span style={{ color: 'var(--green)' }}>{s.icon}</span>{s.text}
+              <span key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.74rem', color: 'rgba(242,237,228,0.65)', fontFamily: 'system-ui, sans-serif' }}>
+                {s.icon}{s.text}
               </span>
             ))}
           </div>
