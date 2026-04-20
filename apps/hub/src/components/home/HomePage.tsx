@@ -76,14 +76,22 @@ function MiniMockup() {
   const [rsi,          setRsi]          = useState<number | null>(null);
   const [rsiModal,     setRsiModal]     = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const openPriceRef = useRef<number>(0);
 
   useEffect(() => {
-    async function load() {
+    let dead = false;
+    let ws: WebSocket | null = null;
+    let retryT: ReturnType<typeof setTimeout> | null = null;
+
+    // Initial REST snapshot: 24hr ticker + klines for chart/RSI
+    async function loadSnapshot() {
       try {
         const [ticker, klines] = await Promise.all([
           fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT').then(r => r.json()),
           fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=15').then(r => r.json()),
         ]);
+        if (dead) return;
+        openPriceRef.current = parseFloat(ticker.openPrice);
         setPrice(parseFloat(ticker.lastPrice));
         setChange(parseFloat(ticker.priceChangePercent));
         const closes: number[] = klines.map((k: any[]) => parseFloat(k[4]));
@@ -101,9 +109,37 @@ function MiniMockup() {
         }
       } catch { /* keep defaults */ }
     }
-    load();
-    const id = setInterval(load, 30_000);
-    return () => clearInterval(id);
+    loadSnapshot();
+
+    // WebSocket for real-time price (same as LiveTicker)
+    const connect = () => {
+      if (dead) return;
+      ws = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@miniTicker');
+      ws.onmessage = (e: MessageEvent<string>) => {
+        try {
+          const d = JSON.parse(e.data);
+          if (d?.e !== '24hrMiniTicker') return;
+          const lp = parseFloat(d.c);
+          const op = parseFloat(d.o);
+          if (!Number.isFinite(lp)) return;
+          if (op > 0) openPriceRef.current = op;
+          const pct = openPriceRef.current > 0
+            ? ((lp - openPriceRef.current) / openPriceRef.current) * 100
+            : 0;
+          setPrice(lp);
+          setChange(pct);
+        } catch { /**/ }
+      };
+      ws.onerror = () => { ws?.close(); if (!dead) retryT = setTimeout(connect, 5000); };
+      ws.onclose = () => {               if (!dead) retryT = setTimeout(connect, 5000); };
+    };
+    connect();
+
+    return () => {
+      dead = true;
+      if (retryT) clearTimeout(retryT);
+      ws?.close();
+    };
   }, []);
 
   const openModal = () => {
