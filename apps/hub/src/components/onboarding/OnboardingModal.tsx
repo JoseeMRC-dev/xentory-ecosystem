@@ -148,7 +148,7 @@ export function OnboardingModal({ onComplete }: OnboardingProps) {
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '1.8rem' }}>
           <div style={{ fontSize: '2.5rem', marginBottom: '0.8rem' }}>{currentStep.emoji}</div>
-          <h2 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: 'clamp(1.2rem, 3vw, 1.5rem)', marginBottom: '0.5rem', letterSpacing: '-0.02em' }}>
+          <h2 style={{ fontSize: 'clamp(1.2rem, 3vw, 1.5rem)', marginBottom: '0.5rem' }}>
             {currentStep.title}
           </h2>
           <p style={{ color: 'var(--muted)', fontSize: '0.85rem', lineHeight: 1.6 }}>{currentStep.subtitle}</p>
@@ -163,15 +163,15 @@ export function OnboardingModal({ onComplete }: OnboardingProps) {
               style={{
                 display: 'flex', alignItems: 'center', gap: '1rem',
                 padding: '1rem 1.2rem', borderRadius: 12, cursor: 'pointer',
-                border: selected === opt.id ? '1px solid var(--gold)' : '1px solid var(--border)',
-                background: selected === opt.id ? 'var(--gold-dim)' : 'var(--card2)',
+                border: selected === opt.id ? '1px solid var(--accent-primary)' : '1px solid var(--border)',
+                background: selected === opt.id ? 'var(--accent-light)' : 'var(--card2)',
                 textAlign: 'left', width: '100%',
                 transition: 'all 0.2s',
               }}
             >
               <span style={{ fontSize: '1.5rem', flexShrink: 0 }}>{opt.emoji}</span>
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 500, fontSize: '0.9rem', color: selected === opt.id ? 'var(--gold)' : 'var(--text)', marginBottom: '0.15rem' }}>{opt.label}</div>
+                <div style={{ fontWeight: 500, fontSize: '0.9rem', color: selected === opt.id ? 'var(--accent-primary)' : 'var(--text)', marginBottom: '0.15rem' }}>{opt.label}</div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>{opt.desc}</div>
               </div>
               {selected === opt.id && (

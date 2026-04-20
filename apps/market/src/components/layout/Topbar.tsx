@@ -34,7 +34,7 @@ function buildTickerHTML(assets: Asset[]): string {
       ${clone ? 'aria-hidden="true"' : `data-id="${a.id}"`}
       style="display:inline-flex;align-items:center;gap:0.4rem;padding:0 1.6rem;cursor:pointer;font-size:0.78rem;border-right:1px solid rgba(255,255,255,0.06);flex-shrink:0;"
     >
-      <span class="mkt-tk-sym" style="font-weight:600;color:var(--text2);letter-spacing:0.04em;font-family:'Outfit',sans-serif;">${a.symbol}</span>
+      <span class="mkt-tk-sym" style="font-weight:600;color:var(--text2);letter-spacing:0.04em;font-family:var(--font-mono,monospace);">${a.symbol}</span>
       <span class="mkt-tk-price" style="color:var(--text);font-variant-numeric:tabular-nums;">${formatPrice(a.price, a.category)}</span>
       <span class="mkt-tk-pct ${a.changePercent24h >= 0 ? 'tk-up' : 'tk-dn'}" style="font-size:0.68rem;white-space:nowrap;">
         ${a.changePercent24h >= 0 ? '▲' : '▼'} ${Math.abs(a.changePercent24h).toFixed(2)}%

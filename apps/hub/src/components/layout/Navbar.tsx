@@ -183,9 +183,9 @@ export function Navbar() {
         {(['USD', 'EUR'] as Currency[]).map(c => (
           <button key={c} onClick={() => setCurrency(c)} style={{
             padding: '0.18rem 0.45rem', borderRadius: 5, border: 'none', cursor: 'pointer',
-            fontSize: '0.65rem', fontWeight: 700, fontFamily: 'Outfit, sans-serif', transition: 'all 0.18s',
-            background: currency === c ? 'linear-gradient(135deg,var(--gold),var(--gold-l))' : 'transparent',
-            color: currency === c ? 'var(--bg)' : 'var(--muted)',
+            fontSize: '0.65rem', fontWeight: 700, transition: 'all 0.18s',
+            background: currency === c ? 'var(--accent-primary)' : 'transparent',
+            color: currency === c ? '#F2EDE4' : 'var(--muted)',
           }}>{c === 'USD' ? '$' : '€'}</button>
         ))}
       </div>
@@ -312,8 +312,8 @@ export function Navbar() {
                     </div>
                     {/* Logout */}
                     <div onClick={async () => { await logout(); navigate('/'); setUserMenu(false); }}
-                      style={{ padding: '0.65rem 1rem', cursor: 'pointer', fontSize: '0.83rem', display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'var(--gold)', transition: 'background 0.12s' }}
-                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(201,168,76,0.07)')}
+                      style={{ padding: '0.65rem 1rem', cursor: 'pointer', fontSize: '0.83rem', display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'var(--text2)', transition: 'background 0.12s' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--card2)')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                     >
                       <LogoutIcon />{t('nav.signout')}
@@ -360,13 +360,13 @@ export function Navbar() {
               <Link key={to} to={to} onClick={() => setMob(false)} style={{
                 textDecoration: 'none', padding: '0.85rem 0',
                 borderBottom: '1px solid var(--border)',
-                fontSize: '1.05rem', color: isActive(to) ? 'var(--gold)' : 'var(--text)',
+                fontSize: '1.05rem', color: isActive(to) ? 'var(--accent-primary)' : 'var(--text)',
                 fontWeight: isActive(to) ? 600 : 400,
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 minHeight: 48,
               }}>
                 {label}
-                <span style={{ color: isActive(to) ? 'var(--gold)' : 'var(--muted)', fontSize: '0.9rem' }}>→</span>
+                <span style={{ color: isActive(to) ? 'var(--accent-primary)' : 'var(--muted)', fontSize: '0.9rem' }}>→</span>
               </Link>
             ))}
             {/* Quick settings row in drawer */}
@@ -381,7 +381,7 @@ export function Navbar() {
                 <>
                   {/* User info chip */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', padding: '0.6rem 0.8rem', background: 'var(--card2)', borderRadius: 10, border: '1px solid var(--border)', marginBottom: '0.2rem' }}>
-                    <div style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, background: 'linear-gradient(135deg,var(--gold),var(--cyan))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '0.85rem', color: 'var(--bg)' }}>
+                    <div style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, background: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem', color: '#F2EDE4' }}>
                       {user.name.charAt(0).toUpperCase()}
                     </div>
                     <div style={{ minWidth: 0 }}>
@@ -392,10 +392,9 @@ export function Navbar() {
                   {/* Dashboard CTA */}
                   <Link to="/dashboard" onClick={() => setMob(false)} style={{
                     textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-                    padding: '0.9rem 1rem', borderRadius: 12, minHeight: 52,
-                    background: 'linear-gradient(135deg,var(--gold),var(--gold-l))', color: 'var(--bg)',
-                    fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.95rem',
-                    boxShadow: '0 4px 20px rgba(201,168,76,0.3)',
+                    padding: '0.9rem 1rem', borderRadius: 10, minHeight: 52,
+                    background: 'var(--accent-primary)', color: '#F2EDE4',
+                    fontWeight: 600, fontSize: '0.95rem',
                   }}>
                     <DashIcon /> {t('nav.dashboard')}
                   </Link>
@@ -419,9 +418,9 @@ export function Navbar() {
                   )}
                   {/* Logout */}
                   <button onClick={async () => { await logout(); navigate('/'); setMob(false); }} style={{
-                    background: 'rgba(201,168,76,0.07)', border: '1px solid rgba(201,168,76,0.3)',
-                    borderRadius: 12, padding: '0.8rem 1rem', cursor: 'pointer', minHeight: 48,
-                    color: 'var(--gold)', fontSize: '0.9rem', fontWeight: 600,
+                    background: 'var(--card2)', border: '1px solid var(--border)',
+                    borderRadius: 10, padding: '0.8rem 1rem', cursor: 'pointer', minHeight: 48,
+                    color: 'var(--text2)', fontSize: '0.9rem', fontWeight: 500,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.2s',
                   }}>
                     <LogoutIcon /> {t('nav.signout')}
@@ -451,7 +450,7 @@ export function Navbar() {
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
               <div>
-                <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ fontWeight: 600, fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   {settingsTab === 'email'    ? <><MailIcon /> {t('settings.email.title')}</> :
                    settingsTab === 'password' ? <><KeyIcon />  {t('settings.pwd.title')}</> :
                                                 <><TrashIcon /> {t('settings.del.title')}</>}
@@ -542,7 +541,7 @@ export function Navbar() {
                           try { const { getSupabase } = await import('../../lib/supabase'); const sb = getSupabase(); if (!sb) throw new Error(); await sb.auth.signOut(); setSMsg({ type: 'ok', text: t('settings.del.signout') }); setTimeout(() => { logout(); navigate('/'); }, 2500); } catch (e: any) { setSMsg({ type: 'err', text: e?.message ?? 'Error' }); } finally { setSBusy(false); }
                         }}
                         disabled={sBusy || sField !== t('settings.del.placeholder')}
-                        style={{ width: '100%', padding: '0.7rem', borderRadius: 9, border: 'none', cursor: sField === t('settings.del.placeholder') ? 'pointer' : 'not-allowed', background: sField === t('settings.del.placeholder') ? 'var(--red)' : 'rgba(240,68,88,0.15)', color: 'white', fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.88rem', transition: 'all 0.2s', opacity: sField === t('settings.del.placeholder') ? 1 : 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+                        style={{ width: '100%', padding: '0.7rem', borderRadius: 9, border: 'none', cursor: sField === t('settings.del.placeholder') ? 'pointer' : 'not-allowed', background: sField === t('settings.del.placeholder') ? 'var(--red)' : 'rgba(240,68,88,0.15)', color: 'white', fontWeight: 600, fontSize: '0.88rem', transition: 'all 0.2s', opacity: sField === t('settings.del.placeholder') ? 1 : 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
                         {sBusy ? <SpinnerIcon /> : <><TrashIcon />{t('settings.del.btn')}</>}
                       </button>
                     </div>

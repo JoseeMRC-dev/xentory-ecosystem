@@ -28,7 +28,7 @@ export function LoadingScreen({ onDone }: LoadingScreenProps) {
           height: 100vh;
           height: 100dvh;
           min-height: -webkit-fill-available;
-          background: #050810;
+          background: var(--bg, #F2EDE4);
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -42,19 +42,20 @@ export function LoadingScreen({ onDone }: LoadingScreenProps) {
           width: min(400px, 80vw);
           height: min(400px, 80vw);
           border-radius: 50%;
-          background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%);
+          background: radial-gradient(circle, var(--gold-dim, #E8F5EE) 0%, transparent 70%);
           animation: xls-glow-pulse 3s ease-in-out infinite;
           pointer-events: none;
         }
         .xls-logo {
-          font-family: 'Outfit', sans-serif;
-          font-weight: 900;
+          font-family: 'Georgia', serif;
+          font-style: italic;
           font-size: clamp(1.8rem, 7vw, 2.8rem);
-          letter-spacing: -0.04em;
+          letter-spacing: -0.02em;
           margin-bottom: 2.5rem;
           animation: xls-slide-up 0.6s ease both;
           position: relative;
           z-index: 1;
+          color: var(--accent-primary, #1B4D3E);
         }
         .xls-spinner {
           position: relative;
@@ -69,24 +70,24 @@ export function LoadingScreen({ onDone }: LoadingScreenProps) {
         .xls-ring-outer {
           position: absolute; inset: 0; border-radius: 50%;
           border: 2px solid transparent;
-          border-top-color: #c9a84c;
-          border-right-color: rgba(201,168,76,0.3);
+          border-top-color: var(--accent-primary, #1B4D3E);
+          border-right-color: var(--border2, #C9B99A);
           animation: xls-spin 1.1s cubic-bezier(0.4,0,0.2,1) infinite;
         }
         .xls-ring-mid {
           position: absolute; inset: 10px; border-radius: 50%;
           border: 2px solid transparent;
-          border-top-color: #4d9fff;
-          border-left-color: rgba(77,159,255,0.3);
+          border-top-color: var(--cyan, #1E3A5F);
+          border-left-color: var(--border, #DDD5C8);
           animation: xls-spin 0.75s cubic-bezier(0.4,0,0.2,1) infinite reverse;
         }
         .xls-dot {
           position: absolute; inset: 22px; border-radius: 50%;
-          background: linear-gradient(135deg, #c9a84c, #4d9fff);
+          background: var(--accent-primary, #1B4D3E);
           animation: xls-dot-pulse 1.5s ease-in-out infinite;
         }
         .xls-label {
-          color: #6b7294;
+          color: var(--muted, #9A8C7A);
           font-size: clamp(0.62rem, 2vw, 0.78rem);
           letter-spacing: 0.1em;
           text-transform: uppercase;
@@ -99,7 +100,7 @@ export function LoadingScreen({ onDone }: LoadingScreenProps) {
           position: absolute;
           bottom: 0; left: 0; right: 0;
           height: 2px;
-          background: linear-gradient(90deg, #c9a84c, #4d9fff);
+          background: var(--accent-primary, #1B4D3E);
           animation: xls-progress 2.5s linear both;
           transform-origin: left;
         }
@@ -130,11 +131,7 @@ export function LoadingScreen({ onDone }: LoadingScreenProps) {
         <div className="xls-glow" />
 
         <div className="xls-logo">
-          <span style={{
-            background: 'linear-gradient(135deg, #c9a84c, #f0d060)',
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-          }}>Xentory</span>
-          <span style={{ color: '#4d9fff' }}>Market</span>
+          Xentory<span style={{ color: 'var(--cyan, #1E3A5F)', fontStyle: 'normal' }}> Market</span>
         </div>
 
         <div className="xls-spinner">

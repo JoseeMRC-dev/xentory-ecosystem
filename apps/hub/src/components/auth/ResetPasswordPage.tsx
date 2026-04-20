@@ -120,15 +120,14 @@ export function ResetPasswordPage() {
   );
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', background: 'radial-gradient(ellipse at 30% 50%,rgba(201,168,76,0.05),transparent 55%)' }}>
-      <div className="glass animate-fadeUp" style={{ width: '100%', maxWidth: 420, borderRadius: 20, padding: '2.5rem' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', background: 'var(--bg)' }}>
+      <div className="animate-fadeUp" style={{ width: '100%', maxWidth: 420, borderRadius: 12, padding: '2.5rem', background: 'var(--card2)', border: '1px solid var(--border)' }}>
 
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <Link to="/" style={{ textDecoration: 'none' }}>
-            <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.6rem', letterSpacing: '-0.02em' }}>
-              <span className="text-gradient-gold">Xen</span>
-              <span style={{ color: '#4d9fff' }}>tory</span>
+            <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '1.6rem', color: 'var(--accent-primary)' }}>
+              Xentory<span style={{ color: 'var(--green)', fontStyle: 'normal' }}>.</span>
             </div>
           </Link>
         </div>
@@ -137,7 +136,7 @@ export function ResetPasswordPage() {
           /* ── Success state ── */
           <div style={{ textAlign: 'center', padding: '1rem 0' }}>
             <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✅</div>
-            <h2 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.3rem', marginBottom: '0.8rem' }}>
+            <h2 style={{ fontSize: '1.3rem', marginBottom: '0.8rem' }}>
               Contraseña actualizada
             </h2>
             <p style={{ color: 'var(--text2)', fontSize: '0.88rem', lineHeight: 1.7, marginBottom: '0.5rem' }}>
@@ -149,7 +148,7 @@ export function ResetPasswordPage() {
           <>
             <div style={{ textAlign: 'center', marginBottom: '1.8rem' }}>
               <div style={{ fontSize: '2rem', marginBottom: '0.6rem' }}>🔐</div>
-              <h2 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.3rem', marginBottom: '0.4rem' }}>
+              <h2 style={{ fontSize: '1.3rem', marginBottom: '0.4rem' }}>
                 Nueva contraseña
               </h2>
               <p style={{ color: 'var(--muted)', fontSize: '0.82rem', lineHeight: 1.6 }}>
