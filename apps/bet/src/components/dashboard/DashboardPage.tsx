@@ -57,10 +57,14 @@ function buildPick(m: Match | undefined, lang: string): DayPick | null {
 
 function StatCard({ icon, value, label, color }: { icon: string; value: string; label: string; color: string }) {
   return (
-    <div className="glass" style={{ borderRadius: 14, padding: '1.4rem', position: 'relative', overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', top: '1rem', right: '1rem', fontSize: '1.4rem', opacity: 0.4 }}>{icon}</div>
-      <div style={{ fontSize: '0.72rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.4rem' }}>{label}</div>
-      <div style={{ fontWeight: 700, fontSize: '2rem', color, letterSpacing: '-0.04em' }}>{value}</div>
+    <div style={{
+      borderRadius: 14, padding: '1.4rem', position: 'relative', overflow: 'hidden',
+      background: 'var(--card2)', border: '1px solid var(--border)',
+      borderTop: `2px solid ${color}`,
+    }}>
+      <div style={{ position: 'absolute', top: '1rem', right: '1rem', fontSize: '1.4rem', opacity: 0.5 }}>{icon}</div>
+      <div style={{ fontSize: '0.68rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.5rem', fontWeight: 600 }}>{label}</div>
+      <div style={{ fontWeight: 700, fontSize: '2rem', color, letterSpacing: '-0.04em', lineHeight: 1 }}>{value}</div>
     </div>
   );
 }
@@ -176,11 +180,15 @@ export function DashboardPage() {
         <StatCard icon="" value="5" label={t('Deportes activos', 'Active sports')} color="var(--cyan)" />
         {/* Telegram card — reflects real connection state */}
         <div
-          className="glass"
           onClick={() => navigate(user?.plan === 'free' ? '/plans' : '/telegram')}
-          style={{ borderRadius: 14, padding: '1.4rem', position: 'relative', overflow: 'hidden', cursor: 'pointer', transition: 'border-color 0.2s' }}
+          style={{
+            borderRadius: 14, padding: '1.4rem', position: 'relative', overflow: 'hidden',
+            background: 'var(--card2)', border: '1px solid var(--border)',
+            borderTop: '2px solid var(--cyan)',
+            cursor: 'pointer', transition: 'border-color 0.2s',
+          }}
           onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--border2)')}
-          onMouseLeave={e => (e.currentTarget.style.borderColor = '')}
+          onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}
         >
           <div style={{ position: 'absolute', top: '1rem', right: '1rem', fontSize: '1.4rem', opacity: 0.4 }}>✈️</div>
           <div style={{ fontSize: '0.72rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.4rem' }}>{t('Canal Telegram', 'Telegram channel')}</div>
@@ -237,6 +245,7 @@ export function DashboardPage() {
                   padding: '1rem 1.2rem',
                   background: 'var(--card2)', borderRadius: 12,
                   border: '1px solid var(--border)',
+                  borderLeft: `3px solid ${confidenceColor(pick.confidence)}`,
                   cursor: 'pointer', transition: 'border-color 0.2s',
                   display: 'flex', gap: '1rem', alignItems: 'center',
                 }}
@@ -247,7 +256,7 @@ export function DashboardPage() {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 500, fontSize: '0.88rem', marginBottom: '0.15rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     {pick.match}
-                    {pick.isAI && <span style={{ fontSize: '0.58rem', padding: '0.1rem 0.35rem', borderRadius: 4, background: 'rgba(0,212,255,0.1)', color: 'var(--cyan)', border: '1px solid rgba(0,212,255,0.2)', flexShrink: 0 }}>IA</span>}
+                    {pick.isAI && <span style={{ fontSize: '0.58rem', padding: '0.1rem 0.35rem', borderRadius: 4, background: 'var(--cyan-dim)', color: 'var(--cyan)', border: '1px solid var(--cyan-dim)', flexShrink: 0 }}>IA</span>}
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>{pick.competition} · {pick.market}</div>
                 </div>
@@ -424,12 +433,13 @@ export function DashboardPage() {
       {user?.plan === 'free' && (
         <div
           onClick={() => navigate('/plans')}
-          className="bet-upgrade-banner"
           style={{
             marginTop: '1.5rem', padding: '1.2rem 1.5rem',
-            background: 'linear-gradient(135deg, rgba(201,168,76,0.08), rgba(0,255,136,0.05))',
+            background: 'var(--accent-light)',
             border: '1px solid var(--border2)', borderRadius: 14,
+            borderLeft: '3px solid var(--accent-primary)',
             display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer',
+            transition: 'border-color 0.2s',
           }}
         >
           <div>
