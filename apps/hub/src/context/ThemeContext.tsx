@@ -14,9 +14,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     try {
       const saved = localStorage.getItem('xentory-theme') as Theme | null;
       if (saved === 'light' || saved === 'dark') return saved;
-      // migrate old key
-      const old = localStorage.getItem('xentory_theme') as Theme | null;
-      if (old === 'light' || old === 'dark') return old;
+      // Clear legacy key so it no longer overrides the default
+      try { localStorage.removeItem('xentory_theme'); } catch { /**/ }
     } catch { /* ignore */ }
     return 'light';
   });

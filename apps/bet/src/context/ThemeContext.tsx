@@ -9,8 +9,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     try {
       const saved = localStorage.getItem('xentory-theme') as Theme | null;
       if (saved === 'light' || saved === 'dark') return saved;
-      const old = localStorage.getItem('xentory_theme') as Theme | null;
-      if (old === 'light' || old === 'dark') return old;
+      try { localStorage.removeItem('xentory_theme'); } catch { /**/ }
     } catch { /* ignore */ }
     return 'light';
   });

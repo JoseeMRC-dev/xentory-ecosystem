@@ -155,7 +155,7 @@ function LogoBlock() {
     <div style={{ padding: '1.1rem 1.2rem 0' }}>
       <div style={{ fontFamily: 'Georgia, serif', fontSize: '1.25rem', marginBottom: '0.2rem', display: 'flex', alignItems: 'baseline' }}>
         <a href={HUB_URL} style={{ textDecoration: 'none', color: 'var(--accent-primary)', fontStyle: 'italic' }}>Xentory</a>
-        <Link to="/dashboard" style={{ textDecoration: 'none', color: 'var(--bet-accent)', fontStyle: 'normal' }}> Bet</Link>
+        <Link to="/dashboard" style={{ textDecoration: 'none', color: 'var(--text2)', fontStyle: 'normal' }}> Bet</Link>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.8rem' }}>
         <span className="live-dot" />
@@ -198,7 +198,7 @@ export function Sidebar() {
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 52, zIndex: 50, background: 'var(--nav-bg)', borderBottom: '1px solid var(--border)', backdropFilter: 'blur(20px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem' }}>
           <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '1.1rem', display: 'flex', alignItems: 'baseline' }}>
             <a href={HUB_URL} style={{ textDecoration: 'none', color: 'var(--accent-primary)' }}>Xentory</a>
-            <Link to="/dashboard" style={{ textDecoration: 'none', color: 'var(--bet-accent)', fontStyle: 'normal' }}> Bet</Link>
+            <Link to="/dashboard" style={{ textDecoration: 'none', color: 'var(--text2)', fontStyle: 'normal' }}> Bet</Link>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <QuickBar />
@@ -215,7 +215,7 @@ export function Sidebar() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem', height: 52, flexShrink: 0, borderBottom: '1px solid var(--border)' }}>
               <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '1.1rem', display: 'flex', alignItems: 'baseline' }}>
                 <a href={HUB_URL} style={{ textDecoration: 'none', color: 'var(--accent-primary)' }}>Xentory</a>
-                <Link to="/dashboard" onClick={() => setOpen(false)} style={{ textDecoration: 'none', color: 'var(--bet-accent)', fontStyle: 'normal' }}> Bet</Link>
+                <Link to="/dashboard" onClick={() => setOpen(false)} style={{ textDecoration: 'none', color: 'var(--text2)', fontStyle: 'normal' }}> Bet</Link>
               </div>
               <button onClick={() => setOpen(false)} aria-label="Cerrar menú" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.4rem', color: 'var(--text)', fontSize: '1.4rem', lineHeight: 1 }}>✕</button>
             </div>
