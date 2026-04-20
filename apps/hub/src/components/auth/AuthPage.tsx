@@ -235,7 +235,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
     <PageWrapper onClose={() => navigate('/')}>
       <div style={{ textAlign: 'center', padding: '1rem 0' }}>
         <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📬</div>
-        <h2 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.4rem', marginBottom: '0.8rem' }}>Confirma tu email</h2>
+        <h2 style={{ fontSize: '1.4rem', marginBottom: '0.8rem' }}>Confirma tu email</h2>
         <p style={{ color: 'var(--text2)', lineHeight: 1.75, fontSize: '0.9rem', marginBottom: '1.5rem' }}>
           Hemos enviado un enlace de confirmación a<br />
           <strong style={{ color: 'var(--text)' }}>{email}</strong>.<br />
@@ -253,7 +253,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
     <PageWrapper onClose={() => navigate('/')}>
       <div style={{ textAlign: 'center', padding: '1rem 0' }}>
         <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✉️</div>
-        <h2 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.4rem', marginBottom: '0.8rem' }}>Revisa tu email</h2>
+        <h2 style={{ fontSize: '1.4rem', marginBottom: '0.8rem' }}>Revisa tu email</h2>
         <p style={{ color: 'var(--text2)', lineHeight: 1.75, fontSize: '0.9rem', marginBottom: '0.5rem' }}>
           Hemos enviado un enlace mágico a<br />
           <strong style={{ color: 'var(--text)' }}>{email}</strong>
@@ -279,7 +279,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
             fontSize: '0.78rem', fontWeight: 500, transition: 'all 0.2s',
             background: tab === t ? 'var(--card)' : 'transparent',
             color: tab === t ? 'var(--text)' : 'var(--muted)',
-            borderBottom: tab === t ? '1px solid var(--gold)' : '1px solid transparent',
+            borderBottom: tab === t ? '2px solid var(--accent-primary)' : '2px solid transparent',
           }}>{label}</button>
         ); })}
       </div>
@@ -331,7 +331,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
             Contraseña
             {tab === 'login' && (
               <button type="button" onClick={() => { setShowForgot(true); setForgotEmail(email); setForgotSent(false); setForgotErr(''); }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gold)', fontSize: '0.75rem', padding: 0 }}>
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent-primary)', fontSize: '0.75rem', padding: 0 }}>
                 ¿Olvidaste tu contraseña?
               </button>
             )}
@@ -362,13 +362,13 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
 
         {/* Age consent checkbox — register only */}
         {tab === 'register' && (
-          <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', cursor: 'pointer', padding: '0.5rem 0.65rem', borderRadius: 8, background: 'rgba(255,68,85,0.04)', border: `1px solid ${ageConsent ? 'rgba(201,168,76,0.3)' : 'rgba(255,68,85,0.2)'}`, transition: 'border-color 0.2s' }}>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', cursor: 'pointer', padding: '0.5rem 0.65rem', borderRadius: 8, background: 'rgba(153,27,27,0.04)', border: `1px solid ${ageConsent ? 'var(--border2)' : 'rgba(153,27,27,0.2)'}`, transition: 'border-color 0.2s' }}>
             <div
               onClick={() => setAgeConsent(v => !v)}
               style={{
                 width: 18, height: 18, borderRadius: 5, flexShrink: 0, marginTop: 2,
-                border: `2px solid ${ageConsent ? 'var(--gold)' : 'var(--red)'}`,
-                background: ageConsent ? 'var(--gold)' : 'transparent',
+                border: `2px solid ${ageConsent ? 'var(--accent-primary)' : 'var(--red)'}`,
+                background: ageConsent ? 'var(--accent-primary)' : 'transparent',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 transition: 'all 0.18s', cursor: 'pointer',
               }}
@@ -377,20 +377,20 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
             </div>
             <span style={{ fontSize: '0.75rem', color: 'var(--text2)', lineHeight: 1.45 }}>
               <strong style={{ color: 'var(--red)' }}>⚠️</strong>{' '}
-              Confirmo que tengo <strong>18 años o más</strong> y entiendo que el juego puede crear adicción. Ayuda: <a href="https://www.jugarbien.es" target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ color: 'var(--gold)', textDecoration: 'none' }}>jugarbien.es</a>
+              Confirmo que tengo <strong>18 años o más</strong> y entiendo que el juego puede crear adicción. Ayuda: <a href="https://www.jugarbien.es" target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ color: 'var(--accent-primary)', textDecoration: 'none' }}>jugarbien.es</a>
             </span>
           </label>
         )}
 
         {/* Terms checkbox — register only */}
         {tab === 'register' && (
-          <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', cursor: 'pointer', padding: '0.5rem 0.65rem', borderRadius: 8, background: 'var(--card2)', border: `1px solid ${terms ? 'rgba(201,168,76,0.3)' : 'var(--border)'}`, transition: 'border-color 0.2s' }}>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', cursor: 'pointer', padding: '0.5rem 0.65rem', borderRadius: 8, background: 'var(--card2)', border: `1px solid ${terms ? 'var(--border2)' : 'var(--border)'}`, transition: 'border-color 0.2s' }}>
             <div
               onClick={() => setTerms(v => !v)}
               style={{
                 width: 18, height: 18, borderRadius: 5, flexShrink: 0, marginTop: 2,
-                border: `2px solid ${terms ? 'var(--gold)' : 'var(--border2)'}`,
-                background: terms ? 'var(--gold)' : 'transparent',
+                border: `2px solid ${terms ? 'var(--accent-primary)' : 'var(--border2)'}`,
+                background: terms ? 'var(--accent-primary)' : 'transparent',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 transition: 'all 0.18s', cursor: 'pointer',
               }}
@@ -398,7 +398,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
               {terms && <svg width="10" height="8" viewBox="0 0 10 8"><path d="M1 4l3 3 5-6" stroke="var(--bg)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>}
             </div>
             <span style={{ fontSize: '0.75rem', color: 'var(--text2)', lineHeight: 1.45 }}>
-              He leído y acepto los <Link to="/terminos" target="_blank" onClick={e => e.stopPropagation()} style={{ color: 'var(--gold)', textDecoration: 'none', fontWeight: 600 }}>Términos de Uso</Link>, incluyendo los riesgos asociados a inversiones y apuestas.
+              He leído y acepto los <Link to="/terminos" target="_blank" onClick={e => e.stopPropagation()} style={{ color: 'var(--accent-primary)', textDecoration: 'none', fontWeight: 600 }}>Términos de Uso</Link>, incluyendo los riesgos asociados a inversiones y apuestas.
             </span>
           </label>
         )}
@@ -458,10 +458,10 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
       {/* Footer links */}
       <p style={{ textAlign: 'center', marginTop: '0.75rem', fontSize: '0.75rem', color: 'var(--muted)' }}>
         {tab === 'login'
-          ? <>¿No tienes cuenta? <Link to="/register" style={{ color: 'var(--gold)', textDecoration: 'none' }}>Regístrate gratis →</Link></>
+          ? <>¿No tienes cuenta? <Link to="/register" style={{ color: 'var(--accent-primary)', textDecoration: 'none' }}>Regístrate gratis →</Link></>
           : tab === 'register'
-          ? <>¿Ya tienes cuenta? <Link to="/login" style={{ color: 'var(--gold)', textDecoration: 'none' }}>Iniciar sesión</Link></>
-          : <>Recuerda: el enlace solo funciona una vez · <button onClick={() => changeTab('login')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gold)', fontSize: '0.75rem', padding: 0 }}>Volver al login</button></>
+          ? <>¿Ya tienes cuenta? <Link to="/login" style={{ color: 'var(--accent-primary)', textDecoration: 'none' }}>Iniciar sesión</Link></>
+          : <>Recuerda: el enlace solo funciona una vez · <button onClick={() => changeTab('login')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent-primary)', fontSize: '0.75rem', padding: 0 }}>Volver al login</button></>
         }
       </p>
 
@@ -473,9 +473,8 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem',
         }} onClick={() => setShowForgot(false)}>
           <div
-            className="glass"
             onClick={e => e.stopPropagation()}
-            style={{ width: '100%', maxWidth: 400, borderRadius: 18, padding: '2rem', position: 'relative', animation: 'fadeUp 0.2s ease' }}
+            style={{ width: '100%', maxWidth: 400, borderRadius: 12, padding: '2rem', position: 'relative', animation: 'fadeUp 0.2s ease', background: 'var(--card2)', border: '1px solid var(--border)' }}
           >
             {/* Close */}
             <button onClick={() => setShowForgot(false)} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: '1.2rem', lineHeight: 1, padding: '0.2rem 0.4rem', borderRadius: 6, transition: 'color 0.2s' }}
@@ -487,7 +486,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
             {forgotSent ? (
               <div style={{ textAlign: 'center', padding: '0.5rem 0' }}>
                 <div style={{ fontSize: '2.5rem', marginBottom: '0.8rem' }}>📬</div>
-                <h3 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.2rem', marginBottom: '0.6rem' }}>
+                <h3 style={{ fontSize: '1.2rem', marginBottom: '0.6rem' }}>
                   Revisa tu email
                 </h3>
                 <p style={{ color: 'var(--text2)', fontSize: '0.85rem', lineHeight: 1.7, marginBottom: '0.5rem' }}>
@@ -500,7 +499,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
                 <button onClick={() => { setShowForgot(false); }} className="btn btn-gold" style={{ width: '100%', justifyContent: 'center' }}>
                   Entendido
                 </button>
-                <button onClick={() => { setShowForgot(false); changeTab('login'); }} style={{ marginTop: '0.8rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gold)', fontSize: '0.78rem', width: '100%', padding: '0.4rem' }}>
+                <button onClick={() => { setShowForgot(false); changeTab('login'); }} style={{ marginTop: '0.8rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent-primary)', fontSize: '0.78rem', width: '100%', padding: '0.4rem' }}>
                   Ir al login →
                 </button>
               </div>
@@ -508,7 +507,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
               <>
                 <div style={{ marginBottom: '1.5rem' }}>
                   <div style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>🔐</div>
-                  <h3 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.2rem', marginBottom: '0.4rem' }}>
+                  <h3 style={{ fontSize: '1.2rem', marginBottom: '0.4rem' }}>
                     Recuperar contraseña
                   </h3>
                   <p style={{ color: 'var(--muted)', fontSize: '0.82rem', lineHeight: 1.6 }}>
@@ -544,7 +543,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
 
       {/* AI disclaimer at bottom */}
       <p style={{ marginTop: '0.6rem', fontSize: '0.68rem', color: 'var(--muted)', textAlign: 'center', lineHeight: 1.5 }}>
-        ⚠️ Herramienta informativa. No garantiza rentabilidad. <Link to="/terminos" style={{ color: 'var(--gold)', textDecoration: 'none' }}>Términos de Uso</Link>
+        ⚠️ Herramienta informativa. No garantiza rentabilidad. <Link to="/terminos" style={{ color: 'var(--accent-primary)', textDecoration: 'none' }}>Términos de Uso</Link>
       </p>
     </PageWrapper>
   );
@@ -561,13 +560,14 @@ function PageWrapper({ children, onClose }: { children: React.ReactNode; onClose
       paddingBottom: '0.5rem',
       paddingLeft: 'clamp(0.5rem,3vw,1rem)',
       paddingRight: 'clamp(0.5rem,3vw,1rem)',
-      background: 'radial-gradient(ellipse at 30% 50%,rgba(201,168,76,0.05) 0%,transparent 55%),radial-gradient(ellipse at 75% 20%,rgba(0,212,255,0.04) 0%,transparent 50%)',
+      background: 'var(--bg)',
     }}>
-      <div className="glass animate-fadeUp" style={{
-        width: '100%', maxWidth: 440, borderRadius: 20,
+      <div className="animate-fadeUp" style={{
+        width: '100%', maxWidth: 440, borderRadius: 12,
         padding: 'clamp(1rem,3vw,1.5rem)',
         maxHeight: 'calc(100svh - var(--bar-h) - 1rem)',
         overflowY: 'auto', overflowX: 'hidden', position: 'relative',
+        background: 'var(--card2)', border: '1px solid var(--border)',
       }}>
         {/* Close button */}
         {onClose && (
@@ -582,9 +582,8 @@ function PageWrapper({ children, onClose }: { children: React.ReactNode; onClose
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '0.9rem' }}>
           <Link to="/" style={{ textDecoration: 'none' }}>
-            <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.45rem', letterSpacing: '-0.02em' }}>
-              <span className="text-gradient-gold">Xen</span>
-              <span style={{ color: 'var(--cyan)' }}>tory</span>
+            <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '1.45rem', color: 'var(--accent-primary)' }}>
+              Xentory<span style={{ color: 'var(--green)', fontStyle: 'normal' }}>.</span>
             </div>
           </Link>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.3rem' }}>

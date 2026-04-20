@@ -3,19 +3,19 @@ import { Link } from 'react-router-dom';
 export function TermsPage() {
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: 'calc(var(--bar-h) + 3rem) 1.5rem 5rem' }}>
-      <h1 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: 'clamp(1.8rem,4vw,2.4rem)', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>
+      <h1 style={{ fontSize: 'clamp(1.8rem,4vw,2.4rem)', marginBottom: '0.5rem' }}>
         Términos de Uso
       </h1>
       <p style={{ color: 'var(--muted)', fontSize: '0.82rem', marginBottom: '3rem' }}>
-        Última actualización: enero 2025 · <Link to="/" style={{ color: 'var(--gold)', textDecoration: 'none' }}>← Volver</Link>
+        Última actualización: enero 2025 · <Link to="/" style={{ color: 'var(--accent-primary)', textDecoration: 'none' }}>← Volver</Link>
       </p>
 
       {/* DISCLAIMER DESTACADO */}
       <div style={{
-        padding: '1.5rem', borderRadius: 16, marginBottom: '2.5rem',
-        background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.25)',
+        padding: '1.5rem', borderRadius: 10, marginBottom: '2.5rem',
+        background: 'var(--accent-light)', border: '1px solid var(--border2)',
       }}>
-        <div style={{ fontWeight: 700, color: 'var(--gold)', marginBottom: '0.6rem', fontSize: '0.95rem' }}>
+        <div style={{ fontWeight: 700, color: 'var(--accent-primary)', marginBottom: '0.6rem', fontSize: '0.95rem' }}>
           ⚠️ Aviso importante — Naturaleza del servicio
         </div>
         <p style={{ color: 'var(--text2)', lineHeight: 1.8, fontSize: '0.9rem' }}>
@@ -91,7 +91,7 @@ Xentory apoya el juego responsable y se reserva el derecho de suspender cuentas 
         },
       ].map(s => (
         <div key={s.title} style={{ marginBottom: '2rem' }}>
-          <h2 style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1.05rem', marginBottom: '0.7rem', color: 'var(--text)' }}>{s.title}</h2>
+          <h2 style={{ fontSize: '1.05rem', marginBottom: '0.7rem', color: 'var(--text)' }}>{s.title}</h2>
           <p style={{ color: 'var(--text2)', lineHeight: 1.85, fontSize: '0.9rem', whiteSpace: 'pre-line' }}>{s.body}</p>
         </div>
       ))}
@@ -99,7 +99,7 @@ Xentory apoya el juego responsable y se reserva el derecho de suspender cuentas 
       <div style={{ marginTop: '3rem', padding: '1.2rem', borderRadius: 12, background: 'var(--card2)', border: '1px solid var(--border)', textAlign: 'center' }}>
         <p style={{ color: 'var(--muted)', fontSize: '0.8rem', lineHeight: 1.7 }}>
           ¿Tienes dudas sobre estos términos? Escríbenos a{' '}
-          <a href="mailto:legal@xentory.io" style={{ color: 'var(--gold)', textDecoration: 'none' }}>legal@xentory.io</a>
+          <a href="mailto:legal@xentory.io" style={{ color: 'var(--accent-primary)', textDecoration: 'none' }}>legal@xentory.io</a>
         </p>
       </div>
     </div>

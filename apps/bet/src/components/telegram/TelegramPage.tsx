@@ -86,7 +86,7 @@ export function TelegramPage() {
         ].map(item => (
           <div key={item.label} className="glass" style={{ borderRadius: 12, padding: '1.1rem', textAlign: 'center' }}>
             <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{item.label}</div>
-            <div style={{ fontFamily: 'Outfit', fontWeight: 700, color: item.color, fontSize: '0.9rem' }}>{item.value}</div>
+            <div style={{ fontWeight: 600, color: item.color, fontSize: '0.9rem' }}>{item.value}</div>
           </div>
         ))}
       </div>
@@ -104,7 +104,7 @@ export function TelegramPage() {
               { num: '04', text: t('El bot te añade al canal de tu plan', 'The bot adds you to your plan channel') },
             ].map(s => (
               <div key={s.num} style={{ display: 'flex', gap: '0.7rem', alignItems: 'flex-start' }}>
-                <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--gold-dim)', border: '1px solid rgba(201,168,76,0.2)',
+                <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--gold-dim)', border: '1px solid var(--border2)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 700, color: 'var(--gold)', flexShrink: 0 }}>
                   {s.num}
                 </div>
@@ -114,7 +114,7 @@ export function TelegramPage() {
           </div>
 
           {isPaid && (
-            <div style={{ background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 10, padding: '0.9rem', marginBottom: '1rem' }}>
+            <div style={{ background: 'var(--accent-light)', border: '1px solid var(--border2)', borderRadius: 10, padding: '0.9rem', marginBottom: '1rem' }}>
               <div style={{ fontSize: '0.7rem', color: 'var(--muted)', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{t('Tu código', 'Your code')}</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
                 <span style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: '1rem', color: 'var(--gold)', letterSpacing: '0.1em' }}>{verifyCode}</span>
@@ -174,7 +174,7 @@ export function TelegramPage() {
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.6rem' }}>
                   <span style={{ fontSize: '1.1rem' }}>{ch.icon}</span>
-                  <span style={{ fontFamily: 'Outfit', fontWeight: 700, color: ch.color, fontSize: '0.88rem' }}>{ch.name}</span>
+                  <span style={{ fontWeight: 600, color: ch.color, fontSize: '0.88rem' }}>{ch.name}</span>
                   {user?.plan === ch.plan && <span style={{ marginLeft: 'auto', fontSize: '0.68rem', padding: '0.1rem 0.4rem', borderRadius: 100, background: `${ch.color}20`, color: ch.color, border: `1px solid ${ch.color}40` }}>{t('Tu plan','Your plan')}</span>}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
@@ -208,13 +208,13 @@ export function TelegramPage() {
               </div>
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>{t('Conf.','Conf.')}</div>
-                <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.85rem', color: p.confidence >= 70 ? 'var(--green)' : 'var(--gold)' }}>{p.confidence}%</div>
+                <div style={{ fontWeight: 600, fontSize: '0.85rem', color: p.confidence >= 70 ? 'var(--green)' : 'var(--gold)' }}>{p.confidence}%</div>
               </div>
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>{t('Cuota','Odds')}</div>
-                <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.85rem' }}>{p.odds}</div>
+                <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{p.odds}</div>
               </div>
-              <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', borderRadius: 100, background: p.tier === 'ELITE' ? 'rgba(201,168,76,0.1)' : 'rgba(77,159,255,0.1)', color: p.tier === 'ELITE' ? 'var(--gold)' : 'var(--cyan)', border: `1px solid ${p.tier === 'ELITE' ? 'rgba(201,168,76,0.25)' : 'rgba(77,159,255,0.25)'}` }}>{p.tier}</span>
+              <span style={{ fontSize: '0.65rem', padding: '0.2rem 0.5rem', borderRadius: 100, background: p.tier === 'ELITE' ? 'var(--accent-light)' : 'rgba(77,159,255,0.1)', color: p.tier === 'ELITE' ? 'var(--gold)' : 'var(--cyan)', border: `1px solid ${p.tier === 'ELITE' ? 'var(--gold-dim)' : 'rgba(77,159,255,0.25)'}` }}>{p.tier}</span>
             </div>
           ))}
         </div>

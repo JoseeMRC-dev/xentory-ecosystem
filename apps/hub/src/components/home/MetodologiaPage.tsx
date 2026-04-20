@@ -137,7 +137,7 @@ function StatCard({ value, label, color, loading }: { value: string; label: stri
           <div style={{ width: 32, height: 32, borderRadius: '50%', border: `2px solid ${color}`, borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }} />
         </div>
       ) : (
-        <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '2rem', color, letterSpacing: '-0.03em', marginBottom: '0.4rem' }}>{value}</div>
+        <div style={{ fontWeight: 700, fontSize: '2rem', color, letterSpacing: '-0.03em', marginBottom: '0.4rem' }}>{value}</div>
       )}
       <div style={{ fontSize: '0.72rem', color: 'var(--muted)', lineHeight: 1.4 }}>{label}</div>
     </div>
@@ -257,10 +257,10 @@ export function MetodologiaPage() {
 
       {/* ── Header ────────────────────────────────────────────────── */}
       <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-        <div style={{ display: 'inline-block', padding: '0.3rem 0.9rem', borderRadius: 100, background: 'var(--gold-dim)', border: '1px solid rgba(201,168,76,0.2)', color: 'var(--gold)', fontSize: '0.72rem', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '1rem' }}>
+        <div style={{ display: 'inline-block', padding: '0.3rem 0.9rem', borderRadius: 100, background: 'var(--gold-dim)', border: '1px solid var(--border2)', color: 'var(--gold)', fontSize: '0.72rem', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '1rem' }}>
           Transparencia total
         </div>
-        <h1 style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: 'clamp(2rem,5vw,3rem)', letterSpacing: '-0.03em', marginBottom: '1rem' }}>
+        <h1 style={{ fontWeight: 700, fontSize: 'clamp(2rem,5vw,3rem)', letterSpacing: '-0.03em', marginBottom: '1rem' }}>
           Metodología y resultados verificados
         </h1>
         <p style={{ color: 'var(--text2)', maxWidth: 580, margin: '0 auto', lineHeight: 1.8, fontSize: '0.95rem' }}>
@@ -274,7 +274,7 @@ export function MetodologiaPage() {
           {TABS.map(([key, icon, label]) => (
             <button key={key} onClick={() => setTab(key)} style={{
               padding: '0.55rem 1.2rem', borderRadius: 9, border: 'none', cursor: 'pointer',
-              fontFamily: 'Outfit', fontWeight: 600, fontSize: '0.83rem',
+              fontFamily: 'Figtree, sans-serif', fontWeight: 600, fontSize: '0.83rem',
               display: 'flex', alignItems: 'center', gap: '0.4rem',
               background: tab === key ? 'var(--card3)' : 'transparent',
               color:      tab === key ? 'var(--text)' : 'var(--muted)',
@@ -319,7 +319,7 @@ export function MetodologiaPage() {
       {accData && (
         <div className="glass" style={{ borderRadius: 18, padding: 'clamp(1.5rem,4vw,2rem)', marginBottom: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-            <h2 style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1.1rem' }}>
+            <h2 style={{ fontWeight: 600, fontSize: '1.1rem' }}>
               📅 Precisión semanal — últimas 6 semanas
             </h2>
             <div style={{ display: 'flex', gap: '0.8rem', fontSize: '0.72rem' }}>
@@ -342,7 +342,7 @@ export function MetodologiaPage() {
 
       {/* ── How the AI works ─────────────────────────────────────── */}
       <div className="glass" style={{ borderRadius: 18, padding: 'clamp(1.5rem,4vw,2.5rem)', marginBottom: '2rem' }}>
-        <h2 style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1.3rem', marginBottom: '1.5rem', paddingBottom: '0.8rem', borderBottom: '1px solid var(--border)' }}>
+        <h2 style={{ fontWeight: 600, fontSize: '1.3rem', marginBottom: '1.5rem', paddingBottom: '0.8rem', borderBottom: '1px solid var(--border)' }}>
           🧠 Cómo funciona el motor de IA
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: '1.5rem' }}>
@@ -378,7 +378,7 @@ export function MetodologiaPage() {
             <div key={block.title}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.8rem' }}>
                 <span style={{ fontSize: '1.2rem' }}>{block.icon}</span>
-                <h3 style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.95rem' }}>{block.title}</h3>
+                <h3 style={{ fontWeight: 600, fontSize: '0.95rem' }}>{block.title}</h3>
               </div>
               {block.items.map((item, i) => (
                 <div key={i} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.4rem', fontSize: '0.82rem' }}>
@@ -394,7 +394,7 @@ export function MetodologiaPage() {
       {/* ── Signal history ────────────────────────────────────────── */}
       <div className="glass" style={{ borderRadius: 18, padding: 'clamp(1.5rem,4vw,2.5rem)', marginBottom: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-          <h2 style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1.3rem' }}>📊 Historial de señales</h2>
+          <h2 style={{ fontWeight: 600, fontSize: '1.3rem' }}>📊 Historial de señales</h2>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '0.72rem', color: 'var(--green)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--green)', display: 'inline-block', boxShadow: '0 0 6px var(--green)', animation: 'pulse 2s infinite' }} />
@@ -410,9 +410,9 @@ export function MetodologiaPage() {
         {planUpgradeLabel && (
           <div
             onClick={() => navigate(user ? '/pricing' : '/register')}
-            style={{ marginBottom: '1rem', padding: '0.8rem 1rem', background: 'linear-gradient(135deg,rgba(201,168,76,0.08),rgba(0,212,255,0.05))', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 10, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', transition: 'border-color 0.2s' }}
-            onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.4)')}
-            onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.2)')}
+            style={{ marginBottom: '1rem', padding: '0.8rem 1rem', background: 'linear-gradient(135deg,rgba(201,168,76,0.08),rgba(0,212,255,0.05))', border: '1px solid var(--border2)', borderRadius: 10, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', transition: 'border-color 0.2s' }}
+            onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--border2)')}
+            onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border2)')}
           >
             <span style={{ fontSize: '0.82rem', color: 'var(--text2)' }}>
               🔒 Las señales se muestran con retraso según tu plan.
@@ -488,7 +488,7 @@ export function MetodologiaPage() {
 
       {/* ── Competitor comparison ─────────────────────────────────── */}
       <div className="glass" style={{ borderRadius: 18, padding: 'clamp(1.5rem,4vw,2.5rem)', marginBottom: '2rem' }}>
-        <h2 style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1.3rem', marginBottom: '0.5rem' }}>
+        <h2 style={{ fontWeight: 600, fontSize: '1.3rem', marginBottom: '0.5rem' }}>
           🏆 ¿Por qué Xentory?
         </h2>
         <p style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
@@ -535,7 +535,7 @@ export function MetodologiaPage() {
 
       {/* ── Limitations ───────────────────────────────────────────── */}
       <div className="glass" style={{ borderRadius: 18, padding: 'clamp(1.5rem,4vw,2.5rem)', marginBottom: '2rem', borderLeft: '3px solid var(--orange)' }}>
-        <h2 style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1.1rem', marginBottom: '1rem' }}>⚠️ Lo que la IA no puede hacer (honestidad total)</h2>
+        <h2 style={{ fontWeight: 600, fontSize: '1.1rem', marginBottom: '1rem' }}>⚠️ Lo que la IA no puede hacer (honestidad total)</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: '0.6rem' }}>
           {[
             'No predice eventos imprevisibles: lesiones de última hora, decisiones arbitrales, cisnes negros',
@@ -553,7 +553,7 @@ export function MetodologiaPage() {
 
       {/* ── CTA ───────────────────────────────────────────────────── */}
       <div style={{ textAlign: 'center', padding: '2rem 0' }}>
-        <h3 style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1.3rem', marginBottom: '0.8rem' }}>¿Te convence la metodología?</h3>
+        <h3 style={{ fontWeight: 600, fontSize: '1.3rem', marginBottom: '0.8rem' }}>¿Te convence la metodología?</h3>
         <p style={{ color: 'var(--text2)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
           Prueba el Plan Pro 7 días gratis. Sin tarjeta de crédito. Cancela cuando quieras.
         </p>

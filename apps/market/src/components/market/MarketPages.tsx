@@ -135,7 +135,7 @@ export function WatchlistPage() {
                   onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                 >
                   <div>
-                    <span style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.9rem' }}>{a.symbol}</span>
+                    <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{a.symbol}</span>
                     <span style={{ color: 'var(--muted)', fontSize: '0.8rem', marginLeft: '0.5rem' }}>{a.name}</span>
                   </div>
                   <span style={{ color: watchlist.includes(a.id) ? 'var(--gold)' : 'var(--muted)', fontSize: '0.8rem' }}>
@@ -176,11 +176,11 @@ export function WatchlistPage() {
               >
                 <div style={{ flex: 1 }} onClick={() => navigate(`/market/${asset.id}`)}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                    <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1rem' }}>{asset.symbol}</div>
+                    <div style={{ fontWeight: 600, fontSize: '1rem' }}>{asset.symbol}</div>
                     <span style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>{asset.name}</span>
                   </div>
                 </div>
-                <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1.1rem' }} onClick={() => navigate(`/market/${asset.id}`)}>
+                <div style={{ fontWeight: 600, fontSize: '1.1rem' }} onClick={() => navigate(`/market/${asset.id}`)}>
                   {formatPrice(asset.price, asset.category)}
                 </div>
                 <div style={{ color: isUp ? 'var(--green)' : 'var(--red)', fontWeight: 500, minWidth: 70, textAlign: 'right' }} onClick={() => navigate(`/market/${asset.id}`)}>
@@ -202,7 +202,7 @@ export function WatchlistPage() {
       {user?.plan === 'free' && (
         <div style={{
           marginTop: '1.5rem', padding: '1rem 1.5rem',
-          background: 'var(--gold-dim)', border: '1px solid rgba(201,168,76,0.2)',
+          background: 'var(--gold-dim)', border: '1px solid var(--border2)',
           borderRadius: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         }}>
           <span style={{ fontSize: '0.85rem', color: 'var(--text2)' }}>
@@ -397,7 +397,7 @@ export function AlertsPage() {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>✈️</div>
           <div>
-            <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.92rem' }}>
+            <div style={{ fontWeight: 600, fontSize: '0.92rem' }}>
               Telegram{' '}
               {tgConn
                 ? <span style={{ color: 'var(--green)', fontSize: '0.75rem', marginLeft: '0.3rem' }}>● Conectado{tgConn.telegram_username ? ` · @${tgConn.telegram_username}` : ''}</span>
@@ -424,7 +424,7 @@ export function AlertsPage() {
             }}>✓ Telegram activo</div>
           )}
           <button style={{ padding: '0.5rem 1rem', borderRadius: 8, fontSize: '0.82rem', fontWeight: 600,
-            cursor: 'pointer', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.3)',
+            cursor: 'pointer', background: 'rgba(201,168,76,0.08)', border: '1px solid var(--border2)',
             color: 'var(--gold)', transition: 'all 0.2s',
           }}>📧 Email</button>
         </div>
@@ -444,7 +444,7 @@ export function AlertsPage() {
           {/* New alert form */}
           {showForm && (
             <div className="glass" style={{ borderRadius: 16, padding: '1.5rem', marginBottom: '1.5rem',
-              border: '1px solid rgba(201,168,76,0.2)', animation: 'fadeIn 0.2s ease',
+              border: '1px solid var(--border2)', animation: 'fadeIn 0.2s ease',
             }}>
               <h3 style={{ fontSize: '0.95rem', marginBottom: '1.2rem' }}>✨ Configurar nueva alerta</h3>
 
@@ -559,24 +559,24 @@ export function AlertsPage() {
                   borderRadius: 12, display: 'flex', alignItems: 'center',
                   opacity: alert.active ? 1 : 0.5,
                   borderColor: alert.triggered
-                    ? 'rgba(201,168,76,0.3)'
+                    ? 'var(--border2)'
                     : alert.active
                       ? (alert.condition === 'above' ? 'rgba(0,255,136,0.15)' : 'rgba(255,68,85,0.15)')
                       : 'var(--border)',
                 }}>
                   <div style={{ width: 38, height: 38, borderRadius: 10, flexShrink: 0,
-                    background: alert.triggered ? 'rgba(201,168,76,0.1)' : alert.condition === 'above' ? 'rgba(0,255,136,0.1)' : 'rgba(255,68,85,0.1)',
+                    background: alert.triggered ? 'var(--accent-light)' : alert.condition === 'above' ? 'rgba(0,255,136,0.1)' : 'rgba(255,68,85,0.1)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem',
                   }}>
                     {alert.triggered ? '✅' : alert.condition === 'above' ? '📈' : '📉'}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                      <span style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.95rem' }}>{alert.symbol}</span>
+                      <span style={{ fontWeight: 600, fontSize: '0.95rem' }}>{alert.symbol}</span>
                       <span className="mkt-alert-cat-badge" style={{ fontSize: '0.7rem', padding: '0.1rem 0.5rem', borderRadius: 100, background: 'var(--card2)', color: 'var(--muted)' }}>
                         {CAT_EMOJI[alert.category]} {alert.category}
                       </span>
-                      {alert.triggered && <span style={{ fontSize: '0.7rem', padding: '0.1rem 0.5rem', borderRadius: 100, background: 'rgba(201,168,76,0.1)', color: 'var(--gold)', border: '1px solid rgba(201,168,76,0.2)' }}>✓ Activada</span>}
+                      {alert.triggered && <span style={{ fontSize: '0.7rem', padding: '0.1rem 0.5rem', borderRadius: 100, background: 'var(--accent-light)', color: 'var(--gold)', border: '1px solid var(--border2)' }}>✓ Activada</span>}
                     </div>
                     <div style={{ color: 'var(--muted)', fontSize: '0.8rem', marginTop: '0.15rem' }}>
                       Avisar cuando {alert.condition === 'above' ? 'suba a' : 'baje de'}{' '}
@@ -633,12 +633,12 @@ export function AnalysisPage() {
               onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'translateY(0)'; }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.6rem' }}>
-                <div style={{ fontFamily: 'Outfit', fontWeight: 700 }}>{asset.symbol}</div>
+                <div style={{ fontWeight: 600 }}>{asset.symbol}</div>
                 <span style={{ color: isUp ? 'var(--green)' : 'var(--red)', fontSize: '0.8rem', fontWeight: 500 }}>
                   {isUp ? '▲' : '▼'} {Math.abs(asset.changePercent24h).toFixed(2)}%
                 </span>
               </div>
-              <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.2rem' }}>
+              <div style={{ fontWeight: 600, fontSize: '1.1rem', marginBottom: '0.2rem' }}>
                 {formatPrice(asset.price, asset.category)}
               </div>
               <div style={{ color: 'var(--muted)', fontSize: '0.72rem' }}>{asset.name} · {asset.category}</div>

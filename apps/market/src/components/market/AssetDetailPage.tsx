@@ -12,12 +12,12 @@ function IndicatorBadge({ label, value, sub, highlight }: { label: string; value
   return (
     <div style={{
       padding: '0.9rem 1rem',
-      background: highlight ? 'rgba(201,168,76,0.06)' : 'var(--card)',
-      border: `1px solid ${highlight ? 'rgba(201,168,76,0.2)' : 'var(--border)'}`,
+      background: highlight ? 'var(--accent-light)' : 'var(--card)',
+      border: `1px solid ${highlight ? 'var(--border2)' : 'var(--border)'}`,
       borderRadius: 10,
     }}>
       <div style={{ fontSize: '0.7rem', color: 'var(--muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '0.3rem' }}>{label}</div>
-      <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1.1rem', color: highlight ? 'var(--gold)' : 'var(--text)' }}>{value}</div>
+      <div style={{ fontWeight: 600, fontSize: '1.1rem', color: highlight ? 'var(--gold)' : 'var(--text)' }}>{value}</div>
       {sub && <div style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '0.1rem' }}>{sub}</div>}
     </div>
   );
@@ -29,7 +29,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return (
     <div className="glass-2" style={{ padding: '0.7rem 1rem', borderRadius: 10, fontSize: '0.8rem' }}>
       <div style={{ color: 'var(--muted)', marginBottom: '0.3rem' }}>{d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
-      <div style={{ fontFamily: 'Outfit', fontWeight: 700, color: 'var(--gold)' }}>{payload[0].value.toFixed(4)}</div>
+      <div style={{ fontWeight: 600, color: 'var(--gold)' }}>{payload[0].value.toFixed(4)}</div>
     </div>
   );
 };
@@ -79,7 +79,7 @@ export function AssetDetailPage() {
     return (
       <div style={{ maxWidth: 500, margin: '6rem auto', textAlign: 'center', padding: '0 1.5rem' }}>
         <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔒</div>
-        <h2 style={{ fontFamily: 'Outfit', fontWeight: 800, marginBottom: '0.5rem' }}>{asset.name}</h2>
+        <h2 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>{asset.name}</h2>
         <p style={{ color: 'var(--muted)', marginBottom: '1.5rem', lineHeight: 1.6 }}>
           Los activos Forex están incluidos en el plan Pro. Actualiza para acceder a EUR/USD, GBP/USD, XAU/USD y más en tiempo real.
         </p>
@@ -108,7 +108,7 @@ export function AssetDetailPage() {
               width: 52, height: 52, borderRadius: '50%',
               background: 'var(--card2)', border: '1px solid var(--border2)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontFamily: 'Outfit', fontWeight: 800, fontSize: '0.9rem',
+              fontWeight: 700, fontSize: '0.9rem',
             }}>
               {asset.symbol.slice(0, 2)}
             </div>
@@ -140,7 +140,7 @@ export function AssetDetailPage() {
               {inWatchlist ? '⭐ En Watchlist' : '☆ Añadir'}
             </button>
             <button onClick={runAnalysis} className="btn btn-gold" disabled={isAnalyzing}>
-              {isAnalyzing ? <span className="animate-spin" style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid #050810', borderTopColor: 'transparent', borderRadius: '50%' }} /> : '🧠'}
+              {isAnalyzing ? <span className="animate-spin" style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid var(--bg)', borderTopColor: 'transparent', borderRadius: '50%' }} /> : '🧠'}
               {isAnalyzing ? 'Analyzing...' : 'AI Analysis'}
             </button>
           </div>
@@ -151,11 +151,11 @@ export function AssetDetailPage() {
       <div className="glass" style={{ borderRadius: 16, padding: '1.5rem', marginBottom: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '2.8rem', letterSpacing: '-0.04em', lineHeight: 1 }}>
+            <div style={{ fontWeight: 700, fontSize: '2.8rem', letterSpacing: '-0.04em', lineHeight: 1 }}>
               {formatPrice(asset.price, asset.category)}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.4rem' }}>
-              <span style={{ color: isUp ? 'var(--green)' : 'var(--red)', fontFamily: 'Outfit', fontWeight: 700, fontSize: '1rem' }}>
+              <span style={{ color: isUp ? 'var(--green)' : 'var(--red)', fontWeight: 600, fontSize: '1rem' }}>
                 {isUp ? '▲' : '▼'} {formatPrice(Math.abs(asset.change24h), asset.category)} ({Math.abs(asset.changePercent24h).toFixed(2)}%)
               </span>
               <span style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>últimas 24h</span>
@@ -173,10 +173,10 @@ export function AssetDetailPage() {
                   border: 'none',
                   cursor: 'pointer',
                   fontSize: '0.78rem',
-                  fontFamily: 'Outfit',
+                  fontFamily: 'Figtree, sans-serif',
                   fontWeight: 600,
                   background: timeframe === tf ? 'var(--gold)' : 'var(--card2)',
-                  color: timeframe === tf ? '#050810' : 'var(--muted)',
+                  color: timeframe === tf ? 'var(--bg)' : 'var(--muted)',
                   transition: 'all 0.15s',
                 }}
               >
@@ -259,7 +259,7 @@ export function AssetDetailPage() {
                 padding: '0.2rem 0.7rem', borderRadius: 100, fontSize: '0.7rem',
                 background: analysis.tier === 'pro' ? 'var(--gold-dim)' : 'var(--card2)',
                 color: analysis.tier === 'pro' ? 'var(--gold)' : 'var(--muted)',
-                border: `1px solid ${analysis.tier === 'pro' ? 'rgba(201,168,76,0.2)' : 'var(--border)'}`,
+                border: `1px solid ${analysis.tier === 'pro' ? 'var(--border2)' : 'var(--border)'}`,
               }}>
                 {analysis.tier === 'pro' ? '⚡ Pro + Grounding' : '⚡ Flash'}
               </span>
@@ -302,13 +302,13 @@ export function AssetDetailPage() {
               }}>
                 <div>
                   <div style={{ fontSize: '0.7rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Señal técnica</div>
-                  <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1rem', color: SIGNAL_LABELS[analysis.signal]?.color }}>
+                  <div style={{ fontWeight: 600, fontSize: '1rem', color: SIGNAL_LABELS[analysis.signal]?.color }}>
                     {SIGNAL_LABELS[analysis.signal]?.label}
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: '0.7rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Confianza</div>
-                  <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1.2rem', color: SIGNAL_LABELS[analysis.signal]?.color }}>
+                  <div style={{ fontWeight: 600, fontSize: '1.2rem', color: SIGNAL_LABELS[analysis.signal]?.color }}>
                     {analysis.confidence}%
                   </div>
                 </div>
@@ -331,13 +331,13 @@ export function AssetDetailPage() {
                 <div style={{ padding: '0.7rem 0.9rem', background: 'rgba(0,255,136,0.05)', border: '1px solid rgba(0,255,136,0.1)', borderRadius: 8 }}>
                   <div style={{ fontSize: '0.7rem', color: 'var(--green)', marginBottom: '0.3rem', letterSpacing: '0.06em' }}>SOPORTES</div>
                   {analysis.keyLevels.support.map((s, i) => (
-                    <div key={i} style={{ fontFamily: 'Outfit', fontWeight: 600, fontSize: '0.85rem' }}>{formatPrice(s, asset.category)}</div>
+                    <div key={i} style={{ fontFamily: 'Figtree, sans-serif', fontWeight: 600, fontSize: '0.85rem' }}>{formatPrice(s, asset.category)}</div>
                   ))}
                 </div>
                 <div style={{ padding: '0.7rem 0.9rem', background: 'rgba(255,68,85,0.05)', border: '1px solid rgba(255,68,85,0.1)', borderRadius: 8 }}>
                   <div style={{ fontSize: '0.7rem', color: 'var(--red)', marginBottom: '0.3rem', letterSpacing: '0.06em' }}>RESISTENCIAS</div>
                   {analysis.keyLevels.resistance.map((r, i) => (
-                    <div key={i} style={{ fontFamily: 'Outfit', fontWeight: 600, fontSize: '0.85rem' }}>{formatPrice(r, asset.category)}</div>
+                    <div key={i} style={{ fontFamily: 'Figtree, sans-serif', fontWeight: 600, fontSize: '0.85rem' }}>{formatPrice(r, asset.category)}</div>
                   ))}
                 </div>
               </div>

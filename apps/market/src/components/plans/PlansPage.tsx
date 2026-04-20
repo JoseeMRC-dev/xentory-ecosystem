@@ -33,7 +33,7 @@ export function PlansPage() {
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
           padding: '0.3rem 0.9rem', borderRadius: 100,
-          background: 'var(--gold-dim)', border: '1px solid rgba(201,168,76,0.2)',
+          background: 'var(--gold-dim)', border: '1px solid var(--border2)',
           color: 'var(--gold)', fontSize: '0.75rem', letterSpacing: '0.1em',
           textTransform: 'uppercase', marginBottom: '1rem',
         }}>
@@ -66,7 +66,7 @@ export function PlansPage() {
               left: yearly ? 26 : 3,
               width: 20, height: 20,
               borderRadius: '50%',
-              background: yearly ? '#050810' : 'var(--muted)',
+              background: yearly ? 'var(--bg)' : 'var(--muted)',
               transition: 'left 0.3s',
             }} />
           </button>
@@ -110,7 +110,7 @@ export function PlansPage() {
                   background: 'var(--gold-dim)',
                   color: 'var(--gold)',
                   fontSize: '0.65rem', letterSpacing: '0.1em',
-                  borderRadius: 4, border: '1px solid rgba(201,168,76,0.25)',
+                  borderRadius: 4, border: '1px solid var(--gold-dim)',
                 }}>
                   MÁS POPULAR
                 </div>
@@ -132,7 +132,7 @@ export function PlansPage() {
 
               {/* Plan info */}
               <div style={{ marginBottom: '1.5rem' }}>
-                <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1.15rem', marginBottom: '0.2rem', color: plan.color }}>
+                <div style={{ fontWeight: 600, fontSize: '1.15rem', marginBottom: '0.2rem', color: plan.color }}>
                   {plan.name}
                 </div>
                 <div style={{ color: 'var(--muted)', fontSize: '0.82rem' }}>{plan.description}</div>
@@ -140,7 +140,7 @@ export function PlansPage() {
 
               {/* Price */}
               <div style={{ marginBottom: '1.5rem' }}>
-                <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '2.8rem', letterSpacing: '-0.04em', lineHeight: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: '2.8rem', letterSpacing: '-0.04em', lineHeight: 1 }}>
                   {plan.price === 0 ? (
                     <span>Free</span>
                   ) : (
@@ -185,7 +185,7 @@ export function PlansPage() {
                     : plan.popular
                     ? `linear-gradient(135deg, var(--gold), var(--gold-l))`
                     : `${plan.color}15`,
-                  color: isCurrentPlan ? 'var(--muted)' : plan.popular ? '#050810' : plan.color,
+                  color: isCurrentPlan ? 'var(--muted)' : plan.popular ? 'var(--bg)' : plan.color,
                   border: plan.popular || isCurrentPlan ? 'none' : `1px solid ${plan.color}30`,
                   fontWeight: plan.popular ? 600 : 500,
                   opacity: isCurrentPlan ? 0.7 : 1,
@@ -201,23 +201,23 @@ export function PlansPage() {
 
       {/* Bundle upsell */}
       <style>{`
-        @keyframes bundleGlow{0%,100%{box-shadow:0 0 0px rgba(201,168,76,0)}50%{box-shadow:0 0 28px rgba(201,168,76,0.45),0 0 10px rgba(201,168,76,0.2)}}
+        @keyframes bundleGlow{0%,100%{box-shadow:0 0 0px rgba(201,168,76,0)}50%{box-shadow:0 0 28px rgba(201,168,76,0.45),0 0 10px var(--border2)}}
         @keyframes bundleShake{0%,82%,100%{transform:none}85%{transform:translateX(-5px)}88%{transform:translateX(5px)}91%{transform:translateX(-4px)}94%{transform:translateX(4px)}97%{transform:translateX(-2px)}}
       `}</style>
       <a href={`${HUB_URL}/pricing?tab=bundle`} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', display: 'block', marginTop: '2rem' }}>
-        <div style={{ borderRadius: 14, padding: '1.2rem 1.5rem', background: 'linear-gradient(135deg,rgba(201,168,76,0.08),rgba(77,159,255,0.06))', border: '1px solid rgba(201,168,76,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', cursor: 'pointer', transition: 'border-color 0.2s', animation: 'bundleGlow 3.5s ease-in-out infinite, bundleShake 6s ease-in-out infinite' }}
+        <div style={{ borderRadius: 14, padding: '1.2rem 1.5rem', background: 'linear-gradient(135deg,rgba(201,168,76,0.08),rgba(77,159,255,0.06))', border: '1px solid var(--border2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', cursor: 'pointer', transition: 'border-color 0.2s', animation: 'bundleGlow 3.5s ease-in-out infinite, bundleShake 6s ease-in-out infinite' }}
           onMouseEnter={e => ((e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(201,168,76,0.7)')}
-          onMouseLeave={e => ((e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(201,168,76,0.4)')}
+          onMouseLeave={e => ((e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border2)')}
         >
           <div>
-            <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.95rem', marginBottom: '0.2rem', color: 'var(--text)' }}>
+            <div style={{ fontWeight: 600, fontSize: '0.95rem', marginBottom: '0.2rem', color: 'var(--text)' }}>
               🎁 {t('¿Quieres Market + Bet? Bundle Pro por solo 49€/mes', 'Want Market + Bet? Bundle Pro for just €49/mo')}
             </div>
             <div style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>
               {t('Ahorra 9€/mes vs contratar por separado · Dos canales Telegram incluidos', 'Save €9/mo vs separate plans · Two Telegram channels included')}
             </div>
           </div>
-          <span style={{ padding: '0.4rem 1rem', borderRadius: 8, background: 'var(--gold)', color: '#050810', fontWeight: 700, fontSize: '0.82rem', whiteSpace: 'nowrap', flexShrink: 0 }}>
+          <span style={{ padding: '0.4rem 1rem', borderRadius: 8, background: 'var(--gold)', color: 'var(--bg)', fontWeight: 700, fontSize: '0.82rem', whiteSpace: 'nowrap', flexShrink: 0 }}>
             {t('Ver bundle →', 'View bundle →')}
           </span>
         </div>

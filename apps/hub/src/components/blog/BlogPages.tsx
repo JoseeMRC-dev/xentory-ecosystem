@@ -111,7 +111,7 @@ function TrendingCard({ article, rank, lang }: { article: NewsArticle; rank: num
       onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
     >
       {/* Rank number */}
-      <span style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.4rem', color: rank <= 3 ? 'var(--gold)' : 'var(--border2)', lineHeight: 1, flexShrink: 0, width: 22, textAlign: 'center', paddingTop: 2 }}>{rank}</span>
+      <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '1.1rem', color: rank <= 3 ? 'var(--accent-primary)' : 'var(--border2)', lineHeight: 1, flexShrink: 0, width: 22, textAlign: 'center', paddingTop: 2 }}>{rank}</span>
       <div style={{ minWidth: 0, flex: 1 }}>
         {/* Thumbnail */}
         {article.imageUrl && !imgErr && (
@@ -146,7 +146,7 @@ function TrendingSection({ lang }: { lang: 'es'|'en' }) {
     <div style={{ marginBottom: '2.5rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.9rem' }}>
         <span style={{ fontSize: '1.1rem' }}>🔥</span>
-        <span style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.95rem' }}>
+        <span style={{ fontWeight: 600, fontSize: '0.95rem' }}>
           {lang === 'es' ? 'Lo más popular hoy' : 'Trending today'}
         </span>
         <span style={{ fontSize: '0.68rem', padding: '0.15rem 0.5rem', borderRadius: 100, background: 'rgba(255,80,80,0.12)', color: '#ff5050', border: '1px solid rgba(255,80,80,0.25)', fontWeight: 600 }}>
@@ -298,12 +298,12 @@ export function BlogPage() {
         {/* Category tabs */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: '0.4rem', padding: '1rem 0 1.5rem', flexWrap: 'wrap' }}>
           <button onClick={() => handleCategoryClick('all')}
-            style={{ padding: '0.4rem 1rem', borderRadius: 100, border: 'none', cursor: 'pointer', background: activeCategory === 'all' ? 'var(--gold)' : 'var(--card2)', color: activeCategory === 'all' ? 'var(--bg)' : 'var(--muted)', fontFamily: 'Outfit', fontWeight: 600, fontSize: '0.8rem', transition: 'all 0.2s' }}>
+            style={{ padding: '0.4rem 1rem', borderRadius: 100, border: `1px solid ${activeCategory === 'all' ? 'var(--accent-primary)' : 'var(--border)'}`, cursor: 'pointer', background: activeCategory === 'all' ? 'var(--accent-primary)' : 'var(--card2)', color: activeCategory === 'all' ? '#F2EDE4' : 'var(--muted)', fontWeight: 600, fontSize: '0.8rem', transition: 'all 0.2s' }}>
             🌐 {t('Todos', 'All')}
           </button>
           {Object.entries(CATEGORY_LABELS).filter(([k]) => k !== 'platform').map(([key, cat]) => (
             <button key={key} onClick={() => handleCategoryClick(key)}
-              style={{ padding: '0.4rem 1rem', borderRadius: 100, cursor: 'pointer', background: activeCategory === key ? `${cat.color}22` : 'var(--card2)', color: activeCategory === key ? cat.color : 'var(--muted)', fontFamily: 'Outfit', fontWeight: 600, fontSize: '0.8rem', border: activeCategory === key ? `1px solid ${cat.color}50` : '1px solid var(--border)', transition: 'all 0.2s' }}>
+              style={{ padding: '0.4rem 1rem', borderRadius: 100, cursor: 'pointer', background: activeCategory === key ? `${cat.color}22` : 'var(--card2)', color: activeCategory === key ? cat.color : 'var(--muted)', fontWeight: 600, fontSize: '0.8rem', border: activeCategory === key ? `1px solid ${cat.color}50` : '1px solid var(--border)', transition: 'all 0.2s' }}>
               {cat.emoji} {categoryLabel(cat)}
             </button>
           ))}
@@ -314,7 +314,7 @@ export function BlogPage() {
           <span style={{ fontSize: '1.1rem' }}>
             {activeCategory === 'all' ? '🌐' : CATEGORY_LABELS[activeCategory]?.emoji}
           </span>
-          <span style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.95rem' }}>
+          <span style={{ fontWeight: 600, fontSize: '0.95rem' }}>
             {activeCategory === 'all'
               ? t('Últimas noticias', 'Latest news')
               : t(`Noticias de ${CATEGORY_LABELS[activeCategory]?.label}`, `${CATEGORY_LABELS[activeCategory]?.labelEn ?? CATEGORY_LABELS[activeCategory]?.label} news`)}

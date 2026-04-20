@@ -124,7 +124,7 @@ function MiniMockup() {
   const signal    = rsi === null ? 'BUY' : rsi < 40 ? 'BUY' : rsi > 60 ? 'SELL' : 'HOLD';
   const sigColor  = signal === 'BUY' ? 'var(--green)' : signal === 'SELL' ? 'var(--red)' : 'var(--gold)';
   const sigBg     = signal === 'BUY' ? 'rgba(0,200,122,0.1)' : signal === 'SELL' ? 'rgba(255,80,80,0.1)' : 'rgba(201,168,76,0.08)';
-  const sigBorder = signal === 'BUY' ? 'rgba(0,200,122,0.2)' : signal === 'SELL' ? 'rgba(255,80,80,0.2)' : 'rgba(201,168,76,0.2)';
+  const sigBorder = signal === 'BUY' ? 'rgba(0,200,122,0.2)' : signal === 'SELL' ? 'rgba(255,80,80,0.2)' : 'var(--border2)';
   const conf      = rsi === null ? '—' :
     signal === 'BUY'  ? `${Math.round((40 - rsi) / 40 * 45 + 55)}% conf.` :
     signal === 'SELL' ? `${Math.round((rsi - 60) / 40 * 45 + 55)}% conf.` : '65% conf.';
@@ -144,14 +144,14 @@ function MiniMockup() {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '0.78rem', color: 'var(--text)' }}>BTC/USD</span>
+            <span style={{ fontWeight: 700, fontSize: '0.78rem', color: 'var(--text)' }}>BTC/USD</span>
             {change !== null && (
               <span style={{ fontSize: '0.65rem', color: chColor, background: chBg, padding: '0.1rem 0.4rem', borderRadius: 4, border: `1px solid ${chBorder}` }}>
                 {up ? '+' : ''}{change.toFixed(2)}%
               </span>
             )}
           </div>
-          <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1rem', color: 'var(--text)' }}>
+          <span style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text)' }}>
             {price !== null ? `$${price.toLocaleString('en-US', { maximumFractionDigits: 0 })}` : '…'}
           </span>
         </div>
@@ -216,7 +216,7 @@ function MiniMockup() {
             <div style={{ fontSize: '0.65rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '0.6rem', fontWeight: 600 }}>BTC/USD · RSI (14)</div>
 
             {/* Big RSI number */}
-            <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '5rem', lineHeight: 1, color: rsiColor, letterSpacing: '-0.04em', marginBottom: '0.3rem', transition: 'color 0.3s' }}>
+            <div style={{ fontWeight: 700, fontSize: '5rem', lineHeight: 1, color: rsiColor, letterSpacing: '-0.04em', marginBottom: '0.3rem', transition: 'color 0.3s' }}>
               {rsi ?? '—'}
             </div>
             <div style={{ fontSize: '0.78rem', color: rsiColor, fontWeight: 600, marginBottom: '1.6rem', opacity: 0.85 }}>{rsiLabel}</div>
@@ -341,12 +341,12 @@ function ExitPopup({ onClose }: { onClose: () => void }) {
   const [email, setEmail] = useState('');
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-      <div className="glass-2" style={{ borderRadius: 24, padding: 'clamp(1.5rem,5vw,2.5rem)', maxWidth: 480, width: '100%', textAlign: 'center', border: '1px solid rgba(201,168,76,0.3)', position: 'relative' }}>
+      <div className="glass-2" style={{ borderRadius: 24, padding: 'clamp(1.5rem,5vw,2.5rem)', maxWidth: 480, width: '100%', textAlign: 'center', border: '1px solid var(--border2)', position: 'relative' }}>
         <button onClick={onClose} style={{ position: 'absolute', top: '1rem', right: '1.2rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: '1.2rem' }}>✕</button>
-        <div style={{ width: 48, height: 48, borderRadius: 14, background: 'var(--gold-dim)', border: '1px solid rgba(201,168,76,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+        <div style={{ width: 48, height: 48, borderRadius: 14, background: 'var(--gold-dim)', border: '1px solid var(--gold-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.8" strokeLinecap="round"><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-6"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
         </div>
-        <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.2rem,4vw,1.55rem)', marginBottom: '0.7rem', letterSpacing: '-0.02em' }}>
+        <h2 style={{ fontWeight: 700, fontSize: 'clamp(1.2rem,4vw,1.55rem)', marginBottom: '0.7rem', letterSpacing: '-0.02em' }}>
           {t('exit.title')}
         </h2>
         <p style={{ color: 'var(--text2)', lineHeight: 1.7, marginBottom: '1.5rem', fontSize: '0.88rem' }}>
@@ -632,7 +632,7 @@ export function HomePage() {
             <div className="platform-card reveal reveal-left d1" style={{ borderRadius: 'var(--radius-lg)', padding: 'clamp(1.8rem,4vw,2.8rem)', border: '1px solid var(--border)', borderLeft: '3px solid var(--gold)', background: 'var(--card2)', position: 'relative' }}>
               <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(var(--gold-glow), transparent 70%)', pointerEvents: 'none' }} />
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', marginBottom: '1rem' }}>
-                <div style={{ width: 40, height: 40, borderRadius: 11, background: 'var(--gold-dim)', border: '1px solid rgba(201,168,76,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 40, height: 40, borderRadius: 11, background: 'var(--gold-dim)', border: '1px solid var(--gold-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.8" strokeLinecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
                 </div>
                 <h3 style={{ fontFamily: 'Georgia, serif', fontWeight: 'normal', fontSize: 'clamp(1.15rem,2.5vw,1.35rem)' }}>
@@ -644,7 +644,7 @@ export function HomePage() {
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginBottom: '1.8rem' }}>
                 {MARKET_TAGS.map(tag => (
-                  <span key={tag} style={{ padding: '0.18rem 0.55rem', borderRadius: 100, fontSize: '0.68rem', background: 'var(--gold-dim)', color: 'var(--gold)', border: '1px solid rgba(201,168,76,0.2)', fontWeight: 500 }}>{tag}</span>
+                  <span key={tag} style={{ padding: '0.18rem 0.55rem', borderRadius: 100, fontSize: '0.68rem', background: 'var(--gold-dim)', color: 'var(--gold)', border: '1px solid var(--border2)', fontWeight: 500 }}>{tag}</span>
                 ))}
               </div>
               <a href={user ? MARKET_URL : undefined} onClick={!user ? () => { trackEvent('cta_click', { cta: 'platform_market', destination: 'register' }); navigate('/register'); } : () => trackEvent('cta_click', { cta: 'platform_market', destination: 'market_app' })} className="btn btn-gold" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -717,7 +717,7 @@ export function HomePage() {
               <div style={{ display: 'flex', gap: '2px', color: 'var(--gold)' }}>
                 {[0,1,2,3,4].map(i => <IconStar key={i} />)}
               </div>
-              <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.95rem', color: 'var(--gold)' }}>4.8</span>
+              <span style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--gold)' }}>4.8</span>
               <span style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>/5</span>
               <span style={{ width: 1, height: 14, background: 'var(--border2)' }} />
               <span style={{ color: 'var(--text2)', fontSize: '0.8rem' }}>
@@ -857,7 +857,7 @@ export function HomePage() {
                 position: 'relative', overflow: 'hidden',
               }}>
                 {tier.tag && (
-                  <div style={{ position: 'absolute', top: 14, right: 14, padding: '0.2rem 0.6rem', borderRadius: 100, fontSize: '0.62rem', fontWeight: 700, background: tier.highlight ? 'rgba(201,168,76,0.15)' : 'rgba(0,200,122,0.1)', color: tier.highlight ? 'var(--gold)' : 'var(--green)', border: `1px solid ${tier.highlight ? 'rgba(201,168,76,0.3)' : 'rgba(0,200,122,0.25)'}` }}>
+                  <div style={{ position: 'absolute', top: 14, right: 14, padding: '0.2rem 0.6rem', borderRadius: 100, fontSize: '0.62rem', fontWeight: 700, background: tier.highlight ? 'rgba(201,168,76,0.15)' : 'rgba(0,200,122,0.1)', color: tier.highlight ? 'var(--gold)' : 'var(--green)', border: `1px solid ${tier.highlight ? 'var(--border2)' : 'rgba(0,200,122,0.25)'}` }}>
                     {tier.tag}
                   </div>
                 )}
@@ -866,9 +866,9 @@ export function HomePage() {
                   <span style={{ fontSize: '0.9rem' }}>{tier.icon}</span>
                   <span style={{ fontSize: '0.72rem', fontWeight: 700, color: tier.platformColor, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{tier.platform}</span>
                 </div>
-                <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '1rem', color: 'var(--text)', marginBottom: '0.4rem' }}>{tier.name}</div>
+                <div style={{ fontWeight: 600, fontSize: '1rem', color: 'var(--text)', marginBottom: '0.4rem' }}>{tier.name}</div>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.2rem', marginBottom: '1.2rem' }}>
-                  <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.8rem,4vw,2.4rem)', color: tier.color, letterSpacing: '-0.04em' }}>{tier.price}</span>
+                  <span style={{ fontWeight: 700, fontSize: 'clamp(1.8rem,4vw,2.4rem)', color: tier.color, letterSpacing: '-0.04em' }}>{tier.price}</span>
                   <span style={{ color: 'var(--muted)', fontSize: '0.82rem' }}>{tier.period}</span>
                 </div>
                 <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 1.5rem', display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
@@ -904,7 +904,7 @@ export function HomePage() {
               <div style={{ fontSize: '0.62rem', color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '0.5rem', fontWeight: 600 }}>
                 {lang === 'es' ? 'Quiénes somos' : 'Who we are'}
               </div>
-              <h3 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.1rem,2.5vw,1.4rem)', marginBottom: '0.7rem' }}>
+              <h3 style={{ fontWeight: 700, fontSize: 'clamp(1.1rem,2.5vw,1.4rem)', marginBottom: '0.7rem' }}>
                 {lang === 'es' ? 'Traders, analistas e ingenieros de IA.' : 'Traders, analysts, and AI engineers.'}
               </h3>
               <p style={{ color: 'var(--text2)', fontSize: '0.87rem', lineHeight: 1.75, margin: 0 }}>
@@ -922,7 +922,7 @@ export function HomePage() {
                 <div key={i} style={{ display: 'flex', gap: '0.7rem', maxWidth: 200 }}>
                   <span style={{ fontSize: '1.3rem', lineHeight: 1, flexShrink: 0, marginTop: 2 }}>{p.icon}</span>
                   <div>
-                    <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.83rem', marginBottom: '0.2rem' }}>{p.title}</div>
+                    <div style={{ fontWeight: 600, fontSize: '0.83rem', marginBottom: '0.2rem' }}>{p.title}</div>
                     <div style={{ color: 'var(--muted)', fontSize: '0.75rem', lineHeight: 1.5 }}>{p.desc}</div>
                   </div>
                 </div>

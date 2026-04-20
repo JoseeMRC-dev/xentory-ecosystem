@@ -84,7 +84,7 @@ const PRICE_REF: Record<string, { price: number; change24h: number; changePercen
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
-  crypto:      '#c9a84c',
+  crypto:      'var(--gold)',
   stocks:      '#00d4ff',
   forex:       '#00ff88',
   commodities: '#f97316',
@@ -189,7 +189,7 @@ export function WatchlistManager() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
           <span style={{ fontSize: '1rem' }}>⭐</span>
-          <span style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1rem' }}>My Watchlist</span>
+          <span style={{ fontWeight: 600, fontSize: '1rem' }}>My Watchlist</span>
           <span style={{
             background: 'var(--card2)', borderRadius: 100, padding: '0.15rem 0.5rem',
             fontSize: '0.72rem', color: 'var(--muted)', fontWeight: 500,
@@ -322,11 +322,11 @@ export function WatchlistManager() {
                   {CATEGORY_ICONS[asset.category] ?? '◆'}
                 </span>
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: '0.82rem', fontFamily: 'Outfit' }}>{asset.symbol}</div>
+                  <div style={{ fontWeight: 600, fontSize: '0.82rem', fontFamily: 'Figtree, sans-serif' }}>{asset.symbol}</div>
                   <div style={{ fontSize: '0.65rem', color: 'var(--muted)' }}>{asset.category}</div>
                 </div>
               </div>
-              <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1.05rem', marginBottom: '0.25rem' }}>
+              <div style={{ fontWeight: 600, fontSize: '1.05rem', marginBottom: '0.25rem' }}>
                 {asset.price > 0 ? formatPrice(asset.price, asset.category) : '—'}
               </div>
               <div style={{ fontSize: '0.75rem', color: isUp ? 'var(--green)' : 'var(--red)', fontWeight: 500 }}>

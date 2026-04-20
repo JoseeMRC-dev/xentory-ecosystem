@@ -104,12 +104,11 @@ export function AuthCallbackPage() {
         </>
       ) : (
         <>
-          <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.5rem', marginBottom: '0.5rem' }}>
-            <span style={{ color: '#c9a84c' }}>Xen</span>
-            <span style={{ color: '#4d9fff' }}>tory</span>
+          <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '1.5rem', marginBottom: '0.5rem', color: 'var(--accent-primary)' }}>
+            Xentory<span style={{ color: 'var(--green)', fontStyle: 'normal' }}>.</span>
           </div>
           <div style={{
-            width: 36, height: 36, border: '3px solid var(--gold)',
+            width: 36, height: 36, border: '3px solid var(--accent-primary)',
             borderTopColor: 'transparent', borderRadius: '50%',
             animation: 'spin 0.8s linear infinite',
           }} />

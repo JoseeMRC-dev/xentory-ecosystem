@@ -23,9 +23,9 @@ function buildTickerHTML(matches: Match[]): string {
       style="display:inline-flex;align-items:center;gap:0.5rem;padding:0 1.8rem;border-right:1px solid rgba(255,255,255,0.06);flex-shrink:0;cursor:pointer;"
     >
       <span style="font-size:0.7rem">${sport?.emoji ?? '🏟️'}</span>
-      <span style="font-family:'Outfit',sans-serif;font-weight:600;font-size:0.75rem;color:var(--text2)">${m.homeTeam.shortName ?? m.homeTeam.name.slice(0,3).toUpperCase()}</span>
-      <span class="bet-tk-score" style="font-family:'Outfit',sans-serif;font-weight:800;font-size:0.82rem;color:var(--red)">${homeScore} - ${awayScore}</span>
-      <span style="font-family:'Outfit',sans-serif;font-weight:600;font-size:0.75rem;color:var(--text2)">${m.awayTeam.shortName ?? m.awayTeam.name.slice(0,3).toUpperCase()}</span>
+      <span style="font-family:var(--font-mono);font-weight:600;font-size:0.75rem;color:var(--text2)">${m.homeTeam.shortName ?? m.homeTeam.name.slice(0,3).toUpperCase()}</span>
+      <span class="bet-tk-score" style="font-family:var(--font-mono);font-weight:800;font-size:0.82rem;color:var(--red)">${homeScore} - ${awayScore}</span>
+      <span style="font-family:var(--font-mono);font-weight:600;font-size:0.75rem;color:var(--text2)">${m.awayTeam.shortName ?? m.awayTeam.name.slice(0,3).toUpperCase()}</span>
       <span class="bet-tk-clock" style="font-size:0.62rem;color:rgba(255,68,85,0.8);background:rgba(255,68,85,0.1);padding:0.1rem 0.4rem;border-radius:4px;border:1px solid rgba(255,68,85,0.2)">${clock}</span>
     </span>`;
   };
@@ -88,7 +88,7 @@ export function BetLiveTicker() {
         background: 'rgba(255,68,85,0.06)',
       }}>
         <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--red)', boxShadow: '0 0 6px var(--red)', display: 'inline-block', animation: 'pulse 1.5s infinite' }} />
-        <span style={{ fontFamily: "'Outfit',sans-serif", fontSize: '0.52rem', color: 'var(--red)', textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700 }}>EN DIRECTO</span>
+        <span style={{ fontFamily: 'var(--font-sans)', fontSize: '0.52rem', color: 'var(--red)', textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700 }}>EN DIRECTO</span>
       </div>
 
       {/* Track */}

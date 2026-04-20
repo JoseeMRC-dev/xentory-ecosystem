@@ -9,9 +9,9 @@ import type { Plan } from '../../types';
 const ONBOARDING_KEY = 'xentory_onboarding_done';
 
 const PLAN_COLORS: Record<Plan, string> = {
-  free:  '#5a6180',
-  pro:   '#c9a84c',
-  elite: '#3b9eff',
+  free:  'var(--muted)',
+  pro:   'var(--gold)',
+  elite: 'var(--cyan)',
 };
 
 
@@ -71,9 +71,9 @@ function PlatformCard({
       <div style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
         <span style={{
           padding: '0.18rem 0.55rem', borderRadius: 100, fontSize: '0.62rem',
-          background: `${PLAN_COLORS[plan]}14`, color: PLAN_COLORS[plan],
-          border: `1px solid ${PLAN_COLORS[plan]}28`, fontWeight: 600,
-          fontFamily: 'Outfit, sans-serif', letterSpacing: '0.05em',
+          background: `var(--card2)`, color: PLAN_COLORS[plan],
+          border: `1px solid var(--border)`, fontWeight: 600,
+          letterSpacing: '0.05em',
         }}>
           {PLAN_LABELS[plan]}
         </span>
@@ -84,7 +84,7 @@ function PlatformCard({
         {icon}
       </div>
 
-      <h3 style={{ fontSize: 'clamp(1rem, 3vw, 1.15rem)', marginBottom: '0.3rem', color, lineHeight: 1.2, fontFamily: 'Outfit, sans-serif', fontWeight: 800 }}>{name}</h3>
+      <h3 style={{ fontSize: 'clamp(1rem, 3vw, 1.15rem)', marginBottom: '0.3rem', color, lineHeight: 1.2, fontFamily: 'Georgia, serif', fontStyle: 'italic', fontWeight: 'normal' }}>{name}</h3>
       <p style={{ color: 'var(--muted)', fontSize: '0.8rem', marginBottom: '1rem', lineHeight: 1.55 }}>
         {planKey === 'market'
           ? t('platforms.market.desc').substring(0, 65) + '…'
@@ -198,8 +198,8 @@ export function DashboardPage() {
 
       {/* Header */}
       <div className="animate-fadeUp" style={{ marginBottom: '1.8rem' }}>
-        <h1 style={{ fontSize: 'clamp(1.3rem,4vw,1.7rem)', marginBottom: '0.3rem', fontFamily: 'Outfit, sans-serif', fontWeight: 800 }}>
-          {greeting}, <span className="text-gradient-gold">{user.name.split(' ')[0]}</span>
+        <h1 style={{ fontSize: 'clamp(1.3rem,4vw,1.7rem)', marginBottom: '0.3rem' }}>
+          {greeting}, <span style={{ color: 'var(--accent-primary)' }}>{user.name.split(' ')[0]}</span>
         </h1>
         <p style={{ color: 'var(--muted)', fontSize: 'clamp(0.78rem,2vw,0.88rem)' }}>{memberTxt}</p>
       </div>
@@ -211,17 +211,17 @@ export function DashboardPage() {
           onClick={() => handleLaunch(quickAction.platform)}
           style={{
             marginBottom: '1.2rem', padding: '0.85rem 1.2rem', borderRadius: 14, cursor: 'pointer',
-            background: quickAction.platform === 'market' ? 'linear-gradient(135deg,rgba(201,168,76,0.08),rgba(201,168,76,0.03))' : 'linear-gradient(135deg,rgba(0,200,122,0.08),rgba(0,200,122,0.03))',
-            border: `1px solid ${quickAction.platform === 'market' ? 'rgba(201,168,76,0.22)' : 'rgba(59,158,255,0.22)'}`,
+            background: 'var(--card2)',
+            border: `1px solid ${quickAction.platform === 'market' ? 'var(--border2)' : 'var(--border)'}`,
             display: 'flex', alignItems: 'center', gap: '0.8rem',
             transition: 'border-color 0.2s, transform 0.2s',
           }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = quickAction.platform === 'market' ? 'rgba(201,168,76,0.45)' : 'rgba(59,158,255,0.45)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = quickAction.platform === 'market' ? 'rgba(201,168,76,0.22)' : 'rgba(59,158,255,0.22)'; e.currentTarget.style.transform = 'none'; }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent-primary)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = quickAction.platform === 'market' ? 'var(--border2)' : 'var(--border)'; e.currentTarget.style.transform = 'none'; }}
         >
           <span style={{ fontSize: '1.4rem', flexShrink: 0 }}>{quickAction.emoji}</span>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: quickAction.platform === 'market' ? 'var(--gold)' : 'var(--cyan)' }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--accent-primary)' }}>
               {quickAction.label}
             </div>
             <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginTop: '0.1rem' }}>
@@ -253,14 +253,13 @@ export function DashboardPage() {
         {/* Launch overlay */}
         {launching && (
           <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'var(--bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', animation: 'fadeIn 0.3s ease' }}>
-            <div style={{ position: 'absolute', width: 400, height: 400, borderRadius: '50%', background: launching === 'market' ? 'radial-gradient(circle,rgba(201,168,76,0.08),transparent 70%)' : 'radial-gradient(circle,rgba(59,158,255,0.08),transparent 70%)', pointerEvents: 'none' }} />
-            <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(2rem,6vw,2.8rem)', letterSpacing: '-0.04em', marginBottom: '2.5rem' }}>
-              <span className="text-gradient-gold">Xentory</span>
-              <span style={{ color: 'var(--cyan)' }}> {launching === 'market' ? 'Market' : 'Bet'}</span>
+            <div style={{ position: 'absolute', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle,var(--gold-dim),transparent 70%)', pointerEvents: 'none' }} />
+            <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 'clamp(2rem,6vw,2.8rem)', letterSpacing: '-0.02em', marginBottom: '2.5rem', color: 'var(--accent-primary)' }}>
+              Xentory {launching === 'market' ? 'Market' : 'Bet'}
             </div>
             <div style={{ position: 'relative', width: 64, height: 64, marginBottom: '2rem' }}>
-              <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '2px solid transparent', borderTopColor: launching === 'market' ? 'var(--gold)' : 'var(--cyan)', animation: 'spin 1.1s linear infinite' }} />
-              <div style={{ position: 'absolute', inset: 10, borderRadius: '50%', border: '2px solid transparent', borderTopColor: 'var(--cyan)', animation: 'spin 0.75s linear infinite reverse' }} />
+              <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '2px solid transparent', borderTopColor: 'var(--accent-primary)', animation: 'spin 1.1s linear infinite' }} />
+              <div style={{ position: 'absolute', inset: 10, borderRadius: '50%', border: '2px solid transparent', borderTopColor: 'var(--gold-l)', animation: 'spin 0.75s linear infinite reverse' }} />
             </div>
             <p style={{ color: 'var(--muted)', fontSize: '0.75rem', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
               {launching === 'market' ? (lang === 'es' ? 'Cargando mercados…' : 'Loading markets…') : (lang === 'es' ? 'Cargando análisis…' : 'Loading analysis…')}
@@ -274,7 +273,7 @@ export function DashboardPage() {
 
         {/* Telegram status */}
         <div className="glass" style={{ borderRadius: 18, padding: 'clamp(1rem,4vw,1.8rem)' }}>
-          <h2 style={{ fontSize: '0.92rem', marginBottom: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'Outfit, sans-serif', color: 'var(--text2)' }}>
+          <h2 style={{ fontSize: '0.92rem', marginBottom: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text2)' }}>
             <TelegramIcon /> Telegram
           </h2>
           <div style={{ padding: '0.85rem 1rem', background: user.telegramLinked ? 'rgba(0,200,122,0.05)' : 'var(--card2)', borderRadius: 12, border: `1px solid ${user.telegramLinked ? 'rgba(0,200,122,0.12)' : 'var(--border)'}` }}>
@@ -293,15 +292,11 @@ export function DashboardPage() {
         {/* Bundle CTA */}
         {(user.subscriptions.market === 'free' || user.subscriptions.bets === 'free') && (
           <>
-            <style>{`
-              @keyframes bundleGlow{0%,100%{box-shadow:0 0 0px rgba(201,168,76,0)}50%{box-shadow:0 0 28px rgba(201,168,76,0.45),0 0 10px rgba(201,168,76,0.2)}}
-              @keyframes bundleShake{0%,82%,100%{transform:none}85%{transform:translateX(-5px)}88%{transform:translateX(5px)}91%{transform:translateX(-4px)}94%{transform:translateX(4px)}97%{transform:translateX(-2px)}}
-            `}</style>
-            <div onClick={() => navigate('/pricing?tab=bundle')} style={{ borderRadius: 18, padding: 'clamp(1rem,4vw,1.8rem)', background: 'linear-gradient(135deg,rgba(201,168,76,0.07),rgba(59,158,255,0.04))', border: '1px solid rgba(201,168,76,0.4)', cursor: 'pointer', transition: 'border-color 0.2s', display: 'flex', flexDirection: 'column', justifyContent: 'center', animation: 'bundleGlow 3.5s ease-in-out infinite, bundleShake 6s ease-in-out infinite' }}
-              onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.7)')}
-              onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.4)')}
+            <div onClick={() => navigate('/pricing?tab=bundle')} style={{ borderRadius: 18, padding: 'clamp(1rem,4vw,1.8rem)', background: 'var(--accent-light)', border: '1px solid var(--border2)', cursor: 'pointer', transition: 'border-color 0.2s', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--accent-primary)')}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border2)')}
             >
-              <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.95rem', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text)' }}>
+              <div style={{ fontWeight: 600, fontSize: '0.95rem', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text)' }}>
                 <span style={{ color: 'var(--gold)' }}><StarIcon /></span>
                 {lang === 'es' ? 'Bundle Total — Ahorra 9€/mes' : 'Full Bundle — Save €9/mo'}
               </div>

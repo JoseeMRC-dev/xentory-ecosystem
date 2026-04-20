@@ -14,7 +14,7 @@ import type { Match } from '../../types';
 // Football competitions for the slider
 const FOOTBALL_COMPETITIONS = [
   { id: 'champions', emoji: '⭐', name: 'Champions League', shortName: 'UCL', color: '#1a56db' },
-  { id: 'laliga',    emoji: '🇪🇸', name: 'La Liga',          shortName: 'LaLiga', color: '#c9a84c' },
+  { id: 'laliga',    emoji: '🇪🇸', name: 'La Liga',          shortName: 'LaLiga', color: 'var(--gold)' },
   { id: 'premier',   emoji: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', name: 'Premier League',  shortName: 'EPL', color: '#3d0099' },
   { id: 'seriea',    emoji: '🇮🇹', name: 'Serie A',           shortName: 'SerieA', color: '#006dac' },
   { id: 'bundesliga',emoji: '🇩🇪', name: 'Bundesliga',        shortName: 'BL', color: '#e30613' },
@@ -60,7 +60,7 @@ function StatCard({ icon, value, label, color }: { icon: string; value: string; 
     <div className="glass" style={{ borderRadius: 14, padding: '1.4rem', position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', top: '1rem', right: '1rem', fontSize: '1.4rem', opacity: 0.4 }}>{icon}</div>
       <div style={{ fontSize: '0.72rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.4rem' }}>{label}</div>
-      <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '2rem', color, letterSpacing: '-0.04em' }}>{value}</div>
+      <div style={{ fontWeight: 700, fontSize: '2rem', color, letterSpacing: '-0.04em' }}>{value}</div>
     </div>
   );
 }
@@ -187,21 +187,21 @@ export function DashboardPage() {
           {user?.plan === 'free' ? (
             // Free plan: prompt to upgrade
             <>
-              <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.4rem', color: 'var(--muted)', letterSpacing: '-0.03em', marginBottom: '0.35rem' }}>{t('No incluido', 'Not included')}</div>
+              <div style={{ fontWeight: 700, fontSize: '1.4rem', color: 'var(--muted)', letterSpacing: '-0.03em', marginBottom: '0.35rem' }}>{t('No incluido', 'Not included')}</div>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.72rem', color: 'var(--gold)', fontWeight: 600 }}>
                 💎 {t('Mejorar plan →', 'Upgrade plan →')}
               </div>
             </>
           ) : tgLinked === null ? (
             // Loading
-            <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '2rem', color: 'var(--muted)', letterSpacing: '-0.04em' }}>…</div>
+            <div style={{ fontWeight: 700, fontSize: '2rem', color: 'var(--muted)', letterSpacing: '-0.04em' }}>…</div>
           ) : tgLinked ? (
             // Linked
-            <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '2rem', color: 'var(--green)', letterSpacing: '-0.04em' }}>{t('Activo', 'Active')}</div>
+            <div style={{ fontWeight: 700, fontSize: '2rem', color: 'var(--green)', letterSpacing: '-0.04em' }}>{t('Activo', 'Active')}</div>
           ) : (
             // Paid plan but not yet linked
             <>
-              <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.6rem', color: 'var(--gold)', letterSpacing: '-0.04em', marginBottom: '0.3rem' }}>{t('Pendiente', 'Pending')}</div>
+              <div style={{ fontWeight: 700, fontSize: '1.6rem', color: 'var(--gold)', letterSpacing: '-0.04em', marginBottom: '0.3rem' }}>{t('Pendiente', 'Pending')}</div>
               <div style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>{t('Vincular →', 'Link →')}</div>
             </>
           )}
@@ -252,7 +252,7 @@ export function DashboardPage() {
                   <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>{pick.competition} · {pick.market}</div>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.88rem', color: confidenceColor(pick.confidence) }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.88rem', color: confidenceColor(pick.confidence) }}>
                     {pick.confidence}%
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--gold)' }}>@{pick.odds}</div>
@@ -428,12 +428,12 @@ export function DashboardPage() {
           style={{
             marginTop: '1.5rem', padding: '1.2rem 1.5rem',
             background: 'linear-gradient(135deg, rgba(201,168,76,0.08), rgba(0,255,136,0.05))',
-            border: '1px solid rgba(201,168,76,0.2)', borderRadius: 14,
+            border: '1px solid var(--border2)', borderRadius: 14,
             display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer',
           }}
         >
           <div>
-            <div style={{ fontFamily: 'Outfit', fontWeight: 700, marginBottom: '0.2rem' }}>
+            <div style={{ fontWeight: 600, marginBottom: '0.2rem' }}>
               🚀 {t('Upgrade a Plan Pro — Análisis completo en todos los deportes', 'Upgrade to Pro Plan — Full analysis across all sports')}
             </div>
             <div style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>

@@ -24,7 +24,7 @@ interface Category {
 }
 
 const LEVEL_COLOR: Record<string, string> = {
-  basic: '#00c896', intermediate: '#c9a84c', advanced: '#e05c5c',
+  basic: '#00c896', intermediate: 'var(--gold)', advanced: '#e05c5c',
 };
 const LEVEL_LABEL: Record<string, { es: string; en: string }> = {
   basic:        { es: 'Básico',     en: 'Basic'        },
@@ -508,7 +508,7 @@ export function EducationPage() {
               padding: '0.38rem 0.85rem', borderRadius: 6, fontSize: '0.78rem', fontWeight: 500,
               border: 'none', cursor: 'pointer', transition: 'all 0.15s',
               background: activeCategory === cat.id ? 'var(--gold)' : 'var(--card2)',
-              color: activeCategory === cat.id ? '#050810' : 'var(--muted)',
+              color: activeCategory === cat.id ? 'var(--bg)' : 'var(--muted)',
             }}>
             {lang === 'es' ? cat.labelEs : cat.labelEn}
           </button>

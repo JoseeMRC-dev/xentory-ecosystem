@@ -318,7 +318,7 @@ export function MatchAnalysisPage() {
           <div className="glass" style={{ borderRadius:16, padding:'1.5rem', borderLeft:'3px solid var(--gold)' }}>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1rem' }}>
               <h2 style={{ fontSize:'1rem' }}>🧠 {t('Análisis IA','AI Analysis')} — {match.homeTeam.name} vs {match.awayTeam.name}</h2>
-              <span style={{ padding:'0.2rem 0.7rem', borderRadius:100, fontSize:'0.65rem', background:analysis.tier==='pro'?'var(--gold-dim)':'var(--card2)', color:analysis.tier==='pro'?'var(--gold)':'var(--muted)', border:analysis.tier==='pro'?'1px solid rgba(201,168,76,0.2)':'1px solid var(--border)' }}>
+              <span style={{ padding:'0.2rem 0.7rem', borderRadius:100, fontSize:'0.65rem', background:analysis.tier==='pro'?'var(--gold-dim)':'var(--card2)', color:analysis.tier==='pro'?'var(--gold)':'var(--muted)', border:analysis.tier==='pro'?'1px solid var(--border2)':'1px solid var(--border)' }}>
                 {analysis.tier === 'pro' ? '⚡ Gemini Pro + Grounding' : 'Gemini Flash'}
               </span>
             </div>
@@ -335,7 +335,7 @@ export function MatchAnalysisPage() {
             </div>
           )}
 
-          <div className="glass" style={{ borderRadius:16, padding:'1.5rem', background:'linear-gradient(135deg, rgba(201,168,76,0.06), rgba(0,255,136,0.04))', border:'1px solid rgba(201,168,76,0.2)' }}>
+          <div className="glass" style={{ borderRadius:16, padding:'1.5rem', background:'linear-gradient(135deg, var(--accent-light), rgba(0,255,136,0.04))', border:'1px solid var(--border2)' }}>
             <div style={{ fontSize:'0.72rem', color:'var(--gold)', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'0.8rem' }}>🎯 {t('Mejor apuesta recomendada','Best recommended bet')}</div>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:'1rem' }}>
               <div>
@@ -808,7 +808,7 @@ function AnalysisWizardModal({ onClose }: { onClose: () => void }) {
                     <button
                       key={match.id} onClick={() => handleMatch(match)}
                       style={{ ...btnBase, padding: '0.7rem 0.9rem' }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--gold)'; (e.currentTarget as HTMLElement).style.background = 'rgba(201,168,76,0.06)'; }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--gold)'; (e.currentTarget as HTMLElement).style.background = 'var(--accent-light)'; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'; (e.currentTarget as HTMLElement).style.background = 'var(--card2)'; }}
                     >
                       <div style={{ flex: 1, textAlign: 'left' }}>
