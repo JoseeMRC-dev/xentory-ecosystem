@@ -6,11 +6,17 @@ const ThemeCtx = createContext<Ctx | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
-    try { return (localStorage.getItem('xentory_theme') as Theme) ?? 'dark'; } catch { return 'dark'; }
+    try {
+      const saved = localStorage.getItem('xentory-theme') as Theme | null;
+      if (saved === 'light' || saved === 'dark') return saved;
+      const old = localStorage.getItem('xentory_theme') as Theme | null;
+      if (old === 'light' || old === 'dark') return old;
+    } catch { /* ignore */ }
+    return 'light';
   });
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
-    try { localStorage.setItem('xentory_theme', theme); } catch { /**/ }
+    try { localStorage.setItem('xentory-theme', theme); } catch { /**/ }
   }, [theme]);
   const toggle = useCallback(() => setTheme(t => t === 'dark' ? 'light' : 'dark'), []);
   return <ThemeCtx.Provider value={{ theme, toggle }}>{children}</ThemeCtx.Provider>;
