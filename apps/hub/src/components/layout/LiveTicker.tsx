@@ -122,17 +122,36 @@ function runEngine(
 
   // 2. Frankfurter forex
   const FX = CRYPTO.length;
+  const applyFx = (usd: number, gbp: number) => {
+    if (usd > 0)        patch(FX,     usd,       opens[FX]     || usd);
+    if (usd > 0 && gbp > 0) patch(FX + 1, usd / gbp, opens[FX + 1] || usd / gbp);
+  };
+
   const pollFx = () => {
     if (dead) return;
+    // Primary: Frankfurter (daily ECB rates)
     fetch('https://api.frankfurter.app/latest?from=EUR&to=USD,GBP')
       .then(r => r.json())
-      .then((d: { rates: { USD: number; GBP: number } }) => {
+      .then((d: { rates?: { USD?: number; GBP?: number } }) => {
         if (dead) return;
-        const { USD: usd, GBP: gbp } = d.rates ?? {};
-        if (usd)        patch(FX,     usd,       opens[FX]     || usd);
-        if (usd && gbp) patch(FX + 1, usd / gbp, opens[FX + 1] || usd / gbp);
+        const usd = d.rates?.USD ?? 0;
+        const gbp = d.rates?.GBP ?? 0;
+        if (usd > 0) { applyFx(usd, gbp); return; }
+        throw new Error('no data');
       })
-      .catch(() => {});
+      .catch(() => {
+        if (dead) return;
+        // Fallback: open.er-api.com (free, no key needed)
+        fetch('https://open.er-api.com/v6/latest/EUR')
+          .then(r => r.json())
+          .then((d: { rates?: { USD?: number; GBP?: number } }) => {
+            if (dead) return;
+            const usd = d.rates?.USD ?? 0;
+            const gbp = d.rates?.GBP ?? 0;
+            applyFx(usd, gbp);
+          })
+          .catch(() => {});
+      });
   };
   pollFx();
   const fxTimer = setInterval(pollFx, 60_000);

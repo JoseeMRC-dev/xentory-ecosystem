@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { CurrencyProvider } from './context/CurrencyContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
+import { PreferencesProvider } from './context/PreferencesContext';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import './styles/global.css';
@@ -73,9 +74,11 @@ export default function App() {
       <ThemeProvider>
         <LanguageProvider>
           <CurrencyProvider>
-            <AuthProvider>
-              <AppRoutes />
-            </AuthProvider>
+            <PreferencesProvider>
+              <AuthProvider>
+                <AppRoutes />
+              </AuthProvider>
+            </PreferencesProvider>
           </CurrencyProvider>
         </LanguageProvider>
       </ThemeProvider>

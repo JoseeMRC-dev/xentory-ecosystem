@@ -194,7 +194,7 @@ function MiniMockup() {
         {/* 7-day chart */}
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: 48, marginBottom: '1rem' }}>
           {bars.map((h, i) => (
-            <div key={i} style={{ flex: 1, borderRadius: '2px 2px 0 0', height: `${h}%`, background: i === bars.length - 1 ? 'var(--gold)' : 'var(--card3)', transition: 'height 0.3s' }} />
+            <div key={i} style={{ flex: 1, borderRadius: '2px 2px 0 0', height: `${h}%`, background: i === bars.length - 1 ? 'var(--gold)' : 'var(--border2)', transition: 'height 0.3s' }} />
           ))}
         </div>
         {/* Signal + RSI */}
