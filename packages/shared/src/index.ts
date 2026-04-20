@@ -1,3 +1,7 @@
+// ── MERIDIAN DESIGN SYSTEM ──
+export { SignalTag } from './components/SignalTag';
+export { useTheme as useMeridianTheme } from './hooks/useTheme';
+
 // ── SHARED TYPES ──
 export type Plan = 'free' | 'pro' | 'elite';
 export type Platform = 'market' | 'bets' | 'both';
