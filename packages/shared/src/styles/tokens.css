@@ -68,38 +68,38 @@
 
 /* === MODO OSCURO === */
 [data-theme="dark"] {
-  /* Fondos */
-  --bg-primary: #0D1A12;       /* Verde bosque muy oscuro */
-  --bg-secondary: #091410;     /* Más oscuro para nav/footer */
-  --bg-nav: #091410;
-  --bg-footer: #050D08;
-  --bg-ribbon: #091410;
+  /* Fondos — bosque oscuro, no pitch black */
+  --bg-primary: #0F1E15;
+  --bg-secondary: #0B1812;
+  --bg-nav: #0B1812;
+  --bg-footer: #060F0B;
+  --bg-ribbon: #0B1812;
 
-  /* Texto — ALTA LEGIBILIDAD */
-  --text-primary: #EDE8DF;     /* Marfil claro — máximo contraste */
-  --text-secondary: #A8BFB0;   /* Texto body — legible */
-  --text-muted: #8BAF96;       /* Navegación */
-  --text-caption: #5A8070;     /* Captions */
+  /* Texto — jerarquía clara, sin cansar la vista */
+  --text-primary: #F0EBE2;     /* marfil cálido ~13:1 */
+  --text-secondary: #C2D5CA;   /* sage claro ~7:1 */
+  --text-muted: #8FAF9F;       /* muted legible ~4.5:1 */
+  --text-caption: #8FAF9F;
 
   /* Marca */
   --accent-primary: #2D6A5A;
   --accent-hover: #245548;
-  --accent-light: rgba(45,106,90,0.15);
+  --accent-light: rgba(45,106,90,0.20);
   --accent-text: #6ECBA8;
 
-  /* Bordes */
-  --border-primary: rgba(255,255,255,0.07);
-  --border-secondary: rgba(255,255,255,0.05);
-  --border-rule: rgba(255,255,255,0.1);
-  --border-heading: rgba(255,255,255,0.15);
+  /* Bordes — claramente visibles */
+  --border-primary: rgba(255,255,255,0.10);
+  --border-secondary: rgba(255,255,255,0.07);
+  --border-rule: rgba(255,255,255,0.14);
+  --border-heading: rgba(255,255,255,0.20);
 
   /* Señales */
-  --signal-buy-bg: rgba(52,211,153,0.12);
+  --signal-buy-bg: rgba(52,211,153,0.14);
   --signal-buy-text: #6ECBA8;
-  --signal-sell-bg: rgba(239,68,68,0.12);
+  --signal-sell-bg: rgba(239,68,68,0.14);
   --signal-sell-text: #FCA5A5;
-  --signal-hold-bg: rgba(245,158,11,0.12);
+  --signal-hold-bg: rgba(245,158,11,0.14);
   --signal-hold-text: #FCD34D;
-  --signal-pro-bg: rgba(99,102,241,0.12);
+  --signal-pro-bg: rgba(99,102,241,0.14);
   --signal-pro-text: #A5B4FC;
 }

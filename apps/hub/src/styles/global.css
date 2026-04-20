@@ -78,57 +78,59 @@
 
 /* ══ MERIDIAN DARK MODE ══════════════════════════════════════════ */
 [data-theme="dark"] {
-  --bg:         #0D1A12;
-  --bg2:        #091410;
-  --bg3:        #071009;
-  --bg4:        #050D07;
+  --bg:         #0F1E15;   /* forest, not pitch black — less eye strain */
+  --bg2:        #0B1812;
+  --bg3:        #08120E;
+  --bg4:        #060F0B;
 
-  --gold:       #2D6A5A;   /* emerald dark-mode primary */
-  --gold-l:     #6ECBA8;   /* sage for text/gradient highlights */
-  --gold-dim:   rgba(45,106,90,0.15);
-  --gold-glow:  rgba(45,106,90,0.20);
+  --gold:       #2D6A5A;
+  --gold-l:     #6ECBA8;
+  --gold-dim:   rgba(45,106,90,0.20);
+  --gold-glow:  rgba(45,106,90,0.24);
 
   --cyan:       #3A6EA5;
-  --cyan-dim:   rgba(58,110,165,0.15);
+  --cyan-dim:   rgba(58,110,165,0.18);
 
-  --green:      #10B981;
-  --green-dim:  rgba(16,185,129,0.12);
+  --green:      #34D399;   /* lighter mint — readable on dark */
+  --green-dim:  rgba(52,211,153,0.14);
   --red:        #FCA5A5;
   --orange:     #FCD34D;
 
-  --text:       #EDE8DF;
-  --text2:      #A8BFB0;
-  --muted:      #5A8070;
+  /* Text hierarchy — enough contrast, no eye strain */
+  --text:       #F0EBE2;   /* warm ivory, ~13:1 contrast */
+  --text2:      #C2D5CA;   /* light sage, ~7:1 contrast */
+  --muted:      #8FAF9F;   /* readable muted, ~4.5:1 contrast */
 
-  --border:     rgba(255,255,255,0.07);
-  --border2:    rgba(255,255,255,0.10);
-  --card:       rgba(255,255,255,0.025);
-  --card2:      rgba(255,255,255,0.04);
-  --card3:      rgba(255,255,255,0.06);
+  /* Surfaces — clearly layered but not harsh */
+  --border:     rgba(255,255,255,0.10);
+  --border2:    rgba(255,255,255,0.17);
+  --card:       rgba(255,255,255,0.06);
+  --card2:      rgba(255,255,255,0.10);
+  --card3:      rgba(255,255,255,0.15);
 
-  --nav-bg:     rgba(9,20,16,0.96);
+  --nav-bg:     rgba(11,24,18,0.97);
   --shadow:     0 4px 24px rgba(0,0,0,0.4);
   --shadow-lg:  0 16px 48px rgba(0,0,0,0.5);
-  --bg-hard:    #0D1A12;
-  --nav-bg-solid: rgba(9,20,16,0.97);
+  --bg-hard:    #0F1E15;
+  --nav-bg-solid: rgba(11,24,18,0.99);
 
   --accent-primary: #2D6A5A;
   --accent-hover:   #245548;
-  --accent-light:   rgba(45,106,90,0.15);
+  --accent-light:   rgba(45,106,90,0.20);
   --accent-text:    #6ECBA8;
-  --bg-footer:      #050D08;
-  --bg-ribbon:      #091410;
-  --text-caption:   #5A8070;
-  --border-rule:    rgba(255,255,255,0.10);
-  --border-heading: rgba(255,255,255,0.15);
+  --bg-footer:      #060F0B;
+  --bg-ribbon:      #0B1812;
+  --text-caption:   #8FAF9F;
+  --border-rule:    rgba(255,255,255,0.14);
+  --border-heading: rgba(255,255,255,0.20);
 
-  --signal-buy-bg:   rgba(52,211,153,0.12);
+  --signal-buy-bg:   rgba(52,211,153,0.14);
   --signal-buy-text: #6ECBA8;
-  --signal-sell-bg:  rgba(239,68,68,0.12);
+  --signal-sell-bg:  rgba(239,68,68,0.14);
   --signal-sell-text:#FCA5A5;
-  --signal-hold-bg:  rgba(245,158,11,0.12);
+  --signal-hold-bg:  rgba(245,158,11,0.14);
   --signal-hold-text:#FCD34D;
-  --signal-pro-bg:   rgba(99,102,241,0.12);
+  --signal-pro-bg:   rgba(99,102,241,0.14);
   --signal-pro-text: #A5B4FC;
 }
 

@@ -46,30 +46,30 @@
 
 /* ══ DARK MODE ═══════════════════════════════════════════════════ */
 [data-theme="dark"] {
-  --bg:        #0D1A12;
-  --nav-bg:    #091410;
-  --bg2:       #091410;
-  --bg3:       #071009;
+  --bg:        #0F1E15;
+  --nav-bg:    #0B1812;
+  --bg2:       #0B1812;
+  --bg3:       #08120E;
   --gold:      #2D6A5A;
   --gold-l:    #6ECBA8;
-  --gold-dim:  rgba(45,106,90,0.15);
+  --gold-dim:  rgba(45,106,90,0.20);
   --cyan:      #3A6EA5;
-  --cyan-dim:  rgba(58,110,165,0.15);
-  --green:     #10B981;
+  --cyan-dim:  rgba(58,110,165,0.18);
+  --green:     #34D399;
   --red:       #FCA5A5;
   --orange:    #FCD34D;
-  --text:      #EDE8DF;
-  --text2:     #A8BFB0;
-  --muted:     #5A8070;
-  --border:    rgba(255,255,255,0.07);
-  --border2:   rgba(255,255,255,0.10);
-  --card:      rgba(255,255,255,0.025);
-  --card2:     rgba(255,255,255,0.04);
+  --text:      #F0EBE2;
+  --text2:     #C2D5CA;
+  --muted:     #8FAF9F;
+  --border:    rgba(255,255,255,0.10);
+  --border2:   rgba(255,255,255,0.17);
+  --card:      rgba(255,255,255,0.06);
+  --card2:     rgba(255,255,255,0.10);
 
   --accent-primary: #2D6A5A;
   --accent-hover:   #245548;
-  --accent-light:   rgba(45,106,90,0.15);
-  --border-rule:    rgba(255,255,255,0.10);
+  --accent-light:   rgba(45,106,90,0.20);
+  --border-rule:    rgba(255,255,255,0.14);
 
   --signal-buy-bg:   rgba(52,211,153,0.12);
   --signal-buy-text: #6ECBA8;
