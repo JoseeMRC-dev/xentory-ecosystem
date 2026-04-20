@@ -210,6 +210,7 @@ export function MetodologiaPage() {
   const plan = user?.subscriptions?.market ?? user?.subscriptions?.bets ?? null;
 
   const [tab, setTab] = useState<PlatformTab>('both');
+  const [assetFilter, setAssetFilter] = useState<string | null>(null);
 
   // Map UI tab to AccuracyPlatform
   const accuracyPlatform: AccuracyPlatform = tab;
@@ -217,10 +218,16 @@ export function MetodologiaPage() {
   const { data: accData, loading: accLoading } = useAccuracyStats(accuracyPlatform, 6);
   const { signals, loading: sigLoading, error: sigError } = useSignals(user ? plan : null);
 
-  // Filter signals by selected platform tab
-  const filteredSignals = tab === 'both'
+  // Unique assets for chip filter (from all signals, before platform/asset filter)
+  const uniqueAssets = Array.from(
+    new Map(signals.map(s => [s.asset, { asset: s.asset, icon: s.asset_icon }])).values()
+  ).slice(0, 14);
+
+  // Filter signals: platform tab first, then optional asset chip
+  const filteredSignals = (tab === 'both'
     ? signals
-    : signals.filter(s => s.platform === tab || s.platform === 'both');
+    : signals.filter(s => s.platform === tab || s.platform === 'both')
+  ).filter(s => assetFilter === null || s.asset === assetFilter);
 
   const visibleSignals = filteredSignals.filter(s => s.visible);
   const wins  = visibleSignals.filter(s => s.result === 'win').length;
@@ -410,17 +417,54 @@ export function MetodologiaPage() {
         {planUpgradeLabel && (
           <div
             onClick={() => navigate(user ? '/pricing' : '/register')}
-            style={{ marginBottom: '1rem', padding: '0.8rem 1rem', background: 'linear-gradient(135deg,rgba(201,168,76,0.08),rgba(0,212,255,0.05))', border: '1px solid var(--border2)', borderRadius: 10, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', transition: 'border-color 0.2s' }}
-            onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--border2)')}
+            style={{ marginBottom: '1rem', padding: '0.8rem 1rem', background: 'var(--accent-light)', border: '1px solid var(--border2)', borderRadius: 10, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', transition: 'border-color 0.2s' }}
+            onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--accent-primary)')}
             onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border2)')}
           >
             <span style={{ fontSize: '0.82rem', color: 'var(--text2)' }}>
               🔒 Las señales se muestran con retraso según tu plan.
-              <span style={{ color: 'var(--gold)', marginLeft: '0.3rem' }}>Señales en tiempo real con Elite.</span>
+              <span style={{ color: 'var(--accent-primary)', marginLeft: '0.3rem' }}>Señales en tiempo real con Elite.</span>
             </span>
-            <span style={{ fontSize: '0.78rem', color: 'var(--gold)', fontWeight: 600, whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: '0.78rem', color: 'var(--accent-primary)', fontWeight: 600, whiteSpace: 'nowrap' }}>
               {planUpgradeLabel} →
             </span>
+          </div>
+        )}
+
+        {/* Asset / currency chip filter */}
+        {!sigLoading && uniqueAssets.length > 1 && (
+          <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1rem', overflowX: 'auto', paddingBottom: '0.25rem' }}>
+            <button
+              onClick={() => setAssetFilter(null)}
+              style={{
+                padding: '0.25rem 0.75rem', borderRadius: 100, fontSize: '0.72rem', fontWeight: 600,
+                cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+                background: assetFilter === null ? 'var(--accent-primary)' : 'var(--card2)',
+                color:      assetFilter === null ? '#F2EDE4'               : 'var(--muted)',
+                border:     assetFilter === null ? '1px solid var(--accent-primary)' : '1px solid var(--border)',
+                transition: 'all 0.18s',
+              }}
+            >
+              Todos
+            </button>
+            {uniqueAssets.map(({ asset, icon }) => (
+              <button
+                key={asset}
+                onClick={() => setAssetFilter(a => a === asset ? null : asset)}
+                style={{
+                  padding: '0.25rem 0.75rem', borderRadius: 100, fontSize: '0.72rem', fontWeight: 600,
+                  cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+                  display: 'flex', alignItems: 'center', gap: '0.3rem',
+                  background: assetFilter === asset ? 'var(--accent-light)' : 'var(--card2)',
+                  color:      assetFilter === asset ? 'var(--accent-primary)' : 'var(--muted)',
+                  border:     assetFilter === asset ? '1px solid var(--accent-primary)' : '1px solid var(--border)',
+                  transition: 'all 0.18s',
+                }}
+              >
+                <span>{icon}</span>
+                <span>{asset}</span>
+              </button>
+            ))}
           </div>
         )}
 

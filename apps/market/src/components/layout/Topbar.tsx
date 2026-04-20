@@ -32,7 +32,7 @@ function buildTickerHTML(assets: Asset[]): string {
     <span
       class="mkt-tk-item"
       ${clone ? 'aria-hidden="true"' : `data-id="${a.id}"`}
-      style="display:inline-flex;align-items:center;gap:0.4rem;padding:0 1.6rem;cursor:pointer;font-size:0.78rem;border-right:1px solid rgba(255,255,255,0.06);flex-shrink:0;"
+      style="display:inline-flex;align-items:center;gap:0.4rem;padding:0 1.6rem;cursor:pointer;font-size:0.78rem;border-right:1px solid var(--border);flex-shrink:0;"
     >
       <span class="mkt-tk-sym" style="font-weight:600;color:var(--text2);letter-spacing:0.04em;font-family:var(--font-mono,monospace);">${a.symbol}</span>
       <span class="mkt-tk-price" style="color:var(--text);font-variant-numeric:tabular-nums;">${formatPrice(a.price, a.category)}</span>
@@ -163,7 +163,7 @@ export const Topbar = memo(function Topbar() {
           left: var(--sidebar-w); right: 0;
           height: var(--topbar-h);
           background: var(--nav-bg);
-          border-bottom: 1px solid rgba(255,255,255,0.06);
+          border-bottom: 1px solid var(--border);
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
           z-index: 40;
@@ -185,19 +185,19 @@ export const Topbar = memo(function Topbar() {
         }
         .mkt-tk-fade-left {
           position: absolute; left: 0; top: 0; bottom: 0; width: 60px; z-index: 2;
-          background: linear-gradient(90deg, rgba(4,6,15,0.95) 40%, transparent);
+          background: linear-gradient(90deg, var(--nav-bg) 40%, transparent);
           pointer-events: none;
         }
         .mkt-tk-fade-right {
           position: relative; z-index: 2;
           width: 40px; flex-shrink: 0;
-          background: linear-gradient(270deg, rgba(4,6,15,0.95) 40%, transparent);
+          background: linear-gradient(270deg, var(--nav-bg) 40%, transparent);
           pointer-events: none;
           align-self: stretch;
         }
         .mkt-topbar-actions {
           display: flex; align-items: center; gap: 0.5rem;
-          padding: 0 1rem; border-left: 1px solid rgba(255,255,255,0.06);
+          padding: 0 1rem; border-left: 1px solid var(--border);
           flex-shrink: 0; z-index: 3;
         }
         .mkt-topbar-icon-btn {
