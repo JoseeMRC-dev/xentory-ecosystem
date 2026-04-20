@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
 import { useLang } from '../../context/LanguageContext';
 
-const LOGO_CYAN = 'var(--cyan)';
+const MARKET_URL = (import.meta as any).env?.VITE_MARKET_URL ?? 'https://xentory-ecosystem-market.vercel.app';
+const BET_URL    = (import.meta as any).env?.VITE_BET_URL    ?? 'https://xentory-bet.vercel.app';
 
 export function Footer() {
   const { t } = useLang();
@@ -11,17 +12,17 @@ export function Footer() {
     {
       title: t('footer.platforms'),
       links: [
-        { label: t('footer.market'),    to: '#' },
-        { label: t('footer.bet'),       to: '#' },
-        { label: t('footer.telegram'),  to: '#' },
+        { label: t('footer.market'),   href: MARKET_URL },
+        { label: t('footer.bet'),      href: BET_URL     },
+        { label: t('footer.telegram'), href: 'https://t.me/xentory' },
       ],
     },
     {
       title: t('footer.product'),
       links: [
-        { label: t('footer.pricing'),      to: '/pricing'    },
-        { label: t('footer.methodology'),  to: '/metodologia' },
-        { label: t('footer.blog'),         to: '/blog'        },
+        { label: t('footer.pricing'),     to: '/pricing'     },
+        { label: t('footer.methodology'), to: '/metodologia' },
+        { label: t('footer.blog'),        to: '/blog'        },
       ],
     },
     {
@@ -34,13 +35,17 @@ export function Footer() {
     },
   ];
 
+  const footerStyle = {
+    background: '#0F1A14',
+    borderTop: '1px solid rgba(255,255,255,0.06)',
+  };
+
+  const textMuted  = 'rgba(242,237,228,0.38)';
+  const textBody   = 'rgba(242,237,228,0.55)';
+  const textHover  = 'rgba(242,237,228,0.85)';
+
   return (
-    <footer style={{
-      borderTop: '1px solid var(--border)',
-      background: 'var(--nav-bg)',
-      backdropFilter: 'blur(20px)',
-      WebkitBackdropFilter: 'blur(20px)',
-    }}>
+    <footer style={footerStyle}>
       <div style={{ maxWidth: 1160, margin: '0 auto', padding: 'clamp(2.5rem,5vw,4rem) clamp(1.2rem,5vw,2.5rem) 0' }}>
 
         {/* Grid */}
@@ -48,60 +53,58 @@ export function Footer() {
 
           {/* Brand column */}
           <div>
-            {/* Logo */}
-            <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1.2rem', marginBottom: '0.9rem', letterSpacing: '-0.04em' }}>
-              <span className="text-gradient-gold">Xen</span>
-              <span style={{ color: LOGO_CYAN }}>tory</span>
+            <div style={{ fontFamily: 'Georgia, serif', fontWeight: 'normal', fontSize: '1.2rem', marginBottom: '0.9rem', color: '#F2EDE4', letterSpacing: '-0.01em' }}>
+              Xentory<span style={{ color: '#6ECBA8' }}>.</span>
             </div>
-            <p style={{ color: 'var(--muted)', fontSize: '0.82rem', lineHeight: 1.75, maxWidth: 240, marginBottom: '1.2rem' }}>
+            <p style={{ color: textBody, fontSize: '0.82rem', lineHeight: 1.75, maxWidth: 240, marginBottom: '1.4rem' }}>
               {t('footer.tagline')}
             </p>
-            {/* Icon row — abstract data marks, no emojis */}
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              {[
-                <svg key="m" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
-                <svg key="t" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
-                <svg key="b" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><line x1="2" y1="12" x2="22" y2="12"/></svg>,
-              ].map((icon, i) => (
-                <div key={i} style={{ width: 30, height: 30, borderRadius: 7, background: 'var(--card2)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>
-                  {icon}
-                </div>
-              ))}
+            {/* SSL badge */}
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.3rem 0.7rem', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4, color: textMuted, fontSize: '0.65rem', letterSpacing: '0.05em' }}>
+              <svg width="10" height="12" viewBox="0 0 10 12" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+                <rect x="1" y="5" width="8" height="6" rx="1"/>
+                <path d="M3 5V3.5a2 2 0 0 1 4 0V5"/>
+              </svg>
+              Stripe SSL · Pagos seguros
             </div>
           </div>
 
           {/* Link columns */}
           {cols.map(col => (
             <div key={col.title}>
-              <h4 style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)', marginBottom: '1rem', fontWeight: 600, fontFamily: 'Outfit, sans-serif' }}>
+              <h4 style={{ fontSize: '0.62rem', textTransform: 'uppercase', letterSpacing: '0.12em', color: textMuted, marginBottom: '1rem', fontWeight: 600, fontFamily: 'system-ui, sans-serif' }}>
                 {col.title}
               </h4>
-              {col.links.map(item => (
-                item.to.startsWith('/') ? (
-                  <Link key={item.label} to={item.to} style={{ display: 'block', color: 'var(--text2)', fontSize: '0.83rem', marginBottom: '0.6rem', textDecoration: 'none', transition: 'color 0.18s' }}
-                    onMouseEnter={e => (e.currentTarget.style.color = 'var(--text)')}
-                    onMouseLeave={e => (e.currentTarget.style.color = 'var(--text2)')}
-                  >{item.label}</Link>
-                ) : (
-                  <a key={item.label} href={item.to} style={{ display: 'block', color: 'var(--text2)', fontSize: '0.83rem', marginBottom: '0.6rem', textDecoration: 'none', transition: 'color 0.18s' }}
-                    onMouseEnter={e => (e.currentTarget.style.color = 'var(--text)')}
-                    onMouseLeave={e => (e.currentTarget.style.color = 'var(--text2)')}
+              {col.links.map(item => {
+                const linkStyle = { display: 'block', color: textBody, fontSize: '0.83rem', marginBottom: '0.6rem', textDecoration: 'none', transition: 'color 0.18s' };
+                if ('to' in item) {
+                  return (
+                    <Link key={item.label} to={item.to!} style={linkStyle}
+                      onMouseEnter={e => (e.currentTarget.style.color = textHover)}
+                      onMouseLeave={e => (e.currentTarget.style.color = textBody)}
+                    >{item.label}</Link>
+                  );
+                }
+                return (
+                  <a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer" style={linkStyle}
+                    onMouseEnter={e => (e.currentTarget.style.color = textHover)}
+                    onMouseLeave={e => (e.currentTarget.style.color = textBody)}
                   >{item.label}</a>
-                )
-              ))}
+                );
+              })}
             </div>
           ))}
         </div>
 
         {/* Divider */}
-        <div style={{ borderTop: '1px solid var(--border)' }} />
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }} />
 
-        {/* Bottom */}
+        {/* Bottom row */}
         <div style={{ padding: 'clamp(1rem,3vw,1.5rem) 0', display: 'flex', flexDirection: 'column', gap: '0.4rem', alignItems: 'center', textAlign: 'center' }}>
-          <p style={{ fontSize: '0.74rem', color: 'var(--muted)' }}>
-            © {year} <span style={{ color: 'var(--text2)', fontWeight: 500 }}>Xentory</span> · {t('footer.rights')}
+          <p style={{ fontSize: '0.74rem', color: textMuted }}>
+            © {year} <span style={{ color: textBody, fontWeight: 500 }}>Xentory</span> · {t('footer.rights')}
           </p>
-          <p style={{ fontSize: '0.68rem', color: 'var(--muted)', maxWidth: 560, lineHeight: 1.65 }}>
+          <p style={{ fontSize: '0.68rem', color: textMuted, maxWidth: 560, lineHeight: 1.65 }}>
             {t('footer.disclaimer')}
           </p>
         </div>
