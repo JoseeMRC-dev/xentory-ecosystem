@@ -552,7 +552,7 @@ export function MatchesPage() {
 
         {/* Dropdown with remaining competitions */}
         {showMoreComps && competitions.length > 5 && (
-          <div className="glass" style={{ position: 'absolute', top: 'calc(100% + 0.5rem)', left: 0, zIndex: 50, borderRadius: 14, padding: '0.75rem', display: 'flex', flexWrap: 'wrap', gap: '0.4rem', maxWidth: 480, boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
+          <div style={{ position: 'absolute', top: 'calc(100% + 0.5rem)', left: 0, zIndex: 200, borderRadius: 12, padding: '0.75rem', display: 'flex', flexWrap: 'wrap', gap: '0.4rem', maxWidth: 480, background: 'var(--bg2)', border: '1px solid var(--border2)', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
             {competitions.slice(5).map(comp => {
               const matchCount = allMatches.filter(m => String(m.competition.id) === comp.id).length;
               const isActive = activeCompetition === comp.id;

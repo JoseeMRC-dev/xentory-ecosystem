@@ -20,7 +20,7 @@ function buildTickerHTML(matches: Match[]): string {
     const clock     = m.clockDisplay ?? m.minute ? `${m.minute}'` : 'LIVE';
     return `<span
       ${clone ? 'aria-hidden="true"' : `data-mid="${m.id}"`}
-      style="display:inline-flex;align-items:center;gap:0.5rem;padding:0 1.8rem;border-right:1px solid rgba(255,255,255,0.06);flex-shrink:0;cursor:pointer;"
+      style="display:inline-flex;align-items:center;gap:0.5rem;padding:0 1.8rem;border-right:1px solid var(--border);flex-shrink:0;cursor:pointer;"
     >
       <span style="font-size:0.7rem">${sport?.emoji ?? '🏟️'}</span>
       <span style="font-family:var(--font-mono);font-weight:600;font-size:0.75rem;color:var(--text2)">${m.homeTeam.shortName ?? m.homeTeam.name.slice(0,3).toUpperCase()}</span>
@@ -75,8 +75,8 @@ export function BetLiveTicker() {
     <div className="bet-live-ticker-bar" style={{
       position: 'fixed', top: 0, left: 'var(--sidebar-w)', right: 0,
       height: 'var(--topbar-h, 36px)',
-      background: '#060810',
-      borderBottom: '1px solid rgba(255,255,255,0.06)',
+      background: 'var(--nav-bg)',
+      borderBottom: '1px solid var(--border)',
       backdropFilter: 'blur(20px)',
       zIndex: 40,
       display: 'flex', alignItems: 'center', overflow: 'hidden',
@@ -84,7 +84,7 @@ export function BetLiveTicker() {
       {/* LIVE badge */}
       <div style={{
         padding: '0 1.2rem', display: 'flex', alignItems: 'center', gap: '0.4rem',
-        borderRight: '1px solid rgba(255,255,255,0.06)', flexShrink: 0, height: '100%',
+        borderRight: '1px solid var(--border)', flexShrink: 0, height: '100%',
         background: 'rgba(255,68,85,0.06)',
       }}>
         <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--red)', boxShadow: '0 0 6px var(--red)', display: 'inline-block', animation: 'pulse 1.5s infinite' }} />
