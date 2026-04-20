@@ -1,0 +1,253 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Figtree:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
+
+/* ══ MERIDIAN TOKENS — BET (LIGHT DEFAULT) ══════════════════════ */
+:root {
+  --bg:        #F2EDE4;
+  --nav-bg:    #FAF7F2;
+  --bg2:       #FAF7F2;
+  --bg3:       #EDE8DF;
+  --gold:      #1B4D3E;
+  --gold-l:    #245548;
+  --gold-dim:  #E8F5EE;
+  --cyan:      #1E3A5F;
+  --cyan-dim:  rgba(30,58,95,0.10);
+  --green:     #10B981;
+  --green-dim: rgba(16,185,129,0.10);
+  --red:       #991B1B;
+  --orange:    #92400E;
+  --text:      #0F1A14;
+  --text2:     #4A5C4E;
+  --muted:     #9A8C7A;
+  --border:    #DDD5C8;
+  --border2:   #C9B99A;
+  --card:      rgba(255,255,255,0.70);
+  --card2:     rgba(255,255,255,0.92);
+  --sidebar-w: 260px;
+  --topbar-h:  62px;
+  /* Sport accent — changed dynamically per sport */
+  --sport:     #10B981;
+  --sport-dim: rgba(16,185,129,0.10);
+
+  /* Meridian semantic */
+  --accent-primary: #1B4D3E;
+  --accent-hover:   #163D31;
+  --accent-light:   #E8F5EE;
+  --border-rule:    #C9B99A;
+  --font-editorial: 'Georgia', 'Times New Roman', serif;
+  --font-sans:      system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono:      'Menlo', 'Monaco', 'Courier New', monospace;
+
+  /* Signal tags */
+  --signal-buy-bg:   #E8F5EE;
+  --signal-buy-text: #1B4D3E;
+  --signal-sell-bg:  #FEF2F2;
+  --signal-sell-text:#991B1B;
+  --signal-hold-bg:  #FFF7ED;
+  --signal-hold-text:#92400E;
+  --signal-pro-bg:   #EEF2FF;
+  --signal-pro-text: #3730A3;
+}
+
+/* ══ DARK MODE ═══════════════════════════════════════════════════ */
+[data-theme="dark"] {
+  --bg:        #0F1E15;
+  --nav-bg:    #0B1812;
+  --bg2:       #0B1812;
+  --bg3:       #08120E;
+  --gold:      #2D6A5A;
+  --gold-l:    #6ECBA8;
+  --gold-dim:  rgba(45,106,90,0.20);
+  --cyan:      #3A6EA5;
+  --cyan-dim:  rgba(58,110,165,0.18);
+  --green:     #34D399;
+  --green-dim: rgba(52,211,153,0.14);
+  --red:       #FCA5A5;
+  --orange:    #FCD34D;
+  --text:      #F0EBE2;
+  --text2:     #C2D5CA;
+  --muted:     #8FAF9F;
+  --border:    rgba(255,255,255,0.10);
+  --border2:   rgba(255,255,255,0.17);
+  --card:      rgba(255,255,255,0.06);
+  --card2:     rgba(255,255,255,0.10);
+  --sport:     #34D399;
+  --sport-dim: rgba(52,211,153,0.14);
+
+  --accent-primary: #2D6A5A;
+  --accent-hover:   #245548;
+  --accent-light:   rgba(45,106,90,0.20);
+  --border-rule:    rgba(255,255,255,0.14);
+
+  --signal-buy-bg:   rgba(52,211,153,0.12);
+  --signal-buy-text: #6ECBA8;
+  --signal-sell-bg:  rgba(239,68,68,0.12);
+  --signal-sell-text:#FCA5A5;
+  --signal-hold-bg:  rgba(245,158,11,0.12);
+  --signal-hold-text:#FCD34D;
+  --signal-pro-bg:   rgba(99,102,241,0.12);
+  --signal-pro-text: #A5B4FC;
+}
+
+/* ══ RESET ═══════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; }
+html { max-width: 100vw; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: 'Figtree', var(--font-sans); font-weight: 400;
+  line-height: 1.75; overflow-x: hidden; max-width: 100vw;
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.3s, color 0.3s;
+}
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* ── TYPOGRAPHY ── */
+h1, h2, h3, h4 {
+  font-family: 'Georgia', serif; font-weight: normal;
+  letter-spacing: -0.01em; line-height: 1.2;
+}
+h4 { font-family: 'Figtree', var(--font-sans); font-weight: 600; }
+
+/* Team/match names: editorial italic */
+.team-name, .match-name { font-family: 'Georgia', serif; font-style: italic; }
+/* Odds / stats: monospace */
+.odd, .stat, .percentage { font-family: var(--font-mono); }
+
+/* ── SURFACES ── */
+.glass   { background: var(--card);  border: 1px solid var(--border); }
+.glass-2 { background: var(--card2); border: 1px solid var(--border2); }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.65rem 1.5rem; border-radius: 8px;
+  font-family: 'Figtree', sans-serif; font-size: 0.88rem; font-weight: 500;
+  cursor: pointer; border: none; transition: all 0.2s;
+  text-decoration: none; white-space: nowrap;
+}
+.btn-gold    { background: var(--accent-primary); color: #F2EDE4; font-weight: 600; }
+.btn-gold:hover { background: var(--accent-hover); transform: translateY(-1px); }
+.btn-outline { background: transparent; border: 1px solid var(--border2); color: var(--text2); }
+.btn-outline:hover { border-color: var(--accent-primary); color: var(--accent-primary); }
+.btn-ghost   { background: transparent; color: var(--muted); }
+.btn-ghost:hover { background: var(--card2); color: var(--text); }
+.btn-green   { background: var(--green-dim); border: 1px solid rgba(16,185,129,0.2); color: var(--green); }
+.btn-green:hover { background: rgba(16,185,129,0.18); }
+.btn-sm  { padding: 0.4rem 0.9rem;  font-size: 0.8rem; }
+.btn-lg  { padding: 0.9rem 2.2rem;  font-size: 1rem; }
+.btn-xl  { padding: 1rem 2.5rem;    font-size: 1.05rem; }
+
+/* ── INPUT ── */
+.input {
+  width: 100%; background: var(--card2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 0.75rem 1rem; color: var(--text);
+  font-family: 'Figtree', sans-serif; font-size: 0.9rem;
+  outline: none; transition: border-color 0.2s;
+}
+.input::placeholder { color: var(--muted); }
+.input:focus { border-color: var(--accent-primary); box-shadow: 0 0 0 3px var(--gold-dim); }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeIn  { from { opacity:0 }                         to { opacity:1 } }
+@keyframes fadeUp  { from { opacity:0; transform:translateY(18px) } to { opacity:1; transform:translateY(0) } }
+@keyframes pulse   { 0%,100% { opacity:1 } 50% { opacity:0.4 } }
+@keyframes spin    { to { transform:rotate(360deg) } }
+@keyframes shimmer { 0% { left:-100% } 100% { left:200% } }
+
+.animate-fadeIn  { animation: fadeIn  0.4s ease both; }
+.animate-fadeUp  { animation: fadeUp  0.5s ease both; }
+.animate-pulse   { animation: pulse   2s infinite; }
+.animate-spin    { animation: spin    1s linear infinite; }
+
+/* ── GRADIENT TEXT ── */
+.text-gradient-gold {
+  background: linear-gradient(90deg, var(--gold), var(--gold-l));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.text-gradient-green {
+  background: linear-gradient(90deg, var(--green), #34D399);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.text-gradient-main {
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-l) 60%, var(--green) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+/* ── LIVE DOT ── */
+.live-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--green); animation:pulse 2s infinite; }
+
+/* ── CONFIDENCE BAR ── */
+.conf-bar      { height: 5px; border-radius: 100px; overflow: hidden; background: var(--card2); }
+.conf-bar-fill { height: 100%; border-radius: 100px; transition: width 0.6s ease; }
+
+/* ═══════════════════════════════════════════════
+   MOBILE RESPONSIVE — MAX 768px
+   ═══════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  html, body { overflow-x: hidden; }
+  :root { --sidebar-w: 0px; }
+  .bet-content-wrapper { margin-left: 0 !important; width: 100% !important; min-width: 0 !important; }
+  .bet-main {
+    margin-left: 0 !important; padding: 1rem !important;
+    padding-top: calc(52px + 36px + 1rem) !important;
+    box-sizing: border-box !important; width: 100% !important;
+    max-width: 100% !important; overflow-x: hidden !important;
+  }
+  .animate-fadeUp { max-width: 100% !important; }
+  .bet-stats-grid      { grid-template-columns: 1fr 1fr !important; }
+  .bet-dash-main-grid  { grid-template-columns: 1fr !important; }
+  .bet-sports-grid     { grid-template-columns: repeat(3, 1fr) !important; }
+  .bet-upgrade-banner  { flex-direction: column !important; align-items: flex-start !important; gap: 1rem !important; }
+  .bet-upgrade-banner .btn { width: 100% !important; justify-content: center !important; margin-left: 0 !important; }
+  .bet-plans-grid      { grid-template-columns: 1fr !important; }
+  .bet-tg-status-grid  { grid-template-columns: 1fr !important; }
+  .bet-history-stats   { grid-template-columns: 1fr 1fr !important; }
+  .bet-markets-grid    { grid-template-columns: 1fr !important; }
+  .bet-form-grid       { grid-template-columns: 1fr !important; }
+  .bet-factors-grid    { grid-template-columns: 1fr !important; }
+  .bet-match-hero-grid { grid-template-columns: 1fr !important; gap: 0.8rem !important; }
+  .bet-history-row     { grid-template-columns: 2fr 1.5fr 1fr !important; }
+  .bet-history-row > span:nth-child(3),
+  .bet-history-row > span:nth-child(4) { display: none !important; }
+  .bet-history-header  { grid-template-columns: 2fr 1.5fr 1fr !important; }
+  .bet-history-header > span:nth-child(3),
+  .bet-history-header > span:nth-child(4) { display: none !important; }
+  .bet-best-bet-row    { flex-direction: column !important; align-items: flex-start !important; gap: 0.8rem !important; }
+  h1 { font-size: 1.3rem !important; }
+  h2 { font-size: 1rem !important; }
+  .glass { overflow: hidden; }
+}
+
+/* ══ COMPETITIONS SLIDER ══════════════════════════════════════════ */
+.bet-competitions-slider {
+  display: flex; gap: 0.6rem; overflow-x: auto; padding-bottom: 0.4rem;
+  scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch;
+}
+.bet-competitions-slider::-webkit-scrollbar { display: none; }
+
+@media (max-width: 768px) {
+  .bet-dash-main-grid { grid-template-columns: 1fr !important; }
+  .bet-upgrade-banner { flex-direction: column !important; align-items: flex-start !important; gap: 1rem !important; }
+  .bet-upgrade-banner .btn { width: 100% !important; justify-content: center !important; margin-left: 0 !important; }
+  .bet-competitions-slider button { font-size: 0.75rem !important; padding: 0.4rem 0.7rem !important; }
+}
+
+/* ══ TELEGRAM PAGE ════════════════════════════════════════════════ */
+.bet-tg-status-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 1rem; margin-bottom: 1.5rem;
+}
+.bet-tg-main-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 1.5rem; margin-bottom: 1.5rem;
+}
+@media (max-width: 768px) {
+  .bet-tg-status-grid { grid-template-columns: 1fr !important; }
+  .bet-tg-main-grid   { grid-template-columns: 1fr !important; }
+}
+@media (min-width: 769px) and (max-width: 900px) {
+  .bet-tg-status-grid { grid-template-columns: repeat(3, 1fr) !important; }
+  .bet-tg-main-grid   { grid-template-columns: 1fr !important; }
+}

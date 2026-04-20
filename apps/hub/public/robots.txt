@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+
+# Block auth and dashboard routes from indexing
+Disallow: /login
+Disallow: /register
+Disallow: /dashboard
+Disallow: /auth/
+Disallow: /reset-password
+
+# Allow all public content
+Allow: /
+Allow: /pricing
+Allow: /metodologia
+Allow: /blog
+Allow: /blog/
+Allow: /terminos
+
+Sitemap: https://xentory.com/sitemap.xml

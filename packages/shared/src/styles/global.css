@@ -1,0 +1,34 @@
+/* ============================================
+   MERIDIAN GLOBAL TYPOGRAPHY — XENTORY
+   ============================================ */
+
+/* Headings: editorial serif */
+h1, h2, h3 {
+  font-family: var(--font-editorial);
+  font-weight: normal;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+/* Nombres de activos, equipos: editorial italic */
+.asset-name, .team-name, .match-name {
+  font-family: var(--font-editorial);
+  font-style: italic;
+}
+
+/* Precios, estadísticas, porcentajes: monospace */
+.price, .stat, .percentage, .odd {
+  font-family: var(--font-mono);
+}
+
+/* Labels, navegación, badges: sans */
+.label, .nav-link, .badge, .caption {
+  font-family: var(--font-sans);
+}
+
+/* Body text: sans */
+body, p {
+  font-family: var(--font-sans);
+  color: var(--text-secondary);
+  line-height: 1.75;
+}

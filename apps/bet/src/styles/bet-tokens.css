@@ -1,0 +1,16 @@
+/* ============================================
+   MERIDIAN — BET ACCENT TOKENS
+   Burgundy: sporting, dynamic, serious
+   ============================================ */
+
+:root {
+  --bet-accent:       #6B1E2E;
+  --bet-accent-light: #FDF2F4;
+  --bet-accent-text:  #6B1E2E;
+}
+
+[data-theme="dark"] {
+  --bet-accent:       #A0384D;
+  --bet-accent-light: rgba(107,30,46,0.15);
+  --bet-accent-text:  #F4A0B0;
+}
