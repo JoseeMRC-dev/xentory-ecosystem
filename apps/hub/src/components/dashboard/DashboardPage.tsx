@@ -54,14 +54,15 @@ function PlatformCard({
   const isPaid = plan !== 'free';
 
   return (
-    <div className="glass" style={{
+    <div style={{
       borderRadius: 18, padding: 'clamp(1.2rem, 4vw, 1.8rem)',
-      borderTop: `2px solid ${color}`, position: 'relative', overflow: 'hidden',
-      display: 'flex', flexDirection: 'column', transition: 'transform 0.2s',
-      boxShadow: highlighted ? `0 0 0 1px ${color}40, 0 4px 24px ${color}14` : undefined,
+      background: 'var(--card2)', border: '1px solid var(--border)',
+      borderTop: `3px solid ${color}`, position: 'relative', overflow: 'hidden',
+      display: 'flex', flexDirection: 'column', transition: 'transform 0.2s, box-shadow 0.2s',
+      boxShadow: highlighted ? `var(--shadow-lg)` : 'var(--shadow)',
     }}
-      onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-2px)')}
-      onMouseLeave={e => (e.currentTarget.style.transform = 'none')}
+      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-lg)'; }}
+      onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = highlighted ? 'var(--shadow-lg)' : 'var(--shadow)'; }}
     >
       {/* "Tu plataforma" badge for highlighted card */}
       {highlighted && (
@@ -97,9 +98,9 @@ function PlatformCard({
           { label: t('nav.dashboard'), value: isPaid ? t('pricing.active').replace('✓ ', '') : t('pricing.free.label'), vColor: isPaid ? 'var(--green)' : 'var(--muted)' },
           { label: 'Telegram',         value: isPaid ? t('pricing.active').replace('✓ ', '') : (lang === 'es' ? 'No incluido' : 'Not included'), vColor: isPaid ? 'var(--cyan)' : 'var(--muted)' },
         ].map(s => (
-          <div key={s.label} style={{ flex: 1, minWidth: 76, padding: '0.45rem 0.6rem', background: 'var(--card2)', borderRadius: 8, textAlign: 'center' }}>
+          <div key={s.label} style={{ flex: 1, minWidth: 76, padding: '0.45rem 0.6rem', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, textAlign: 'center' }}>
             <div style={{ fontSize: '0.57rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.18rem' }}>{s.label}</div>
-            <div style={{ fontSize: '0.78rem', color: s.vColor, fontWeight: 500 }}>● {s.value}</div>
+            <div style={{ fontSize: '0.78rem', color: s.vColor, fontWeight: 600 }}>● {s.value}</div>
           </div>
         ))}
       </div>
@@ -272,11 +273,11 @@ export function DashboardPage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,300px),1fr))', gap: 'clamp(0.8rem,3vw,1.2rem)' }}>
 
         {/* Telegram status */}
-        <div className="glass" style={{ borderRadius: 18, padding: 'clamp(1rem,4vw,1.8rem)' }}>
+        <div style={{ borderRadius: 18, padding: 'clamp(1rem,4vw,1.8rem)', background: 'var(--card2)', border: '1px solid var(--border)', borderTop: '3px solid var(--cyan)' }}>
           <h2 style={{ fontSize: '0.92rem', marginBottom: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text2)' }}>
             <TelegramIcon /> Telegram
           </h2>
-          <div style={{ padding: '0.85rem 1rem', background: user.telegramLinked ? 'rgba(0,200,122,0.05)' : 'var(--card2)', borderRadius: 12, border: `1px solid ${user.telegramLinked ? 'rgba(0,200,122,0.12)' : 'var(--border)'}` }}>
+          <div style={{ padding: '0.85rem 1rem', background: user.telegramLinked ? 'var(--green-dim)' : 'var(--bg3)', borderRadius: 12, border: `1px solid ${user.telegramLinked ? 'rgba(52,211,153,0.2)' : 'var(--border)'}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <div style={{ fontSize: '0.7rem', color: 'var(--muted)', marginBottom: '0.2rem', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Telegram</div>

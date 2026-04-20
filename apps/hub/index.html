@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="dark">
+<html lang="es" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -123,12 +123,12 @@
     }
     </script>
 
-    <!-- ── Theme init (before paint to avoid flash) ──────────────── -->
+    <!-- ── Theme init (before paint, no flash) ──────────────────── -->
     <script>
       try {
-        var t = localStorage.getItem('xentory_theme');
-        if (t) document.documentElement.setAttribute('data-theme', t);
-      } catch(e) {}
+        var t = localStorage.getItem('xentory-theme') || localStorage.getItem('xentory_theme');
+        document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
+      } catch(e) { document.documentElement.setAttribute('data-theme','light'); }
     </script>
 
     <!-- Google Analytics 4 — replace G-XXXXXXXXXX with your Measurement ID -->
