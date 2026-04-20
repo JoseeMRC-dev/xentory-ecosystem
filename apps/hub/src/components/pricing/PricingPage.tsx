@@ -261,7 +261,7 @@ export function PricingPage() {
               <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginBottom: '2rem' }}>
                 <div>
                   <div style={{ fontSize: '0.65rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.3rem' }}>{t('pricing.bundle.individual')}</div>
-                  <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '1.4rem', textDecoration: 'line-through', color: 'var(--muted)' }}>
+                  <div style={{ fontWeight: 600, fontSize: '1.4rem', textDecoration: 'line-through', color: 'var(--muted)' }}>
                     {yearly ? `${Math.round(58 * 12 * 0.8)}€${t('pricing.yr')}` : `58€${t('pricing.mo')}`}
                   </div>
                 </div>

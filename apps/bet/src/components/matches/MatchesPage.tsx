@@ -70,7 +70,7 @@ function CalendarDay() {
     }}>
       <span style={{ background: '#ef4444', height: '35%', width: '100%' }} />
       <span style={{
-        fontFamily: 'Outfit', fontWeight: 800, fontSize: '0.85rem', color: 'var(--text)',
+        fontWeight: 700, fontSize: '0.85rem', color: 'var(--text)',
         background: 'var(--card2)', width: '100%', flex: 1,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>{day}</span>
@@ -108,7 +108,7 @@ function GolfCard({ match, onClick }: { match: Match; onClick: () => void }) {
           <div style={{ fontSize: '0.72rem', color: '#22c55e', marginBottom: '0.25rem' }}>
             {match.competition.emoji} {match.competition.name}
           </div>
-          <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.95rem', lineHeight: 1.2 }}>
+          <div style={{ fontWeight: 600, fontSize: '0.95rem', lineHeight: 1.2 }}>
             {match.venue ?? match.competition.name}
           </div>
         </div>
@@ -128,7 +128,7 @@ function GolfCard({ match, onClick }: { match: Match; onClick: () => void }) {
             <span>Score · {lang === 'es' ? 'Hoyo' : 'Thru'}</span>
           </div>
           {match.leaderboard.slice(0, 6).map((p, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', padding: '0.2rem 0.3rem', borderRadius: 6, background: i === 0 ? 'rgba(201,168,76,0.1)' : i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent', marginBottom: '0.08rem' }}>
+            <div key={i} style={{ display: 'flex', alignItems: 'center', padding: '0.2rem 0.3rem', borderRadius: 6, background: i === 0 ? 'var(--accent-light)' : i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent', marginBottom: '0.08rem' }}>
               <span style={{ fontSize: '0.68rem', color: 'var(--muted)', minWidth: 30, fontWeight: i === 0 ? 700 : 400 }}>{p.pos}</span>
               <span style={{ fontSize: '0.85rem', fontWeight: i === 0 ? 700 : 400, flex: 1, color: i === 0 ? 'var(--gold)' : 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
               <span style={{ fontSize: '0.85rem', fontWeight: 700, color: parseGolfScoreColor(p.score), minWidth: 34, textAlign: 'right' }}>{p.score}</span>
@@ -173,7 +173,7 @@ function MatchCard({ match, query, onClick }: { match: Match; query: string; onC
     return (
       <span>
         {text.slice(0, idx)}
-        <mark style={{ background: 'rgba(201,168,76,0.3)', color: 'var(--gold)', borderRadius: 2 }}>
+        <mark style={{ background: 'var(--border2)', color: 'var(--gold)', borderRadius: 2 }}>
           {text.slice(idx, idx + query.length)}
         </mark>
         {text.slice(idx + query.length)}
@@ -216,14 +216,14 @@ function MatchCard({ match, query, onClick }: { match: Match; query: string; onC
       {/* Teams */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
         <div style={{ flex: 1, textAlign: 'right' }}>
-          <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1rem' }}>
+          <div style={{ fontWeight: 600, fontSize: '1rem' }}>
             {highlight(match.homeTeam.name)}
           </div>
           <div style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '0.2rem' }}>{lang === 'es' ? 'Local' : 'Home'}</div>
         </div>
         <div style={{ textAlign: 'center', minWidth: 64 }}>
           {match.status === 'finished' || match.status === 'live' ? (
-            <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.4rem', color: match.status === 'live' ? 'var(--red)' : 'var(--text)' }}>
+            <div style={{ fontWeight: 700, fontSize: '1.4rem', color: match.status === 'live' ? 'var(--red)' : 'var(--text)' }}>
               {match.homeScore ?? 0} — {match.awayScore ?? 0}
             </div>
           ) : (
@@ -233,7 +233,7 @@ function MatchCard({ match, query, onClick }: { match: Match; query: string; onC
           )}
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1rem' }}>
+          <div style={{ fontWeight: 600, fontSize: '1rem' }}>
             {highlight(match.awayTeam.name)}
           </div>
           <div style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '0.2rem' }}>{lang === 'es' ? 'Visitante' : 'Away'}</div>
@@ -445,7 +445,7 @@ export function MatchesPage() {
             display: 'flex', alignItems: 'center', gap: '0.5rem',
             padding: '0.5rem 1rem', borderRadius: 100, cursor: 'pointer',
             background: showSearch ? 'var(--gold-dim)' : 'var(--card2)',
-            border: showSearch ? '1px solid rgba(201,168,76,0.4)' : '1px solid var(--border)',
+            border: showSearch ? '1px solid var(--border2)' : '1px solid var(--border)',
             color: showSearch ? 'var(--gold)' : 'var(--muted)',
             fontSize: '0.82rem', transition: 'all 0.2s',
           }}
@@ -522,13 +522,13 @@ export function MatchesPage() {
                   fontSize: '0.75rem', fontWeight: 500, flexShrink: 0,
                   background: isActive ? 'var(--gold-dim)' : 'var(--card2)',
                   color: isActive ? 'var(--gold)' : 'var(--muted)',
-                  border: isActive ? '1px solid rgba(201,168,76,0.4)' : '1px solid var(--border)',
+                  border: isActive ? '1px solid var(--border2)' : '1px solid var(--border)',
                   transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '0.3rem',
                 }}>
                 <span>{comp.emoji}</span>
                 <span>{comp.name}</span>
                 {!loading && matchCount > 0 && (
-                  <span style={{ background: isActive ? 'rgba(201,168,76,0.25)' : 'var(--border)', color: isActive ? 'var(--gold)' : 'var(--muted)', borderRadius: 100, padding: '0 0.35rem', fontSize: '0.65rem', fontWeight: 700, minWidth: 16, textAlign: 'center' }}>{matchCount}</span>
+                  <span style={{ background: isActive ? 'var(--gold-dim)' : 'var(--border)', color: isActive ? 'var(--gold)' : 'var(--muted)', borderRadius: 100, padding: '0 0.35rem', fontSize: '0.65rem', fontWeight: 700, minWidth: 16, textAlign: 'center' }}>{matchCount}</span>
                 )}
               </button>
             );
@@ -542,7 +542,7 @@ export function MatchesPage() {
                 fontSize: '0.75rem', fontWeight: 600, flexShrink: 0,
                 background: showMoreComps ? 'var(--gold-dim)' : 'var(--card2)',
                 color: showMoreComps ? 'var(--gold)' : 'var(--muted)',
-                border: showMoreComps ? '1px solid rgba(201,168,76,0.4)' : '1px solid var(--border)',
+                border: showMoreComps ? '1px solid var(--border2)' : '1px solid var(--border)',
                 transition: 'all 0.2s',
               }}>
               {showMoreComps ? '✕' : `+${competitions.length - 5} ${lang === 'es' ? 'más' : 'more'}`}
@@ -563,13 +563,13 @@ export function MatchesPage() {
                     fontSize: '0.75rem', fontWeight: 500,
                     background: isActive ? 'var(--gold-dim)' : 'var(--card2)',
                     color: isActive ? 'var(--gold)' : 'var(--muted)',
-                    border: isActive ? '1px solid rgba(201,168,76,0.4)' : '1px solid var(--border)',
+                    border: isActive ? '1px solid var(--border2)' : '1px solid var(--border)',
                     transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '0.3rem',
                   }}>
                   <span>{comp.emoji}</span>
                   <span>{comp.name}</span>
                   {!loading && matchCount > 0 && (
-                    <span style={{ background: isActive ? 'rgba(201,168,76,0.25)' : 'var(--border)', color: isActive ? 'var(--gold)' : 'var(--muted)', borderRadius: 100, padding: '0 0.35rem', fontSize: '0.65rem', fontWeight: 700, minWidth: 16, textAlign: 'center' }}>{matchCount}</span>
+                    <span style={{ background: isActive ? 'var(--gold-dim)' : 'var(--border)', color: isActive ? 'var(--gold)' : 'var(--muted)', borderRadius: 100, padding: '0 0.35rem', fontSize: '0.65rem', fontWeight: 700, minWidth: 16, textAlign: 'center' }}>{matchCount}</span>
                   )}
                 </button>
               );
@@ -597,7 +597,7 @@ export function MatchesPage() {
               fontSize: '0.78rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.3rem',
               background: statusFilter === f.id ? 'var(--gold-dim)' : 'var(--card2)',
               color:      statusFilter === f.id ? 'var(--gold)'    : 'var(--muted)',
-              border:     statusFilter === f.id ? '1px solid rgba(201,168,76,0.4)' : '1px solid var(--border)',
+              border:     statusFilter === f.id ? '1px solid var(--border2)' : '1px solid var(--border)',
               transition: 'all 0.2s',
             }}
           >
@@ -652,7 +652,7 @@ export function MatchesPage() {
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem', alignItems: 'center' }}>
           <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>{t('Filtros activos:', 'Active filters:')}</span>
           {activeCompetition !== 'all' && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.2rem 0.6rem', borderRadius: 100, background: 'var(--gold-dim)', border: '1px solid rgba(201,168,76,0.25)', fontSize: '0.72rem', color: 'var(--gold)' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.2rem 0.6rem', borderRadius: 100, background: 'var(--gold-dim)', border: '1px solid var(--gold-dim)', fontSize: '0.72rem', color: 'var(--gold)' }}>
               {competitions.find(c => c.id === activeCompetition)?.emoji} {competitions.find(c => c.id === activeCompetition)?.name}
               <button onClick={() => setComp('all')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gold)', fontSize: '0.8rem', padding: 0 }}>✕</button>
             </span>
@@ -732,7 +732,7 @@ export function MatchesPage() {
               <div key={dayKey} style={{ marginBottom: '2.5rem' }}>
                 {/* Day header */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem', paddingBottom: '0.6rem', borderBottom: `2px solid ${dayKey === todayStr ? 'rgba(201,168,76,0.35)' : dayKey === tomorrowStr ? 'rgba(0,212,255,0.25)' : 'var(--border)'}` }}>
-                  <span style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1rem', color: dayColor, letterSpacing: '0.04em' }}>{dayLabel}</span>
+                  <span style={{ fontWeight: 700, fontSize: '1rem', color: dayColor, letterSpacing: '0.04em' }}>{dayLabel}</span>
                   {dayKey !== 'ANTERIORES' && (
                     <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>
                       · {new Date(dayKey + 'T12:00:00').toLocaleDateString(locale, { day: '2-digit', month: 'short' })}
@@ -753,7 +753,7 @@ export function MatchesPage() {
                       {/* Competition header */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.7rem', paddingBottom: '0.4rem', borderBottom: '1px solid var(--border)' }}>
                         <span style={{ fontSize: '0.9rem' }}>{matches[0]?.competition.emoji}</span>
-                        <span style={{ fontFamily: 'Outfit', fontWeight: 600, fontSize: '0.9rem' }}>{compName}</span>
+                        <span style={{ fontFamily: 'Figtree, sans-serif', fontWeight: 600, fontSize: '0.9rem' }}>{compName}</span>
                         <span style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>{matches.length} {match_word(matches.length)}</span>
                         {showSplit && played.length > 0 && (
                           <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.45rem', borderRadius: 100, background: 'rgba(107,114,148,0.12)', color: 'var(--muted)', border: '1px solid rgba(107,114,148,0.2)' }}>

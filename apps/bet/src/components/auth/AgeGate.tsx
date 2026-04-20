@@ -77,7 +77,7 @@ export function AgeGate({ onConfirm, userId, tokens }: AgeGateProps) {
         <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>🔞</div>
 
         <h2 style={{
-          fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1.5rem',
+          fontWeight: 700, fontSize: '1.5rem',
           marginBottom: '0.5rem', letterSpacing: '-0.02em',
         }}>
           Verificación de edad
@@ -108,7 +108,7 @@ export function AgeGate({ onConfirm, userId, tokens }: AgeGateProps) {
           display: 'flex', alignItems: 'flex-start', gap: '0.65rem', cursor: 'pointer',
           padding: '0.75rem', borderRadius: 10, marginBottom: '1.2rem',
           background: 'rgba(255,68,85,0.04)',
-          border: `1px solid ${agreed ? 'rgba(201,168,76,0.3)' : 'rgba(255,68,85,0.2)'}`,
+          border: `1px solid ${agreed ? 'var(--border2)' : 'rgba(255,68,85,0.2)'}`,
           transition: 'border-color 0.2s', textAlign: 'left',
         }}>
           <div

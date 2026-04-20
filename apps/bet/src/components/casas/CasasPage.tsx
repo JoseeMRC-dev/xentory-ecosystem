@@ -150,11 +150,11 @@ function CasaCard({ casa, idx }: { casa: Casa; idx: number }) {
           <div style={{
             width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
             background: idx < 3
-              ? 'linear-gradient(135deg,var(--gold),#b8860b)'
+              ? 'var(--accent-primary)'
               : 'var(--card2)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: '0.65rem', fontWeight: 700,
-            color: idx < 3 ? '#050810' : 'var(--muted)',
+            color: idx < 3 ? '#F2EDE4' : 'var(--muted)',
           }}>
             #{idx + 1}
           </div>
@@ -247,7 +247,7 @@ function CasaCard({ casa, idx }: { casa: Casa; idx: number }) {
           {/* Affiliate note */}
           <div style={{
             padding: '0.55rem 0.75rem', borderRadius: 8, marginBottom: '0.8rem',
-            background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.2)',
+            background: 'var(--accent-light)', border: '1px solid var(--border2)',
             fontSize: '0.7rem', color: 'var(--muted)', lineHeight: 1.6,
           }}>
             💡 {t(
@@ -285,7 +285,7 @@ export function CasasPage() {
       {/* Header */}
       <div style={{ marginBottom: '1.5rem' }}>
         <h1 style={{
-          fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1.5rem',
+          fontWeight: 700, fontSize: '1.5rem',
           marginBottom: '0.4rem', letterSpacing: '-0.02em',
         }}>
           {t('Casas de Apuestas', 'Betting Houses')}

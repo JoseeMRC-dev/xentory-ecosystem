@@ -52,7 +52,7 @@ export function CheckoutModal({ clientSecret, onClose }: Props) {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.8" strokeLinecap="round">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             </svg>
-            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.95rem' }}>
+            <span style={{ fontWeight: 600, fontSize: '0.95rem' }}>
               Pago seguro con Stripe
             </span>
           </div>
