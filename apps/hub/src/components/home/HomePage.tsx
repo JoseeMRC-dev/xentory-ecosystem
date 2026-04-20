@@ -462,7 +462,7 @@ export function HomePage() {
         background: 'var(--bg)',
         borderBottom: '1px solid var(--border)',
       }}>
-        <div style={{
+        <div className="hero-editorial-grid" style={{
           maxWidth: 1100, margin: '0 auto',
           display: 'grid',
           gridTemplateColumns: 'clamp(280px,55%,600px) 1fr',
@@ -581,10 +581,10 @@ export function HomePage() {
           </div>
         </div>
 
-        {/* Mobile: stacked single column */}
         <style>{`
           @media (max-width: 768px) {
-            .hero-editorial-grid { grid-template-columns: 1fr !important; }
+            .hero-editorial-grid { grid-template-columns: 1fr !important; gap: 2rem !important; }
+            .stats-grid-4 { grid-template-columns: repeat(2,1fr) !important; }
           }
         `}</style>
       </section>
