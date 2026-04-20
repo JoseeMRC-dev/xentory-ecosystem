@@ -226,7 +226,7 @@ export function Navbar() {
         {/* Logo */}
         <Link to="/" style={{ textDecoration: 'none', flexShrink: 0 }}>
           <span style={{ fontFamily: 'Georgia, serif', fontWeight: 'normal', fontSize: 'clamp(1.15rem,3vw,1.3rem)', letterSpacing: '-0.01em', color: 'var(--text)' }}>
-            Xentory<span style={{ color: 'var(--accent-primary, var(--gold))' }}>.</span>
+            Xentory
           </span>
         </Link>
 

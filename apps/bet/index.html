@@ -10,7 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script>
       try {
-        var t = localStorage.getItem('xentory-theme') || localStorage.getItem('xentory_theme');
+        localStorage.removeItem('xentory_theme');
+        var t = localStorage.getItem('xentory-theme');
         document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
       } catch(e) { document.documentElement.setAttribute('data-theme','light'); }
     </script>

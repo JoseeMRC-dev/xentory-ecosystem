@@ -583,7 +583,7 @@ function PageWrapper({ children, onClose }: { children: React.ReactNode; onClose
         <div style={{ textAlign: 'center', marginBottom: '0.9rem' }}>
           <Link to="/" style={{ textDecoration: 'none' }}>
             <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '1.45rem', color: 'var(--accent-primary)' }}>
-              Xentory<span style={{ color: 'var(--green)', fontStyle: 'normal' }}>.</span>
+              Xentory
             </div>
           </Link>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.3rem' }}>

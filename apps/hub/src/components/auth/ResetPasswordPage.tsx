@@ -127,7 +127,7 @@ export function ResetPasswordPage() {
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <Link to="/" style={{ textDecoration: 'none' }}>
             <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '1.6rem', color: 'var(--accent-primary)' }}>
-              Xentory<span style={{ color: 'var(--green)', fontStyle: 'normal' }}>.</span>
+              Xentory
             </div>
           </Link>
         </div>

@@ -105,7 +105,7 @@ export function AuthCallbackPage() {
       ) : (
         <>
           <div style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '1.5rem', marginBottom: '0.5rem', color: 'var(--accent-primary)' }}>
-            Xentory<span style={{ color: 'var(--green)', fontStyle: 'normal' }}>.</span>
+            Xentory
           </div>
           <div style={{
             width: 36, height: 36, border: '3px solid var(--accent-primary)',

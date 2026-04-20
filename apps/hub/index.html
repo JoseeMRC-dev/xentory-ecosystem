@@ -126,7 +126,8 @@
     <!-- ── Theme init (before paint, no flash) ──────────────────── -->
     <script>
       try {
-        var t = localStorage.getItem('xentory-theme') || localStorage.getItem('xentory_theme');
+        localStorage.removeItem('xentory_theme');
+        var t = localStorage.getItem('xentory-theme');
         document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
       } catch(e) { document.documentElement.setAttribute('data-theme','light'); }
     </script>

@@ -54,7 +54,7 @@ export function Footer() {
           {/* Brand column */}
           <div>
             <div style={{ fontFamily: 'Georgia, serif', fontWeight: 'normal', fontSize: '1.2rem', marginBottom: '0.9rem', color: '#F2EDE4', letterSpacing: '-0.01em' }}>
-              Xentory<span style={{ color: '#6ECBA8' }}>.</span>
+              Xentory
             </div>
             <p style={{ color: textBody, fontSize: '0.82rem', lineHeight: 1.75, maxWidth: 240, marginBottom: '1.4rem' }}>
               {t('footer.tagline')}
