@@ -200,7 +200,7 @@ export function PreferencesModal({ onClose }: Props) {
             {es ? 'Cancelar' : 'Cancel'}
           </button>
           {!(tab === 'bet' && !user) && (
-            <button onClick={() => { setPrefs(local); onClose(); }} className="btn btn-gold" style={{ flex: 1, justifyContent: 'center', fontWeight: 700 }}>
+            <button onClick={async () => { await setPrefs(local); onClose(); }} className="btn btn-gold" style={{ flex: 1, justifyContent: 'center', fontWeight: 700 }}>
               {es ? 'Guardar preferencias' : 'Save preferences'}
             </button>
           )}
