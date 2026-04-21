@@ -70,29 +70,64 @@ const TESTIMONIALS_EN = [
 ];
 
 // ── MINI DASHBOARD — datos reales de Binance ─────────────────────────
+const CRYPTO_ASSETS = [
+  { sym: 'BTC',  bin: 'BTCUSDT'  },
+  { sym: 'ETH',  bin: 'ETHUSDT'  },
+  { sym: 'SOL',  bin: 'SOLUSDT'  },
+  { sym: 'XRP',  bin: 'XRPUSDT'  },
+  { sym: 'BNB',  bin: 'BNBUSDT'  },
+  { sym: 'DOGE', bin: 'DOGEUSDT' },
+  { sym: 'AVAX', bin: 'AVAXUSDT' },
+  { sym: 'ADA',  bin: 'ADAUSDT'  },
+] as const;
+
 function MiniMockup() {
-  const { convert, format, currency } = useCurrency();
+  const { format, currency } = useCurrency();
+  const [symbol,       setSymbol]       = useState<string>(() => {
+    try { return localStorage.getItem('xentory-mockup-sym') ?? 'BTC'; } catch { return 'BTC'; }
+  });
+  const [showPicker,   setShowPicker]   = useState(false);
   const [price,        setPrice]        = useState<number | null>(null);
   const [change,       setChange]       = useState<number | null>(null);
   const [bars,         setBars]         = useState<number[]>([62, 78, 55, 85, 70, 92, 68]);
   const [closes7,      setCloses7]      = useState<number[]>([]);
+  const [dates7,       setDates7]       = useState<string[]>([]);
   const [hoveredBar,   setHoveredBar]   = useState<number | null>(null);
   const [rsi,          setRsi]          = useState<number | null>(null);
   const [rsiModal,     setRsiModal]     = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const openPriceRef = useRef<number>(0);
+  const openPriceRef  = useRef<number>(0);
+  const touchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pickerRef     = useRef<HTMLDivElement>(null);
+
+  const binSym = CRYPTO_ASSETS.find(a => a.sym === symbol)?.bin ?? 'BTCUSDT';
+
+  // Close picker on outside click
+  useEffect(() => {
+    if (!showPicker) return;
+    const fn = (e: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) setShowPicker(false);
+    };
+    document.addEventListener('mousedown', fn);
+    return () => document.removeEventListener('mousedown', fn);
+  }, [showPicker]);
 
   useEffect(() => {
     let dead = false;
     let ws: WebSocket | null = null;
     let retryT: ReturnType<typeof setTimeout> | null = null;
 
-    // Initial REST snapshot: 24hr ticker + klines for chart/RSI
+    // Reset display when symbol changes
+    setPrice(null); setChange(null); setRsi(null);
+    setBars([62, 78, 55, 85, 70, 92, 68]);
+    setCloses7([]); setDates7([]); setHoveredBar(null);
+    openPriceRef.current = 0;
+
     async function loadSnapshot() {
       try {
         const [ticker, klines] = await Promise.all([
-          fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT').then(r => r.json()),
-          fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=15').then(r => r.json()),
+          fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${binSym}`).then(r => r.json()),
+          fetch(`https://api.binance.com/api/v3/klines?symbol=${binSym}&interval=1d&limit=15`).then(r => r.json()),
         ]);
         if (dead) return;
         openPriceRef.current = parseFloat(ticker.openPrice);
@@ -104,6 +139,9 @@ function MiniMockup() {
         const range = hi - lo || 1;
         setBars(last7.map(c => Math.round(((c - lo) / range) * 70 + 20)));
         setCloses7(last7);
+        setDates7(klines.slice(-7).map((k: any[]) =>
+          new Date(k[0]).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
+        ));
         if (closes.length >= 15) {
           const deltas = closes.slice(1).map((c, i) => c - closes[i]);
           const gains  = deltas.map(d => d > 0 ? d : 0);
@@ -116,10 +154,10 @@ function MiniMockup() {
     }
     loadSnapshot();
 
-    // WebSocket for real-time price (same as LiveTicker)
+    const wsStream = binSym.toLowerCase();
     const connect = () => {
       if (dead) return;
-      ws = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@miniTicker');
+      ws = new WebSocket(`wss://stream.binance.com:9443/ws/${wsStream}@miniTicker`);
       ws.onmessage = (e: MessageEvent<string>) => {
         try {
           const d = JSON.parse(e.data);
@@ -145,7 +183,8 @@ function MiniMockup() {
       if (retryT) clearTimeout(retryT);
       ws?.close();
     };
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [binSym]);
 
   const openModal = () => {
     setRsiModal(true);
@@ -184,14 +223,62 @@ function MiniMockup() {
       }}>
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <span style={{ fontWeight: 700, fontSize: '0.78rem', color: 'var(--text)' }}>
-              BTC/{currency}
-            </span>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', position: 'relative' }} ref={pickerRef}>
+            {/* Asset picker trigger */}
+            <button
+              onClick={() => setShowPicker(v => !v)}
+              title="Cambiar activo"
+              style={{
+                display: 'flex', alignItems: 'center', gap: '0.3rem',
+                background: showPicker ? 'var(--accent-light)' : 'var(--card)',
+                border: `1px solid ${showPicker ? 'var(--accent-primary)' : 'var(--border)'}`,
+                borderRadius: 6, padding: '0.18rem 0.45rem 0.18rem 0.35rem',
+                cursor: 'pointer', transition: 'all 0.15s',
+              }}
+            >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={showPicker ? 'var(--accent-primary)' : 'var(--muted)'} strokeWidth="2.2" strokeLinecap="round">
+                <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/>
+                <line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/>
+                <line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/>
+                <line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/>
+                <line x1="17" y1="16" x2="23" y2="16"/>
+              </svg>
+              <span style={{ fontWeight: 700, fontSize: '0.78rem', color: showPicker ? 'var(--accent-primary)' : 'var(--text)' }}>
+                {symbol}/{currency}
+              </span>
+            </button>
             {change !== null && (
               <span style={{ fontSize: '0.65rem', color: chColor, background: chBg, padding: '0.1rem 0.4rem', borderRadius: 4, border: `1px solid ${chBorder}` }}>
                 {up ? '+' : ''}{change.toFixed(2)}%
               </span>
+            )}
+            {/* Asset picker dropdown */}
+            {showPicker && (
+              <div style={{
+                position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 10,
+                background: 'var(--bg2)', border: '1px solid var(--border2)', borderRadius: 10,
+                padding: '0.5rem', display: 'flex', flexWrap: 'wrap', gap: '0.35rem',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.15)', width: 200,
+              }}>
+                {CRYPTO_ASSETS.map(a => (
+                  <button
+                    key={a.sym}
+                    onClick={() => {
+                      setSymbol(a.sym);
+                      try { localStorage.setItem('xentory-mockup-sym', a.sym); } catch { /**/ }
+                      setShowPicker(false);
+                    }}
+                    style={{
+                      padding: '0.28rem 0.65rem', borderRadius: 6, cursor: 'pointer',
+                      border: `1px solid ${symbol === a.sym ? 'var(--accent-primary)' : 'var(--border)'}`,
+                      background: symbol === a.sym ? 'var(--accent-light)' : 'var(--card)',
+                      color: symbol === a.sym ? 'var(--accent-primary)' : 'var(--text2)',
+                      fontSize: '0.72rem', fontWeight: symbol === a.sym ? 700 : 400,
+                      fontFamily: 'system-ui, sans-serif', transition: 'all 0.12s',
+                    }}
+                  >{a.sym}</button>
+                ))}
+              </div>
             )}
           </div>
           <span style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text)' }}>
@@ -202,16 +289,20 @@ function MiniMockup() {
         <div style={{ position: 'relative', marginBottom: '1rem' }}>
           {hoveredBar !== null && closes7[hoveredBar] != null && (
             <div style={{
-              position: 'absolute', bottom: 'calc(100% + 4px)',
-              left: `calc(${(hoveredBar + 0.5) / bars.length * 100}% - 2px)`,
+              position: 'absolute', bottom: 'calc(100% + 5px)',
+              left: `${Math.min(Math.max((hoveredBar + 0.5) / bars.length * 100, 12), 88)}%`,
               transform: 'translateX(-50%)',
               background: 'var(--bg2)', border: '1px solid var(--border2)',
-              borderRadius: 6, padding: '0.2rem 0.5rem',
-              fontSize: '0.62rem', color: 'var(--text)', whiteSpace: 'nowrap',
-              zIndex: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-              pointerEvents: 'none',
+              borderRadius: 7, padding: '0.25rem 0.6rem',
+              zIndex: 2, boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
+              pointerEvents: 'none', textAlign: 'center',
             }}>
-              {format(closes7[hoveredBar])}
+              <div style={{ fontSize: '0.58rem', color: 'var(--muted)', lineHeight: 1.2, fontFamily: 'system-ui, sans-serif' }}>
+                {dates7[hoveredBar] ?? ''}
+              </div>
+              <div style={{ fontSize: '0.68rem', color: 'var(--text)', fontWeight: 600, whiteSpace: 'nowrap', fontFamily: 'system-ui, sans-serif' }}>
+                {format(closes7[hoveredBar])}
+              </div>
             </div>
           )}
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: 48 }}>
@@ -219,15 +310,24 @@ function MiniMockup() {
               <div key={i}
                 onMouseEnter={() => setHoveredBar(i)}
                 onMouseLeave={() => setHoveredBar(null)}
-                onTouchStart={() => setHoveredBar(i)}
-                onTouchEnd={() => setTimeout(() => setHoveredBar(null), 1800)}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
+                  // tap same bar → dismiss; tap new bar → show
+                  if (hoveredBar === i) { setHoveredBar(null); }
+                  else {
+                    setHoveredBar(i);
+                    touchTimerRef.current = setTimeout(() => setHoveredBar(null), 5000);
+                  }
+                }}
                 style={{
                   flex: 1, borderRadius: '2px 2px 0 0', height: `${h}%`, cursor: 'pointer',
                   background: hoveredBar === i || i === bars.length - 1 ? 'var(--gold)' : 'var(--border2)',
                   opacity: hoveredBar !== null && hoveredBar !== i && i !== bars.length - 1 ? 0.4 : 1,
                   transition: 'height 0.3s, opacity 0.15s, background 0.15s',
+                  WebkitTapHighlightColor: 'transparent',
                 }} />
-          ))}
+            ))}
           </div>
         </div>
         {/* Signal + RSI */}
