@@ -374,7 +374,12 @@ export function Navbar() {
             animation: 'fadeUp 0.2s ease both',
             boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
           }}>
-            {navLinks.filter(l => l.to !== '/blog').map(({ to, label }) => (
+            {/* ── NAV LINKS — explicit order, always visible ── */}
+            {([
+              { to: '/blog',        label: t('nav.blog') },
+              { to: '/metodologia', label: t('nav.methodology') },
+              ...(!user ? [{ to: '/pricing', label: t('nav.pricing') }] : []),
+            ] as { to: string; label: string }[]).map(({ to, label }) => (
               <Link key={to} to={to} onClick={() => setMob(false)} style={{
                 textDecoration: 'none', padding: '0.85rem 0',
                 borderBottom: '1px solid var(--border)',
@@ -387,18 +392,29 @@ export function Navbar() {
                 <span style={{ color: isActive(to) ? 'var(--accent-primary)' : 'var(--muted)', fontSize: '0.9rem' }}>→</span>
               </Link>
             ))}
-            {/* Blog — explicit to guarantee visibility */}
-            <Link to="/blog" onClick={() => setMob(false)} style={{
-              textDecoration: 'none', padding: '0.85rem 0',
-              borderBottom: '1px solid var(--border)',
-              fontSize: '1.05rem', color: isActive('/blog') ? 'var(--accent-primary)' : 'var(--text)',
-              fontWeight: isActive('/blog') ? 600 : 400,
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              minHeight: 48,
-            }}>
-              {t('nav.blog')}
-              <span style={{ color: isActive('/blog') ? 'var(--accent-primary)' : 'var(--muted)', fontSize: '0.9rem' }}>→</span>
-            </Link>
+            {/* Cómo funciona — solo sin sesión */}
+            {!user && (
+              <button
+                onClick={() => {
+                  setMob(false);
+                  if (location.pathname === '/') {
+                    document.getElementById('how')?.scrollIntoView({ behavior: 'smooth' });
+                  } else {
+                    navigate('/');
+                    setTimeout(() => document.getElementById('how')?.scrollIntoView({ behavior: 'smooth' }), 200);
+                  }
+                }}
+                style={{
+                  background: 'none', border: 'none', borderBottom: '1px solid var(--border)',
+                  padding: '0.85rem 0', fontSize: '1.05rem', color: 'var(--text)', fontWeight: 400,
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  width: '100%', cursor: 'pointer', minHeight: 48, textAlign: 'left',
+                }}
+              >
+                {lang === 'es' ? 'Cómo funciona' : 'How it works'}
+                <span style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>↓</span>
+              </button>
+            )}
             {/* Quick settings row in drawer */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '0.9rem', paddingBottom: '0.4rem' }}>
               <span style={{ fontSize: '0.7rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
