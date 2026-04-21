@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useCurrency, type Currency } from '../../context/CurrencyContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useLang } from '../../context/LanguageContext';
+import { PreferencesModal } from '../preferences/PreferencesModal';
 
 // ── SVG ICONS ─────────────────────────────────────────────────────────
 const FlagES = () => (
@@ -66,6 +67,15 @@ const DashIcon = () => (
     <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
   </svg>
 );
+const SlidersIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/>
+    <line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/>
+    <line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/>
+    <line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/>
+    <line x1="17" y1="16" x2="23" y2="16"/>
+  </svg>
+);
 const PlanIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
@@ -112,6 +122,7 @@ export function Navbar() {
   const [mob, setMob]              = useState(false);
   const [settingsModal, setSettings] = useState(false);
   const [settingsTab, setSettingsTab] = useState<'email'|'password'|'delete'>('email');
+  const [showPrefs, setShowPrefs] = useState(false);
   const [sField, setSField]        = useState('');
   const [sField2, setSField2]      = useState('');
   const [sBusy, setSBusy]          = useState(false);
@@ -199,6 +210,13 @@ export function Navbar() {
       {/* Language toggle */}
       <button onClick={toggleLang} style={{ ...IB, overflow: 'hidden', padding: 0 }} title={lang === 'es' ? 'Switch to English' : 'Cambiar a Español'}>
         {lang === 'es' ? <FlagEN /> : <FlagES />}
+      </button>
+      {/* Personalización */}
+      <button onClick={() => setShowPrefs(true)} style={IB} title={lang === 'es' ? 'Personalización' : 'Preferences'}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent-primary)'; e.currentTarget.style.color = 'var(--accent-primary)'; }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text2)'; }}
+      >
+        <SlidersIcon />
       </button>
     </div>
   );
@@ -369,6 +387,22 @@ export function Navbar() {
                 <span style={{ color: isActive(to) ? 'var(--accent-primary)' : 'var(--muted)', fontSize: '0.9rem' }}>→</span>
               </Link>
             ))}
+            {/* Personalización row */}
+            <button
+              onClick={() => { setMob(false); setShowPrefs(true); }}
+              style={{
+                textDecoration: 'none', padding: '0.85rem 0',
+                borderBottom: '1px solid var(--border)', borderTop: 'none', borderLeft: 'none', borderRight: 'none',
+                fontSize: '1.05rem', color: 'var(--text)',
+                fontWeight: 400, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                width: '100%', background: 'none', cursor: 'pointer', minHeight: 48, textAlign: 'left',
+              }}
+            >
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <SlidersIcon /> {lang === 'es' ? 'Personalización' : 'Preferences'}
+              </span>
+              <span style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>→</span>
+            </button>
             {/* Quick settings row in drawer */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '0.9rem', paddingBottom: '0.4rem' }}>
               <span style={{ fontSize: '0.7rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
@@ -552,6 +586,8 @@ export function Navbar() {
           </div>
         </>
       )}
+      {/* ── PREFERENCES MODAL ───────────────────────────────────── */}
+      {showPrefs && <PreferencesModal onClose={() => setShowPrefs(false)} />}
     </>
   );
 }
