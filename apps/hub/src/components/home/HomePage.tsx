@@ -957,7 +957,7 @@ export function HomePage() {
           </div>
 
           {/* Comparison cards */}
-          <div className="reveal why-xentory-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '1.2rem', alignItems: 'start' }}>
+          <div className="reveal why-xentory-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: '1.2rem', alignItems: 'start' }}>
             {([
               {
                 label:    lang === 'es' ? 'Tipster típico' : 'Typical tipster',
@@ -1039,7 +1039,10 @@ export function HomePage() {
           </div>
 
           {/* Mobile: stack to single column */}
-          <style>{`@media (max-width: 640px) { .why-xentory-grid { grid-template-columns: 1fr !important; } }`}</style>
+          <style>{`
+            @media (max-width: 860px) { .why-xentory-grid { grid-template-columns: 1fr 1fr !important; } }
+            @media (max-width: 560px) { .why-xentory-grid { grid-template-columns: 1fr !important; } }
+          `}</style>
 
           <p className="reveal" style={{ textAlign: 'center', color: 'var(--muted)', fontSize: '0.73rem', marginTop: '1.5rem' }}>
             {lang === 'es'
