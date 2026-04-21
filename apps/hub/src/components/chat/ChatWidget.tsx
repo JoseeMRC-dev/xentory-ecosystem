@@ -211,18 +211,35 @@ export function ChatWidget() {
 
   return (
     <>
+      <style>{`
+        .xentory-chat-panel {
+          position: fixed;
+          bottom: 5.5rem; right: 1.5rem; z-index: 950;
+          width: min(340px, calc(100vw - 2rem));
+          height: min(480px, calc(100vh - 8rem));
+          background: var(--bg2); border: 1px solid var(--border2);
+          border-radius: 20px; display: flex; flex-direction: column;
+          box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+          animation: fadeUp 0.22s ease; overflow: hidden;
+        }
+        @media (min-width: 600px) {
+          .xentory-chat-panel { width: 380px; height: 540px; }
+        }
+        @media (min-width: 1024px) {
+          .xentory-chat-panel { width: 420px; height: 580px; bottom: 5.8rem; right: 2rem; }
+        }
+        .xentory-chat-btn {
+          position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 950;
+          width: 52px; height: 52px;
+        }
+        @media (min-width: 1024px) {
+          .xentory-chat-btn { width: 56px; height: 56px; bottom: 2rem; right: 2rem; }
+        }
+      `}</style>
+
       {/* ── Panel ── */}
       {open && (
-        <div style={{
-          position: 'fixed', bottom: '5.5rem', right: '1.5rem', zIndex: 950,
-          width: 'min(360px, calc(100vw - 2rem))',
-          height: 'min(520px, calc(100vh - 8rem))',
-          background: 'var(--bg2)', border: '1px solid var(--border2)',
-          borderRadius: 20, display: 'flex', flexDirection: 'column',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-          animation: 'fadeUp 0.22s ease',
-          overflow: 'hidden',
-        }}>
+        <div className="xentory-chat-panel">
           {/* Header */}
           <div style={{ padding: '1rem 1.2rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0.7rem', flexShrink: 0 }}>
             <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
@@ -317,9 +334,9 @@ export function ChatWidget() {
       <button
         onClick={() => setOpen(o => !o)}
         aria-label={es ? 'Abrir asistente' : 'Open assistant'}
+        className="xentory-chat-btn"
         style={{
-          position: 'fixed', bottom: '1.5rem', right: '1.5rem', zIndex: 950,
-          width: 52, height: 52, borderRadius: '50%',
+          borderRadius: '50%',
           background: open ? 'var(--card)' : 'var(--accent-primary)',
           border: open ? '1px solid var(--border2)' : 'none',
           color: open ? 'var(--text2)' : '#fff',
