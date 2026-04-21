@@ -1,29 +1,26 @@
 /**
- * chat — Supabase Edge Function
+ * chat — Supabase Edge Function (Gemini-powered)
  *
- * Proxies Claude API calls for the Xentory chatbot.
- * Requires: supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
- *
- * Request body:
- *   { messages: [{role, content}][], plan: {market, bets}, userName: string, lang: string }
- *
- * Requires a valid Supabase JWT (logged-in users only).
+ * - Verifies auth + plan server-side (only pro/elite users reach Gemini)
+ * - Returns { short: string, detail?: string }
+ * - Requires: GEMINI_API_KEY secret (shared with gemini-proxy)
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2?target=deno';
 
-const corsHeaders = {
+const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
+const cors = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
 
   try {
-    // Verify auth
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+    // ── 1. Auth ──────────────────────────────────────────────────────
+    const authHeader = req.headers.get('Authorization') ?? '';
+    if (!authHeader) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: cors });
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -31,71 +28,71 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } },
     );
     const { data: { user }, error: authErr } = await supabase.auth.getUser();
-    if (authErr || !user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+    if (authErr || !user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: cors });
 
-    const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
-    if (!apiKey) return new Response(JSON.stringify({ error: 'API key not configured' }), { status: 500, headers: corsHeaders });
+    // ── 2. Verify plan server-side ───────────────────────────────────
+    const { data: subs } = await supabase
+      .from('user_subscriptions')
+      .select('platform, plan, status')
+      .eq('user_id', user.id)
+      .in('status', ['active', 'trial']);
 
-    const { messages, plan, userName, lang } = await req.json() as {
+    const find = (ps: string[]) => (subs as any[])?.find(r => ps.includes(r.platform))?.plan ?? 'free';
+    const marketPlan = find(['market', 'bundle']);
+    const betsPlan   = find(['bets',   'bundle']);
+    const isPaid     = marketPlan !== 'free' || betsPlan !== 'free';
+
+    if (!isPaid) return new Response(JSON.stringify({ error: 'upgrade_required' }), { status: 403, headers: cors });
+
+    // ── 3. Parse body ────────────────────────────────────────────────
+    const { messages, lang } = await req.json() as {
       messages: { role: string; content: string }[];
-      plan: { market: string; bets: string };
-      userName: string;
       lang: string;
     };
 
-    const marketPlan = plan?.market ?? 'free';
-    const betsPlan   = plan?.bets   ?? 'free';
+    const geminiKey = Deno.env.get('GEMINI_API_KEY') ?? '';
+    if (!geminiKey) return new Response(JSON.stringify({ error: 'not configured' }), { status: 503, headers: cors });
 
-    const hasMarketPaid = marketPlan !== 'free';
-    const hasBetsPaid   = betsPlan   !== 'free';
-
-    const planLine = lang === 'en'
-      ? `Plan: Market ${marketPlan.toUpperCase()}${hasBetsPaid ? ` · Bet ${betsPlan.toUpperCase()}` : ''}.`
-      : `Plan: Market ${marketPlan.toUpperCase()}${hasBetsPaid ? ` · Bet ${betsPlan.toUpperCase()}` : ''}.`;
+    // ── 4. System prompt ─────────────────────────────────────────────
+    const caps = [
+      marketPlan !== 'free' ? (lang === 'en' ? 'crypto, stocks and forex trading' : 'trading de cripto, acciones y forex') : null,
+      betsPlan   !== 'free' ? (lang === 'en' ? 'sports betting strategy'           : 'estrategia de apuestas deportivas')    : null,
+    ].filter(Boolean).join(lang === 'en' ? ' and ' : ' y ');
 
     const system = lang === 'en'
-      ? `You are the Xentory assistant — a concise, friendly AI for a signal platform (crypto/stocks trading + sports betting).
-User: ${userName || 'User'}. ${planLine}
-Rules:
-- Reply in English. Max 120 words. Be direct.
-- Crypto / stocks / forex questions: answer if Market plan is pro or elite; otherwise suggest upgrading.
-- Sports betting questions: answer if Bets plan is pro or elite; otherwise suggest upgrading.
-- General platform questions (features, pricing, how it works, account): always answer.
-- Never invent real prices, odds, or live signals.
-- For unresolved technical issues, suggest support@xentory.io.`
-      : `Eres el asistente de Xentory — una IA concisa y amable de una plataforma de señales (trading cripto/acciones + apuestas deportivas).
-Usuario: ${userName || 'Usuario'}. ${planLine}
-Reglas:
-- Responde en español. Máx 120 palabras. Sé directo.
-- Preguntas de cripto / acciones / forex: responde si el plan Market es pro o elite; si no, sugiere mejorarlo.
-- Preguntas de apuestas deportivas: responde si el plan Bet es pro o elite; si no, sugiere mejorarlo.
-- Preguntas generales sobre la plataforma (funciones, precios, cómo funciona, cuenta): responde siempre.
-- Nunca inventes precios, cuotas ni señales en tiempo real.
-- Para problemas técnicos sin resolver, sugiere soporte@xentory.io.`;
+      ? `You are the Xentory assistant. You help with: ${caps}.
+ALWAYS respond with valid JSON only: {"short":"1–2 sentence answer, max 55 words","detail":"2–3 extra sentences if the topic genuinely needs more context — omit this key if not needed"}
+Be factual and direct. Never invent live prices, odds, or real-time signals.`
+      : `Eres el asistente de Xentory. Ayudas con: ${caps}.
+SIEMPRE responde solo con JSON válido: {"short":"respuesta de 1–2 frases, máx 55 palabras","detail":"2–3 frases adicionales si el tema lo requiere — omite esta clave si no hace falta"}
+Sé directo y factual. Nunca inventes precios, cuotas o señales en tiempo real.`;
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 300,
-        system,
-        messages,
-      }),
-    });
+    // ── 5. Call Gemini ───────────────────────────────────────────────
+    const payload = {
+      systemInstruction: { parts: [{ text: system }] },
+      contents: messages.map(m => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content }],
+      })),
+      generationConfig: { maxOutputTokens: 280, temperature: 0.6, responseMimeType: 'application/json' },
+    };
 
-    const data = await res.json();
-    const text: string = data.content?.[0]?.text ?? (lang === 'en' ? 'Sorry, I could not process your question.' : 'Lo siento, no pude procesar tu pregunta.');
+    const gemRes = await fetch(
+      `${GEMINI_BASE}/gemini-2.0-flash:generateContent?key=${geminiKey}`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) },
+    );
+    const gemData = await gemRes.json();
+    const rawText = gemData.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}';
 
-    return new Response(JSON.stringify({ text }), {
-      headers: { ...corsHeaders, 'content-type': 'application/json' },
-    });
+    let parsed: { short?: string; detail?: string } = {};
+    try { parsed = JSON.parse(rawText); } catch { parsed = { short: rawText }; }
+
+    return new Response(JSON.stringify({
+      short:  parsed.short  ?? (lang === 'en' ? 'Sorry, could not process that.' : 'Lo siento, no pude procesar eso.'),
+      detail: parsed.detail || undefined,
+    }), { headers: { ...cors, 'content-type': 'application/json' } });
+
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: corsHeaders });
+    return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: cors });
   }
 });
