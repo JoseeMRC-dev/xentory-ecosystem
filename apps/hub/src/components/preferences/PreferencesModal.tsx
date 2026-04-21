@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { usePreferences, type Preferences } from '../../context/PreferencesContext';
 import { useLang } from '../../context/LanguageContext';
 
@@ -11,6 +11,23 @@ const LEAGUE_OPTIONS  = [
 ];
 
 type Tab = 'market' | 'bet';
+
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div>
+      <p style={{ fontSize: '0.67rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)', fontWeight: 600, marginBottom: '0.6rem', fontFamily: 'system-ui, sans-serif' }}>{title}</p>
+      {children}
+    </div>
+  );
+}
+
+function ChipRow({ items, active, onToggle }: { items: string[]; active: string[]; onToggle: (v: string) => void }) {
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+      {items.map(v => <Chip key={v} label={v} active={active.includes(v)} onToggle={() => onToggle(v)} />)}
+    </div>
+  );
+}
 
 function Chip({ label, active, onToggle }: { label: string; active: boolean; onToggle: () => void }) {
   return (
@@ -57,19 +74,6 @@ export function PreferencesModal({ onClose }: Props) {
     boxShadow: active ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
     transition: 'all 0.18s',
   });
-
-  const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <div>
-      <p style={{ fontSize: '0.67rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)', fontWeight: 600, marginBottom: '0.6rem', fontFamily: 'system-ui, sans-serif' }}>{title}</p>
-      {children}
-    </div>
-  );
-
-  const ChipRow = ({ items, active, onToggle }: { items: string[]; active: string[]; onToggle: (v: string) => void }) => (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-      {items.map(v => <Chip key={v} label={v} active={active.includes(v)} onToggle={() => onToggle(v)} />)}
-    </div>
-  );
 
   return (
     <>
