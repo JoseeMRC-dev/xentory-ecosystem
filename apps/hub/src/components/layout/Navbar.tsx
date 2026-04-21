@@ -374,7 +374,7 @@ export function Navbar() {
             animation: 'fadeUp 0.2s ease both',
             boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
           }}>
-            {navLinks.map(({ to, label }) => (
+            {navLinks.filter(l => l.to !== '/blog').map(({ to, label }) => (
               <Link key={to} to={to} onClick={() => setMob(false)} style={{
                 textDecoration: 'none', padding: '0.85rem 0',
                 borderBottom: '1px solid var(--border)',
@@ -387,22 +387,18 @@ export function Navbar() {
                 <span style={{ color: isActive(to) ? 'var(--accent-primary)' : 'var(--muted)', fontSize: '0.9rem' }}>→</span>
               </Link>
             ))}
-            {/* Personalización row */}
-            <button
-              onClick={() => { setMob(false); setShowPrefs(true); }}
-              style={{
-                textDecoration: 'none', padding: '0.85rem 0',
-                borderBottom: '1px solid var(--border)', borderTop: 'none', borderLeft: 'none', borderRight: 'none',
-                fontSize: '1.05rem', color: 'var(--text)',
-                fontWeight: 400, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                width: '100%', background: 'none', cursor: 'pointer', minHeight: 48, textAlign: 'left',
-              }}
-            >
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                <SlidersIcon /> {lang === 'es' ? 'Personalización' : 'Preferences'}
-              </span>
-              <span style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>→</span>
-            </button>
+            {/* Blog — explicit to guarantee visibility */}
+            <Link to="/blog" onClick={() => setMob(false)} style={{
+              textDecoration: 'none', padding: '0.85rem 0',
+              borderBottom: '1px solid var(--border)',
+              fontSize: '1.05rem', color: isActive('/blog') ? 'var(--accent-primary)' : 'var(--text)',
+              fontWeight: isActive('/blog') ? 600 : 400,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              minHeight: 48,
+            }}>
+              {t('nav.blog')}
+              <span style={{ color: isActive('/blog') ? 'var(--accent-primary)' : 'var(--muted)', fontSize: '0.9rem' }}>→</span>
+            </Link>
             {/* Quick settings row in drawer */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '0.9rem', paddingBottom: '0.4rem' }}>
               <span style={{ fontSize: '0.7rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
