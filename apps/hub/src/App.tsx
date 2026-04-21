@@ -7,6 +7,7 @@ import { LanguageProvider } from './context/LanguageContext';
 import { PreferencesProvider } from './context/PreferencesContext';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
+import { ChatWidget } from './components/chat/ChatWidget';
 import './styles/global.css';
 
 const HomePage        = lazy(() => import('./components/home/HomePage'));
@@ -38,7 +39,7 @@ function BackToTop() {
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       aria-label="Volver al inicio"
       style={{
-        position: 'fixed', bottom: '1.8rem', right: '1.5rem', zIndex: 900,
+        position: 'fixed', bottom: '5.2rem', right: '1.5rem', zIndex: 900,
         width: 44, height: 44, borderRadius: '50%',
         background: 'var(--card)', border: '1px solid var(--border2)',
         color: 'var(--text2)', cursor: 'pointer',
@@ -76,6 +77,7 @@ function Layout({ children, hideFooter }: { children: React.ReactNode; hideFoote
       <main><Suspense fallback={<PageSkeleton />}>{children}</Suspense></main>
       {!hideFooter && <Footer />}
       <BackToTop />
+      <ChatWidget />
     </>
   );
 }
