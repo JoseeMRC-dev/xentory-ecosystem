@@ -369,10 +369,11 @@ function MiniMockup() {
             style={{
               width: '100%', maxWidth: 340,
               borderRadius: 22,
-              background: 'linear-gradient(145deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))',
+              background: 'var(--bg2)',
               border: `1px solid ${rsiColor}40`,
-              boxShadow: `0 0 60px ${rsiColor}22, 0 24px 60px rgba(0,0,0,0.6)`,
+              boxShadow: `0 0 40px ${rsiColor}18, 0 24px 60px rgba(0,0,0,0.4)`,
               padding: '2rem 1.8rem 1.6rem',
+              position: 'relative',
               transform: modalVisible ? 'scale(1) translateY(0)' : 'scale(0.55) translateY(40px)',
               opacity: modalVisible ? 1 : 0,
               transition: 'transform 0.38s cubic-bezier(0.34,1.4,0.64,1), opacity 0.3s ease',
@@ -382,7 +383,7 @@ function MiniMockup() {
             <button onClick={closeModal} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '1.1rem', lineHeight: 1, padding: '0.2rem 0.4rem' }}>✕</button>
 
             {/* Label */}
-            <div style={{ fontSize: '0.65rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '0.6rem', fontWeight: 600 }}>BTC/USD · RSI (14)</div>
+            <div style={{ fontSize: '0.65rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '0.6rem', fontWeight: 600 }}>{symbol}/{currency} · RSI (14)</div>
 
             {/* Big RSI number */}
             <div style={{ fontWeight: 700, fontSize: '5rem', lineHeight: 1, color: rsiColor, letterSpacing: '-0.04em', marginBottom: '0.3rem', transition: 'color 0.3s' }}>
