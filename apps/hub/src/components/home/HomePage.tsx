@@ -941,6 +941,114 @@ export function HomePage() {
         </div>
       </section>
 
+      {/* ══ WHY XENTORY — COMPARISON ════════════════════════════════ */}
+      <section style={{ padding: 'clamp(4.5rem,9vw,7rem) clamp(1rem,5vw,2rem)' }}>
+        <div className="section-container">
+          <div className="reveal" style={{ textAlign: 'center', marginBottom: 'clamp(2.5rem,5vw,3.5rem)' }}>
+            <SectionLabel label={lang === 'es' ? 'Por qué Xentory' : 'Why Xentory'} />
+            <h2 style={{ fontSize: 'clamp(1.8rem,5vw,2.8rem)', marginBottom: '0.7rem' }}>
+              {lang === 'es' ? 'Lo que otros cobran. Lo que nosotros ofrecemos.' : 'What others charge. What we deliver.'}
+            </h2>
+            <p style={{ color: 'var(--text2)', fontSize: 'clamp(0.9rem,2vw,1rem)', maxWidth: 560, margin: '0 auto' }}>
+              {lang === 'es'
+                ? 'El mercado de tipsters y analistas está lleno de servicios caros, opacos y sin historial verificable.'
+                : 'The tipster and analyst market is full of expensive, opaque services with no verifiable track record.'}
+            </p>
+          </div>
+
+          {/* Comparison cards */}
+          <div className="reveal why-xentory-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '1.2rem', alignItems: 'start' }}>
+            {([
+              {
+                label:    lang === 'es' ? 'Tipster típico' : 'Typical tipster',
+                sublabel: lang === 'es' ? 'Canales de apuestas' : 'Betting channels',
+                price:    lang === 'es' ? '€30 – €300 /mes' : '€30 – €300 /mo',
+                priceNote: lang === 'es' ? 'O cobran por pick (€2–€10 c/u)' : 'Or charge per pick (€2–€10 each)',
+                highlight: false,
+                items: [
+                  { ok: false, text: lang === 'es' ? 'Historial verificable públicamente' : 'Publicly verifiable history' },
+                  { ok: false, text: lang === 'es' ? 'Análisis automatizado con IA'       : 'AI-powered automated analysis' },
+                  { ok: false, text: lang === 'es' ? 'Razonamiento detallado por señal'   : 'Detailed reasoning per signal' },
+                  { ok: true,  text: lang === 'es' ? 'Señales de apuestas deportivas'     : 'Sports betting signals' },
+                  { ok: false, text: lang === 'es' ? 'Cobertura cripto + apuestas'        : 'Crypto + betting coverage' },
+                  { ok: false, text: lang === 'es' ? 'Cancela en cualquier momento'       : 'Cancel anytime' },
+                ],
+              },
+              {
+                label:    lang === 'es' ? 'Analista / Trader' : 'Analyst / Trader',
+                sublabel: lang === 'es' ? 'Grupos y newsletters cripto' : 'Crypto groups & newsletters',
+                price:    lang === 'es' ? '€50 – €500 /mes' : '€50 – €500 /mo',
+                priceNote: lang === 'es' ? 'Algunos +% sobre ganancias' : 'Some charge % on profits',
+                highlight: false,
+                items: [
+                  { ok: false, text: lang === 'es' ? 'Historial verificable públicamente' : 'Publicly verifiable history' },
+                  { ok: false, text: lang === 'es' ? 'Análisis automatizado con IA'       : 'AI-powered automated analysis' },
+                  { ok: false, text: lang === 'es' ? 'Razonamiento detallado por señal'   : 'Detailed reasoning per signal' },
+                  { ok: true,  text: lang === 'es' ? 'Señales de mercados financieros'    : 'Financial market signals' },
+                  { ok: false, text: lang === 'es' ? 'Cobertura cripto + apuestas'        : 'Crypto + betting coverage' },
+                  { ok: false, text: lang === 'es' ? 'Cancela en cualquier momento'       : 'Cancel anytime' },
+                ],
+              },
+              {
+                label:    'Xentory',
+                sublabel: lang === 'es' ? 'IA · Cripto · Apuestas' : 'AI · Crypto · Betting',
+                price:    lang === 'es' ? 'Desde €19 /mes' : 'From €19 /mo',
+                priceNote: lang === 'es' ? 'Bundle completo desde €49/mes' : 'Full bundle from €49/mo',
+                highlight: true,
+                items: [
+                  { ok: true, text: lang === 'es' ? 'Historial verificable públicamente' : 'Publicly verifiable history' },
+                  { ok: true, text: lang === 'es' ? 'Análisis automatizado con IA'       : 'AI-powered automated analysis' },
+                  { ok: true, text: lang === 'es' ? 'Razonamiento detallado por señal'   : 'Detailed reasoning per signal' },
+                  { ok: true, text: lang === 'es' ? 'Señales de mercados financieros'    : 'Financial market signals' },
+                  { ok: true, text: lang === 'es' ? 'Cobertura cripto + apuestas'        : 'Crypto + betting coverage' },
+                  { ok: true, text: lang === 'es' ? 'Cancela en cualquier momento'       : 'Cancel anytime' },
+                ],
+              },
+            ] as { label: string; sublabel: string; price: string; priceNote: string; highlight: boolean; items: { ok: boolean; text: string }[] }[]).map((col, ci) => (
+              <div key={ci} style={{
+                borderRadius: 18,
+                border: col.highlight ? '2px solid var(--gold)' : '1px solid var(--border)',
+                background: col.highlight ? 'var(--card)' : 'var(--bg2)',
+                padding: '1.8rem 1.5rem',
+                position: 'relative',
+                boxShadow: col.highlight ? '0 0 40px rgba(212,175,55,0.12)' : 'none',
+              }}>
+                {col.highlight && (
+                  <div style={{ position: 'absolute', top: '-13px', left: '50%', transform: 'translateX(-50%)', background: 'var(--gold)', color: '#1a1a1a', fontSize: '0.62rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '0.2rem 0.8rem', borderRadius: 100 }}>
+                    {lang === 'es' ? 'Mejor valor' : 'Best value'}
+                  </div>
+                )}
+                <div style={{ fontSize: '0.62rem', color: col.highlight ? 'var(--gold)' : 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, marginBottom: '0.3rem' }}>{col.sublabel}</div>
+                <div style={{ fontWeight: 700, fontSize: '1.15rem', marginBottom: '1rem', color: 'var(--text)' }}>{col.label}</div>
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem', marginBottom: '1rem' }}>
+                  <div style={{ fontSize: 'clamp(1.3rem,3vw,1.6rem)', fontWeight: 800, color: col.highlight ? 'var(--gold)' : 'var(--text)', letterSpacing: '-0.03em' }}>{col.price}</div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginTop: '0.25rem' }}>{col.priceNote}</div>
+                </div>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                  {col.items.map((item, ii) => (
+                    <li key={ii} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.55rem', fontSize: '0.82rem', color: item.ok ? 'var(--text)' : 'var(--muted)', opacity: item.ok ? 1 : 0.5 }}>
+                      <span style={{ flexShrink: 0, marginTop: '0.05rem', fontWeight: 700, fontSize: '0.85rem', color: item.ok ? 'var(--green, #00e676)' : 'var(--red, #ff4455)' }}>
+                        {item.ok ? '✓' : '✗'}
+                      </span>
+                      <span style={{ textDecoration: item.ok ? 'none' : 'line-through', textDecorationColor: 'var(--border)' }}>{item.text}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          {/* Mobile: stack to single column */}
+          <style>{`@media (max-width: 640px) { .why-xentory-grid { grid-template-columns: 1fr !important; } }`}</style>
+
+          <p className="reveal" style={{ textAlign: 'center', color: 'var(--muted)', fontSize: '0.73rem', marginTop: '1.5rem' }}>
+            {lang === 'es'
+              ? '* Precios de referencia del mercado (2024–2025). Pueden variar según proveedor.'
+              : '* Reference market prices (2024–2025). May vary by provider.'}
+          </p>
+        </div>
+      </section>
+
       {/* ══ FAQ ══════════════════════════════════════════════════════ */}
       <section style={{ padding: 'clamp(4.5rem,9vw,7rem) clamp(1rem,5vw,2rem)' }}>
         <div style={{ maxWidth: 740, margin: '0 auto', padding: '0 clamp(0rem,2vw,1rem)' }}>
