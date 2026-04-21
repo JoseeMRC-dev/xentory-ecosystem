@@ -71,14 +71,17 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
 
   const setPrefs = useCallback(async (p: Preferences) => {
     setState(p);
-    toStorage(p);
+    toStorage(p);  // always persists locally regardless of Supabase
 
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return;
-
-    await supabase
-      .from('user_preferences')
-      .upsert({ user_id: session.user.id, market: p.market, bet: p.bet }, { onConflict: 'user_id' });
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return;
+      await supabase
+        .from('user_preferences')
+        .upsert({ user_id: session.user.id, market: p.market, bet: p.bet }, { onConflict: 'user_id' });
+    } catch {
+      // Supabase unavailable or table missing — local save already done above
+    }
   }, []);
 
   return <PreferencesCtx.Provider value={{ prefs, setPrefs }}>{children}</PreferencesCtx.Provider>;

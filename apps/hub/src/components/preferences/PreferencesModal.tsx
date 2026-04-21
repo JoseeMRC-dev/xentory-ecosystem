@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useState, useRef, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePreferences, type Preferences } from '../../context/PreferencesContext';
 import { useLang } from '../../context/LanguageContext';
@@ -58,7 +58,19 @@ export function PreferencesModal({ onClose }: Props) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const es = lang === 'es';
-  const [tab, setTab] = useState<Tab>('market');
+  const [tab, setTab]       = useState<Tab>('market');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved]   = useState(false);
+  const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleSave = async () => {
+    setSaving(true);
+    await setPrefs(local);
+    setSaving(false);
+    setSaved(true);
+    savedTimer.current = setTimeout(() => { setSaved(false); onClose(); }, 900);
+  };
+
   const [local, setLocal] = useState<Preferences>({
     market: { ...prefs.market, crypto: [...prefs.market.crypto], forex: [...prefs.market.forex], stocks: [...prefs.market.stocks] },
     bet:    { ...prefs.bet,    favoriteLeagues: [...prefs.bet.favoriteLeagues] },
@@ -196,12 +208,26 @@ export function PreferencesModal({ onClose }: Props) {
 
         {/* Footer */}
         <div style={{ padding: '1rem 1.6rem', borderTop: '1px solid var(--border)', flexShrink: 0, display: 'flex', gap: '0.7rem' }}>
-          <button onClick={onClose} className="btn btn-outline" style={{ flex: 1, justifyContent: 'center' }}>
+          <button onClick={onClose} disabled={saving} className="btn btn-outline" style={{ flex: 1, justifyContent: 'center' }}>
             {es ? 'Cancelar' : 'Cancel'}
           </button>
           {!(tab === 'bet' && !user) && (
-            <button onClick={async () => { await setPrefs(local); onClose(); }} className="btn btn-gold" style={{ flex: 1, justifyContent: 'center', fontWeight: 700 }}>
-              {es ? 'Guardar preferencias' : 'Save preferences'}
+            <button
+              onClick={handleSave}
+              disabled={saving || saved}
+              className="btn btn-gold"
+              style={{ flex: 1, justifyContent: 'center', fontWeight: 700, gap: '0.5rem', transition: 'all 0.2s' }}
+            >
+              {saved ? (
+                <>{es ? '✓ Guardado' : '✓ Saved'}</>
+              ) : saving ? (
+                <>
+                  <span style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />
+                  {es ? 'Guardando…' : 'Saving…'}
+                </>
+              ) : (
+                <>{es ? 'Guardar preferencias' : 'Save preferences'}</>
+              )}
             </button>
           )}
         </div>
