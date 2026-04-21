@@ -76,11 +76,13 @@ function MiniMockup() {
   const [change,       setChange]       = useState<number | null>(null);
   const [bars,         setBars]         = useState<number[]>([62, 78, 55, 85, 70, 92, 68]);
   const [closes7,      setCloses7]      = useState<number[]>([]);
+  const [dates7,       setDates7]       = useState<string[]>([]);
   const [hoveredBar,   setHoveredBar]   = useState<number | null>(null);
   const [rsi,          setRsi]          = useState<number | null>(null);
   const [rsiModal,     setRsiModal]     = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const openPriceRef = useRef<number>(0);
+  const openPriceRef    = useRef<number>(0);
+  const touchTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     let dead = false;
@@ -104,6 +106,9 @@ function MiniMockup() {
         const range = hi - lo || 1;
         setBars(last7.map(c => Math.round(((c - lo) / range) * 70 + 20)));
         setCloses7(last7);
+        setDates7(klines.slice(-7).map((k: any[]) =>
+          new Date(k[0]).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
+        ));
         if (closes.length >= 15) {
           const deltas = closes.slice(1).map((c, i) => c - closes[i]);
           const gains  = deltas.map(d => d > 0 ? d : 0);
@@ -202,16 +207,20 @@ function MiniMockup() {
         <div style={{ position: 'relative', marginBottom: '1rem' }}>
           {hoveredBar !== null && closes7[hoveredBar] != null && (
             <div style={{
-              position: 'absolute', bottom: 'calc(100% + 4px)',
-              left: `calc(${(hoveredBar + 0.5) / bars.length * 100}% - 2px)`,
+              position: 'absolute', bottom: 'calc(100% + 5px)',
+              left: `${Math.min(Math.max((hoveredBar + 0.5) / bars.length * 100, 12), 88)}%`,
               transform: 'translateX(-50%)',
               background: 'var(--bg2)', border: '1px solid var(--border2)',
-              borderRadius: 6, padding: '0.2rem 0.5rem',
-              fontSize: '0.62rem', color: 'var(--text)', whiteSpace: 'nowrap',
-              zIndex: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-              pointerEvents: 'none',
+              borderRadius: 7, padding: '0.25rem 0.6rem',
+              zIndex: 2, boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
+              pointerEvents: 'none', textAlign: 'center',
             }}>
-              {format(closes7[hoveredBar])}
+              <div style={{ fontSize: '0.58rem', color: 'var(--muted)', lineHeight: 1.2, fontFamily: 'system-ui, sans-serif' }}>
+                {dates7[hoveredBar] ?? ''}
+              </div>
+              <div style={{ fontSize: '0.68rem', color: 'var(--text)', fontWeight: 600, whiteSpace: 'nowrap', fontFamily: 'system-ui, sans-serif' }}>
+                {format(closes7[hoveredBar])}
+              </div>
             </div>
           )}
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: 48 }}>
@@ -219,15 +228,24 @@ function MiniMockup() {
               <div key={i}
                 onMouseEnter={() => setHoveredBar(i)}
                 onMouseLeave={() => setHoveredBar(null)}
-                onTouchStart={() => setHoveredBar(i)}
-                onTouchEnd={() => setTimeout(() => setHoveredBar(null), 1800)}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
+                  // tap same bar → dismiss; tap new bar → show
+                  if (hoveredBar === i) { setHoveredBar(null); }
+                  else {
+                    setHoveredBar(i);
+                    touchTimerRef.current = setTimeout(() => setHoveredBar(null), 5000);
+                  }
+                }}
                 style={{
                   flex: 1, borderRadius: '2px 2px 0 0', height: `${h}%`, cursor: 'pointer',
                   background: hoveredBar === i || i === bars.length - 1 ? 'var(--gold)' : 'var(--border2)',
                   opacity: hoveredBar !== null && hoveredBar !== i && i !== bars.length - 1 ? 0.4 : 1,
                   transition: 'height 0.3s, opacity 0.15s, background 0.15s',
+                  WebkitTapHighlightColor: 'transparent',
                 }} />
-          ))}
+            ))}
           </div>
         </div>
         {/* Signal + RSI */}
