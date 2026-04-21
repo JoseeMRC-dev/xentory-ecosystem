@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useLang } from '../../context/LanguageContext';
+import { useCurrency } from '../../context/CurrencyContext';
 import { LiveTicker } from '../layout/LiveTicker';
 import { useAccuracyStats } from '../../hooks/useAccuracyStats';
 import { trackEvent } from '../../lib/analytics';
@@ -70,9 +71,12 @@ const TESTIMONIALS_EN = [
 
 // ── MINI DASHBOARD — datos reales de Binance ─────────────────────────
 function MiniMockup() {
+  const { convert, format, currency } = useCurrency();
   const [price,        setPrice]        = useState<number | null>(null);
   const [change,       setChange]       = useState<number | null>(null);
   const [bars,         setBars]         = useState<number[]>([62, 78, 55, 85, 70, 92, 68]);
+  const [closes7,      setCloses7]      = useState<number[]>([]);
+  const [hoveredBar,   setHoveredBar]   = useState<number | null>(null);
   const [rsi,          setRsi]          = useState<number | null>(null);
   const [rsiModal,     setRsiModal]     = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -99,6 +103,7 @@ function MiniMockup() {
         const lo = Math.min(...last7), hi = Math.max(...last7);
         const range = hi - lo || 1;
         setBars(last7.map(c => Math.round(((c - lo) / range) * 70 + 20)));
+        setCloses7(last7);
         if (closes.length >= 15) {
           const deltas = closes.slice(1).map((c, i) => c - closes[i]);
           const gains  = deltas.map(d => d > 0 ? d : 0);
@@ -180,7 +185,9 @@ function MiniMockup() {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <span style={{ fontWeight: 700, fontSize: '0.78rem', color: 'var(--text)' }}>BTC/USD</span>
+            <span style={{ fontWeight: 700, fontSize: '0.78rem', color: 'var(--text)' }}>
+              BTC/{currency}
+            </span>
             {change !== null && (
               <span style={{ fontSize: '0.65rem', color: chColor, background: chBg, padding: '0.1rem 0.4rem', borderRadius: 4, border: `1px solid ${chBorder}` }}>
                 {up ? '+' : ''}{change.toFixed(2)}%
@@ -188,14 +195,40 @@ function MiniMockup() {
             )}
           </div>
           <span style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text)' }}>
-            {price !== null ? `$${price.toLocaleString('en-US', { maximumFractionDigits: 0 })}` : '…'}
+            {price !== null ? format(price) : '…'}
           </span>
         </div>
-        {/* 7-day chart */}
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: 48, marginBottom: '1rem' }}>
-          {bars.map((h, i) => (
-            <div key={i} style={{ flex: 1, borderRadius: '2px 2px 0 0', height: `${h}%`, background: i === bars.length - 1 ? 'var(--gold)' : 'var(--border2)', transition: 'height 0.3s' }} />
+        {/* 7-day chart with bar tooltips */}
+        <div style={{ position: 'relative', marginBottom: '1rem' }}>
+          {hoveredBar !== null && closes7[hoveredBar] != null && (
+            <div style={{
+              position: 'absolute', bottom: 'calc(100% + 4px)',
+              left: `calc(${(hoveredBar + 0.5) / bars.length * 100}% - 2px)`,
+              transform: 'translateX(-50%)',
+              background: 'var(--bg2)', border: '1px solid var(--border2)',
+              borderRadius: 6, padding: '0.2rem 0.5rem',
+              fontSize: '0.62rem', color: 'var(--text)', whiteSpace: 'nowrap',
+              zIndex: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+              pointerEvents: 'none',
+            }}>
+              {format(closes7[hoveredBar])}
+            </div>
+          )}
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: 48 }}>
+            {bars.map((h, i) => (
+              <div key={i}
+                onMouseEnter={() => setHoveredBar(i)}
+                onMouseLeave={() => setHoveredBar(null)}
+                onTouchStart={() => setHoveredBar(i)}
+                onTouchEnd={() => setTimeout(() => setHoveredBar(null), 1800)}
+                style={{
+                  flex: 1, borderRadius: '2px 2px 0 0', height: `${h}%`, cursor: 'pointer',
+                  background: hoveredBar === i || i === bars.length - 1 ? 'var(--gold)' : 'var(--border2)',
+                  opacity: hoveredBar !== null && hoveredBar !== i && i !== bars.length - 1 ? 0.4 : 1,
+                  transition: 'height 0.3s, opacity 0.15s, background 0.15s',
+                }} />
           ))}
+          </div>
         </div>
         {/* Signal + RSI */}
         <div style={{ display: 'flex', gap: '0.5rem' }}>
