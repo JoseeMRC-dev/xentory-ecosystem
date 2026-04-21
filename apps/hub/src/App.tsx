@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { Suspense, lazy, useEffect } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CurrencyProvider } from './context/CurrencyContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -26,6 +26,37 @@ function ScrollToTop() {
   return null;
 }
 
+function BackToTop() {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > 400);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+  return (
+    <button
+      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      aria-label="Volver al inicio"
+      style={{
+        position: 'fixed', bottom: '1.8rem', right: '1.5rem', zIndex: 900,
+        width: 44, height: 44, borderRadius: '50%',
+        background: 'var(--card)', border: '1px solid var(--border2)',
+        color: 'var(--text2)', cursor: 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateY(0)' : 'translateY(12px)',
+        pointerEvents: visible ? 'auto' : 'none',
+        transition: 'opacity 0.25s ease, transform 0.25s ease',
+      }}
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="18 15 12 9 6 15"/>
+      </svg>
+    </button>
+  );
+}
+
 function PageSkeleton() {
   return (
     <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -44,6 +75,7 @@ function Layout({ children, hideFooter }: { children: React.ReactNode; hideFoote
       <Navbar />
       <main><Suspense fallback={<PageSkeleton />}>{children}</Suspense></main>
       {!hideFooter && <Footer />}
+      <BackToTop />
     </>
   );
 }
