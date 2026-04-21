@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { usePreferences, type Preferences } from '../../context/PreferencesContext';
 import { useLang } from '../../context/LanguageContext';
+import { useAuth } from '../../context/AuthContext';
 
 const CRYPTO_OPTIONS  = ['BTC', 'ETH', 'SOL', 'XRP', 'BNB', 'DOGE', 'AVAX', 'ADA'];
 const FOREX_OPTIONS   = ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF'];
@@ -11,6 +13,23 @@ const LEAGUE_OPTIONS  = [
 ];
 
 type Tab = 'market' | 'bet';
+
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div>
+      <p style={{ fontSize: '0.67rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)', fontWeight: 600, marginBottom: '0.6rem', fontFamily: 'system-ui, sans-serif' }}>{title}</p>
+      {children}
+    </div>
+  );
+}
+
+function ChipRow({ items, active, onToggle }: { items: string[]; active: string[]; onToggle: (v: string) => void }) {
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+      {items.map(v => <Chip key={v} label={v} active={active.includes(v)} onToggle={() => onToggle(v)} />)}
+    </div>
+  );
+}
 
 function Chip({ label, active, onToggle }: { label: string; active: boolean; onToggle: () => void }) {
   return (
@@ -36,6 +55,8 @@ interface Props { onClose: () => void; }
 export function PreferencesModal({ onClose }: Props) {
   const { prefs, setPrefs } = usePreferences();
   const { lang } = useLang();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const es = lang === 'es';
   const [tab, setTab] = useState<Tab>('market');
   const [local, setLocal] = useState<Preferences>({
@@ -57,19 +78,6 @@ export function PreferencesModal({ onClose }: Props) {
     boxShadow: active ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
     transition: 'all 0.18s',
   });
-
-  const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <div>
-      <p style={{ fontSize: '0.67rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)', fontWeight: 600, marginBottom: '0.6rem', fontFamily: 'system-ui, sans-serif' }}>{title}</p>
-      {children}
-    </div>
-  );
-
-  const ChipRow = ({ items, active, onToggle }: { items: string[]; active: string[]; onToggle: (v: string) => void }) => (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-      {items.map(v => <Chip key={v} label={v} active={active.includes(v)} onToggle={() => onToggle(v)} />)}
-    </div>
-  );
 
   return (
     <>
@@ -118,6 +126,50 @@ export function PreferencesModal({ onClose }: Props) {
                 <ChipRow items={STOCK_OPTIONS} active={local.market.stocks} onToggle={v => updM('stocks', toggle(local.market.stocks, v))} />
               </Section>
             </>
+          ) : !user ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2.5rem 1rem', gap: '1rem', textAlign: 'center' }}>
+              <div style={{ fontSize: '2.5rem', lineHeight: 1 }}>⚽</div>
+              <div>
+                <p style={{ fontWeight: 700, fontSize: '1rem', margin: '0 0 0.35rem', fontFamily: 'system-ui, sans-serif' }}>
+                  {es ? 'Inicia sesión para personalizar apuestas' : 'Sign in to personalise bets'}
+                </p>
+                <p style={{ fontSize: '0.82rem', color: 'var(--muted)', margin: 0, lineHeight: 1.6, fontFamily: 'system-ui, sans-serif' }}>
+                  {es
+                    ? 'Guarda tu equipo favorito y las ligas que más te interesan para ver primero lo que importa.'
+                    : 'Save your favourite team and leagues to always see what matters most first.'}
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <button
+                  onClick={() => { onClose(); navigate('/register'); }}
+                  className="btn btn-gold"
+                  style={{ fontWeight: 700 }}
+                >
+                  {es ? 'Crear cuenta gratis' : 'Create free account'}
+                </button>
+                <button
+                  onClick={() => { onClose(); navigate('/login'); }}
+                  className="btn btn-outline"
+                >
+                  {es ? 'Iniciar sesión' : 'Sign in'}
+                </button>
+              </div>
+              {/* Preview bloqueado */}
+              <div style={{ width: '100%', marginTop: '0.5rem', opacity: 0.35, pointerEvents: 'none', userSelect: 'none' }}>
+                <p style={{ fontSize: '0.67rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)', fontWeight: 600, marginBottom: '0.6rem', fontFamily: 'system-ui, sans-serif' }}>
+                  {es ? 'Equipo favorito' : 'Favourite team'}
+                </p>
+                <input className="input" type="text" disabled placeholder={es ? 'Ej: Real Madrid, Liverpool...' : 'E.g: Liverpool, PSG...'} style={{ width: '100%' }} />
+                <p style={{ fontSize: '0.67rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)', fontWeight: 600, margin: '1rem 0 0.6rem', fontFamily: 'system-ui, sans-serif' }}>
+                  {es ? 'Ligas y competiciones' : 'Leagues & competitions'}
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                  {LEAGUE_OPTIONS.slice(0, 6).map(l => (
+                    <span key={l} style={{ padding: '0.32rem 0.85rem', borderRadius: 20, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--text2)', fontSize: '0.78rem', fontFamily: 'system-ui, sans-serif' }}>{l}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
           ) : (
             <>
               <Section title={es ? 'Equipo favorito' : 'Favorite team'}>
@@ -147,9 +199,11 @@ export function PreferencesModal({ onClose }: Props) {
           <button onClick={onClose} className="btn btn-outline" style={{ flex: 1, justifyContent: 'center' }}>
             {es ? 'Cancelar' : 'Cancel'}
           </button>
-          <button onClick={() => { setPrefs(local); onClose(); }} className="btn btn-gold" style={{ flex: 1, justifyContent: 'center', fontWeight: 700 }}>
-            {es ? 'Guardar preferencias' : 'Save preferences'}
-          </button>
+          {!(tab === 'bet' && !user) && (
+            <button onClick={() => { setPrefs(local); onClose(); }} className="btn btn-gold" style={{ flex: 1, justifyContent: 'center', fontWeight: 700 }}>
+              {es ? 'Guardar preferencias' : 'Save preferences'}
+            </button>
+          )}
         </div>
       </div>
     </>
