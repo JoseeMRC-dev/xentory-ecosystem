@@ -333,6 +333,88 @@ cron.schedule('*/30 * * * * *', async () => {
   try { await checkAlerts(); } catch (e) { console.error('[Bot] Cron error:', e); }
 });
 
+// ── FORMATEAR SEÑAL PARA CANAL ────────────────────────────────────
+function msgSignal(s: {
+  asset: string; asset_icon: string; signal: string; confidence: number;
+  type: string; platform: string; published_at: string; metadata?: any;
+}): string {
+  const isMarket = s.type !== 'sport';
+  const header   = isMarket ? '📊 <b>NUEVA SEÑAL · Xentory Market</b>' : '⚽ <b>NUEVA SEÑAL · Xentory Bet</b>';
+  const confBar  = s.confidence >= 75 ? '🟢' : s.confidence >= 60 ? '🟡' : '🔴';
+  const time     = new Date(s.published_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' });
+
+  const lines = [
+    header,
+    '',
+    `${s.asset_icon} <b>${s.asset}</b>`,
+    `🎯 ${s.signal}`,
+    `${confBar} Confianza: <b>${s.confidence}%</b>`,
+  ];
+
+  // Metadatos opcionales (odds, timeframe, reason...)
+  if (s.metadata?.odds)      lines.push(`💰 Cuota: <b>${s.metadata.odds}</b>`);
+  if (s.metadata?.timeframe) lines.push(`⏱ Timeframe: ${s.metadata.timeframe}`);
+  if (s.metadata?.reason)    lines.push(`\n💡 ${s.metadata.reason}`);
+
+  lines.push('', `🕐 ${time} · Madrid`);
+  lines.push(`\n<a href="https://xentory.io/dashboard">Ver en Xentory →</a>`);
+  return lines.join('\n');
+}
+
+// Canales destino según plataforma de la señal
+function getSignalChannels(platform: string): string[] {
+  switch (platform) {
+    case 'market': return [CH.MARKET_PRO];
+    case 'bet':    return [CH.BET_PRO];
+    case 'both':   return [CH.MARKET_PRO, CH.BET_PRO];
+    default:       return [];
+  }
+}
+
+// ── CRON: broadcast señales nuevas cada 2 min ─────────────────────
+async function broadcastSignals() {
+  const { data: signals, error } = await supabase
+    .from('signals')
+    .select('id, asset, asset_icon, signal, confidence, type, platform, published_at, metadata')
+    .eq('is_active', true)
+    .eq('telegram_sent', false)
+    .order('published_at', { ascending: true })
+    .limit(10);
+
+  if (error) { console.error('[Bot] broadcastSignals error:', error.message); return; }
+  if (!signals?.length) return;
+
+  for (const sig of signals) {
+    const channels = getSignalChannels(sig.platform);
+    const text     = msgSignal(sig);
+    let sent       = false;
+
+    for (const ch of channels) {
+      if (!ch) continue;
+      try {
+        await bot.telegram.sendMessage(ch, text, {
+          parse_mode: 'HTML',
+          link_preview_options: { is_disabled: true },
+        });
+        sent = true;
+        console.log(`[Bot] 📣 Señal ${sig.asset} → canal ${ch}`);
+      } catch (e: any) {
+        console.error(`[Bot] Error enviando señal al canal ${ch}:`, e.message);
+      }
+    }
+
+    if (sent || channels.length === 0) {
+      await supabase.from('signals')
+        .update({ telegram_sent: true, telegram_sent_at: new Date().toISOString() })
+        .eq('id', sig.id);
+    }
+  }
+}
+
+cron.schedule('*/2 * * * *', async () => {
+  try { await broadcastSignals(); } catch (e) { console.error('[Bot] Broadcast cron error:', e); }
+});
+
 // ── ARRANQUE ──────────────────────────────────────────────────────
 bot.launch().then(() => {
   console.log('🤖 @XentoryBot en marcha');
