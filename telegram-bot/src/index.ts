@@ -371,6 +371,73 @@ function getSignalChannels(platform: string): string[] {
   }
 }
 
+// ── DM PERSONAL: notifica usuarios que siguen el activo/equipo ────
+async function dmSignalToFollowers(sig: {
+  asset: string; asset_icon: string; signal: string; confidence: number;
+  type: string; published_at: string; metadata?: any;
+}) {
+  const isMarket  = sig.type !== 'sport';
+  const assetLow  = sig.asset.toLowerCase();
+
+  const { data: prefs } = await supabase
+    .from('user_preferences').select('user_id, market, bet');
+  if (!prefs?.length) return;
+
+  const interested: string[] = [];
+  for (const p of prefs) {
+    if (isMarket) {
+      const watched: string[] = [
+        ...(p.market?.crypto ?? []),
+        ...(p.market?.forex  ?? []),
+        ...(p.market?.stocks ?? []),
+      ];
+      if (watched.some((w: string) => w.toLowerCase() === assetLow)) interested.push(p.user_id);
+    } else {
+      const favTeam    = (p.bet?.favoriteTeam ?? '').toLowerCase();
+      const favLeagues = (p.bet?.favoriteLeagues ?? []) as string[];
+      const sigLeague  = (sig.metadata?.league ?? '').toLowerCase();
+      if ((favTeam && assetLow.includes(favTeam)) ||
+          favLeagues.some((l: string) => l.toLowerCase() === sigLeague))
+        interested.push(p.user_id);
+    }
+  }
+
+  if (!interested.length) return;
+
+  const { data: conns } = await supabase
+    .from('telegram_connections').select('user_id, telegram_chat_id')
+    .in('user_id', interested).eq('verified', true);
+  if (!conns?.length) return;
+
+  const confBar = sig.confidence >= 75 ? '🟢' : sig.confidence >= 60 ? '🟡' : '🔴';
+  const header  = isMarket ? '📌 <b>Señal de tu lista · Market</b>' : '📌 <b>Señal de tu seguimiento · Bet</b>';
+  const time    = new Date(sig.published_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' });
+
+  const lines = [
+    header, '',
+    `${sig.asset_icon} <b>${sig.asset}</b>`,
+    `🎯 ${sig.signal}`,
+    `${confBar} Confianza: <b>${sig.confidence}%</b>`,
+  ];
+  if (sig.metadata?.odds)      lines.push(`💰 Cuota: <b>${sig.metadata.odds}</b>`);
+  if (sig.metadata?.timeframe) lines.push(`⏱ Timeframe: ${sig.metadata.timeframe}`);
+  if (sig.metadata?.reason)    lines.push(`\n💡 ${sig.metadata.reason}`);
+  lines.push('', `🕐 ${time} · Madrid`);
+  lines.push(`\n<a href="https://xentory.io/dashboard">Ver en Xentory →</a>`);
+  const text = lines.join('\n');
+
+  for (const conn of conns) {
+    try {
+      await bot.telegram.sendMessage(Number(conn.telegram_chat_id), text, {
+        parse_mode: 'HTML', link_preview_options: { is_disabled: true },
+      });
+      console.log(`[Bot] 📌 DM señal ${sig.asset} → ${conn.telegram_chat_id}`);
+    } catch (e: any) {
+      console.error(`[Bot] Error DM → ${conn.telegram_chat_id}:`, e.message);
+    }
+  }
+}
+
 // ── CRON: broadcast señales nuevas cada 2 min ─────────────────────
 async function broadcastSignals() {
   const { data: signals, error } = await supabase
@@ -385,29 +452,30 @@ async function broadcastSignals() {
   if (!signals?.length) return;
 
   for (const sig of signals) {
-    const channels = getSignalChannels(sig.platform);
-    const text     = msgSignal(sig);
-    let sent       = false;
-
-    for (const ch of channels) {
-      if (!ch) continue;
-      try {
-        await bot.telegram.sendMessage(ch, text, {
-          parse_mode: 'HTML',
-          link_preview_options: { is_disabled: true },
-        });
-        sent = true;
-        console.log(`[Bot] 📣 Señal ${sig.asset} → canal ${ch}`);
-      } catch (e: any) {
-        console.error(`[Bot] Error enviando señal al canal ${ch}:`, e.message);
+    // Canales del grupo: solo señales de alta confianza (≥70)
+    if (sig.confidence >= 70) {
+      const channels = getSignalChannels(sig.platform);
+      const text     = msgSignal(sig);
+      for (const ch of channels) {
+        if (!ch) continue;
+        try {
+          await bot.telegram.sendMessage(ch, text, {
+            parse_mode: 'HTML', link_preview_options: { is_disabled: true },
+          });
+          console.log(`[Bot] 📣 Señal ${sig.asset} (${sig.confidence}%) → canal ${ch}`);
+        } catch (e: any) {
+          console.error(`[Bot] Error enviando señal al canal ${ch}:`, e.message);
+        }
       }
     }
 
-    if (sent || channels.length === 0) {
-      await supabase.from('signals')
-        .update({ telegram_sent: true, telegram_sent_at: new Date().toISOString() })
-        .eq('id', sig.id);
-    }
+    // DM personal: siempre notifica a usuarios que siguen el activo
+    await dmSignalToFollowers(sig);
+
+    // Marcar como procesada independientemente
+    await supabase.from('signals')
+      .update({ telegram_sent: true, telegram_sent_at: new Date().toISOString() })
+      .eq('id', sig.id);
   }
 }
 
