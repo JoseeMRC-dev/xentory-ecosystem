@@ -269,12 +269,12 @@ export function DashboardPage() {
         )}
       </div>
 
-      {/* Telegram status + Bundle CTA */}
+      {/* Telegram status + Alerts + Bundle CTA */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,300px),1fr))', gap: 'clamp(0.8rem,3vw,1.2rem)' }}>
 
         {/* Telegram status */}
-        <div style={{ borderRadius: 18, padding: 'clamp(1rem,4vw,1.8rem)', background: 'var(--card2)', border: '1px solid var(--border)', borderTop: '3px solid var(--cyan)' }}>
-          <h2 style={{ fontSize: '0.92rem', marginBottom: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text2)' }}>
+        <div style={{ borderRadius: 18, padding: 'clamp(1rem,4vw,1.8rem)', background: 'var(--card2)', border: '1px solid var(--border)', borderTop: '3px solid var(--cyan)', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+          <h2 style={{ fontSize: '0.92rem', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text2)' }}>
             <TelegramIcon /> Telegram
           </h2>
           <div style={{ padding: '0.85rem 1rem', background: user.telegramLinked ? 'var(--green-dim)' : 'var(--bg3)', borderRadius: 12, border: `1px solid ${user.telegramLinked ? 'rgba(52,211,153,0.2)' : 'var(--border)'}` }}>
@@ -288,6 +288,23 @@ export function DashboardPage() {
               <div style={{ color: user.telegramLinked ? 'var(--green)' : 'var(--muted)' }}><TelegramIcon /></div>
             </div>
           </div>
+          {/* Alerts link */}
+          <button
+            onClick={() => navigate('/alerts')}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '0.7rem 1rem', borderRadius: 10, cursor: 'pointer',
+              background: 'var(--card2)', border: '1px solid var(--border)',
+              color: 'var(--text)', fontSize: '0.82rem', fontWeight: 500, transition: 'border-color 0.2s',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.4)')}
+            onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+              🔔 {lang === 'es' ? 'Alertas y señales' : 'Alerts & signals'}
+            </span>
+            <ArrowIcon />
+          </button>
         </div>
 
         {/* Bundle CTA */}
