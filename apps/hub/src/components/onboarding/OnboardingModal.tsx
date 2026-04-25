@@ -76,7 +76,7 @@ export function OnboardingModal({ onComplete }: OnboardingProps) {
       savePreferences(newSelections);
       if (selected === 'telegram') {
         onComplete();
-        navigate('/telegram');
+        window.open('https://t.me/XentoryBot', '_blank');
       } else if (selected === 'upgrade') {
         onComplete();
         navigate('/pricing');

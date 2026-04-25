@@ -133,10 +133,15 @@ export function TelegramPage() {
                 🔗 Vincular Telegram
               </button>
             ) : (
-              <a href={`https://t.me/${channel.name.replace('@','')}`} target="_blank" rel="noreferrer"
+              <a href="https://t.me/XentoryBot" target="_blank" rel="noreferrer"
                 className="btn btn-gold" style={{ display: 'flex', width: '100%', justifyContent: 'center', textDecoration: 'none' }}>
-                ✈️ Abrir canal en Telegram
+                ✈️ Obtener enlace del canal
               </a>
+            )}
+            {conn && (
+              <p style={{ fontSize: '0.72rem', color: 'var(--muted)', textAlign: 'center', marginTop: '0.5rem', lineHeight: 1.5 }}>
+                Abre el bot y envía <strong>/update</strong> para recibir tu enlace de acceso al canal
+              </p>
             )}
           </div>
         </div>
