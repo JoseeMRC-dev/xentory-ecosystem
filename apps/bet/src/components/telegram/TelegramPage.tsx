@@ -134,10 +134,13 @@ export function TelegramPage() {
             </button>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <a href={`https://t.me/${channel.name.replace('@','')}`} target="_blank" rel="noreferrer"
+              <a href="https://t.me/XentoryBot" target="_blank" rel="noreferrer"
                 className="btn btn-gold" style={{ display: 'flex', width: '100%', justifyContent: 'center', textDecoration: 'none' }}>
-                ✈️ {t('Ir al canal', 'Go to channel')}
+                ✈️ {t('Obtener enlace del canal', 'Get channel link')}
               </a>
+              <p style={{ fontSize: '0.72rem', color: 'var(--muted)', textAlign: 'center', margin: 0, lineHeight: 1.5 }}>
+                {t('Abre el bot y envía /update para recibir tu enlace de acceso', 'Open the bot and send /update to get your access link')}
+              </p>
               <button onClick={handleReconnect} className="btn btn-outline btn-sm" style={{ width: '100%', justifyContent: 'center' }}>
                 🔄 {t('Reconectar', 'Reconnect')}
               </button>

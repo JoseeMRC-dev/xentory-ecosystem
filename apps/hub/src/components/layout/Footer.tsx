@@ -14,7 +14,7 @@ export function Footer() {
       links: [
         { label: t('footer.market'),   href: MARKET_URL },
         { label: t('footer.bet'),      href: BET_URL     },
-        { label: t('footer.telegram'), href: 'https://t.me/xentory' },
+        { label: t('footer.telegram'), href: 'https://t.me/XentoryBot' },
       ],
     },
     {
