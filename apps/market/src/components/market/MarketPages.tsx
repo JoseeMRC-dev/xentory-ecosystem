@@ -6,7 +6,7 @@ import { MOCK_ASSETS } from '../../constants';
 import type { Asset } from '../../types';
 import {
   loadAlerts, createAlert, toggleAlert, deleteAlert,
-  getTelegramConnection, upsertVerifyCode,
+  getTelegramConnection, upsertVerifyCode, generateVerifyCode,
   type PriceAlert, type AlertCategory, type AlertCondition, type AlertChannel,
 } from '../../services/alertService';
 
@@ -246,10 +246,10 @@ export function AlertsPage() {
     if (!user?.id) return;
     setLoading(true);
 
-    // Generate + save code to DB; drive display from returned value
-    upsertVerifyCode(user.id, user.email, 'market', user.plan ?? 'free')
-      .then(code => setVerifyCode(code))
-      .catch(console.error);
+    // Generate code instantly for display, then save to DB in background
+    const code = generateVerifyCode('market');
+    setVerifyCode(code);
+    upsertVerifyCode(user.id, user.email ?? '', 'market', user.plan ?? 'free', code);
 
     // Load alerts + telegram connection in parallel
     Promise.all([
@@ -267,16 +267,12 @@ export function AlertsPage() {
     if (!isPaid) { navigate('/plans'); return; }
     if (!user) return;
     setTgLoading(true);
-    try {
-      // Refresh code in DB and open bot with the exact same code
-      const freshCode = await upsertVerifyCode(user.id, user.email, 'market', user.plan ?? 'free');
-      setVerifyCode(freshCode);
-      window.open(`https://t.me/XentoryBot?start=${freshCode}`, '_blank');
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setTgLoading(false);
-    }
+    // Generate fresh code, show it, save to DB, then open bot — all in sync-first order
+    const freshCode = generateVerifyCode('market');
+    setVerifyCode(freshCode);
+    await upsertVerifyCode(user.id, user.email ?? '', 'market', user.plan ?? 'free', freshCode);
+    window.open(`https://t.me/XentoryBot?start=${freshCode}`, '_blank');
+    setTgLoading(false);
   };
 
   // Poll connection status after opening bot (check every 3s for 30s)
