@@ -6,7 +6,7 @@ import { MOCK_ASSETS } from '../../constants';
 import type { Asset } from '../../types';
 import {
   loadAlerts, createAlert, toggleAlert, deleteAlert,
-  getTelegramConnection, upsertVerifyCode, generateVerifyCode,
+  getTelegramConnection, upsertVerifyCode,
   type PriceAlert, type AlertCategory, type AlertCondition, type AlertChannel,
 } from '../../services/alertService';
 
@@ -246,9 +246,10 @@ export function AlertsPage() {
     if (!user?.id) return;
     setLoading(true);
 
-    // Generate verify code (deterministic from user_id)
-    const code = generateVerifyCode(user.id, 'market');
-    setVerifyCode(code);
+    // Generate + save code to DB; drive display from returned value
+    upsertVerifyCode(user.id, user.email, 'market', user.plan ?? 'free')
+      .then(code => setVerifyCode(code))
+      .catch(console.error);
 
     // Load alerts + telegram connection in parallel
     Promise.all([
@@ -267,10 +268,10 @@ export function AlertsPage() {
     if (!user) return;
     setTgLoading(true);
     try {
-      // Save code to Supabase so bot can verify it
-      await upsertVerifyCode(user.id, user.email, 'market', user.plan);
-      // Open bot with deep link carrying the code
-      window.open(`https://t.me/XentoryBot?start=${verifyCode}`, '_blank');
+      // Refresh code in DB and open bot with the exact same code
+      const freshCode = await upsertVerifyCode(user.id, user.email, 'market', user.plan ?? 'free');
+      setVerifyCode(freshCode);
+      window.open(`https://t.me/XentoryBot?start=${freshCode}`, '_blank');
     } catch (e) {
       console.error(e);
     } finally {
