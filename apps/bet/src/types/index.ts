@@ -53,6 +53,47 @@ export interface Match {
   totalPlayers?: number;
 }
 
+// ── LIVE MATCH STATS ──
+export interface LiveMatchStat {
+  label:    string;
+  home:     string | number;
+  away:     string | number;
+  homePct:  number;   // 0-100 for bar width
+  isPossession?: boolean;
+  cardColor?:    string;   // 'var(--gold)' | 'var(--red)'
+}
+
+export interface MatchEvent {
+  minute: number;
+  type:   'goal' | 'yellowCard' | 'redCard' | 'sub' | 'var';
+  team:   'home' | 'away';
+  player?: string;
+  detail?: string;
+}
+
+export interface LiveMatchStats {
+  stats:    LiveMatchStat[];
+  events:   MatchEvent[];
+  fetchedAt: number;
+}
+
+// ── LIVE AI ANALYSIS ──
+export interface LiveBetSuggestion {
+  market:     string;
+  pick:       string;
+  odds:       string;
+  reasoning:  string;
+  confidence: number;
+}
+
+export interface LiveAnalysisResult {
+  assessment: string;
+  momentum:   'home' | 'away' | 'balanced';
+  liveBets:   LiveBetSuggestion[];
+  forecast:   string;
+  generatedAt: string;
+}
+
 // ── FORM (últimos partidos) ──
 export type MatchResult = 'W' | 'D' | 'L';
 

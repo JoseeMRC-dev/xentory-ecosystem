@@ -1,14 +1,14 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { fetchTeamStats, fetchNonFootballStats, fetchLiveMatchById, fetchWeekMatches, fetchTennisMatches, fetchBasketballMatches, fetchF1Matches, fetchGolfMatches } from '../../services/sportsService';
-import { generateMatchAnalysis } from '../../services/aiService';
+import { fetchTeamStats, fetchNonFootballStats, fetchLiveMatchById, fetchLiveMatchStats, fetchWeekMatches, fetchTennisMatches, fetchBasketballMatches, fetchF1Matches, fetchGolfMatches } from '../../services/sportsService';
+import { generateMatchAnalysis, generateLiveAnalysis } from '../../services/aiService';
 import { logActivity } from '../../services/activityStore';
 import { fetchBookmakerOdds, BOOKMAKERS } from '../../services/oddsService';
 import type { MatchBookmakerOdds, MarketBookmakerOdds } from '../../services/oddsService';
 import { SPORT_CONFIG, FORM_COLORS, confidenceColor } from '../../constants';
 import { useLang } from '../../context/LanguageContext';
-import type { MatchAnalysis, FormMatch, Match } from '../../types';
+import type { MatchAnalysis, FormMatch, Match, LiveMatchStats, LiveAnalysisResult } from '../../types';
 
 const FOOTBALL_LEAGUE_SLUGS: Record<number, string> = {
   1: 'soccer/fifa.world',      // Mundial FIFA 2026
@@ -187,25 +187,270 @@ function LiveScoreboard({ match, liveData }: { match: Match; liveData: Partial<M
   );
 }
 
+// ── LIVE STATS TABLE ─────────────────────────────────────────────────────────
+function LiveStatsTable({
+  stats,
+  homeTeam,
+  awayTeam,
+}: {
+  stats: LiveMatchStats;
+  homeTeam: string;
+  awayTeam: string;
+}) {
+  const { t } = useLang();
+  if (!stats.stats.length && !stats.events.length) return null;
+
+  return (
+    <div className="glass" style={{ borderRadius: 16, padding: '1.5rem', borderTop: '2px solid rgba(255,68,85,0.4)', background: 'linear-gradient(135deg, rgba(255,68,85,0.04), transparent)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
+        <h2 style={{ fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span style={{ color: 'var(--red)', animation: 'pulse 2s infinite' }}>●</span>
+          {t('Estadísticas del partido', 'Match statistics')}
+        </h2>
+        <span style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>
+          {t('Actualizado', 'Updated')} {new Date(stats.fetchedAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+        </span>
+      </div>
+
+      {/* Team headers */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '0.5rem', marginBottom: '1rem', textAlign: 'center' }}>
+        <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text)', textAlign: 'left' }}>{homeTeam}</div>
+        <div style={{ fontSize: '0.65rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>{t('Estadística', 'Stat')}</div>
+        <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text)', textAlign: 'right' }}>{awayTeam}</div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+        {stats.stats.map((stat, i) => {
+          const barColor = stat.cardColor ?? (stat.isPossession ? 'var(--cyan)' : 'var(--primary)');
+          const awayBarColor = stat.cardColor ?? (stat.isPossession ? 'rgba(0,212,255,0.5)' : 'rgba(107,59,229,0.5)');
+
+          if (stat.isPossession) {
+            // Full-width split possession bar
+            return (
+              <div key={i}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '0.5rem', alignItems: 'center', marginBottom: '0.35rem' }}>
+                  <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1rem', color: 'var(--cyan)', textAlign: 'left' }}>{stat.home}%</div>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.07em', textAlign: 'center', whiteSpace: 'nowrap' }}>{stat.label}</div>
+                  <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '1rem', color: 'rgba(0,212,255,0.65)', textAlign: 'right' }}>{stat.away}%</div>
+                </div>
+                <div style={{ display: 'flex', height: 8, borderRadius: 4, overflow: 'hidden', background: 'var(--border)' }}>
+                  <div style={{ width: `${stat.homePct}%`, background: 'var(--cyan)', transition: 'width 0.6s ease', borderRadius: '4px 0 0 4px' }} />
+                  <div style={{ flex: 1, background: 'rgba(0,212,255,0.3)', borderRadius: '0 4px 4px 0' }} />
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div key={i} style={{ display: 'grid', gridTemplateColumns: '40px 1fr 40px', gap: '0.6rem', alignItems: 'center' }}>
+              <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.92rem', color: stat.cardColor ?? 'var(--text)', textAlign: 'right' }}>{stat.home}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                <div style={{ fontSize: '0.65rem', color: 'var(--muted)', textAlign: 'center', letterSpacing: '0.05em' }}>{stat.label}</div>
+                <div style={{ display: 'flex', height: 5, borderRadius: 3, overflow: 'hidden', background: 'var(--border)' }}>
+                  <div style={{ width: `${stat.homePct}%`, background: barColor, transition: 'width 0.6s ease', borderRadius: '3px 0 0 3px' }} />
+                  <div style={{ flex: 1, background: awayBarColor, borderRadius: '0 3px 3px 0' }} />
+                </div>
+              </div>
+              <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: '0.92rem', color: stat.cardColor ?? 'var(--muted)', textAlign: 'left' }}>{stat.away}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Key events timeline */}
+      {stats.events.length > 0 && (
+        <div style={{ marginTop: '1.2rem', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
+          <div style={{ fontSize: '0.72rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.6rem' }}>
+            {t('Eventos clave', 'Key events')}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+            {stats.events.slice(-8).map((ev, i) => {
+              const icon = ev.type === 'goal' ? '⚽' : ev.type === 'yellowCard' ? '🟨' : ev.type === 'redCard' ? '🟥' : '🔄';
+              const teamName = ev.team === 'home' ? homeTeam : awayTeam;
+              const isHome = ev.team === 'home';
+              return (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.78rem', justifyContent: isHome ? 'flex-start' : 'flex-end' }}>
+                  {isHome && <span style={{ color: 'var(--muted)', minWidth: 28 }}>{ev.minute}'</span>}
+                  {isHome && <span>{icon}</span>}
+                  <span style={{ color: 'var(--text2)' }}>{teamName}{ev.player ? ` · ${ev.player}` : ''}</span>
+                  {!isHome && <span>{icon}</span>}
+                  {!isHome && <span style={{ color: 'var(--muted)', minWidth: 28, textAlign: 'right' }}>{ev.minute}'</span>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── LIVE ANALYSIS SECTION ─────────────────────────────────────────────────────
+function LiveAnalysisSection({
+  result,
+  loading,
+  lastFetchedAt,
+  onRefresh,
+  homeTeam,
+  awayTeam,
+  isPaid,
+}: {
+  result:        LiveAnalysisResult | null;
+  loading:       boolean;
+  lastFetchedAt: number;
+  onRefresh:     () => void;
+  homeTeam:      string;
+  awayTeam:      string;
+  isPaid:        boolean;
+}) {
+  const { t } = useLang();
+
+  const momentumColor = !result ? 'var(--muted)'
+    : result.momentum === 'home'  ? 'var(--green)'
+    : result.momentum === 'away'  ? 'var(--red)'
+    : 'var(--gold)';
+  const momentumLabel = !result ? '—'
+    : result.momentum === 'home'  ? `${homeTeam} domina`
+    : result.momentum === 'away'  ? `${awayTeam} domina`
+    : t('Equilibrado', 'Balanced');
+
+  const secsSince = lastFetchedAt ? Math.floor((Date.now() - lastFetchedAt) / 1000) : 0;
+  const timeLabel = secsSince < 60
+    ? t('Ahora mismo', 'Just now')
+    : `${Math.floor(secsSince / 60)}${t('min atrás', 'min ago')}`;
+
+  return (
+    <div className="glass" style={{ borderRadius: 16, padding: '1.5rem', borderTop: '2px solid rgba(255,68,85,0.5)', background: 'linear-gradient(135deg, rgba(255,68,85,0.06), rgba(255,68,85,0.01))' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--red)', display: 'inline-block', animation: 'pulse 1.5s infinite' }} />
+          <h2 style={{ fontSize: '1rem' }}>🧠 {t('Análisis en Directo', 'Live Analysis')}</h2>
+          {result && (
+            <span style={{ fontSize: '0.65rem', color: 'var(--muted)' }}>· {timeLabel}</span>
+          )}
+        </div>
+        <button
+          onClick={onRefresh}
+          disabled={loading}
+          className="btn btn-outline btn-sm"
+          style={{ fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+        >
+          <span style={{ display: 'inline-block', animation: loading ? 'spin 0.8s linear infinite' : 'none' }}>🔄</span>
+          {loading ? t('Analizando...', 'Analysing...') : t('Actualizar', 'Refresh')}
+        </button>
+      </div>
+
+      {loading && !result && (
+        <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', padding: '1rem', background: 'rgba(255,68,85,0.05)', borderRadius: 10, border: '1px solid rgba(255,68,85,0.15)' }}>
+          <div style={{ width: 20, height: 20, border: '2px solid rgba(255,68,85,0.3)', borderTopColor: 'var(--red)', borderRadius: '50%', animation: 'spin 0.8s linear infinite', flexShrink: 0 }} />
+          <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>{t('Evaluando el partido en tiempo real...', 'Evaluating match in real time...')}</span>
+        </div>
+      )}
+
+      {result && (
+        <>
+          {/* Momentum indicator */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.7rem 1rem', background: `${momentumColor}10`, border: `1px solid ${momentumColor}30`, borderRadius: 10, marginBottom: '1rem' }}>
+            <span style={{ fontSize: '0.65rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('Momentum:', 'Momentum:')}</span>
+            <span style={{ fontWeight: 700, color: momentumColor, fontSize: '0.88rem' }}>
+              {result.momentum === 'home' ? '◄ ' : ''}
+              {momentumLabel}
+              {result.momentum === 'away' ? ' ►' : ''}
+            </span>
+          </div>
+
+          {/* Assessment */}
+          <p style={{ color: 'var(--text2)', fontSize: '0.9rem', lineHeight: 1.75, marginBottom: '1rem' }}>{result.assessment}</p>
+
+          {/* Live bets */}
+          {result.liveBets.length > 0 && (
+            <div style={{ marginBottom: '1rem' }}>
+              <div style={{ fontSize: '0.7rem', color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.6rem' }}>
+                🎯 {t('Apuestas en vivo sugeridas', 'Suggested live bets')}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {result.liveBets.map((bet, i) => (
+                  !isPaid && i > 0 ? null :
+                  <div key={i} style={{ padding: '0.75rem 0.9rem', background: 'var(--card2)', borderRadius: 10, borderLeft: `3px solid ${confidenceColor(bet.confidence)}`, display: 'flex', gap: '0.8rem', alignItems: 'flex-start' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.25rem', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '0.72rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{bet.market}</span>
+                        <span style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text)' }}>{bet.pick}</span>
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--muted)', lineHeight: 1.5 }}>{bet.reasoning}</div>
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <div style={{ fontFamily: 'Outfit', fontWeight: 800, fontSize: '1.1rem', color: 'var(--gold)' }}>@{bet.odds}</div>
+                      <div style={{ fontSize: '0.65rem', color: confidenceColor(bet.confidence) }}>{bet.confidence}%</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {!isPaid && result.liveBets.length > 1 && (
+                <div style={{ textAlign: 'center', marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--muted)', padding: '0.5rem', background: 'var(--card2)', borderRadius: 8, border: '1px solid var(--border)' }}>
+                  🔒 {t(`+${result.liveBets.length - 1} apuestas más — Plan Pro`, `+${result.liveBets.length - 1} more bets — Pro Plan`)}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Forecast */}
+          <div style={{ padding: '0.9rem 1rem', background: 'rgba(0,212,255,0.05)', border: '1px solid rgba(0,212,255,0.15)', borderRadius: 10 }}>
+            <div style={{ fontSize: '0.65rem', color: 'var(--cyan)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.4rem' }}>
+              🔮 {t('Pronóstico', 'Forecast')}
+            </div>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text2)', lineHeight: 1.65, margin: 0 }}>{result.forecast}</p>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export function MatchAnalysisPage() {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t, lang } = useLang();
-  const [analysis, setAnalysis] = useState<MatchAnalysis | null>(null);
-  const [bkOdds, setBkOdds]     = useState<MatchBookmakerOdds | null>(null);
-  const [loading, setLoading]   = useState(false);
-  const [error, setError]       = useState('');
-  const [liveData, setLiveData] = useState<Partial<Match>|null>(null);
+  const [analysis, setAnalysis]           = useState<MatchAnalysis | null>(null);
+  const [bkOdds, setBkOdds]               = useState<MatchBookmakerOdds | null>(null);
+  const [loading, setLoading]             = useState(false);
+  const [error, setError]                 = useState('');
+  const [liveData, setLiveData]           = useState<Partial<Match>|null>(null);
+  const [liveStats, setLiveStats]         = useState<LiveMatchStats|null>(null);
+  const [liveAnalysis, setLiveAnalysis]   = useState<LiveAnalysisResult|null>(null);
+  const [liveAiLoading, setLiveAiLoading] = useState(false);
+  const [liveAiFetchedAt, setLiveAiFetchedAt] = useState(0);
   const [formFilters, setFormFilters] = useState<{ home: string | null; away: string | null }>({ home: null, away: null });
-  const pollRef = useRef<ReturnType<typeof setInterval>|null>(null);
+  const pollRef    = useRef<ReturnType<typeof setInterval>|null>(null);
+  const liveAiRef  = useRef<ReturnType<typeof setInterval>|null>(null);
+  const pollCount  = useRef(0);
   const match: Match|undefined  = location.state?.match;
 
   // Reset form filters when the analysed match changes
   useEffect(() => { setFormFilters({ home: null, away: null }); }, [match?.id]);
 
-  // Live polling
+  const refreshLiveAi = useCallback(async (
+    currentMatch: Match,
+    currentStats: LiveMatchStats | null,
+    currentLiveData: Partial<Match> | null,
+  ) => {
+    if (liveAiLoading) return;
+    setLiveAiLoading(true);
+    const score = {
+      home: currentLiveData?.homeScore ?? currentMatch.homeScore ?? 0,
+      away: currentLiveData?.awayScore ?? currentMatch.awayScore ?? 0,
+    };
+    const clock = currentLiveData?.clockDisplay ?? currentMatch.clockDisplay ?? '?';
+    const result = await generateLiveAnalysis(currentMatch, score, clock, currentStats, user?.plan ?? 'free');
+    setLiveAnalysis(result);
+    setLiveAiFetchedAt(Date.now());
+    setLiveAiLoading(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.plan]);
+
+  // Live polling — score + stats every 20s; AI analysis every 5 min (15 ticks)
   useEffect(() => {
     if (!match?.espnEventId) return;
     if (match.status === 'finished') return;
@@ -215,14 +460,37 @@ export function MatchAnalysisPage() {
       : match.sport === 'basketball' ? 'basketball/nba'
       : null;
     if (!slug) return;
+
+    let latestStats: LiveMatchStats | null = null;
+    let latestLiveData: Partial<Match> | null = null;
+
     const poll = async () => {
-      const fresh = await fetchLiveMatchById(match.sport, slug, match.espnEventId!);
-      if (fresh) setLiveData(fresh);
-      if (fresh?.status === 'finished' && pollRef.current) clearInterval(pollRef.current);
+      const [fresh, freshStats] = await Promise.all([
+        fetchLiveMatchById(match.sport, slug, match.espnEventId!),
+        match.sport === 'football' ? fetchLiveMatchStats(slug, match.espnEventId!) : Promise.resolve(null),
+      ]);
+      if (fresh) { setLiveData(fresh); latestLiveData = fresh; }
+      if (freshStats) { setLiveStats(freshStats); latestStats = freshStats; }
+      if (fresh?.status === 'finished' && pollRef.current) {
+        clearInterval(pollRef.current);
+        if (liveAiRef.current) clearInterval(liveAiRef.current);
+        return;
+      }
+      // Refresh live AI analysis every 15 ticks (~5 min) or on first load
+      pollCount.current += 1;
+      if (pollCount.current === 1 || pollCount.current % 15 === 0) {
+        refreshLiveAi(match, latestStats, latestLiveData);
+      }
     };
+
+    pollCount.current = 0;
     poll();
     pollRef.current = setInterval(poll, 20_000);
-    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+      if (liveAiRef.current) clearInterval(liveAiRef.current);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [match?.id]);
 
   const generateAnalysis = async () => {
@@ -298,6 +566,28 @@ export function MatchAnalysisPage() {
       <button onClick={() => navigate('/matches')} className="btn btn-ghost btn-sm" style={{ marginBottom:'1.2rem' }}>← {t('Volver a partidos','Back to matches')}</button>
 
       <LiveScoreboard match={match} liveData={liveData} />
+
+      {/* Live stats — football only, only when match is live or just finished */}
+      {liveStats && (liveData?.status === 'live' || liveData?.status === 'finished' || match.status === 'live' || match.status === 'finished') && (
+        <LiveStatsTable
+          stats={liveStats}
+          homeTeam={match.homeTeam.name}
+          awayTeam={match.awayTeam.name}
+        />
+      )}
+
+      {/* Live AI analysis — only when match is live */}
+      {(liveData?.status === 'live' || (match.status === 'live' && !liveData)) && (
+        <LiveAnalysisSection
+          result={liveAnalysis}
+          loading={liveAiLoading}
+          lastFetchedAt={liveAiFetchedAt}
+          onRefresh={() => refreshLiveAi(match, liveStats, liveData)}
+          homeTeam={match.homeTeam.name}
+          awayTeam={match.awayTeam.name}
+          isPaid={(user?.plan ?? 'free') !== 'free'}
+        />
+      )}
 
       {loading && (
         <div className="glass" style={{ borderRadius:16, padding:'4rem', textAlign:'center' }}>
