@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useLang } from '../../context/LanguageContext';
 import {
-  getTelegramConnection, upsertVerifyCode,
+  getTelegramConnection, upsertVerifyCode, generateVerifyCode,
   type TelegramConnection,
 } from '../../services/alertService';
 
@@ -38,11 +38,11 @@ export function TelegramPage() {
 
   useEffect(() => {
     if (!user?.id) return;
+    // Generate code synchronously so it shows instantly, then save to DB in background
+    const code = generateVerifyCode('bet');
+    setVerifyCode(code);
     getTelegramConnection(user.id, 'bet').then(c => { setConn(c); setLoading(false); });
-    // Always generate a fresh random code and save it to DB on mount
-    upsertVerifyCode(user.id, user.email ?? '', 'bet', user.plan ?? 'free')
-      .then(code => setVerifyCode(code))
-      .catch(console.error);
+    upsertVerifyCode(user.id, user.email ?? '', 'bet', user.plan ?? 'free', code);
   }, [user?.id]);
 
   const pollConnection = () => {
@@ -72,8 +72,9 @@ export function TelegramPage() {
   const handleRegenCode = async () => {
     if (!user?.id || regenerating) return;
     setRegenerating(true);
-    const newCode = await upsertVerifyCode(user.id, user.email ?? '', 'bet', user.plan ?? 'free').catch(console.error);
-    if (newCode) setVerifyCode(newCode);
+    const newCode = generateVerifyCode('bet');
+    setVerifyCode(newCode);
+    await upsertVerifyCode(user.id, user.email ?? '', 'bet', user.plan ?? 'free', newCode);
     setRegenerating(false);
     setRegenDone(true);
     setTimeout(() => setRegenDone(false), 3000);
@@ -126,7 +127,7 @@ export function TelegramPage() {
             <div style={{ background: 'var(--accent-light)', border: '1px solid var(--border2)', borderRadius: 10, padding: '0.9rem', marginBottom: '1rem' }}>
               <div style={{ fontSize: '0.7rem', color: 'var(--muted)', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{t('Tu código', 'Your code')}</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: '1rem', color: verifyCode ? 'var(--gold)' : 'var(--muted)', letterSpacing: '0.1em' }}>{verifyCode || '··············'}</span>
+                <span style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: '1rem', color: 'var(--gold)', letterSpacing: '0.1em' }}>{verifyCode}</span>
                 <div style={{ display: 'flex', gap: '0.4rem', flexShrink: 0 }}>
                   <button onClick={() => { navigator.clipboard.writeText(verifyCode); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
                     className="btn btn-gold btn-sm">{copied ? `✓ ${t('Copiado','Copied')}` : t('Copiar','Copy')}</button>
