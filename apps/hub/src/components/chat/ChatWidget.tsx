@@ -493,14 +493,28 @@ export function ChatWidget() {
     <>
       <style>{`
         .xentory-chat-panel {
-          position: fixed; bottom: 5.5rem; right: 1.5rem; z-index: 950;
-          width: min(340px, calc(100vw - 2rem)); height: min(480px, calc(100vh - 8rem));
+          position: fixed; z-index: 950;
           background: var(--bg2); border: 1px solid var(--border2); border-radius: 20px;
           display: flex; flex-direction: column;
-          box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: fadeUp 0.22s ease; overflow: hidden;
+          box-shadow: 0 20px 60px rgba(0,0,0,0.35); animation: fadeUp 0.22s ease; overflow: hidden;
+          /* Mobile: centered, near full-width */
+          left: 50%; bottom: 5.2rem;
+          transform: translateX(-50%);
+          width: calc(100vw - 1.5rem);
+          height: calc(100dvh - 9.5rem);
+          max-height: 520px;
+          border-radius: 18px;
         }
-        @media (min-width: 600px)  { .xentory-chat-panel { width: 380px; height: 540px; } }
-        @media (min-width: 1024px) { .xentory-chat-panel { width: 420px; height: 580px; bottom: 5.8rem; right: 2rem; } }
+        @media (min-width: 560px) {
+          .xentory-chat-panel {
+            left: auto; right: 1.5rem; transform: none;
+            width: 380px; height: 540px; max-height: none;
+            bottom: 5.5rem;
+          }
+        }
+        @media (min-width: 1024px) {
+          .xentory-chat-panel { width: 420px; height: 580px; bottom: 5.8rem; right: 2rem; }
+        }
         .xentory-chat-btn {
           position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 950;
           width: 52px; height: 52px;

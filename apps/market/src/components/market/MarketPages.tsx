@@ -270,7 +270,7 @@ export function AlertsPage() {
       // Save code to Supabase so bot can verify it
       await upsertVerifyCode(user.id, user.email, 'market', user.plan);
       // Open bot with deep link carrying the code
-      window.open(`https://t.me/XentoryMarketBot?start=${verifyCode}`, '_blank');
+      window.open(`https://t.me/XentoryBot?start=${verifyCode}`, '_blank');
     } catch (e) {
       console.error(e);
     } finally {
