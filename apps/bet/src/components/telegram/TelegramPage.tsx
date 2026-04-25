@@ -18,11 +18,13 @@ export function TelegramPage() {
   const navigate   = useNavigate();
   const { t }      = useLang();
 
-  const [conn,       setConn]       = useState<TelegramConnection | null>(null);
-  const [loading,    setLoading]    = useState(true);
-  const [connecting, setConnecting] = useState(false);
-  const [verifyCode, setVerifyCode] = useState('');
-  const [copied,     setCopied]     = useState(false);
+  const [conn,         setConn]         = useState<TelegramConnection | null>(null);
+  const [loading,      setLoading]      = useState(true);
+  const [connecting,   setConnecting]   = useState(false);
+  const [verifyCode,   setVerifyCode]   = useState('');
+  const [copied,       setCopied]       = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+  const [regenDone,    setRegenDone]    = useState(false);
 
   const isPaid  = user?.plan === 'pro' || user?.plan === 'elite';
   const channel = CHANNEL_INFO[user?.plan ?? 'free'];
@@ -40,10 +42,8 @@ export function TelegramPage() {
     const code = generateVerifyCode(user.id, 'bet');
     setVerifyCode(code);
     getTelegramConnection(user.id, 'bet').then(c => { setConn(c); setLoading(false); });
-    // Pre-save the code so the bot can validate it immediately when the user opens it
-    if (user.plan === 'pro' || user.plan === 'elite') {
-      upsertVerifyCode(user.id, user.email ?? '', 'bet', user.plan).catch(console.error);
-    }
+    // Always pre-save the code so the bot can validate it immediately
+    upsertVerifyCode(user.id, user.email ?? '', 'bet', user.plan ?? 'free').catch(console.error);
   }, [user?.id]);
 
   const pollConnection = () => {
@@ -68,6 +68,15 @@ export function TelegramPage() {
   const handleReconnect = () => {
     setConn(null);
     handleConnect();
+  };
+
+  const handleRegenCode = async () => {
+    if (!user?.id || regenerating) return;
+    setRegenerating(true);
+    await upsertVerifyCode(user.id, user.email ?? '', 'bet', user.plan ?? 'free').catch(console.error);
+    setRegenerating(false);
+    setRegenDone(true);
+    setTimeout(() => setRegenDone(false), 3000);
   };
 
   return (
@@ -118,8 +127,19 @@ export function TelegramPage() {
               <div style={{ fontSize: '0.7rem', color: 'var(--muted)', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{t('Tu código', 'Your code')}</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
                 <span style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: '1rem', color: 'var(--gold)', letterSpacing: '0.1em' }}>{verifyCode}</span>
-                <button onClick={() => { navigator.clipboard.writeText(verifyCode); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
-                  className="btn btn-gold btn-sm">{copied ? `✓ ${t('Copiado','Copied')}` : t('Copiar','Copy')}</button>
+                <div style={{ display: 'flex', gap: '0.4rem', flexShrink: 0 }}>
+                  <button onClick={() => { navigator.clipboard.writeText(verifyCode); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+                    className="btn btn-gold btn-sm">{copied ? `✓ ${t('Copiado','Copied')}` : t('Copiar','Copy')}</button>
+                  <button onClick={handleRegenCode} className="btn btn-outline btn-sm" disabled={regenerating}
+                    title={t('Regenerar si ha expirado', 'Regenerate if expired')}>
+                    {regenerating ? '…' : regenDone ? '✓' : '🔄'}
+                  </button>
+                </div>
+              </div>
+              <div style={{ fontSize: '0.68rem', color: regenDone ? 'var(--green)' : 'var(--muted)', marginTop: '0.4rem', transition: 'color 0.3s' }}>
+                {regenDone
+                  ? t('Código renovado · Válido 24h más', 'Code renewed · Valid 24h more')
+                  : t('Válido 24h · Pulsa 🔄 si ha expirado', 'Valid 24h · Press 🔄 if expired')}
               </div>
             </div>
           )}

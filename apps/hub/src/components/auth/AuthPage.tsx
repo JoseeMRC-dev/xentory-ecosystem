@@ -300,6 +300,18 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
 
       {/* Form */}
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        {/* CAPTCHA primero: verifica en background mientras el usuario rellena el formulario */}
+        {(tab === 'login' || tab === 'register') && (
+          <TurnstileWidget
+            key={captcha.resetKey}
+            onVerify={captcha.onVerify}
+            onExpire={captcha.onExpire}
+            onError={captcha.onError}
+            theme="dark"
+            compact
+          />
+        )}
+
         {tab === 'register' && (
           <Field label="Nombre completo">
             <input className="input" placeholder="Alex Martínez" value={name}
@@ -432,17 +444,6 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
           <div style={{ padding: '0.7rem 0.9rem', background: 'rgba(255,68,85,0.08)', border: '1px solid rgba(255,68,85,0.2)', borderRadius: 8, color: 'var(--red)', fontSize: '0.82rem', lineHeight: 1.5 }}>
             {error}
           </div>
-        )}
-
-        {/* CAPTCHA — shown for login and register */}
-        {(tab === 'login' || tab === 'register') && (
-          <TurnstileWidget
-            key={captcha.resetKey}
-            onVerify={captcha.onVerify}
-            onExpire={captcha.onExpire}
-            onError={captcha.onError}
-            theme="dark"
-          />
         )}
 
         <button type="submit" disabled={isLoading} className="btn btn-gold btn-lg"

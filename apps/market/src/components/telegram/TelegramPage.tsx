@@ -25,10 +25,12 @@ export function TelegramPage() {
   const { user }   = useAuth();
   const navigate   = useNavigate();
 
-  const [conn,       setConn]       = useState<TelegramConnection | null>(null);
-  const [loading,    setLoading]    = useState(true);
-  const [verifyCode, setVerifyCode] = useState('');
-  const [copied,     setCopied]     = useState(false);
+  const [conn,         setConn]         = useState<TelegramConnection | null>(null);
+  const [loading,      setLoading]      = useState(true);
+  const [verifyCode,   setVerifyCode]   = useState('');
+  const [copied,       setCopied]       = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+  const [regenDone,    setRegenDone]    = useState(false);
 
   const isPaid  = user?.plan === 'pro' || user?.plan === 'elite';
   const channel = CHANNEL_INFO[user?.plan ?? 'free'];
@@ -42,10 +44,8 @@ export function TelegramPage() {
       setConn(c);
       setLoading(false);
     });
-    // Pre-save the code so the bot can validate it immediately when the user opens it
-    if (user.plan === 'pro' || user.plan === 'elite') {
-      upsertVerifyCode(user.id, user.email ?? '', 'market', user.plan).catch(console.error);
-    }
+    // Always pre-save the code so the bot can validate it immediately
+    upsertVerifyCode(user.id, user.email ?? '', 'market', user.plan ?? 'free').catch(console.error);
   }, [user?.id]);
 
   // ── Poll after opening bot ───────────────────────────────────
@@ -71,6 +71,15 @@ export function TelegramPage() {
     navigator.clipboard.writeText(verifyCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleRegenCode = async () => {
+    if (!user?.id || regenerating) return;
+    setRegenerating(true);
+    await upsertVerifyCode(user.id, user.email ?? '', 'market', user.plan ?? 'free').catch(console.error);
+    setRegenerating(false);
+    setRegenDone(true);
+    setTimeout(() => setRegenDone(false), 3000);
   };
 
   return (
@@ -174,16 +183,22 @@ export function TelegramPage() {
               <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
                 Tu código de verificación
               </div>
-              <div className="mkt-verify-code" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="mkt-verify-code" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
                 <div style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: '1.15rem', color: 'var(--gold)', letterSpacing: '0.1em' }}>
                   {verifyCode}
                 </div>
-                <button onClick={handleCopyCode} className="btn btn-gold btn-sm">
-                  {copied ? '✓ Copiado' : 'Copiar'}
-                </button>
+                <div style={{ display: 'flex', gap: '0.4rem', flexShrink: 0 }}>
+                  <button onClick={handleCopyCode} className="btn btn-gold btn-sm">
+                    {copied ? '✓ Copiado' : 'Copiar'}
+                  </button>
+                  <button onClick={handleRegenCode} className="btn btn-outline btn-sm" disabled={regenerating}
+                    title="Regenerar código si ha expirado">
+                    {regenerating ? '…' : regenDone ? '✓' : '🔄'}
+                  </button>
+                </div>
               </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginTop: '0.5rem' }}>
-                Envía este código al bot · Válido 24h · Se renueva automáticamente
+              <div style={{ fontSize: '0.72rem', color: regenDone ? 'var(--green)' : 'var(--muted)', marginTop: '0.5rem', transition: 'color 0.3s' }}>
+                {regenDone ? 'Código renovado · Válido por 24h más' : 'Envía este código al bot · Válido 24h · Pulsa 🔄 si ha expirado'}
               </div>
             </div>
           )}
