@@ -41,13 +41,13 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: 'Missing fields' }), { status: 400, headers: CORS });
       }
 
-      // Delete any existing unused codes
+      // Delete ALL previous codes for this user+platform (used or not) so the
+      // UNIQUE constraint on `code` never blocks a fresh insert.
       await supabase
         .from('telegram_verify_codes')
         .delete()
         .eq('user_id', user_id)
-        .eq('platform', platform)
-        .eq('used', false);
+        .eq('platform', platform);
 
       // Insert new code
       const { error } = await supabase.from('telegram_verify_codes').insert({

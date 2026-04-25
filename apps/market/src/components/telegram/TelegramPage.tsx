@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import {
-  getTelegramConnection, upsertVerifyCode, generateVerifyCode,
+  getTelegramConnection, upsertVerifyCode,
   type TelegramConnection,
 } from '../../services/alertService';
 
@@ -38,14 +38,14 @@ export function TelegramPage() {
   // ── Load connection status ──────────────────────────────────
   useEffect(() => {
     if (!user?.id) return;
-    const code = generateVerifyCode(user.id, 'market');
-    setVerifyCode(code);
     getTelegramConnection(user.id, 'market').then(c => {
       setConn(c);
       setLoading(false);
     });
-    // Always pre-save the code so the bot can validate it immediately
-    upsertVerifyCode(user.id, user.email ?? '', 'market', user.plan ?? 'free').catch(console.error);
+    // Always generate a fresh random code and save it to DB on mount
+    upsertVerifyCode(user.id, user.email ?? '', 'market', user.plan ?? 'free')
+      .then(code => setVerifyCode(code))
+      .catch(console.error);
   }, [user?.id]);
 
   // ── Poll after opening bot ───────────────────────────────────
@@ -76,7 +76,8 @@ export function TelegramPage() {
   const handleRegenCode = async () => {
     if (!user?.id || regenerating) return;
     setRegenerating(true);
-    await upsertVerifyCode(user.id, user.email ?? '', 'market', user.plan ?? 'free').catch(console.error);
+    const newCode = await upsertVerifyCode(user.id, user.email ?? '', 'market', user.plan ?? 'free').catch(console.error);
+    if (newCode) setVerifyCode(newCode);
     setRegenerating(false);
     setRegenDone(true);
     setTimeout(() => setRegenDone(false), 3000);
@@ -184,8 +185,8 @@ export function TelegramPage() {
                 Tu código de verificación
               </div>
               <div className="mkt-verify-code" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
-                <div style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: '1.15rem', color: 'var(--gold)', letterSpacing: '0.1em' }}>
-                  {verifyCode}
+                <div style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: '1.15rem', color: verifyCode ? 'var(--gold)' : 'var(--muted)', letterSpacing: '0.1em' }}>
+                  {verifyCode || '···············'}
                 </div>
                 <div style={{ display: 'flex', gap: '0.4rem', flexShrink: 0 }}>
                   <button onClick={handleCopyCode} className="btn btn-gold btn-sm">
