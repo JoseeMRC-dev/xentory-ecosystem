@@ -81,10 +81,11 @@ async function callEF(path: string, body: object): Promise<any> {
 }
 
 // ── GENERATE VERIFICATION CODE ─────────────────────────────────
-export function generateVerifyCode(userId: string, platform: 'market' | 'bet'): string {
+export function generateVerifyCode(platform: 'market' | 'bet'): string {
   const prefix = platform === 'market' ? 'XMKT' : 'XBET';
-  const hash   = userId.replace(/-/g, '').slice(0, 8).toUpperCase();
-  return `${prefix}-${hash}`;
+  const bytes  = crypto.getRandomValues(new Uint8Array(4));
+  const suffix = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+  return `${prefix}-${suffix}`;
 }
 
 // ── SAVE/REFRESH VERIFICATION CODE ────────────────────────────
@@ -94,7 +95,7 @@ export async function upsertVerifyCode(
   platform: 'market' | 'bet',
   plan:      string
 ): Promise<string> {
-  const code = generateVerifyCode(userId, platform);
+  const code = generateVerifyCode(platform);
   await callEF('manage-alerts', {
     action:    'upsert_code',
     user_id:   userId,
