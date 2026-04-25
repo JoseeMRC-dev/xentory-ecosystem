@@ -1,4 +1,4 @@
-import type { Match, TeamStats, FormMatch, Competition } from '../types';
+import type { Match, TeamStats, FormMatch, Competition, LiveMatchStats, LiveMatchStat, MatchEvent } from '../types';
 import { SEASON, COMPETITIONS } from '../constants';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -273,6 +273,91 @@ export async function fetchLiveMatchById(
     };
   }
   return null;
+}
+
+// ── FETCH LIVE MATCH DETAILED STATS + EVENTS ─────────────────────────────────
+const FOOTBALL_STAT_MAP: Array<{ key: string; label: string; cardColor?: string; isPossession?: boolean }> = [
+  { key: 'possessionPct',  label: 'Posesión',         isPossession: true },
+  { key: 'totalShots',     label: 'Tiros' },
+  { key: 'shotsOnTarget',  label: 'Tiros a puerta' },
+  { key: 'blockedShots',   label: 'Tiros bloqueados' },
+  { key: 'cornerKicks',    label: 'Córners' },
+  { key: 'fouls',          label: 'Faltas' },
+  { key: 'offsides',       label: 'Fueras de juego' },
+  { key: 'saves',          label: 'Paradas' },
+  { key: 'yellowCards',    label: 'T. amarillas', cardColor: 'var(--gold)' },
+  { key: 'redCards',       label: 'T. rojas',     cardColor: 'var(--red)' },
+];
+
+export async function fetchLiveMatchStats(
+  slug: string,
+  espnEventId: string,
+): Promise<LiveMatchStats | null> {
+  const json = await espnFetchLive(`/${slug}/summary?event=${espnEventId}`);
+  if (!json) return null;
+
+  // ── Stats ──────────────────────────────────────────────────────────────────
+  const teams: any[] = json.boxscore?.teams ?? [];
+  const homeTeam = teams.find((t: any) => t.homeAway === 'home') ?? teams[0];
+  const awayTeam = teams.find((t: any) => t.homeAway === 'away') ?? teams[1];
+
+  const stats: LiveMatchStat[] = [];
+  if (homeTeam && awayTeam) {
+    const hMap: Record<string, string> = {};
+    const aMap: Record<string, string> = {};
+    for (const s of homeTeam.statistics ?? []) hMap[s.name] = s.displayValue;
+    for (const s of awayTeam.statistics  ?? []) aMap[s.name] = s.displayValue;
+
+    for (const { key, label, cardColor, isPossession } of FOOTBALL_STAT_MAP) {
+      const hRaw = hMap[key];
+      const aRaw = aMap[key];
+      if (hRaw === undefined && aRaw === undefined) continue;
+      const hNum = parseFloat(hRaw ?? '0') || 0;
+      const aNum = parseFloat(aRaw ?? '0') || 0;
+      const total = hNum + aNum;
+      stats.push({
+        label,
+        home:        hRaw ?? '0',
+        away:        aRaw ?? '0',
+        homePct:     isPossession ? hNum : total > 0 ? Math.round((hNum / total) * 100) : 50,
+        isPossession,
+        cardColor,
+      });
+    }
+  }
+
+  // ── Key events (goals, cards) ──────────────────────────────────────────────
+  const events: MatchEvent[] = [];
+  const comp = json.header?.competitions?.[0] ?? json.boxscore?.gamePackage?.competitions?.[0];
+  const competitors: any[] = comp?.competitors ?? [];
+  const homeId = competitors.find((c: any) => c.homeAway === 'home')?.id;
+
+  const scoring: any[] = json.scoringPlays ?? [];
+  for (const play of scoring) {
+    const teamId = play.team?.id ?? play.homeScore !== undefined ? homeId : undefined;
+    events.push({
+      minute: Math.floor((play.clock?.value ?? play.clock?.displayValue?.replace("'", '') ?? 0) as number),
+      type:   'goal',
+      team:   play.team?.id === homeId ? 'home' : 'away',
+      player: play.scoringPlay ? (play.athletesInvolved?.[0]?.displayName ?? undefined) : undefined,
+      detail: play.text,
+    });
+  }
+  // Cards from plays
+  for (const play of (json.plays ?? []) as any[]) {
+    const type = play.type?.text?.toLowerCase() ?? '';
+    if (!type.includes('yellow') && !type.includes('red') && !type.includes('card')) continue;
+    events.push({
+      minute: Math.floor(play.clock?.value ?? 0),
+      type:   type.includes('red') ? 'redCard' : 'yellowCard',
+      team:   play.team?.id === homeId ? 'home' : 'away',
+      player: play.athletesInvolved?.[0]?.displayName,
+    });
+  }
+  events.sort((a, b) => a.minute - b.minute);
+
+  if (stats.length === 0 && events.length === 0) return null;
+  return { stats, events, fetchedAt: Date.now() };
 }
 
 // ── FETCH ALL LIVE MATCHES ACROSS SPORTS for Bet ticker ──────────────────────

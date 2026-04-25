@@ -1,4 +1,4 @@
-import type { Match, TeamStats, MatchAnalysis, PredictionMarkets, Plan } from '../types';
+import type { Match, TeamStats, MatchAnalysis, PredictionMarkets, Plan, LiveMatchStats, LiveAnalysisResult } from '../types';
 import { supabase } from '../lib/supabase';
 
 const GEMINI_FLASH = 'gemini-2.0-flash';
@@ -398,4 +398,119 @@ export async function generateMatchAnalysis(
     tier:        isPro ? 'pro' : 'flash',
     generatedAt: new Date().toISOString(),
   };
+}
+
+// ── LIVE MATCH ANALYSIS ──────────────────────────────────────────────────────
+function buildLivePrompt(
+  match: Match,
+  score: { home: number; away: number },
+  clock: string,
+  stats: LiveMatchStats | null,
+): string {
+  const statsText = stats?.stats.length
+    ? stats.stats.map(s => `${s.label}: ${s.home} — ${s.away} (local — visitante)`).join('\n')
+    : 'Sin estadísticas disponibles aún';
+
+  const eventsText = stats?.events.length
+    ? stats.events.map(e => {
+        const icon = e.type === 'goal' ? '⚽' : e.type === 'yellowCard' ? '🟨' : e.type === 'redCard' ? '🟥' : '🔄';
+        const team = e.team === 'home' ? match.homeTeam.name : match.awayTeam.name;
+        return `${icon} ${e.minute}' — ${team}${e.player ? ` (${e.player})` : ''}`;
+      }).join('\n')
+    : 'Sin eventos registrados';
+
+  return `Eres un analista deportivo experto. Analiza este partido EN DIRECTO y genera una evaluación táctica en tiempo real.
+
+PARTIDO: ${match.homeTeam.name} vs ${match.awayTeam.name}
+COMPETICIÓN: ${match.competition.name}
+MINUTO: ${clock}
+MARCADOR: ${match.homeTeam.name} ${score.home} - ${score.away} ${match.awayTeam.name}
+
+ESTADÍSTICAS DEL PARTIDO (local — visitante):
+${statsText}
+
+EVENTOS CLAVE:
+${eventsText}
+
+Responde SOLO en JSON puro (sin markdown, sin backticks):
+{
+  "assessment": "3-4 frases evaluando el partido AHORA: quién domina, situación táctica, ritmo del partido y cómo afecta el marcador al juego de cada equipo",
+  "momentum": "home" o "away" o "balanced",
+  "liveBets": [
+    {
+      "market": "nombre del mercado",
+      "pick": "la apuesta concreta",
+      "odds": "cuota como string (ej. '1.70')",
+      "reasoning": "1-2 frases justificando con datos del partido en curso",
+      "confidence": número 50-88
+    }
+  ],
+  "forecast": "2-3 frases: qué es probable que ocurra hasta el final del partido basándote en lo que se está viendo ahora"
+}
+
+Incluye 2-3 apuestas en vivo relevantes: próximo gol, resultado final, más/menos goles, tarjetas, etc.`;
+}
+
+export async function generateLiveAnalysis(
+  match: Match,
+  score: { home: number; away: number },
+  clock: string,
+  stats: LiveMatchStats | null,
+  plan: Plan,
+): Promise<LiveAnalysisResult> {
+  const prompt = buildLivePrompt(match, score, clock, stats);
+
+  let result: LiveAnalysisResult = {
+    assessment:  '',
+    momentum:    'balanced',
+    liveBets:    [],
+    forecast:    '',
+    generatedAt: new Date().toISOString(),
+  };
+
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      const res = await fetch(PROXY_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+        body: JSON.stringify({
+          model: plan === 'pro' || plan === 'elite' ? GEMINI_PRO : GEMINI_FLASH,
+          payload: {
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.5, maxOutputTokens: 800, responseMimeType: 'application/json' },
+          },
+        }),
+      });
+      if (res.ok) {
+        const data   = await res.json();
+        const text   = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+        const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
+        result = {
+          assessment:  parsed.assessment  ?? '',
+          momentum:    parsed.momentum    ?? 'balanced',
+          liveBets:    parsed.liveBets    ?? [],
+          forecast:    parsed.forecast    ?? '',
+          generatedAt: new Date().toISOString(),
+        };
+      }
+    }
+  } catch { /* use fallback */ }
+
+  if (!result.assessment) {
+    const domTeam = stats?.stats.find(s => s.isPossession);
+    const hPoss = domTeam ? Number(domTeam.home) : 50;
+    const dominant = hPoss > 55 ? match.homeTeam.name : hPoss < 45 ? match.awayTeam.name : null;
+    result.assessment = dominant
+      ? `${dominant} domina el partido con mayor posesión y presencia en el área rival. El marcador de ${score.home}-${score.away} en el minuto ${clock} refleja una dinámica competida. Los equipos buscan los espacios y la transición rápida está siendo clave. La presión defensiva está siendo intensa en ambos lados.`
+      : `El partido está equilibrado con ambos equipos generando ocasiones. El marcador ${score.home}-${score.away} en el minuto ${clock} puede cambiar en cualquier momento. Ningún equipo ha logrado imponerse tácticamente de forma clara.`;
+    result.momentum = hPoss > 55 ? 'home' : hPoss < 45 ? 'away' : 'balanced';
+    result.liveBets = [
+      { market: 'Resultado final', pick: score.home > score.away ? `${match.homeTeam.name} gana` : score.away > score.home ? `${match.awayTeam.name} gana` : 'Empate', odds: '1.80', reasoning: 'Basado en el marcador y dominio actual del partido.', confidence: 62 },
+      { market: 'Más de 2.5 goles', pick: score.home + score.away >= 2 ? 'Over 2.5 (activado)' : 'Under 2.5', odds: '1.65', reasoning: 'El ritmo del partido sugiere continuidad ofensiva.', confidence: 58 },
+    ];
+    result.forecast = `Con ${clock} en el marcador de ${score.home}-${score.away}, el partido puede evolucionar hacia un cierre defensivo o una apertura táctica buscando el gol. Los minutos finales serán decisivos.`;
+  }
+
+  return result;
 }
