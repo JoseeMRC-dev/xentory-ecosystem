@@ -1,12 +1,19 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useLang } from '../../context/LanguageContext';
 import { supabase } from '../../lib/supabase';
 
-// ── Static response catalogue ─────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────
+interface Action { label: string; to?: string; launch?: 'market' | 'bets' }
 interface Copy { short: string; detail?: string }
-interface StaticEntry { test: RegExp; es: Copy; en: Copy }
+interface StaticEntry {
+  test: RegExp;
+  es: Copy; en: Copy;
+  esActions?: Action[]; enActions?: Action[];
+}
 
+// ── Static response catalogue ─────────────────────────────────────────
 const STATIC: StaticEntry[] = [
   {
     test: /^(hola|hey|buenas|hello|hi|good\s*(morning|afternoon|evening))[\s!?.,]*$/i,
@@ -23,59 +30,79 @@ const STATIC: StaticEntry[] = [
       short: 'Xentory is an AI signal platform for crypto/stock trading and sports betting, with a publicly verifiable track record.',
       detail: 'It combines automated technical analysis with language models to generate signals with confidence scores and detailed reasoning. Available in two modules: Xentory Market and Xentory Bet.',
     },
+    esActions: [
+      { label: 'Xentory Market →', launch: 'market' },
+      { label: 'Xentory Bet →',    launch: 'bets' },
+    ],
+    enActions: [
+      { label: 'Xentory Market →', launch: 'market' },
+      { label: 'Xentory Bet →',    launch: 'bets' },
+    ],
   },
   {
     test: /cómo funciona|como funciona|how does it work|how it works/i,
     es: {
       short: 'La IA analiza datos en tiempo real y genera señales con nivel de confianza. Cada señal incluye el razonamiento detrás.',
-      detail: 'Para mercados: analiza RSI, soportes, volumen y noticias. Para apuestas: estadísticas del partido, forma reciente, momios y head-to-head. Puedes ver la metodología completa en la sección Metodología.',
+      detail: 'Para mercados: analiza RSI, soportes, volumen y noticias. Para apuestas: estadísticas del partido, forma reciente, momios y head-to-head.',
     },
     en: {
       short: 'The AI analyzes real-time data and generates signals with a confidence level. Each signal includes the reasoning behind it.',
-      detail: 'For markets: analyzes RSI, support levels, volume, and news. For betting: match stats, recent form, odds, and head-to-head. See the full methodology in the Methodology section.',
+      detail: 'For markets: analyzes RSI, support levels, volume, and news. For betting: match stats, recent form, odds, and head-to-head.',
     },
+    esActions: [{ label: 'Ver Metodología →', to: '/metodologia' }],
+    enActions: [{ label: 'See Methodology →', to: '/metodologia' }],
   },
   {
     test: /precio|plan|cuánto|cuanto|cost|price|suscripci|subscri/i,
     es: {
       short: 'Los planes empiezan desde **€19/mes** (Market Pro o Bet Pro). El Bundle Elite incluye ambas plataformas por **€49/mes**.',
-      detail: 'También hay un plan gratuito con acceso básico. Todos los planes de pago incluyen 7 días de prueba sin tarjeta. Consulta la comparativa completa en la sección Precios.',
+      detail: 'También hay un plan gratuito con acceso básico. Todos los planes de pago incluyen 7 días de prueba sin tarjeta.',
     },
     en: {
       short: 'Plans start from **€19/mo** (Market Pro or Bet Pro). The Bundle Elite includes both platforms for **€49/mo**.',
-      detail: 'There is also a free plan with basic access. All paid plans include a 7-day trial with no card required. See the full comparison in the Pricing section.',
+      detail: 'There is also a free plan with basic access. All paid plans include a 7-day trial with no card required.',
     },
+    esActions: [{ label: 'Ver planes →', to: '/pricing' }],
+    enActions: [{ label: 'See plans →',  to: '/pricing' }],
   },
   {
     test: /prueba|trial|gratis|free\s*trial|7\s*d[íi]as|sin\s*tarjeta|no\s*credit/i,
-    es: {
-      short: '¡Sí! Todos los planes de pago incluyen **7 días de prueba gratuita** sin tarjeta. Cancela cuando quieras.',
-    },
-    en: {
-      short: 'Yes! All paid plans include a **7-day free trial** with no credit card required. Cancel anytime.',
-    },
+    es: { short: '¡Sí! Todos los planes de pago incluyen **7 días de prueba gratuita** sin tarjeta. Cancela cuando quieras.' },
+    en: { short: 'Yes! All paid plans include a **7-day free trial** with no credit card required. Cancel anytime.' },
+    esActions: [{ label: 'Empezar prueba →', to: '/register' }],
+    enActions: [{ label: 'Start trial →',    to: '/register' }],
   },
   {
     test: /bundle|ambas\s*plataformas|both\s*platforms/i,
     es: {
-      short: 'El **Bundle** combina Market + Bet en una sola suscripción. El Bundle Pro cuesta **€29/mes** y el Elite **€49/mes**.',
+      short: 'El **Bundle** combina Market + Bet en una sola suscripción. Bundle Pro **€29/mes**, Bundle Elite **€49/mes**.',
       detail: 'Es la opción más económica si usas ambas plataformas: ahorras respecto a contratar Market y Bet por separado.',
     },
     en: {
-      short: 'The **Bundle** combines Market + Bet in a single subscription. Bundle Pro is **€29/mo** and Elite **€49/mo**.',
+      short: 'The **Bundle** combines Market + Bet in a single subscription. Bundle Pro **€29/mo**, Bundle Elite **€49/mo**.',
       detail: 'It\'s the most cost-effective option if you use both platforms — cheaper than subscribing to Market and Bet separately.',
     },
+    esActions: [{ label: 'Ver Bundle →', to: '/pricing?tab=bundle' }],
+    enActions: [{ label: 'See Bundle →', to: '/pricing?tab=bundle' }],
   },
   {
     test: /market|cripto|crypto|bitcoin|btc|accion|stock|forex|trading\s*de/i,
     es: {
       short: '**Xentory Market** ofrece señales de IA para cripto (BTC, ETH, SOL…), acciones (NVDA, AAPL…) y forex en tiempo real.',
-      detail: 'Incluye análisis RSI, soportes/resistencias, nivel de confianza por señal y alertas de precio en Telegram. El plan Pro da acceso a señales diarias; Elite incluye análisis avanzado y watchlist ilimitada.',
+      detail: 'Incluye análisis RSI, soportes/resistencias, nivel de confianza por señal y alertas de precio en Telegram. Pro da acceso a señales diarias; Elite incluye análisis avanzado y watchlist ilimitada.',
     },
     en: {
       short: '**Xentory Market** offers AI signals for crypto (BTC, ETH, SOL…), stocks (NVDA, AAPL…) and forex in real time.',
       detail: 'Includes RSI analysis, support/resistance levels, per-signal confidence scores and Telegram price alerts. Pro gives daily signals; Elite adds advanced analysis and unlimited watchlist.',
     },
+    esActions: [
+      { label: 'Abrir Market →', launch: 'market' },
+      { label: 'Ver planes →',   to: '/pricing' },
+    ],
+    enActions: [
+      { label: 'Open Market →', launch: 'market' },
+      { label: 'See plans →',   to: '/pricing' },
+    ],
   },
   {
     test: /bet|apuesta|deporte|sport|fútbol|futbol|football|basket|tenis|tennis/i,
@@ -87,95 +114,143 @@ const STATIC: StaticEntry[] = [
       short: '**Xentory Bet** analyzes matches with AI and generates result, handicap, and totals signals with confidence scores.',
       detail: 'Covers football, basketball, tennis and more. Win history is public and verifiable. Pro includes daily signals; Elite adds expanded coverage and detailed pre-match analysis.',
     },
+    esActions: [
+      { label: 'Abrir Apuestas →', launch: 'bets' },
+      { label: 'Ver planes →',     to: '/pricing' },
+    ],
+    enActions: [
+      { label: 'Open Bet →',   launch: 'bets' },
+      { label: 'See plans →',  to: '/pricing' },
+    ],
   },
   {
     test: /metodolog|acierto|accuracy|historial|track\s*record|porcentaje/i,
     es: {
       short: 'El historial de señales es **público y verificable**. Puedes ver los porcentajes de acierto por plataforma en la sección Metodología.',
-      detail: 'La IA registra cada señal emitida y el resultado una vez resuelto el evento. No se editan ni eliminan registros. Los factores de análisis y el razonamiento de cada señal están disponibles para todos los planes.',
+      detail: 'La IA registra cada señal emitida y el resultado una vez resuelto el evento. No se editan ni eliminan registros.',
     },
     en: {
       short: 'The signal history is **public and verifiable**. You can see accuracy rates by platform in the Methodology section.',
-      detail: 'The AI records every signal and the outcome once the event resolves. No records are edited or deleted. Analysis factors and signal reasoning are available across all plans.',
+      detail: 'The AI records every signal and the outcome once the event resolves. No records are edited or deleted.',
     },
+    esActions: [{ label: 'Ver Metodología →', to: '/metodologia' }],
+    enActions: [{ label: 'See Methodology →', to: '/metodologia' }],
+  },
+  {
+    test: /alerta(s)?|notificaci[oó]n|price\s*alert/i,
+    es: {
+      short: 'Configura **alertas de precio** y te avisamos por Telegram cuando un activo alcanza tu precio objetivo.',
+      detail: 'También recibes señales personalizadas de tus activos y equipos favoritos directamente en privado en el bot.',
+    },
+    en: {
+      short: 'Set up **price alerts** and we\'ll notify you on Telegram when an asset hits your target price.',
+      detail: 'You also receive personalised signals for your favourite assets and teams directly via the private bot.',
+    },
+    esActions: [{ label: 'Gestionar alertas →', to: '/alerts' }],
+    enActions: [{ label: 'Manage alerts →',     to: '/alerts' }],
   },
   {
     test: /telegram/i,
     es: {
       short: 'Con planes Pro y Elite recibes señales y alertas de precio directamente en un **canal privado de Telegram**.',
-      detail: 'El bot de Telegram también gestiona el acceso al canal según tu plan activo. Puedes vincularlo desde el dashboard en Ajustes → Telegram.',
+      detail: 'El bot gestiona el acceso al canal según tu plan. Vincúlalo desde el dashboard.',
     },
     en: {
       short: 'Pro and Elite plans include signals and price alerts directly in a **private Telegram channel**.',
-      detail: 'The Telegram bot also manages channel access based on your active plan. You can link it from the dashboard under Settings → Telegram.',
+      detail: 'The bot manages channel access based on your active plan. Link it from the dashboard.',
     },
+    esActions: [{ label: 'Ir al Dashboard →', to: '/dashboard' }],
+    enActions: [{ label: 'Go to Dashboard →', to: '/dashboard' }],
   },
   {
     test: /cancela|cancel|dar\s*de\s*baja|baja/i,
     es: { short: 'Puedes cancelar en cualquier momento desde el **dashboard → Suscripción**, sin penalizaciones ni permanencia.' },
     en: { short: 'You can cancel at any time from the **dashboard → Subscription**, with no penalties or lock-in.' },
+    esActions: [{ label: 'Ir al Dashboard →', to: '/dashboard' }],
+    enActions: [{ label: 'Go to Dashboard →', to: '/dashboard' }],
   },
   {
     test: /dashboard|panel|mi\s*cuenta|my\s*account/i,
     es: {
       short: 'El **dashboard** es tu panel de control: gestiona tu suscripción, alertas, acceso a plataformas y vinculación con Telegram.',
-      detail: 'Accede desde el menú superior una vez iniciada sesión. También puedes lanzar directamente Xentory Market o Xentory Bet desde allí con SSO automático.',
+      detail: 'Puedes lanzar directamente Xentory Market o Xentory Bet desde allí con SSO automático.',
     },
     en: {
       short: 'The **dashboard** is your control panel: manage your subscription, alerts, platform access, and Telegram linking.',
-      detail: 'Access it from the top menu once logged in. You can also launch Xentory Market or Xentory Bet directly from there with automatic SSO.',
+      detail: 'You can also launch Xentory Market or Xentory Bet directly from there with automatic SSO.',
     },
+    esActions: [
+      { label: 'Ir al Dashboard →', to: '/dashboard' },
+      { label: 'Abrir Market →',    launch: 'market' },
+      { label: 'Abrir Apuestas →',  launch: 'bets' },
+    ],
+    enActions: [
+      { label: 'Go to Dashboard →', to: '/dashboard' },
+      { label: 'Open Market →',     launch: 'market' },
+      { label: 'Open Bet →',        launch: 'bets' },
+    ],
   },
   {
     test: /señal|signal|qué\s*es\s*una\s*señal|what.*signal/i,
     es: {
       short: 'Una señal es una recomendación generada por la IA con activo, dirección, nivel de confianza y razonamiento.',
-      detail: 'Ejemplo: "BTC/USD — Compra en soporte | Confianza 78% | RSI sobrevendido + volumen creciente". El resultado se registra públicamente una vez que el evento se resuelve.',
+      detail: 'Ejemplo: "BTC/USD — Compra en soporte | Confianza 78% | RSI sobrevendido + volumen creciente".',
     },
     en: {
       short: 'A signal is an AI-generated recommendation with asset, direction, confidence level, and reasoning.',
-      detail: 'Example: "BTC/USD — Buy at support | Confidence 78% | Oversold RSI + rising volume". The outcome is recorded publicly once the event resolves.',
+      detail: 'Example: "BTC/USD — Buy at support | Confidence 78% | Oversold RSI + rising volume".',
     },
+    esActions: [
+      { label: 'Ver en Market →',   launch: 'market' },
+      { label: 'Ver en Apuestas →', launch: 'bets' },
+    ],
+    enActions: [
+      { label: 'View in Market →', launch: 'market' },
+      { label: 'View in Bet →',    launch: 'bets' },
+    ],
   },
   {
     test: /política|politica|privacidad|privacy|términos|terminos|legal|terms/i,
     es: {
       short: 'Xentory no almacena datos financieros sensibles. Las señales son orientativas y no constituyen asesoramiento financiero.',
-      detail: 'Consulta los Términos de uso y la Política de privacidad completos en el pie de página del sitio web. Para cualquier duda legal escríbenos a soporte@xentory.io.',
+      detail: 'Consulta los Términos de uso y la Política de privacidad en el pie de página del sitio.',
     },
     en: {
       short: 'Xentory does not store sensitive financial data. Signals are informational and do not constitute financial advice.',
-      detail: 'See the full Terms of Use and Privacy Policy in the website footer. For any legal questions write to us at support@xentory.io.',
+      detail: 'See the full Terms of Use and Privacy Policy in the website footer.',
     },
+    esActions: [{ label: 'Ver Términos →', to: '/terminos' }],
+    enActions: [{ label: 'See Terms →',    to: '/terminos' }],
   },
   {
     test: /contacto|soporte|support|contact|ayuda|help|problema|issue|error|bug/i,
-    es: {
-      short: 'Para soporte escríbenos a **soporte@xentory.io**. Respondemos en menos de 24 h en días laborables.',
-    },
-    en: {
-      short: 'For support write to **support@xentory.io**. We reply within 24 hours on business days.',
-    },
+    es: { short: 'Para soporte escríbenos a **soporte@xentory.io**. Respondemos en menos de 24 h en días laborables.' },
+    en: { short: 'For support write to **support@xentory.io**. We reply within 24 hours on business days.' },
   },
   {
     test: /registr|crear\s*cuenta|sign\s*up|create\s*account|nuevo\s*usuario/i,
-    es: { short: 'Crea tu cuenta gratuita haciendo clic en **Registrarse**. Solo necesitas un email. El plan gratuito incluye acceso básico sin tarjeta.' },
-    en: { short: 'Create your free account by clicking **Register**. You only need an email. The free plan includes basic access with no card needed.' },
+    es: { short: 'Crea tu cuenta gratuita en segundos. Solo necesitas un email. El plan gratuito incluye acceso básico sin tarjeta.' },
+    en: { short: 'Create your free account in seconds. You only need an email. The free plan includes basic access with no card needed.' },
+    esActions: [{ label: 'Crear cuenta →', to: '/register' }],
+    enActions: [{ label: 'Create account →', to: '/register' }],
   },
 ];
 
-function getStatic(text: string, lang: string): Copy | null {
+function getStatic(text: string, lang: string): (Copy & { actions?: Action[] }) | null {
   const m = STATIC.find(s => s.test.test(text));
   if (!m) return null;
-  return lang === 'en' ? m.en : m.es;
+  const copy    = lang === 'en' ? m.en : m.es;
+  const actions = lang === 'en' ? (m.enActions ?? m.esActions) : (m.esActions ?? m.enActions);
+  return { ...copy, actions };
 }
 
-// ── Types ─────────────────────────────────────────────────────────────
+// ── Message type ──────────────────────────────────────────────────────
 interface Message {
   role: 'user' | 'assistant';
   content: string;
   short?: string;
   detail?: string;
+  actions?: Action[];
   expanded: boolean;
   ts: number;
 }
@@ -217,9 +292,16 @@ function MsgText({ text }: { text: string }) {
 }
 
 // ── Message bubble ────────────────────────────────────────────────────
-function Bubble({ msg, onToggle }: { msg: Message; onToggle: () => void }) {
-  const isUser = msg.role === 'user';
+function Bubble({
+  msg, onToggle, onAction,
+}: {
+  msg: Message;
+  onToggle: () => void;
+  onAction: (a: Action) => void;
+}) {
+  const isUser   = msg.role === 'user';
   const displayed = msg.short ?? msg.content;
+
   return (
     <div style={{ display: 'flex', justifyContent: isUser ? 'flex-end' : 'flex-start' }}>
       <div style={{
@@ -233,12 +315,14 @@ function Bubble({ msg, onToggle }: { msg: Message; onToggle: () => void }) {
         border: isUser ? 'none' : '1px solid var(--border)',
       }}>
         <MsgText text={displayed} />
+
         {/* Expanded detail */}
         {msg.expanded && msg.detail && (
           <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: `1px solid ${isUser ? 'rgba(255,255,255,0.2)' : 'var(--border)'}`, fontSize: '0.82rem', opacity: 0.92 }}>
             <MsgText text={msg.detail} />
           </div>
         )}
+
         {/* Ver más / Ver menos */}
         {msg.detail && (
           <button
@@ -254,6 +338,31 @@ function Bubble({ msg, onToggle }: { msg: Message; onToggle: () => void }) {
             {msg.expanded ? '↑ Ver menos' : '↓ Ver más'}
           </button>
         )}
+
+        {/* Action buttons */}
+        {!isUser && msg.actions && msg.actions.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginTop: '0.6rem' }}>
+            {msg.actions.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => onAction(a)}
+                style={{
+                  padding: '0.28rem 0.72rem', borderRadius: 20, cursor: 'pointer',
+                  fontSize: '0.73rem', fontWeight: 600,
+                  background: 'transparent',
+                  border: '1px solid var(--accent-primary)',
+                  color: 'var(--accent-primary)',
+                  fontFamily: 'system-ui, sans-serif',
+                  transition: 'background 0.15s, color 0.15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--accent-primary)'; e.currentTarget.style.color = '#fff'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--accent-primary)'; }}
+              >
+                {a.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -261,8 +370,9 @@ function Bubble({ msg, onToggle }: { msg: Message; onToggle: () => void }) {
 
 // ── Main component ────────────────────────────────────────────────────
 export function ChatWidget() {
-  const { user } = useAuth();
+  const { user, launchPlatform } = useAuth();
   const { lang } = useLang();
+  const navigate = useNavigate();
   const es = lang === 'es';
 
   const isPaid = user
@@ -280,6 +390,12 @@ export function ChatWidget() {
     setMsgs(prev => prev.map((m, i) => i === index ? { ...m, expanded: !m.expanded } : m));
   }, []);
 
+  const handleAction = useCallback((action: Action) => {
+    setOpen(false);
+    if (action.launch) launchPlatform(action.launch);
+    else if (action.to) navigate(action.to);
+  }, [navigate, launchPlatform]);
+
   // Greeting on first open
   useEffect(() => {
     if (!open || messages.length > 0) return;
@@ -291,7 +407,11 @@ export function ChatWidget() {
         ? `Hi, ${user.name.split(' ')[0]}! 👋 I'm the Xentory assistant. ${isPaid ? 'I can help with the platform and market or betting analysis.' : 'I can answer questions about the platform and your plans.'} What can I do for you?`
         : 'Hello! 👋 I\'m the Xentory assistant. I can help you with platform info, plans, and features.';
 
-    setMsgs([{ role: 'assistant', content: greeting, short: greeting, expanded: false, ts: Date.now() }]);
+    const greetActions: Action[] = es
+      ? [{ label: 'Abrir Market →', launch: 'market' }, { label: 'Abrir Apuestas →', launch: 'bets' }, { label: 'Ver planes →', to: '/pricing' }]
+      : [{ label: 'Open Market →', launch: 'market' }, { label: 'Open Bet →', launch: 'bets' }, { label: 'See plans →', to: '/pricing' }];
+
+    setMsgs([{ role: 'assistant', content: greeting, short: greeting, actions: greetActions, expanded: false, ts: Date.now() }]);
   }, [open]);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, loading]);
@@ -314,6 +434,7 @@ export function ChatWidget() {
         role: 'assistant',
         content: staticHit.short + (staticHit.detail ? ' ' + staticHit.detail : ''),
         short: staticHit.short, detail: staticHit.detail,
+        actions: staticHit.actions,
         expanded: false, ts: Date.now(),
       };
     } else if (!user || !isPaid) {
@@ -325,7 +446,12 @@ export function ChatWidget() {
         : (!user
           ? 'For market or betting analysis, sign in with a Pro or Elite plan. For general questions write to support@xentory.io.'
           : 'For personalised analysis you need a **Pro** or **Elite** plan. See them in the Pricing section.');
-      reply = { role: 'assistant', content: msg, short: msg, expanded: false, ts: Date.now() };
+      const fallbackActions: Action[] = user
+        ? (es ? [{ label: 'Ver planes →', to: '/pricing' }] : [{ label: 'See plans →', to: '/pricing' }])
+        : (es
+          ? [{ label: 'Iniciar sesión →', to: '/login' }, { label: 'Crear cuenta →', to: '/register' }]
+          : [{ label: 'Sign in →', to: '/login' }, { label: 'Create account →', to: '/register' }]);
+      reply = { role: 'assistant', content: msg, short: msg, actions: fallbackActions, expanded: false, ts: Date.now() };
     } else {
       const history = [...messages, userMsg].map(m => ({ role: m.role, content: m.content }));
       try {
@@ -357,7 +483,6 @@ export function ChatWidget() {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
   };
 
-  // Quick chips for non-paid users
   const chips = !isPaid
     ? (es
         ? ['¿Qué es Xentory?', '¿Cuánto cuesta?', '¿Hay prueba gratis?', 'Xentory Market', 'Xentory Bet']
@@ -383,7 +508,6 @@ export function ChatWidget() {
         @media (min-width: 1024px) { .xentory-chat-btn { width: 56px; height: 56px; bottom: 2rem; right: 2rem; } }
       `}</style>
 
-      {/* ── Panel ── */}
       {open && (
         <div className="xentory-chat-panel">
           {/* Header */}
@@ -407,11 +531,9 @@ export function ChatWidget() {
 
           {/* Messages */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {messages.map((m, i) =>
-              m.role === 'user'
-                ? <Bubble key={i} msg={m} onToggle={() => toggleExpand(i)} />
-                : <Bubble key={i} msg={m} onToggle={() => toggleExpand(i)} />
-            )}
+            {messages.map((m, i) => (
+              <Bubble key={i} msg={m} onToggle={() => toggleExpand(i)} onAction={handleAction} />
+            ))}
             {loading && (
               <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
                 <div style={{ padding: '0.6rem 0.9rem', borderRadius: '16px 16px 16px 4px', background: 'var(--card)', border: '1px solid var(--border)', display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
@@ -421,12 +543,10 @@ export function ChatWidget() {
                 </div>
               </div>
             )}
-            {/* Quick chips */}
             {chips.length > 0 && messages.length <= 1 && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.2rem' }}>
                 {chips.map(c => (
-                  <button key={c}
-                    onClick={() => sendText(c)}
+                  <button key={c} onClick={() => sendText(c)}
                     style={{ padding: '0.3rem 0.75rem', borderRadius: 20, fontSize: '0.75rem', border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--text2)', cursor: 'pointer', fontFamily: 'system-ui, sans-serif' }}>
                     {c}
                   </button>
@@ -467,7 +587,7 @@ export function ChatWidget() {
         </div>
       )}
 
-      {/* ── Floating button ── */}
+      {/* Floating button */}
       <button
         onClick={() => setOpen(o => !o)}
         aria-label={es ? 'Abrir asistente' : 'Open assistant'}
