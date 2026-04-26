@@ -127,8 +127,8 @@ export function PricingPage() {
             plan,
             interval,
             device_fp:   fp,
-            embedded:    true,
-            return_url:  `${window.location.origin}/pricing?success=true&platform=${plt}&plan=${plan}`,
+            success_url: `${window.location.origin}/pricing?success=true&platform=${plt}&plan=${plan}`,
+            cancel_url:  `${window.location.origin}/pricing`,
           }),
         });
       } finally {
@@ -139,11 +139,15 @@ export function PricingPage() {
       try { json = await res.json(); } catch { /* non-JSON body */ }
 
       if (json.clientSecret) {
+        // Embedded checkout — opens modal
         setClientSecret(json.clientSecret);
+      } else if (json.url) {
+        // Fallback: redirect to Stripe hosted checkout
+        window.location.href = json.url;
       } else {
         const detail = json.error || json.message || `HTTP ${res.status}`;
         console.error('[checkout]', res.status, json);
-        setError(`Error: ${detail}`);
+        setError(`Error al iniciar el pago: ${detail}`);
       }
     } catch (e: any) {
       console.error('[checkout] catch:', e);
