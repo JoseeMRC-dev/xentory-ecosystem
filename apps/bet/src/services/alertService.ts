@@ -92,19 +92,24 @@ export function generateVerifyCode(platform: 'market' | 'bet'): string {
 export async function upsertVerifyCode(
   userId:    string,
   userEmail: string,
-  platform: 'market' | 'bet',
-  plan:      string
+  platform:  'market' | 'bet',
+  plan:      string,
+  code?:     string,
 ): Promise<string> {
-  const code = generateVerifyCode(platform);
-  await callEF('manage-alerts', {
-    action:    'upsert_code',
-    user_id:   userId,
-    user_email: userEmail,
-    platform,
-    plan,
-    code,
-  });
-  return code;
+  const finalCode = code ?? generateVerifyCode(platform);
+  try {
+    await callEF('manage-alerts', {
+      action:     'upsert_code',
+      user_id:    userId,
+      user_email: userEmail || '',
+      platform,
+      plan,
+      code:       finalCode,
+    });
+  } catch (e) {
+    console.error('upsertVerifyCode EF error:', e);
+  }
+  return finalCode;
 }
 
 // ── CHECK TELEGRAM CONNECTION STATUS ─────────────────────────

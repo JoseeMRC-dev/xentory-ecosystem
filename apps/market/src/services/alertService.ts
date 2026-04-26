@@ -89,22 +89,29 @@ export function generateVerifyCode(platform: 'market' | 'bet' | 'bundle'): strin
 }
 
 // ── SAVE/REFRESH VERIFICATION CODE ────────────────────────────
+// Accepts an optional pre-generated code so callers can display it instantly
+// before the async DB write completes. Never throws — EF errors are logged only.
 export async function upsertVerifyCode(
   userId:    string,
   userEmail: string,
   platform:  'market' | 'bet' | 'bundle',
-  plan:      string
+  plan:      string,
+  code?:     string,
 ): Promise<string> {
-  const code = generateVerifyCode(platform);
-  await callEF('manage-alerts', {
-    action:    'upsert_code',
-    user_id:   userId,
-    user_email: userEmail,
-    platform,
-    plan,
-    code,
-  });
-  return code;
+  const finalCode = code ?? generateVerifyCode(platform);
+  try {
+    await callEF('manage-alerts', {
+      action:     'upsert_code',
+      user_id:    userId,
+      user_email: userEmail || '',
+      platform,
+      plan,
+      code:       finalCode,
+    });
+  } catch (e) {
+    console.error('upsertVerifyCode EF error (code still usable if shown):', e);
+  }
+  return finalCode;
 }
 
 // ── CHECK TELEGRAM CONNECTION STATUS ─────────────────────────
