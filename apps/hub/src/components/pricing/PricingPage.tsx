@@ -138,11 +138,16 @@ export function PricingPage() {
       let json: any = {};
       try { json = await res.json(); } catch { /* non-JSON body */ }
 
-      if (json.clientSecret) {
+      if (json.upgraded) {
+        // Upgrade directo: suscripción modificada sin redirección a Stripe
+        if (plt === 'market' || plt === 'bundle') upgradeMarket(json.plan as Plan);
+        if (plt === 'bets'   || plt === 'bundle') upgradeBets(json.plan as Plan);
+        setSuccess(`${plt}-${json.plan}`);
+      } else if (json.clientSecret) {
         // Embedded checkout — opens modal
         setClientSecret(json.clientSecret);
       } else if (json.url) {
-        // Fallback: redirect to Stripe hosted checkout
+        // Redirect to Stripe hosted checkout
         window.location.href = json.url;
       } else {
         const detail = json.error || json.message || `HTTP ${res.status}`;
@@ -307,15 +312,21 @@ export function PricingPage() {
               const isBusy = loading === `${plt}-${plan.id}`;
               const price = yearly && plan.price > 0 ? plan.yearlyPrice : plan.price;
               const isPaid = plan.price > 0;
-              // Trial: disponible si el usuario no lo usó en esta plataforma
-              // (el dispositivo se comprueba en el backend)
               const trialAvailable = isPaid && !trialUsed[plt] && !trialUsed['bundle'];
+              // Resalta el plan al que el usuario llega redirigido desde la sub-app
+              const isTargeted = initialPlan === plan.id && !isCurrent;
 
               return (
                 <div key={plan.id} style={{
                   borderRadius: 20, padding: 'clamp(1.5rem,3vw,2.2rem)',
                   background: plan.popular ? 'var(--accent-light)' : 'var(--card)',
-                  border: plan.popular ? '2px solid var(--accent-primary)' : isCurrent ? `1px solid ${plan.color}30` : '1px solid var(--border)',
+                  border: plan.popular
+                    ? '2px solid var(--accent-primary)'
+                    : isTargeted
+                    ? `2px solid ${plan.color}`
+                    : isCurrent
+                    ? `1px solid ${plan.color}30`
+                    : '1px solid var(--border)',
                   position: 'relative', overflow: 'hidden',
                   transition: 'transform 0.2s, box-shadow 0.2s',
                 }}
@@ -323,7 +334,7 @@ export function PricingPage() {
                   onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}
                 >
                   {/* Top accent line */}
-                  {plan.popular && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg,${plan.color},${plan.color}80)` }} />}
+                  {(plan.popular || isTargeted) && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg,${plan.color},${plan.color}80)` }} />}
 
                   {/* Badges */}
                   <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.2rem', flexWrap: 'wrap', minHeight: 24 }}>

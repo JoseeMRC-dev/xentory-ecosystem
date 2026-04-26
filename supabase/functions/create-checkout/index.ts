@@ -89,6 +89,43 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     );
 
+    // ── Upgrade/downgrade: si ya tiene suscripción activa, modificarla ─────
+    const { data: existingActiveSub } = await supabaseAdmin
+      .from('user_subscriptions')
+      .select('stripe_subscription_id, plan')
+      .eq('user_id', user.id)
+      .eq('platform', platform)
+      .in('status', ['active', 'trialing'])
+      .maybeSingle();
+
+    if (existingActiveSub?.stripe_subscription_id && existingActiveSub.plan !== plan) {
+      const activeSub = await stripe.subscriptions.retrieve(existingActiveSub.stripe_subscription_id);
+      const itemId = activeSub.items.data[0]?.id;
+
+      if (!itemId) {
+        return new Response(JSON.stringify({ error: 'subscription_item_not_found' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      await stripe.subscriptions.update(existingActiveSub.stripe_subscription_id, {
+        items: [{ id: itemId, price: priceId }],
+        proration_behavior: 'always_invoice',
+        metadata: {
+          supabase_user_id: user.id,
+          platform,
+          plan,
+          interval,
+        },
+      });
+
+      console.log(`↑ Plan cambiado: ${user.id} → ${platform}/${plan} (antes: ${existingActiveSub.plan})`);
+
+      return new Response(JSON.stringify({ upgraded: true, plan, platform, trial_eligible: false }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // ── Verificar elegibilidad del trial ────────────────────────────
     // Capa 1: ¿Ya usó trial este usuario en esta plataforma?
     const { data: userTrial } = await supabaseAdmin
