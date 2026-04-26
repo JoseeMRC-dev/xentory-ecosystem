@@ -287,6 +287,9 @@ export function Navbar() {
                   {user.name.charAt(0).toUpperCase()}
                 </button>
                 {userMenu && (
+                  <>
+                  {/* Transparent bridge — covers the 8px gap so onMouseLeave doesn't fire mid-way */}
+                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, height: 8 }} />
                   <div className="glass-2" style={{
                     position: 'absolute', top: 'calc(100% + 8px)', right: 0, borderRadius: 14,
                     minWidth: 200, overflow: 'hidden', border: '1px solid var(--border2)', zIndex: 400,
@@ -337,6 +340,7 @@ export function Navbar() {
                       <LogoutIcon />{t('nav.signout')}
                     </div>
                   </div>
+                  </>
                 )}
               </div>
             </>
