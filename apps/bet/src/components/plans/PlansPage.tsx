@@ -17,7 +17,21 @@ export function PlansPage() {
   const handleSubscribe = (planId: Plan) => {
     if (!user) { navigate('/login'); return; }
     if (planId === 'free' || planId === user.plan) return;
-    window.location.href = `${HUB_URL}/pricing?tab=bets&plan=${planId}&interval=${yearly ? 'yearly' : 'monthly'}`;
+    const params = new URLSearchParams({
+      tab:      'bets',
+      plan:     planId,
+      interval: yearly ? 'yearly' : 'monthly',
+    });
+    // Pasar tokens de Supabase para que Hub pueda restaurar la sesión aunque haya expirado
+    try {
+      const stored = localStorage.getItem('xentory_bet_tokens');
+      if (stored) {
+        const t = JSON.parse(stored);
+        if (t.access)  params.set('utoken',   t.access);
+        if (t.refresh) params.set('urefresh',  t.refresh);
+      }
+    } catch { /**/ }
+    window.location.href = `${HUB_URL}/pricing?${params.toString()}`;
   };
 
   return (
