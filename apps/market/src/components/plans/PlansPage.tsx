@@ -22,7 +22,21 @@ export function PlansPage() {
   // Redirige al Hub para procesar el pago con Stripe
   const handleSubscribe = (planId: Plan) => {
     if (planId === 'free' || !user) return;
-    window.location.href = `${HUB_URL}/pricing?tab=market&plan=${planId}&interval=${yearly ? 'yearly' : 'monthly'}`;
+    const params = new URLSearchParams({
+      tab:      'market',
+      plan:     planId,
+      interval: yearly ? 'yearly' : 'monthly',
+    });
+    // Pasar tokens de Supabase para que Hub pueda restaurar la sesión aunque haya expirado
+    try {
+      const stored = localStorage.getItem('xentory_market_tokens');
+      if (stored) {
+        const t = JSON.parse(stored);
+        if (t.access)  params.set('utoken',   t.access);
+        if (t.refresh) params.set('urefresh',  t.refresh);
+      }
+    } catch { /**/ }
+    window.location.href = `${HUB_URL}/pricing?${params.toString()}`;
   };
 
   return (

@@ -82,8 +82,14 @@ async function fetchSubscriptions(userId: string): Promise<{ market: Plan; bets:
 }
 
 function loadStoredUser(): User | null {
-  try { const s = localStorage.getItem(USER_KEY); return s ? JSON.parse(s) : null; }
-  catch { return null; }
+  try {
+    const s = localStorage.getItem(USER_KEY);
+    if (!s) return null;
+    const u = JSON.parse(s);
+    // Garantizar que subscriptions siempre existe (compatibilidad con caché antigua)
+    if (u && !u.subscriptions) u.subscriptions = { market: 'free', bets: 'free' };
+    return u;
+  } catch { return null; }
 }
 
 // Mock para desarrollo sin Supabase
@@ -99,7 +105,7 @@ const delay = (ms = 1000) => new Promise(r => setTimeout(r, ms));
 // ──────────────────────────────────────────────────────────────────────────
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser]         = useState<User | null>(loadStoredUser);
-  const [isLoading, setLoading] = useState(false);
+  const [isLoading, setLoading] = useState(true);
   const [ssoToken, setSso]      = useState<SSOToken | null>(null);
 
   useEffect(() => {

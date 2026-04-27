@@ -21,6 +21,7 @@ const AuthContext   = createContext<AuthContextType | null>(null);
 const HUB_URL       = (import.meta as any).env?.VITE_HUB_URL ?? 'https://x-eight-beryl.vercel.app';
 const USER_KEY      = 'xentory_market_user';
 const SESSION_KEY   = 'xentory_market_session';
+const TOKENS_KEY    = 'xentory_market_tokens';
 const CACHE_MAX_AGE = 24 * 60 * 60 * 1000; // 24h
 
 // ── MODULE-LEVEL SSO CAPTURE ──────────────────────────────────────────────────
@@ -34,14 +35,22 @@ const _capturedSSO = (() => {
     const uid    = qp.get('uid');
     const uemail = qp.get('uemail');
     if (!uid || !uemail) return null;
+    const utoken   = qp.get('utoken')   ?? '';
+    const urefresh = qp.get('urefresh') ?? '';
     const sso = {
       uid,
       uemail,
-      uname:  qp.get('uname') ?? uemail.split('@')[0],
-      uplan:  qp.get('uplan') ?? 'free',
+      uname:    qp.get('uname') ?? uemail.split('@')[0],
+      uplan:    qp.get('uplan') ?? 'free',
+      utoken,
+      urefresh,
     };
     // Save to sessionStorage immediately as backup
     sessionStorage.setItem(SESSION_KEY, JSON.stringify({ ...sso, capturedAt: Date.now() }));
+    // Store Supabase tokens separately so they can be passed back to Hub on upgrade
+    if (utoken) {
+      try { localStorage.setItem(TOKENS_KEY, JSON.stringify({ access: utoken, refresh: urefresh, savedAt: Date.now() })); } catch { /**/ }
+    }
     console.log('[Market] SSO captured at module level:', uemail);
     return sso;
   } catch {
