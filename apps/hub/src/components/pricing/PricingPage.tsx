@@ -43,7 +43,7 @@ const BundleIcon = () => (
 );
 
 export function PricingPage() {
-  const { user, upgradeMarket, upgradeBets } = useAuth();
+  const { user, upgradeMarket, upgradeBets, isLoading: authLoading } = useAuth();
   const { t, lang } = useLang();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -60,6 +60,21 @@ export function PricingPage() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   // plataformas donde este usuario YA usó el trial (comprobación por user_id)
   const [trialUsed,  setTrialUsed]  = useState<Record<string, boolean>>({});
+
+  // Restaurar sesión de Supabase desde tokens pasados por la sub-app (Bet/Market)
+  useEffect(() => {
+    const utoken   = searchParams.get('utoken');
+    const urefresh = searchParams.get('urefresh');
+    if (utoken) {
+      supabase.auth.setSession({ access_token: utoken, refresh_token: urefresh ?? '' })
+        .catch(() => { /* sesión inválida — el usuario tendrá que re-autenticarse */ });
+      // Limpiar tokens de la URL para no exponerlos en el historial del navegador
+      const clean = new URLSearchParams(searchParams);
+      clean.delete('utoken');
+      clean.delete('urefresh');
+      window.history.replaceState({}, '', `/pricing?${clean.toString()}`);
+    }
+  }, []);
 
   // Cargar historial de trial del usuario actual
   useEffect(() => {
@@ -175,7 +190,9 @@ export function PricingPage() {
   };
 
   const currentPlan = (plt: 'market' | 'bets') =>
-    user ? (plt === 'market' ? user.subscriptions.market : user.subscriptions.bets) : 'free';
+    plt === 'market'
+      ? (user?.subscriptions?.market ?? 'free')
+      : (user?.subscriptions?.bets   ?? 'free');
 
   const TABS: [PlatformTab, React.ReactNode, string][] = [
     ['market', <MarketIcon />, t('pricing.tab.market')],
@@ -372,16 +389,16 @@ export function PricingPage() {
                     ))}
                   </div>
 
-                  <button onClick={() => handleSubscribe(plan.id as Plan, plt)} disabled={isCurrent || isBusy} style={{
+                  <button onClick={() => handleSubscribe(plan.id as Plan, plt)} disabled={isCurrent || isBusy || authLoading} style={{
                     width: '100%', padding: '0.78rem', borderRadius: 9, border: plan.popular ? 'none' : `1px solid ${plan.color}28`,
-                    cursor: isCurrent ? 'not-allowed' : 'pointer',
+                    cursor: (isCurrent || authLoading) ? 'not-allowed' : 'pointer',
                     fontFamily: 'Figtree, sans-serif', fontWeight: plan.popular ? 600 : 500, fontSize: '0.88rem',
                     background: isCurrent ? 'var(--card2)' : plan.popular ? 'var(--accent-primary)' : `${plan.color}10`,
                     color: isCurrent ? 'var(--muted)' : plan.popular ? '#F2EDE4' : plan.color,
-                    opacity: isCurrent ? 0.65 : 1, transition: 'all 0.2s',
+                    opacity: (isCurrent || authLoading) ? 0.65 : 1, transition: 'all 0.2s',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.45rem',
                   }}>
-                    {isBusy
+                    {isBusy || authLoading
                       ? <SpinnerIcon />
                       : isCurrent
                         ? t('pricing.current')
