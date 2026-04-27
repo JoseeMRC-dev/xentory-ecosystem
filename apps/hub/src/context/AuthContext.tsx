@@ -116,32 +116,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Bootstrap session on mount
   useEffect(() => {
     let alive = true;
+    let unsubscribe: (() => void) | undefined;
     (async () => {
-      const sb = await getSupabase();
-      if (!sb) { setLoading(false); return; }
+      try {
+        const sb = await getSupabase();
+        if (!sb) return;
 
-      const { data: { session } } = await sb.auth.getSession();
-      if (session?.user && alive) {
-        const base = sbToNexus(session.user, loadStoredUser());
-        const subs = await fetchSubscriptions(session.user.id);
-        if (alive) setUser({ ...base, subscriptions: subs });
-      }
-
-      const { data: { subscription } } = sb.auth.onAuthStateChange(async (_e: string, sess: any) => {
-        if (!alive) return;
-        if (sess?.user) {
-          const base = sbToNexus(sess.user, loadStoredUser());
-          const subs = await fetchSubscriptions(sess.user.id);
-          setUser({ ...base, subscriptions: subs });
-        } else {
-          setUser(null);
+        const { data: { session } } = await sb.auth.getSession();
+        if (session?.user && alive) {
+          const base = sbToNexus(session.user, loadStoredUser());
+          const subs = await fetchSubscriptions(session.user.id);
+          if (alive) setUser({ ...base, subscriptions: subs });
         }
-      });
 
-      if (alive) setLoading(false);
-      return () => subscription.unsubscribe();
+        const { data: { subscription } } = sb.auth.onAuthStateChange(async (_e: string, sess: any) => {
+          if (!alive) return;
+          if (sess?.user) {
+            const base = sbToNexus(sess.user, loadStoredUser());
+            const subs = await fetchSubscriptions(sess.user.id);
+            setUser({ ...base, subscriptions: subs });
+          } else {
+            setUser(null);
+          }
+        });
+        unsubscribe = () => subscription.unsubscribe();
+      } catch (err) {
+        console.error('[Auth] bootstrap error:', err);
+      } finally {
+        if (alive) setLoading(false);
+      }
     })();
-    return () => { alive = false; };
+    return () => { alive = false; unsubscribe?.(); };
   }, []);
 
   // ── Login email/password ───────────────────────────────────────────────
