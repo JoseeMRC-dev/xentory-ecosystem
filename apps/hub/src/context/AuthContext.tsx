@@ -11,8 +11,11 @@
 
 import {
   createContext, useContext, useState, useCallback,
-  useEffect, type ReactNode,
+  useEffect, useRef, type ReactNode,
 } from 'react';
+
+// Minutos de inactividad antes de cerrar sesión automáticamente
+const INACTIVITY_MINUTES = 30;
 import { getSupabase } from '../lib/supabase';
 import type { User, Plan, SSOToken } from '../types';
 
@@ -299,6 +302,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     console.log('[launch] navigating to', PLATFORM_URLS[platform]);
     window.location.href = url;
   }, [user]);
+
+  // ── Inactivity auto-logout ─────────────────────────────────────────────
+  const inactivityTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const ms = INACTIVITY_MINUTES * 60 * 1000;
+
+    const reset = () => {
+      if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
+      inactivityTimer.current = setTimeout(() => {
+        console.info('[Auth] inactividad — cerrando sesión');
+        logout();
+      }, ms);
+    };
+
+    const events = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+    events.forEach(e => window.addEventListener(e, reset, { passive: true }));
+    reset(); // arrancar el temporizador al montarse
+
+    return () => {
+      events.forEach(e => window.removeEventListener(e, reset));
+      if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
+    };
+  }, [user, logout]);
 
   // NOTE: ?redirect= param intentionally removed — caused infinite loop
   // Users must click the platform button again after login
