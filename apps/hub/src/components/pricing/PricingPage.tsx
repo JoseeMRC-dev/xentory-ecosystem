@@ -116,41 +116,16 @@ export function PricingPage() {
     setError(null);
 
     try {
-      // Obtener access token con timeout de 6s para evitar que un refresh
-      // de token colgado bloquee el botón indefinidamente
-      const authTimeout = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('auth_timeout')), 6_000)
-      );
-
-      let accessToken: string | undefined;
-      try {
-        const { data: { session } } = await Promise.race([
-          supabase.auth.getSession(),
-          authTimeout,
-        ]);
-        if (session?.access_token) {
-          accessToken = session.access_token;
-        } else {
-          const { data } = await Promise.race([
-            supabase.auth.refreshSession(),
-            authTimeout,
-          ]);
-          accessToken = data.session?.access_token;
-        }
-      } catch (authErr: any) {
-        if (authErr?.message === 'auth_timeout') {
-          setError('Tu sesión tardó demasiado en cargarse. Recarga la página e inténtalo de nuevo.');
-          return;
-        }
-        throw authErr;
-      }
-
+      // getSession() devuelve la sesión desde localStorage y refresca el
+      // token automáticamente si está caducado. Si no hay sesión → login.
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
       if (!accessToken) { navigate('/login'); return; }
 
       const fp = await deviceFingerprint();
 
       const controller = new AbortController();
-      const fetchTimeout = setTimeout(() => controller.abort(), 15_000);
+      const fetchTimeout = setTimeout(() => controller.abort(), 20_000);
 
       let res: Response;
       try {
@@ -177,13 +152,6 @@ export function PricingPage() {
       let json: any = {};
       try { json = await res.json(); } catch { /* non-JSON body */ }
 
-      if (!res.ok && !json.upgraded && !json.clientSecret) {
-        const detail = json.error || json.message || `HTTP ${res.status}`;
-        console.error('[checkout] error response:', res.status, json);
-        setError(`Error al iniciar el pago: ${detail}`);
-        return;
-      }
-
       if (json.upgraded) {
         if (plt === 'market' || plt === 'bundle') upgradeMarket(json.plan as Plan);
         if (plt === 'bets'   || plt === 'bundle') upgradeBets(json.plan as Plan);
@@ -194,14 +162,14 @@ export function PricingPage() {
         window.location.href = json.url;
       } else {
         const detail = json.error || json.message || `HTTP ${res.status}`;
-        console.error('[checkout] unexpected response:', res.status, json);
+        console.error('[checkout] error response:', res.status, json);
         setError(`Error al iniciar el pago: ${detail}`);
       }
     } catch (e: any) {
       console.error('[checkout] catch:', e);
       const msg = e?.name === 'AbortError'
         ? 'Tiempo de espera agotado. Inténtalo de nuevo.'
-        : `Error: ${e?.message ?? 'desconocido'}`;
+        : `Error inesperado: ${e?.message ?? 'desconocido'}`;
       setError(msg);
     } finally {
       setLoading(null);
