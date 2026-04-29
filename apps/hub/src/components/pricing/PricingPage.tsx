@@ -214,7 +214,7 @@ export function PricingPage() {
   };
 
   const handleBundle = () => {
-    startCheckout('bundle', 'pro', yearly ? 'yearly' : 'monthly');
+    startCheckout('bundle', 'elite', yearly ? 'yearly' : 'monthly');
   };
 
   const currentPlan = (plt: 'market' | 'bets') =>
@@ -319,7 +319,7 @@ export function PricingPage() {
                 <div>
                   <div style={{ fontSize: '0.65rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.3rem' }}>{t('pricing.bundle.individual')}</div>
                   <div style={{ fontWeight: 600, fontSize: '1.4rem', textDecoration: 'line-through', color: 'var(--muted)' }}>
-                    {yearly ? `${Math.round(58 * 12 * 0.8)}€${t('pricing.yr')}` : `58€${t('pricing.mo')}`}
+                    {yearly ? `${Math.round(108 * 12 * 0.8)}€${t('pricing.yr')}` : `108€${t('pricing.mo')}`}
                   </div>
                 </div>
                 <div>
@@ -337,7 +337,7 @@ export function PricingPage() {
               </div>
 
               <div style={{ textAlign: 'left', marginBottom: '2rem' }}>
-                {['All Xentory Market Pro included', 'All Xentory Bet Pro included', '2 premium Telegram channels', 'Market + sports signals', 'One single subscription'].map(f => (
+                {['All Xentory Market Elite included', 'All Xentory Bet Elite included', '2 ELITE Telegram channels', 'Unlimited on-demand analysis', 'Weekly PDF reports · Priority support 24/7', 'One single subscription'].map(f => (
                   <div key={f} style={{ display: 'flex', gap: '0.6rem', marginBottom: '0.65rem', fontSize: '0.87rem', alignItems: 'center' }}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2.5" strokeLinecap="round" style={{ flexShrink: 0 }}><polyline points="20 6 9 17 4 12"/></svg>
                     <span style={{ color: 'var(--text2)' }}>{f}</span>
@@ -345,8 +345,8 @@ export function PricingPage() {
                 ))}
               </div>
 
-              <button onClick={handleBundle} disabled={loading === 'bundle-pro' || loading === 'bundle-elite'} className="btn btn-gold btn-lg" style={{ width: '100%', justifyContent: 'center' }}>
-                {(loading === 'bundle-pro' || loading === 'bundle-elite') ? <SpinnerIcon /> : t('pricing.bundle.cta')}
+              <button onClick={handleBundle} disabled={loading === 'bundle-elite'} className="btn btn-gold btn-lg" style={{ width: '100%', justifyContent: 'center' }}>
+                {loading === 'bundle-elite' ? <SpinnerIcon /> : t('pricing.bundle.cta')}
               </button>
             </div>
           </div>
