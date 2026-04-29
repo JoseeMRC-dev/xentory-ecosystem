@@ -225,10 +225,10 @@ export function PlansPage() {
         >
           <div>
             <div style={{ fontWeight: 600, fontSize: '0.95rem', marginBottom: '0.2rem', color: 'var(--text)' }}>
-              🎁 {t('¿Quieres Market + Bet Elite? Bundle Elite por solo 89€/mes', 'Want Market + Bet Elite? Bundle Elite for just €89/mo')}
+              🎁 {t('¿Quieres Market + Bet Elite? Bundle Elite por solo 49€/mes', 'Want Market + Bet Elite? Bundle Elite for just €49/mo')}
             </div>
             <div style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>
-              {t('Ahorra 19€/mes vs contratar por separado · Dos canales Telegram ELITE incluidos', 'Save €19/mo vs separate plans · Two ELITE Telegram channels included')}
+              {t('Ahorra 59€/mes vs contratar por separado · Dos canales Telegram ELITE incluidos', 'Save €59/mo vs separate plans · Two ELITE Telegram channels included')}
             </div>
           </div>
           <span style={{ padding: '0.4rem 1rem', borderRadius: 8, background: 'var(--gold)', color: 'var(--bg)', fontWeight: 700, fontSize: '0.82rem', whiteSpace: 'nowrap', flexShrink: 0 }}>
