@@ -116,17 +116,41 @@ export function PricingPage() {
     setError(null);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      // Refresh if token is about to expire or already invalid
-      const accessToken = session?.access_token
-        ? session.access_token
-        : (await supabase.auth.refreshSession()).data.session?.access_token;
+      // Obtener access token con timeout de 6s para evitar que un refresh
+      // de token colgado bloquee el botón indefinidamente
+      const authTimeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('auth_timeout')), 6_000)
+      );
+
+      let accessToken: string | undefined;
+      try {
+        const { data: { session } } = await Promise.race([
+          supabase.auth.getSession(),
+          authTimeout,
+        ]);
+        if (session?.access_token) {
+          accessToken = session.access_token;
+        } else {
+          const { data } = await Promise.race([
+            supabase.auth.refreshSession(),
+            authTimeout,
+          ]);
+          accessToken = data.session?.access_token;
+        }
+      } catch (authErr: any) {
+        if (authErr?.message === 'auth_timeout') {
+          setError('Tu sesión tardó demasiado en cargarse. Recarga la página e inténtalo de nuevo.');
+          return;
+        }
+        throw authErr;
+      }
+
       if (!accessToken) { navigate('/login'); return; }
 
       const fp = await deviceFingerprint();
 
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 12_000);
+      const fetchTimeout = setTimeout(() => controller.abort(), 15_000);
 
       let res: Response;
       try {
@@ -147,33 +171,37 @@ export function PricingPage() {
           }),
         });
       } finally {
-        clearTimeout(timeout);
+        clearTimeout(fetchTimeout);
       }
 
       let json: any = {};
       try { json = await res.json(); } catch { /* non-JSON body */ }
 
+      if (!res.ok && !json.upgraded && !json.clientSecret) {
+        const detail = json.error || json.message || `HTTP ${res.status}`;
+        console.error('[checkout] error response:', res.status, json);
+        setError(`Error al iniciar el pago: ${detail}`);
+        return;
+      }
+
       if (json.upgraded) {
-        // Upgrade directo: suscripción modificada sin redirección a Stripe
         if (plt === 'market' || plt === 'bundle') upgradeMarket(json.plan as Plan);
         if (plt === 'bets'   || plt === 'bundle') upgradeBets(json.plan as Plan);
         setSuccess(`${plt}-${json.plan}`);
       } else if (json.clientSecret) {
-        // Embedded checkout — opens modal
         setClientSecret(json.clientSecret);
       } else if (json.url) {
-        // Redirect to Stripe hosted checkout
         window.location.href = json.url;
       } else {
         const detail = json.error || json.message || `HTTP ${res.status}`;
-        console.error('[checkout]', res.status, json);
+        console.error('[checkout] unexpected response:', res.status, json);
         setError(`Error al iniciar el pago: ${detail}`);
       }
     } catch (e: any) {
       console.error('[checkout] catch:', e);
       const msg = e?.name === 'AbortError'
-        ? 'Tiempo de espera agotado (12s). Inténtalo de nuevo.'
-        : `Error de conexión: ${e?.message ?? 'desconocido'}`;
+        ? 'Tiempo de espera agotado. Inténtalo de nuevo.'
+        : `Error: ${e?.message ?? 'desconocido'}`;
       setError(msg);
     } finally {
       setLoading(null);
@@ -186,7 +214,7 @@ export function PricingPage() {
   };
 
   const handleBundle = () => {
-    startCheckout('bundle', 'pro', yearly ? 'yearly' : 'monthly');
+    startCheckout('bundle', 'elite', yearly ? 'yearly' : 'monthly');
   };
 
   const currentPlan = (plt: 'market' | 'bets') =>
@@ -234,8 +262,9 @@ export function PricingPage() {
 
         {/* Error banner */}
         {error && (
-          <div style={{ marginBottom: '1.5rem', padding: '0.8rem 1.2rem', borderRadius: 10, background: 'rgba(255,68,85,0.1)', border: '1px solid rgba(255,68,85,0.3)', color: 'var(--red)', fontSize: '0.85rem' }}>
-            ⚠️ {error}
+          <div style={{ marginBottom: '1.5rem', padding: '1rem 1.3rem', borderRadius: 12, background: 'rgba(255,68,85,0.12)', border: '1px solid rgba(255,68,85,0.4)', color: 'var(--red)', fontSize: '0.88rem', display: 'flex', alignItems: 'flex-start', gap: '0.6rem', maxWidth: 560, width: '100%' }}>
+            <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>⚠️</span>
+            <span>{error} <button onClick={() => setError(null)} style={{ marginLeft: '0.5rem', background: 'none', border: 'none', color: 'var(--red)', cursor: 'pointer', fontSize: '0.8rem', opacity: 0.7, textDecoration: 'underline', padding: 0 }}>Cerrar</button></span>
           </div>
         )}
 
@@ -290,7 +319,7 @@ export function PricingPage() {
                 <div>
                   <div style={{ fontSize: '0.65rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.3rem' }}>{t('pricing.bundle.individual')}</div>
                   <div style={{ fontWeight: 600, fontSize: '1.4rem', textDecoration: 'line-through', color: 'var(--muted)' }}>
-                    {yearly ? `${Math.round(58 * 12 * 0.8)}€${t('pricing.yr')}` : `58€${t('pricing.mo')}`}
+                    {yearly ? `${Math.round(108 * 12 * 0.8)}€${t('pricing.yr')}` : `108€${t('pricing.mo')}`}
                   </div>
                 </div>
                 <div>
@@ -308,7 +337,7 @@ export function PricingPage() {
               </div>
 
               <div style={{ textAlign: 'left', marginBottom: '2rem' }}>
-                {['All Xentory Market Pro included', 'All Xentory Bet Pro included', '2 premium Telegram channels', 'Market + sports signals', 'One single subscription'].map(f => (
+                {['All Xentory Market Elite included', 'All Xentory Bet Elite included', '2 ELITE Telegram channels', 'Unlimited on-demand analysis', 'Weekly PDF reports · Priority support 24/7', 'One single subscription'].map(f => (
                   <div key={f} style={{ display: 'flex', gap: '0.6rem', marginBottom: '0.65rem', fontSize: '0.87rem', alignItems: 'center' }}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2.5" strokeLinecap="round" style={{ flexShrink: 0 }}><polyline points="20 6 9 17 4 12"/></svg>
                     <span style={{ color: 'var(--text2)' }}>{f}</span>
@@ -316,8 +345,8 @@ export function PricingPage() {
                 ))}
               </div>
 
-              <button onClick={handleBundle} disabled={loading === 'bundle-pro' || loading === 'bundle-elite'} className="btn btn-gold btn-lg" style={{ width: '100%', justifyContent: 'center' }}>
-                {(loading === 'bundle-pro' || loading === 'bundle-elite') ? <SpinnerIcon /> : t('pricing.bundle.cta')}
+              <button onClick={handleBundle} disabled={loading === 'bundle-elite'} className="btn btn-gold btn-lg" style={{ width: '100%', justifyContent: 'center' }}>
+                {loading === 'bundle-elite' ? <SpinnerIcon /> : t('pricing.bundle.cta')}
               </button>
             </div>
           </div>
