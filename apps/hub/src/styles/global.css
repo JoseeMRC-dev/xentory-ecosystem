@@ -528,6 +528,14 @@ body.menu-open { overflow: hidden; }
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
+  align-items: start;
+}
+/* popular card elevation on desktop */
+.pricing-card-popular {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 24px 60px rgba(201,168,76,0.12), 0 8px 24px rgba(0,0,0,0.25) !important;
+  z-index: 1;
+  position: relative;
 }
 /* tablet: 2 columnas */
 @media (max-width: 900px) and (min-width: 580px) {
@@ -535,6 +543,10 @@ body.menu-open { overflow: hidden; }
     grid-template-columns: repeat(2, 1fr);
     max-width: 680px;
     margin: 0 auto;
+  }
+  .pricing-card-popular {
+    transform: none;
+    box-shadow: none !important;
   }
 }
 /* móvil: 1 columna */
@@ -544,6 +556,10 @@ body.menu-open { overflow: hidden; }
     max-width: 440px;
     margin: 0 auto;
     gap: 1rem;
+  }
+  .pricing-card-popular {
+    transform: none;
+    box-shadow: none !important;
   }
 }
 

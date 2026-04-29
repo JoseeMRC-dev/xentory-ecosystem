@@ -90,9 +90,9 @@ export const BETS_PLANS: PlatformPlan[] = [
 export const BUNDLE = {
   name: 'Full Bundle',
   description: 'Xentory Market Elite + Xentory Bet Elite',
-  monthlyPrice: 89,   // en vez de 59+49=108
-  yearlyPrice: 854,   // 89×12×0.8
-  saving: 19,
+  monthlyPrice: 49,   // en vez de 59+49=108
+  yearlyPrice: 470,   // 49×12×0.8
+  saving: 59,
   color: '#c9a84c',
 };
 
