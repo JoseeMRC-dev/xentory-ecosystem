@@ -333,8 +333,8 @@ export function PricingPage() {
               const isTargeted = initialPlan === plan.id && !isCurrent;
 
               return (
-                <div key={plan.id} style={{
-                  borderRadius: 20, padding: 'clamp(1.5rem,3vw,2.2rem)',
+                <div key={plan.id} className={plan.popular ? 'pricing-card-popular' : undefined} style={{
+                  borderRadius: 20, padding: 'clamp(1.5rem,3vw,2.4rem)',
                   background: plan.popular ? 'var(--accent-light)' : 'var(--card)',
                   border: plan.popular
                     ? '2px solid var(--accent-primary)'
@@ -346,8 +346,8 @@ export function PricingPage() {
                   position: 'relative', overflow: 'hidden',
                   transition: 'transform 0.2s, box-shadow 0.2s',
                 }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = 'var(--shadow)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}
+                  onMouseEnter={e => { if (!plan.popular) { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = 'var(--shadow)'; } }}
+                  onMouseLeave={e => { if (!plan.popular) { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; } }}
                 >
                   {/* Top accent line */}
                   {(plan.popular || isTargeted) && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg,${plan.color},${plan.color}80)` }} />}
