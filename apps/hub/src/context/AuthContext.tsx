@@ -105,7 +105,7 @@ const delay = (ms = 1000) => new Promise(r => setTimeout(r, ms));
 // ──────────────────────────────────────────────────────────────────────────
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser]         = useState<User | null>(loadStoredUser);
-  const [isLoading, setLoading] = useState(true);
+  const [isLoading, setLoading] = useState(false);
   const [ssoToken, setSso]      = useState<SSOToken | null>(null);
 
   useEffect(() => {

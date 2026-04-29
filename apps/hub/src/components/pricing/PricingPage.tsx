@@ -391,16 +391,16 @@ export function PricingPage() {
                     ))}
                   </div>
 
-                  <button onClick={() => handleSubscribe(plan.id as Plan, plt)} disabled={isCurrent || isBusy || authLoading} style={{
+                  <button onClick={() => handleSubscribe(plan.id as Plan, plt)} disabled={isCurrent || isBusy} style={{
                     width: '100%', padding: '0.78rem', borderRadius: 9, border: plan.popular ? 'none' : `1px solid ${plan.color}28`,
-                    cursor: (isCurrent || authLoading) ? 'not-allowed' : 'pointer',
+                    cursor: isCurrent ? 'not-allowed' : 'pointer',
                     fontFamily: 'Figtree, sans-serif', fontWeight: plan.popular ? 600 : 500, fontSize: '0.88rem',
                     background: isCurrent ? 'var(--card2)' : plan.popular ? 'var(--accent-primary)' : `${plan.color}10`,
                     color: isCurrent ? 'var(--muted)' : plan.popular ? '#F2EDE4' : plan.color,
-                    opacity: (isCurrent || authLoading) ? 0.65 : 1, transition: 'all 0.2s',
+                    opacity: isCurrent ? 0.65 : 1, transition: 'all 0.2s',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.45rem',
                   }}>
-                    {isBusy || authLoading
+                    {isBusy
                       ? <SpinnerIcon />
                       : isCurrent
                         ? t('pricing.current')
