@@ -19,10 +19,15 @@
 import Stripe from 'https://esm.sh/stripe@14?target=deno';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2?target=deno';
 
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') ?? '', {
-  apiVersion: '2024-06-20',
-  httpClient: Stripe.createFetchHttpClient(),
-});
+const STRIPE_KEY = Deno.env.get('STRIPE_SECRET_KEY') ?? '';
+
+if (!STRIPE_KEY) {
+  console.error('STRIPE_SECRET_KEY is not configured');
+}
+
+const stripe = STRIPE_KEY
+  ? new Stripe(STRIPE_KEY, { apiVersion: '2024-06-20', httpClient: Stripe.createFetchHttpClient() })
+  : null;
 
 // Días de prueba gratuita para usuarios elegibles
 const TRIAL_DAYS = 7;
@@ -53,6 +58,12 @@ function isValidFp(fp: unknown): fp is string {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+
+  if (!stripe) {
+    return new Response(JSON.stringify({ error: 'Stripe no está configurado en el servidor. Contacta con soporte.' }), {
+      status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
 
   try {
     // ── Autenticar usuario ──────────────────────────────────────────
