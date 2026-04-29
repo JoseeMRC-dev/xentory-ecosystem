@@ -37,8 +37,8 @@ const PRICE_ENV: Record<string, string> = {
   'bets-pro-yearly':       'STRIPE_PRICE_BETS_PRO_YEARLY',
   'bets-elite-monthly':    'STRIPE_PRICE_BETS_ELITE_MONTHLY',
   'bets-elite-yearly':     'STRIPE_PRICE_BETS_ELITE_YEARLY',
-  'bundle-pro-monthly':    'STRIPE_PRICE_BUNDLE_MONTHLY',
-  'bundle-pro-yearly':     'STRIPE_PRICE_BUNDLE_YEARLY',
+  'bundle-elite-monthly':  'STRIPE_PRICE_BUNDLE_MONTHLY',
+  'bundle-elite-yearly':   'STRIPE_PRICE_BUNDLE_YEARLY',
 };
 
 const corsHeaders = {
