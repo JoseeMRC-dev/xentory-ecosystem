@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "input=$(cat); cmd=$(echo \"$input\" | jq -r '.tool_input.command // \"\"'); if echo \"$cmd\" | grep -qE '^git push' && ! echo \"$cmd\" | grep -qE 'dev-ai'; then branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null); if [ \"$branch\" != \"dev-ai\" ]; then echo '{\"decision\":\"block\",\"reason\":\"Solo se permite hacer push a la rama dev-ai. Rama actual: '\"$branch\"'\"}'; exit 0; fi; fi; echo '{\"decision\":\"allow\"}'",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
