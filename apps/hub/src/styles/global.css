@@ -529,8 +529,22 @@ body.menu-open { overflow: hidden; }
   grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
 }
-@media (max-width: 860px) {
-  .pricing-grid { grid-template-columns: 1fr; max-width: 480px; margin: 0 auto; }
+/* tablet: 2 columnas */
+@media (max-width: 900px) and (min-width: 580px) {
+  .pricing-grid {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 680px;
+    margin: 0 auto;
+  }
+}
+/* móvil: 1 columna */
+@media (max-width: 579px) {
+  .pricing-grid {
+    grid-template-columns: 1fr;
+    max-width: 440px;
+    margin: 0 auto;
+    gap: 1rem;
+  }
 }
 
 /* ── STATS GRID ─────────────────────────────────────────────────── */

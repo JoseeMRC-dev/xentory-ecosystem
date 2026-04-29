@@ -138,12 +138,12 @@ export function PricingPage() {
             'Authorization': `Bearer ${accessToken}`,
           },
           body: JSON.stringify({
-            platform:    plt,
+            platform:   plt,
             plan,
             interval,
-            device_fp:   fp,
-            success_url: `${window.location.origin}/pricing?success=true&platform=${plt}&plan=${plan}`,
-            cancel_url:  `${window.location.origin}/pricing`,
+            device_fp:  fp,
+            embedded:   true,
+            return_url: `${window.location.origin}/pricing?success=true&platform=${plt}&plan=${plan}`,
           }),
         });
       } finally {
@@ -240,19 +240,21 @@ export function PricingPage() {
         )}
 
         {/* Platform tabs */}
-        <div style={{ display: 'inline-flex', background: 'var(--card2)', borderRadius: 12, padding: '0.3rem', gap: '0.2rem', border: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', background: 'var(--card2)', borderRadius: 12, padding: '0.3rem', gap: '0.2rem', border: '1px solid var(--border)', width: '100%', maxWidth: 420 }}>
           {TABS.map(([key, icon, label]) => (
             <button key={key} onClick={() => setPlatform(key)} style={{
-              padding: '0.55rem 1.2rem', borderRadius: 9, border: 'none', cursor: 'pointer',
-              fontWeight: 600, fontSize: '0.83rem',
-              display: 'flex', alignItems: 'center', gap: '0.4rem',
+              flex: 1,
+              padding: '0.55rem 0.6rem', borderRadius: 9, border: 'none', cursor: 'pointer',
+              fontWeight: 600, fontSize: 'clamp(0.72rem, 2vw, 0.83rem)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem',
               background: platform === key ? (key === 'bundle' ? 'var(--accent-primary)' : 'var(--card)') : 'transparent',
               color: platform === key ? (key === 'bundle' ? '#F2EDE4' : 'var(--text)') : 'var(--muted)',
               transition: 'all 0.18s',
               borderBottom: platform === key && key !== 'bundle' ? '2px solid var(--accent-primary)' : '2px solid transparent',
+              whiteSpace: 'nowrap',
             }}>
-              <span style={{ opacity: platform === key ? 1 : 0.5 }}>{icon}</span>
-              <span style={{ display: 'inline' }}>{label}</span>
+              <span style={{ opacity: platform === key ? 1 : 0.5, flexShrink: 0 }}>{icon}</span>
+              <span>{label}</span>
             </button>
           ))}
         </div>
