@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
     }
 
     // ── Leer body ───────────────────────────────────────────────────
-    const { platform, plan, interval, success_url, cancel_url, device_fp, embedded, return_url } = await req.json();
+    const { platform, plan, interval, success_url, cancel_url, device_fp } = await req.json();
     const priceKey = `${platform}-${plan}-${interval}`;
     const priceId  = Deno.env.get(PRICE_ENV[priceKey] ?? '');
 
@@ -121,16 +121,9 @@ Deno.serve(async (req) => {
 
       await stripe.subscriptions.update(existingActiveSub.stripe_subscription_id, {
         items: [{ id: itemId, price: priceId }],
-        proration_behavior: 'always_invoice',
-        metadata: {
-          supabase_user_id: user.id,
-          platform,
-          plan,
-          interval,
-        },
+        proration_behavior: 'always_invoke',
+        metadata: { supabase_user_id: user.id, platform, plan, interval },
       });
-
-      console.log(`↑ Plan cambiado: ${user.id} → ${platform}/${plan} (antes: ${existingActiveSub.plan})`);
 
       return new Response(JSON.stringify({ upgraded: true, plan, platform, trial_eligible: false }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -138,7 +131,6 @@ Deno.serve(async (req) => {
     }
 
     // ── Verificar elegibilidad del trial ────────────────────────────
-    // Capa 1: ¿Ya usó trial este usuario en esta plataforma?
     const { data: userTrial } = await supabaseAdmin
       .from('trial_usage')
       .select('id')
@@ -146,7 +138,6 @@ Deno.serve(async (req) => {
       .eq('platform', platform)
       .maybeSingle();
 
-    // Capa 2: ¿Ya usó trial este dispositivo en esta plataforma?
     let deviceTrial = false;
     const validFp = isValidFp(device_fp);
     if (validFp) {
@@ -185,9 +176,8 @@ Deno.serve(async (req) => {
       customer:    customerId,
       mode:        'subscription',
       line_items:  [{ price: priceId, quantity: 1 }],
-      ...(embedded
-        ? { ui_mode: 'embedded', return_url }
-        : { success_url: `${success_url}&session_id={CHECKOUT_SESSION_ID}`, cancel_url }),
+      success_url: `${success_url}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url,
       metadata: {
         supabase_user_id: user.id,
         platform,
@@ -196,26 +186,13 @@ Deno.serve(async (req) => {
         device_fp: validFp ? device_fp : '',
       },
       subscription_data: {
-        metadata: {
-          supabase_user_id: user.id,
-          platform,
-          plan,
-          interval,
-        },
-        // Solo se añaden días de trial si el usuario/dispositivo es elegible.
-        // Los precios de Stripe NO deben tener trial configurado en el dashboard;
-        // toda la lógica de trial se controla aquí.
+        metadata: { supabase_user_id: user.id, platform, plan, interval },
         ...(trialEligible ? { trial_period_days: TRIAL_DAYS } : {}),
       },
     });
 
-    console.log(
-      `checkout creado: ${user.id} → ${platform}/${plan} | trial_eligible=${trialEligible}${!trialEligible ? ` (bloqueado: user=${!!userTrial}, device=${deviceTrial})` : ''}`,
-    );
-
     return new Response(JSON.stringify({
       url:            session.url,
-      clientSecret:   session.client_secret ?? null,
       trial_eligible: trialEligible,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
