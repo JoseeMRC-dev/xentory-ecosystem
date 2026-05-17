@@ -1,0 +1,37 @@
+name: Deploy Supabase Edge Functions
+
+on:
+  push:
+    branches: [dev-ai, main, master]
+    paths:
+      - 'supabase/functions/**'
+
+  workflow_dispatch:
+    inputs:
+      supabase_token:
+        description: 'Supabase Access Token (sbp_...)'
+        required: false
+        type: string
+
+jobs:
+  deploy:
+    name: Deploy create-checkout
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy Edge Function
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ inputs.supabase_token || secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          supabase functions deploy create-checkout \
+            --project-ref mtgatdmrpfysqphdgaue \
+            --no-verify-jwt
