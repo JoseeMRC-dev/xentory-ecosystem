@@ -224,14 +224,14 @@ export function PricingPage() {
 
         {/* Error banner */}
         {error && (
-          <div style={{ marginBottom: '1.5rem', padding: '1rem 1.3rem', borderRadius: 12, background: 'rgba(255,68,85,0.12)', border: '1px solid rgba(255,68,85,0.4)', color: 'var(--red)', fontSize: '0.88rem', display: 'flex', alignItems: 'flex-start', gap: '0.6rem', maxWidth: 560, width: '100%' }}>
+          <div style={{ marginBottom: '1.5rem', padding: '1rem 1.3rem', borderRadius: 12, background: 'rgba(255,68,85,0.12)', border: '1px solid rgba(255,68,85,0.4)', color: 'var(--red)', fontSize: '0.88rem', display: 'flex', alignItems: 'flex-start', gap: '0.6rem', maxWidth: 560, width: '100%', margin: '0 auto 1.5rem' }}>
             <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>⚠️</span>
             <span>{error} <button onClick={() => setError(null)} style={{ marginLeft: '0.5rem', background: 'none', border: 'none', color: 'var(--red)', cursor: 'pointer', fontSize: '0.8rem', opacity: 0.7, textDecoration: 'underline', padding: 0 }}>Cerrar</button></span>
           </div>
         )}
 
         {/* Platform tabs */}
-        <div style={{ display: 'flex', background: 'var(--card2)', borderRadius: 12, padding: '0.3rem', gap: '0.2rem', border: '1px solid var(--border)', width: '100%', maxWidth: 420 }}>
+        <div style={{ display: 'flex', background: 'var(--card2)', borderRadius: 12, padding: '0.3rem', gap: '0.2rem', border: '1px solid var(--border)', width: '100%', maxWidth: 420, margin: '0 auto' }}>
           {TABS.map(([key, icon, label]) => (
             <button key={key} onClick={() => setPlatform(key)} style={{
               flex: 1,
