@@ -18,10 +18,27 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2?target=deno
 
 const MAX_ACCOUNTS_PER_IP = 2;
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin':  '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// ── FIND-006: Restrict CORS to known origins ──────────────────────
+const ALLOWED_ORIGINS = [
+  'https://xentory.com',
+  'https://hub.xentory.com',
+  'https://market.xentory.com',
+  'https://bet.xentory.com',
+  'https://x-eight-beryl.vercel.app',
+  'https://xentory-ecosystem-market.vercel.app',
+  'https://xentory-ecosystem-bet.vercel.app',
+];
+
+function buildCorsHeaders(req: Request) {
+  const origin  = req.headers.get('origin');
+  const allowed = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    'Access-Control-Allow-Origin':  allowed,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  };
+}
+// Legacy alias used below
+const corsHeaders = buildCorsHeaders;
 
 /** Extrae la IP real del cliente desde los headers de Cloudflare/Vercel */
 function getClientIP(req: Request): string {
@@ -52,7 +69,9 @@ function isPrivateIP(ip: string): boolean {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  const cors = buildCorsHeaders(req);
+
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
 
   const supabaseAdmin = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
@@ -63,7 +82,7 @@ Deno.serve(async (req) => {
     const { email, device_fp } = await req.json();
     if (!email || typeof email !== 'string') {
       return new Response(JSON.stringify({ allowed: false, reason: 'email_required' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400, headers: { ...cors, 'Content-Type': 'application/json' },
       });
     }
 
@@ -73,7 +92,7 @@ Deno.serve(async (req) => {
     // Dev / IPs privadas: siempre permitidas
     if (isPrivateIP(ip)) {
       return new Response(JSON.stringify({ allowed: true }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...cors, 'Content-Type': 'application/json' },
       });
     }
 
@@ -87,14 +106,14 @@ Deno.serve(async (req) => {
     if (ipErr) {
       console.warn('check-ip: DB error (IP)', ipErr.message);
       return new Response(JSON.stringify({ allowed: true }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...cors, 'Content-Type': 'application/json' },
       });
     }
 
     if ((ipCount ?? 0) >= MAX_ACCOUNTS_PER_IP) {
-      console.log(`check-ip: bloqueado por IP=${ip} count=${ipCount}`);
+      console.log(`check-ip: bloqueado por IP count=${ipCount}`);
       return new Response(JSON.stringify({ allowed: false, reason: 'ip_limit_reached' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...cors, 'Content-Type': 'application/json' },
       });
     }
 
@@ -109,7 +128,7 @@ Deno.serve(async (req) => {
       if (!fpErr && (fpCount ?? 0) >= 1) {
         console.log(`check-ip: bloqueado por device_fp count=${fpCount}`);
         return new Response(JSON.stringify({ allowed: false, reason: 'device_limit_reached' }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: { ...cors, 'Content-Type': 'application/json' },
         });
       }
     }
@@ -123,14 +142,14 @@ Deno.serve(async (req) => {
     });
 
     return new Response(JSON.stringify({ allowed: true }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...cors, 'Content-Type': 'application/json' },
     });
 
   } catch (err) {
     console.error('check-registration-ip error:', err);
     // Fail-open: si hay error inesperado, no bloquemos el registro
     return new Response(JSON.stringify({ allowed: true }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...cors, 'Content-Type': 'application/json' },
     });
   }
 });

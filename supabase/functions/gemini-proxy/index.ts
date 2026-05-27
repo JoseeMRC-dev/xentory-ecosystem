@@ -17,12 +17,29 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2?target=deno
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// ── FIND-006: Restrict CORS to known origins ──────────────────────
+const ALLOWED_ORIGINS = [
+  'https://xentory.com',
+  'https://hub.xentory.com',
+  'https://market.xentory.com',
+  'https://bet.xentory.com',
+  'https://x-eight-beryl.vercel.app',
+  'https://xentory-ecosystem-market.vercel.app',
+  'https://xentory-ecosystem-bet.vercel.app',
+];
+
+function getCorsHeaders(origin: string | null) {
+  const allowed = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    'Access-Control-Allow-Origin':  allowed,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  };
+}
 
 Deno.serve(async (req) => {
+  const origin      = req.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -98,7 +115,8 @@ Deno.serve(async (req) => {
 
   } catch (err) {
     console.error('gemini-proxy error:', err);
-    return new Response(JSON.stringify({ error: String(err) }), {
+    // FIND-007: never expose internal error details
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }

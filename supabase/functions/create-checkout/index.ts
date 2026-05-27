@@ -33,16 +33,44 @@ const PRICE_ENV: Record<string, string> = {
   'bundle-elite-yearly':  'STRIPE_PRICE_BUNDLE_YEARLY',
 };
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin':  '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// ── FIND-006: Restrict CORS to known origins ──────────────────────
+const ALLOWED_ORIGINS = [
+  'https://xentory.com',
+  'https://hub.xentory.com',
+  'https://market.xentory.com',
+  'https://bet.xentory.com',
+  'https://x-eight-beryl.vercel.app',
+  'https://xentory-ecosystem-market.vercel.app',
+  'https://xentory-ecosystem-bet.vercel.app',
+];
+
+function getCorsHeaders(origin: string | null) {
+  const allowed = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    'Access-Control-Allow-Origin':  allowed,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  };
+}
+
+// ── FIND-002: Validate redirect URLs against allowlist ────────────
+function validateUrl(raw: unknown): string | null {
+  if (typeof raw !== 'string') return null;
+  try {
+    const u = new URL(raw);
+    return ALLOWED_ORIGINS.some(o => u.origin === o) ? raw : null;
+  } catch {
+    return null;
+  }
+}
 
 function isValidFp(fp: unknown): fp is string {
   return typeof fp === 'string' && /^[0-9a-f]{64}$/.test(fp);
 }
 
 Deno.serve(async (req) => {
+  const origin      = req.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   if (!stripe) {
@@ -62,18 +90,37 @@ Deno.serve(async (req) => {
 
     const { data: { user }, error: authErr } = await supabase.auth.getUser(jwt);
     if (authErr || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized', detail: authErr?.message }), {
+      // FIND-007: don't expose auth error details
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     const body = await req.json();
     const { platform, plan, interval, device_fp } = body;
-    // Support both redirect mode (success_url/cancel_url) and embedded mode (return_url)
-    const success_url: string | undefined = body.success_url;
-    const cancel_url:  string | undefined = body.cancel_url;
-    const embedded:    boolean             = !!body.embedded;
-    const return_url:  string | undefined = body.return_url;
+
+    // FIND-002: Validate all redirect URLs
+    const success_url = validateUrl(body.success_url);
+    const cancel_url  = validateUrl(body.cancel_url);
+    const embedded:    boolean = !!body.embedded;
+    const return_url  = validateUrl(body.return_url);
+
+    // Reject if provided but invalid
+    if (body.success_url && !success_url) {
+      return new Response(JSON.stringify({ error: 'Invalid success_url origin' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    if (body.cancel_url && !cancel_url) {
+      return new Response(JSON.stringify({ error: 'Invalid cancel_url origin' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    if (body.return_url && !return_url) {
+      return new Response(JSON.stringify({ error: 'Invalid return_url origin' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     const priceKey = `${platform}-${plan}-${interval}`;
     const priceId  = Deno.env.get(PRICE_ENV[priceKey] ?? '');
@@ -146,14 +193,17 @@ Deno.serve(async (req) => {
       customerId = customer.id;
     }
 
+    // Fallback URLs (safe defaults)
+    const defaultUrl = 'https://x-eight-beryl.vercel.app/pricing';
+
     // Build checkout URL config depending on mode
     const urlConfig = embedded && return_url
       ? { ui_mode: 'embedded' as const, return_url }
       : {
           success_url: success_url
             ? `${success_url}&session_id={CHECKOUT_SESSION_ID}`
-            : `${return_url ?? 'https://x-eight-beryl.vercel.app/pricing'}`,
-          cancel_url: cancel_url ?? 'https://x-eight-beryl.vercel.app/pricing',
+            : defaultUrl,
+          cancel_url: cancel_url ?? defaultUrl,
         };
 
     const session = await stripe.checkout.sessions.create({
@@ -183,8 +233,9 @@ Deno.serve(async (req) => {
 
   } catch (err) {
     console.error('create-checkout error:', err);
-    return new Response(JSON.stringify({ error: String(err) }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // FIND-007: never expose internal error details
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500, headers: { ...getCorsHeaders(req.headers.get('origin')), 'Content-Type': 'application/json' },
     });
   }
 });

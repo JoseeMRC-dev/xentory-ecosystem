@@ -23,7 +23,9 @@ const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
 );
 
-const corsHeaders = { 'Access-Control-Allow-Origin': '*' };
+// stripe-webhook is called server-to-server by Stripe — no browser CORS needed.
+// We keep a minimal header only for OPTIONS pre-flight (should never happen in practice).
+const corsHeaders = { 'Access-Control-Allow-Origin': 'https://stripe.com' };
 
 // Devuelve el plan ('pro'|'elite') a partir del precio de Stripe buscando en las env vars
 function planFromPriceId(priceId: string): { plan: string; platform: string; interval: string } | null {
@@ -164,6 +166,7 @@ Deno.serve(async (req) => {
 
   } catch (err) {
     console.error('stripe-webhook error:', err);
-    return new Response(JSON.stringify({ error: String(err) }), { status: 500 });
+    // FIND-007: never expose internal error details
+    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 });
   }
 });
