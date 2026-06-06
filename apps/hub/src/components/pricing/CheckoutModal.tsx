@@ -39,8 +39,8 @@ export function CheckoutModal({ clientSecret, onClose }: Props) {
       <style>{`
         @keyframes co-fadeIn  { from { opacity: 0 } to { opacity: 1 } }
         @keyframes co-popIn   {
-          from { opacity: 0; transform: translate(-50%, -50%) scale(0.94) }
-          to   { opacity: 1; transform: translate(-50%, -50%) scale(1) }
+          from { opacity: 0; transform: scale(0.94) }
+          to   { opacity: 1; transform: scale(1) }
         }
 
         /* ── Overlay ── */
@@ -52,17 +52,22 @@ export function CheckoutModal({ clientSecret, onClose }: Props) {
           backdrop-filter: blur(8px);
           -webkit-backdrop-filter: blur(8px);
           animation: co-fadeIn 0.2s ease;
+          /* flex centering — funciona correctamente en todos los tamaños */
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 16px;
+          /* scroll del overlay para pantallas muy pequeñas */
           overflow-y: auto;
           -webkit-overflow-scrolling: touch;
         }
 
-        /* ── Popup centrado — aplica en todos los tamaños ── */
+        /* ── Popup ── */
         .co-popup {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
           animation: co-popIn 0.25s cubic-bezier(0.34, 1.3, 0.64, 1);
+          /* margin: auto centra correctamente dentro del flex overlay */
+          margin: auto;
+          flex-shrink: 0;
 
           background: var(--card);
           border: 1px solid var(--border2);
@@ -72,38 +77,27 @@ export function CheckoutModal({ clientSecret, onClose }: Props) {
           flex-direction: column;
           overflow: hidden;
 
-          /* móvil: casi pantalla completa con margen */
-          width: calc(100vw - 24px);
+          /* móvil: ocupa casi todo el ancho */
+          width: 100%;
           max-width: 480px;
-          /* altura máxima para que nunca desborde — el body scrollea internamente */
           max-height: calc(100dvh - 32px);
         }
 
-        /* tablet: un poco más amplio */
+        /* tablet */
         @media (min-width: 600px) {
+          .co-overlay { padding: 32px; }
           .co-popup {
-            width: calc(100vw - 64px);
             max-width: 520px;
             max-height: calc(100dvh - 64px);
           }
         }
 
-        /* desktop: tamaño fijo cómodo */
+        /* desktop */
         @media (min-width: 1024px) {
+          .co-overlay { padding: 40px; }
           .co-popup {
-            width: 560px;
             max-width: 560px;
             max-height: calc(100dvh - 80px);
-          }
-        }
-
-        /* Cuando el modal es más alto que la ventana, deja espacio arriba/abajo */
-        @media (max-height: 640px) {
-          .co-popup {
-            top: 16px;
-            transform: translateX(-50%);
-            margin-bottom: 16px;
-            max-height: none;
           }
         }
 
