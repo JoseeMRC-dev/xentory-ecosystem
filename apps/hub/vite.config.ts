@@ -12,9 +12,9 @@ export default defineConfig({
     // Split vendors into cacheable chunks
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-core':   ['react', 'react-dom'],
-          'react-router': ['react-router-dom'],
+        manualChunks: (id) => {
+          if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/')) return 'react-core';
+          if (id.includes('node_modules/react-router')) return 'react-router';
         },
       },
     },
