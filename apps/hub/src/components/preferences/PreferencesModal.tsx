@@ -126,7 +126,55 @@ export function PreferencesModal({ onClose }: Props) {
 
         {/* Scrollable body */}
         <div style={{ padding: '0 1.6rem 1rem', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '1.4rem' }}>
-          {tab === 'market' ? (
+          {tab === 'market' && !user ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2.5rem 1rem', gap: '1rem', textAlign: 'center' }}>
+              <div style={{ fontSize: '2.5rem', lineHeight: 1 }}>📈</div>
+              <div>
+                <p style={{ fontWeight: 700, fontSize: '1rem', margin: '0 0 0.35rem', fontFamily: 'system-ui, sans-serif' }}>
+                  {es ? 'Inicia sesión para personalizar el mercado' : 'Sign in to personalise the market'}
+                </p>
+                <p style={{ fontSize: '0.82rem', color: 'var(--muted)', margin: 0, lineHeight: 1.6, fontFamily: 'system-ui, sans-serif' }}>
+                  {es
+                    ? 'Guarda tus criptomonedas, pares de forex y acciones favoritas para ver siempre lo que más te importa.'
+                    : 'Save your favourite crypto, forex pairs and stocks to always see what matters most first.'}
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <button
+                  onClick={() => { onClose(); navigate('/register'); }}
+                  className="btn btn-gold"
+                  style={{ fontWeight: 700 }}
+                >
+                  {es ? 'Crear cuenta gratis' : 'Create free account'}
+                </button>
+                <button
+                  onClick={() => { onClose(); navigate('/login'); }}
+                  className="btn btn-outline"
+                >
+                  {es ? 'Iniciar sesión' : 'Sign in'}
+                </button>
+              </div>
+              {/* Preview bloqueado */}
+              <div style={{ width: '100%', marginTop: '0.5rem', opacity: 0.35, pointerEvents: 'none', userSelect: 'none' }}>
+                <p style={{ fontSize: '0.67rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)', fontWeight: 600, marginBottom: '0.6rem', fontFamily: 'system-ui, sans-serif' }}>
+                  {es ? 'Criptomonedas' : 'Crypto'}
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                  {CRYPTO_OPTIONS.slice(0, 5).map(l => (
+                    <span key={l} style={{ padding: '0.32rem 0.85rem', borderRadius: 20, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--text2)', fontSize: '0.78rem', fontFamily: 'system-ui, sans-serif' }}>{l}</span>
+                  ))}
+                </div>
+                <p style={{ fontSize: '0.67rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)', fontWeight: 600, margin: '1rem 0 0.6rem', fontFamily: 'system-ui, sans-serif' }}>
+                  {es ? 'Acciones' : 'Stocks'}
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                  {STOCK_OPTIONS.slice(0, 5).map(l => (
+                    <span key={l} style={{ padding: '0.32rem 0.85rem', borderRadius: 20, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--text2)', fontSize: '0.78rem', fontFamily: 'system-ui, sans-serif' }}>{l}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : tab === 'market' ? (
             <>
               <Section title={es ? 'Criptomonedas' : 'Crypto'}>
                 <ChipRow items={CRYPTO_OPTIONS} active={local.market.crypto} onToggle={v => updM('crypto', toggle(local.market.crypto, v))} />
@@ -211,7 +259,7 @@ export function PreferencesModal({ onClose }: Props) {
           <button onClick={onClose} disabled={saving} className="btn btn-outline" style={{ flex: 1, justifyContent: 'center' }}>
             {es ? 'Cancelar' : 'Cancel'}
           </button>
-          {!(tab === 'bet' && !user) && (
+          {!!user && (
             <button
               onClick={handleSave}
               disabled={saving || saved}
