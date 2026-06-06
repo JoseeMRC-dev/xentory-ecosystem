@@ -6,6 +6,7 @@ import { MARKET_PLANS, BETS_PLANS, BUNDLE } from '../../constants';
 import { supabase } from '../../lib/supabase';
 import { deviceFingerprint } from '../../lib/fingerprint';
 import { trackEvent } from '../../lib/analytics';
+import { CheckoutModal } from './CheckoutModal';
 import type { Plan } from '../../types';
 
 const SUPABASE_FN = 'https://mtgatdmrpfysqphdgaue.supabase.co/functions/v1';
@@ -53,9 +54,10 @@ export function PricingPage() {
 
   const [platform, setPlatform] = useState<PlatformTab>(initialTab);
   const [yearly,   setYearly]   = useState(searchParams.get('interval') === 'yearly');
-  const [loading,  setLoading]  = useState<string | null>(null);
-  const [success,  setSuccess]  = useState<string | null>(null);
-  const [error,    setError]    = useState<string | null>(null);
+  const [loading,       setLoading]       = useState<string | null>(null);
+  const [success,       setSuccess]       = useState<string | null>(null);
+  const [error,         setError]         = useState<string | null>(null);
+  const [checkoutSecret, setCheckoutSecret] = useState<string | null>(null);
   // plataformas donde este usuario YA usó el trial (comprobación por user_id)
   const [trialUsed,  setTrialUsed]  = useState<Record<string, boolean>>({});
 
@@ -88,7 +90,7 @@ export function PricingPage() {
       });
   }, [user]);
 
-  // Detectar retorno desde Stripe (?success=true)
+  // Detectar retorno desde Stripe (?success=true — redirect mode)
   useEffect(() => {
     if (searchParams.get('success') === 'true') {
       const plt  = searchParams.get('platform') ?? 'market';
@@ -98,6 +100,18 @@ export function PricingPage() {
       if (plt === 'market' || plt === 'bundle') upgradeMarket(plan);
       if (plt === 'bets'   || plt === 'bundle') upgradeBets(plan);
       // Limpiar params de la URL
+      window.history.replaceState({}, '', '/pricing');
+    }
+  }, []);
+
+  // Detectar retorno desde Stripe (?checkout_done=1 — embedded modal mode)
+  useEffect(() => {
+    if (searchParams.get('checkout_done') === '1') {
+      const plt  = searchParams.get('platform') ?? 'market';
+      const plan = (searchParams.get('plan') ?? 'pro') as Plan;
+      setSuccess(`${plt}-${plan}`);
+      if (plt === 'market' || plt === 'bundle') upgradeMarket(plan);
+      if (plt === 'bets'   || plt === 'bundle') upgradeBets(plan);
       window.history.replaceState({}, '', '/pricing');
     }
   }, []);
@@ -120,6 +134,12 @@ export function PricingPage() {
 
       const fp = await deviceFingerprint();
 
+      // En HTTPS (producción) usamos embedded checkout; en HTTP (dev local) usamos redirect
+      const useEmbedded = window.location.protocol === 'https:';
+      const returnUrl   = useEmbedded
+        ? `${window.location.origin}/pricing?checkout_done=1&platform=${plt}&plan=${plan}`
+        : undefined;
+
       const controller = new AbortController();
       const fetchTimeout = setTimeout(() => controller.abort(), 20_000);
 
@@ -133,12 +153,16 @@ export function PricingPage() {
             'Authorization': `Bearer ${accessToken}`,
           },
           body: JSON.stringify({
-            platform:    plt,
+            platform:  plt,
             plan,
             interval,
-            device_fp:   fp,
-            success_url: `${window.location.origin}/pricing?success=true&platform=${plt}&plan=${plan}`,
-            cancel_url:  `${window.location.origin}/pricing?tab=${plt}`,
+            device_fp: fp,
+            ...(useEmbedded
+              ? { embedded: true, return_url: returnUrl }
+              : {
+                  success_url: `${window.location.origin}/pricing?success=true&platform=${plt}&plan=${plan}`,
+                  cancel_url:  `${window.location.origin}/pricing?tab=${plt}`,
+                }),
           }),
         });
       } finally {
@@ -152,6 +176,8 @@ export function PricingPage() {
         if (plt === 'market' || plt === 'bundle') upgradeMarket(json.plan as Plan);
         if (plt === 'bets'   || plt === 'bundle') upgradeBets(json.plan as Plan);
         setSuccess(`${plt}-${json.plan}`);
+      } else if (json.clientSecret) {
+        setCheckoutSecret(json.clientSecret);
       } else if (json.url) {
         window.location.href = json.url;
       } else {
@@ -196,6 +222,12 @@ export function PricingPage() {
 
   return (
     <>
+    {checkoutSecret && (
+      <CheckoutModal
+        clientSecret={checkoutSecret}
+        onClose={() => setCheckoutSecret(null)}
+      />
+    )}
     <div style={{ paddingTop: 'calc(var(--bar-h) + 32px)', minHeight: '100vh' }}>
 
       {/* ── HEADER ─────────────────────────────────────────────── */}
