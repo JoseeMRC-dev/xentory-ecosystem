@@ -20,6 +20,7 @@ const AuthCallbackPage  = lazy(() => import('./components/auth/AuthCallbackPage'
 const ResetPasswordPage = lazy(() => import('./components/auth/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
 const TermsPage        = lazy(() => import('./components/legal/TermsPage').then(m => ({ default: m.TermsPage })));
 const AlertsPage       = lazy(() => import('./components/alerts/AlertsPage').then(m => ({ default: m.AlertsPage })));
+const StudioPage       = lazy(() => import('./components/studio/StudioPage').then(m => ({ default: m.StudioPage })));
 const ChatWidget       = lazy(() => import('./components/chat/ChatWidget').then(m => ({ default: m.ChatWidget })));
 
 function ScrollToTop() {
@@ -112,6 +113,7 @@ function AppRoutes() {
       <Route path="/register"    element={user ? <Navigate to="/dashboard" replace /> : <Layout hideFooter><AuthPage key="register" defaultTab="register" /></Layout>} />
       <Route path="/dashboard"   element={<ProtectedRoute><Layout><DashboardPage /></Layout></ProtectedRoute>} />
       <Route path="/alerts"      element={<ProtectedRoute><Layout><AlertsPage /></Layout></ProtectedRoute>} />
+      <Route path="/studio"      element={<ProtectedRoute><Layout><StudioPage /></Layout></ProtectedRoute>} />
       <Route path="/auth/callback"   element={<AuthCallbackPage />} />
       <Route path="/reset-password"  element={<ResetPasswordPage />} />
       <Route path="/terminos"       element={<Layout><TermsPage /></Layout>} />
