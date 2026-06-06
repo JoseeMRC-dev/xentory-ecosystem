@@ -7,7 +7,6 @@ import { LanguageProvider } from './context/LanguageContext';
 import { PreferencesProvider } from './context/PreferencesContext';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
-import { ChatWidget } from './components/chat/ChatWidget';
 import './styles/global.css';
 
 const HomePage        = lazy(() => import('./components/home/HomePage'));
@@ -21,6 +20,7 @@ const AuthCallbackPage  = lazy(() => import('./components/auth/AuthCallbackPage'
 const ResetPasswordPage = lazy(() => import('./components/auth/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
 const TermsPage        = lazy(() => import('./components/legal/TermsPage').then(m => ({ default: m.TermsPage })));
 const AlertsPage       = lazy(() => import('./components/alerts/AlertsPage').then(m => ({ default: m.AlertsPage })));
+const ChatWidget       = lazy(() => import('./components/chat/ChatWidget').then(m => ({ default: m.ChatWidget })));
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -88,7 +88,7 @@ function Layout({ children, hideFooter }: { children: React.ReactNode; hideFoote
       <main><Suspense fallback={<PageSkeleton />}>{children}</Suspense></main>
       {!hideFooter && <Footer />}
       <BackToTop />
-      <ChatWidget />
+      <Suspense fallback={null}><ChatWidget /></Suspense>
     </>
   );
 }
