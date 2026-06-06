@@ -303,8 +303,8 @@ export function Navbar() {
                     </div>
                     {/* Nav actions */}
                     {[
-                      { label: t('nav.dashboard'), icon: <DashIcon />, to: '/dashboard' },
-                      { label: t('nav.myplans'),   icon: <PlanIcon />, to: '/pricing'   },
+                      { label: t('nav.dashboard'), icon: <DashIcon />,   to: '/dashboard' },
+                      { label: t('nav.myplans'),   icon: <PlanIcon />,   to: '/pricing'   },
                     ].map(item => (
                       <div key={item.to} onClick={() => { navigate(item.to); setUserMenu(false); }}
                         style={{ padding: '0.65rem 1rem', cursor: 'pointer', fontSize: '0.83rem', display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'var(--text2)', transition: 'background 0.12s' }}
