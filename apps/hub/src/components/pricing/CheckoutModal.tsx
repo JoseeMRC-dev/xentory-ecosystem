@@ -10,19 +10,23 @@ interface Props {
 }
 
 const CloseIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
     <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+  </svg>
+);
+
+const ShieldIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
   </svg>
 );
 
 export function CheckoutModal({ clientSecret, onClose }: Props) {
   const fetchClientSecret = useCallback(() => Promise.resolve(clientSecret), [clientSecret]);
 
-  // Cerrar con Escape
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', onKey);
-    // Bloquear scroll del body mientras el modal está abierto
     document.body.style.overflow = 'hidden';
     return () => {
       window.removeEventListener('keydown', onKey);
@@ -34,74 +38,136 @@ export function CheckoutModal({ clientSecret, onClose }: Props) {
     <>
       <style>{`
         @keyframes co-fadeIn  { from { opacity: 0 } to { opacity: 1 } }
-        @keyframes co-slideUp { from { transform: translateY(32px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
-
-        .co-overlay {
-          position: fixed; inset: 0; z-index: 9999;
-          background: rgba(0,0,0,0.78);
-          backdrop-filter: blur(6px);
-          -webkit-backdrop-filter: blur(6px);
-          display: flex;
-          align-items: flex-end;          /* móvil: sheet desde abajo */
-          justify-content: center;
-          animation: co-fadeIn 0.18s ease;
-          padding: 0;
+        @keyframes co-popIn   {
+          from { opacity: 0; transform: translate(-50%, -50%) scale(0.94) }
+          to   { opacity: 1; transform: translate(-50%, -50%) scale(1) }
         }
 
-        .co-sheet {
-          width: 100%;
-          max-height: 96dvh;
+        /* ── Overlay ── */
+        .co-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 9999;
+          background: rgba(4, 6, 15, 0.82);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          animation: co-fadeIn 0.2s ease;
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        /* ── Popup centrado — aplica en todos los tamaños ── */
+        .co-popup {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          animation: co-popIn 0.25s cubic-bezier(0.34, 1.3, 0.64, 1);
+
           background: var(--card);
-          border-radius: 20px 20px 0 0;
-          border: 1px solid var(--border);
-          border-bottom: none;
+          border: 1px solid var(--border2);
+          border-radius: 20px;
+          box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255,255,255,0.04);
           display: flex;
           flex-direction: column;
           overflow: hidden;
-          box-shadow: 0 -12px 60px rgba(0,0,0,0.45);
-          animation: co-slideUp 0.25s cubic-bezier(0.34,1.2,0.64,1);
+
+          /* móvil: casi pantalla completa con margen */
+          width: calc(100vw - 24px);
+          max-width: 480px;
+          /* altura máxima para que nunca desborde — el body scrollea internamente */
+          max-height: calc(100dvh - 32px);
         }
 
-        /* tablet/desktop: centrado como modal clásico */
+        /* tablet: un poco más amplio */
         @media (min-width: 600px) {
-          .co-overlay {
-            align-items: center;
-            padding: clamp(1rem, 4vw, 2rem);
-          }
-          .co-sheet {
-            width: 100%;
-            max-width: 540px;
-            max-height: 92dvh;
-            border-radius: 20px;
-            border-bottom: 1px solid var(--border);
+          .co-popup {
+            width: calc(100vw - 64px);
+            max-width: 520px;
+            max-height: calc(100dvh - 64px);
           }
         }
 
-        /* pantallas muy pequeñas: full screen */
-        @media (max-width: 380px) {
-          .co-sheet {
-            max-height: 100dvh;
-            border-radius: 16px 16px 0 0;
+        /* desktop: tamaño fijo cómodo */
+        @media (min-width: 1024px) {
+          .co-popup {
+            width: 560px;
+            max-width: 560px;
+            max-height: calc(100dvh - 80px);
           }
         }
 
+        /* Cuando el modal es más alto que la ventana, deja espacio arriba/abajo */
+        @media (max-height: 640px) {
+          .co-popup {
+            top: 16px;
+            transform: translateX(-50%);
+            margin-bottom: 16px;
+            max-height: none;
+          }
+        }
+
+        /* ── Header ── */
         .co-header {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 0.9rem 1.1rem;
+          padding: 1rem 1.25rem;
           border-bottom: 1px solid var(--border);
           flex-shrink: 0;
+          gap: 0.75rem;
         }
 
-        .co-drag-handle {
-          width: 36px; height: 4px;
-          background: var(--border2);
-          border-radius: 2px;
-          margin: 0.6rem auto 0;
+        .co-header-left {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          min-width: 0;
+        }
+
+        .co-badge {
+          font-size: 0.6rem;
+          font-weight: 700;
+          letter-spacing: 0.06em;
+          padding: 0.15rem 0.45rem;
+          border-radius: 5px;
+          background: rgba(0, 200, 122, 0.1);
+          color: var(--green);
+          border: 1px solid rgba(0, 200, 122, 0.22);
+          white-space: nowrap;
           flex-shrink: 0;
         }
 
+        .co-title {
+          font-weight: 600;
+          font-size: 0.88rem;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          font-family: system-ui, sans-serif;
+        }
+
+        .co-close-btn {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          border: 1px solid var(--border);
+          background: var(--card2);
+          cursor: pointer;
+          color: var(--muted);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.15s, color 0.15s, border-color 0.15s;
+          flex-shrink: 0;
+        }
+        .co-close-btn:hover {
+          background: var(--border);
+          color: var(--text);
+          border-color: var(--border2);
+        }
+
+        /* ── Body scrollable ── */
         .co-body {
           overflow-y: auto;
           flex: 1;
@@ -109,22 +175,18 @@ export function CheckoutModal({ clientSecret, onClose }: Props) {
           -webkit-overflow-scrolling: touch;
         }
 
-        .co-close-btn {
-          width: 34px; height: 34px;
-          border-radius: 50%;
-          border: none;
-          background: var(--card2);
-          cursor: pointer;
-          color: var(--muted);
+        /* ── Footer ── */
+        .co-footer {
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: background 0.15s, color 0.15s;
+          gap: 0.4rem;
+          padding: 0.6rem 1.25rem;
+          border-top: 1px solid var(--border);
           flex-shrink: 0;
-        }
-        .co-close-btn:hover {
-          background: var(--border);
-          color: var(--text);
+          color: var(--muted);
+          font-size: 0.68rem;
+          font-family: system-ui, sans-serif;
         }
       `}</style>
 
@@ -135,25 +197,14 @@ export function CheckoutModal({ clientSecret, onClose }: Props) {
         aria-modal="true"
         aria-label="Pago seguro con Stripe"
       >
-        <div className="co-sheet">
-          {/* Handle visual (solo móvil, indica que se puede arrastrar) */}
-          <div className="co-drag-handle" aria-hidden="true" />
+        <div className="co-popup">
 
           {/* Header */}
           <div className="co-header">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.9" strokeLinecap="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              </svg>
-              <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Pago seguro con Stripe</span>
-              <span style={{
-                fontSize: '0.62rem', fontWeight: 600, letterSpacing: '0.06em',
-                padding: '0.1rem 0.4rem', borderRadius: 4,
-                background: 'rgba(0,200,122,0.1)', color: 'var(--green)',
-                border: '1px solid rgba(0,200,122,0.2)',
-              }}>
-                SSL 256-bit
-              </span>
+            <div className="co-header-left">
+              <ShieldIcon />
+              <span className="co-title">Pago seguro</span>
+              <span className="co-badge">SSL 256-bit</span>
             </div>
             <button className="co-close-btn" onClick={onClose} aria-label="Cerrar">
               <CloseIcon />
@@ -169,6 +220,15 @@ export function CheckoutModal({ clientSecret, onClose }: Props) {
               <EmbeddedCheckout />
             </EmbeddedCheckoutProvider>
           </div>
+
+          {/* Footer */}
+          <div className="co-footer">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            Procesado por Stripe · Tus datos están protegidos
+          </div>
+
         </div>
       </div>
     </>
