@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import { translations, type TKey } from '../i18n/translations';
 
 export type Lang = 'es' | 'en';
@@ -25,6 +25,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     try { return (localStorage.getItem('xentory_lang') as Lang) ?? 'es'; }
     catch { return 'es'; }
   });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('lang', lang);
+  }, [lang]);
 
   const toggleLang = useCallback(() => {
     setLang(l => {
