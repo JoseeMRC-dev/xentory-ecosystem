@@ -3,13 +3,11 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useLang } from '../../context/LanguageContext';
 import { MARKET_PLANS, BETS_PLANS, BUNDLE } from '../../constants';
-import { supabase } from '../../lib/supabase';
+import { supabase, SUPABASE_FUNCTIONS_URL } from '../../lib/supabase';
 import { deviceFingerprint } from '../../lib/fingerprint';
 import { trackEvent } from '../../lib/analytics';
 import { CheckoutModal } from './CheckoutModal';
 import type { Plan } from '../../types';
-
-const SUPABASE_FN = 'https://mtgatdmrpfysqphdgaue.supabase.co/functions/v1';
 
 type PlatformTab = 'market' | 'bets' | 'bundle';
 
@@ -133,7 +131,7 @@ export function PricingPage() {
 
       let res: Response;
       try {
-        res = await fetch(`${SUPABASE_FN}/create-checkout`, {
+        res = await fetch(`${SUPABASE_FUNCTIONS_URL}/create-checkout`, {
           method: 'POST',
           signal: controller.signal,
           headers: {

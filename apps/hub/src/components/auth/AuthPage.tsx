@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useLoginProtection } from '../../hooks/useLoginProtection';
 import { TurnstileWidget, useCaptcha } from './TurnstileWidget';
 import { deviceFingerprint } from '../../lib/fingerprint';
+import { SUPABASE_FUNCTIONS_URL } from '../../lib/supabase';
 
 type Tab = 'login' | 'register' | 'magic';
 
@@ -156,7 +157,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
         try {
           const fp = await deviceFingerprint();
           const ipCheck = await fetch(
-            'https://mtgatdmrpfysqphdgaue.supabase.co/functions/v1/check-registration-ip',
+            `${SUPABASE_FUNCTIONS_URL}/check-registration-ip`,
             {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
