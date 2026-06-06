@@ -3,13 +3,11 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useLang } from '../../context/LanguageContext';
 import { MARKET_PLANS, BETS_PLANS, BUNDLE } from '../../constants';
-import { supabase } from '../../lib/supabase';
+import { supabase, SUPABASE_FUNCTIONS_URL } from '../../lib/supabase';
 import { deviceFingerprint } from '../../lib/fingerprint';
 import { trackEvent } from '../../lib/analytics';
 import { CheckoutModal } from './CheckoutModal';
 import type { Plan } from '../../types';
-
-const SUPABASE_FN = 'https://mtgatdmrpfysqphdgaue.supabase.co/functions/v1';
 
 type PlatformTab = 'market' | 'bets' | 'bundle';
 
@@ -90,30 +88,18 @@ export function PricingPage() {
       });
   }, [user]);
 
-  // Detectar retorno desde Stripe (?success=true — redirect mode)
+  // Detectar retorno desde Stripe — tanto redirect (?success=true) como modal (?checkout_done=1)
   useEffect(() => {
-    if (searchParams.get('success') === 'true') {
-      const plt  = searchParams.get('platform') ?? 'market';
-      const plan = (searchParams.get('plan') ?? 'pro') as Plan;
-      setSuccess(`${plt}-${plan}`);
-      // Actualizar plan en el estado local inmediatamente (hasta que el webhook confirme)
-      if (plt === 'market' || plt === 'bundle') upgradeMarket(plan);
-      if (plt === 'bets'   || plt === 'bundle') upgradeBets(plan);
-      // Limpiar params de la URL
-      window.history.replaceState({}, '', '/pricing');
-    }
-  }, []);
+    const isRedirect = searchParams.get('success') === 'true';
+    const isModal    = searchParams.get('checkout_done') === '1';
+    if (!isRedirect && !isModal) return;
 
-  // Detectar retorno desde Stripe (?checkout_done=1 — embedded modal mode)
-  useEffect(() => {
-    if (searchParams.get('checkout_done') === '1') {
-      const plt  = searchParams.get('platform') ?? 'market';
-      const plan = (searchParams.get('plan') ?? 'pro') as Plan;
-      setSuccess(`${plt}-${plan}`);
-      if (plt === 'market' || plt === 'bundle') upgradeMarket(plan);
-      if (plt === 'bets'   || plt === 'bundle') upgradeBets(plan);
-      window.history.replaceState({}, '', '/pricing');
-    }
+    const plt  = searchParams.get('platform') ?? 'market';
+    const plan = (searchParams.get('plan') ?? 'pro') as Plan;
+    setSuccess(`${plt}-${plan}`);
+    if (plt === 'market' || plt === 'bundle') upgradeMarket(plan);
+    if (plt === 'bets'   || plt === 'bundle') upgradeBets(plan);
+    window.history.replaceState({}, '', '/pricing');
   }, []);
 
   const plans = platform === 'market' ? MARKET_PLANS : platform === 'bets' ? BETS_PLANS : [];
@@ -145,7 +131,7 @@ export function PricingPage() {
 
       let res: Response;
       try {
-        res = await fetch(`${SUPABASE_FN}/create-checkout`, {
+        res = await fetch(`${SUPABASE_FUNCTIONS_URL}/create-checkout`, {
           method: 'POST',
           signal: controller.signal,
           headers: {
