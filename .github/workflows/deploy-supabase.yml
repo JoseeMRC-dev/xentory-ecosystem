@@ -15,9 +15,9 @@ on:
 
 jobs:
   deploy:
-    name: Deploy create-checkout
+    name: Deploy Edge Functions
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
@@ -28,10 +28,18 @@ jobs:
         with:
           version: latest
 
-      - name: Deploy Edge Function
+      - name: Deploy Edge Functions
         env:
           SUPABASE_ACCESS_TOKEN: ${{ inputs.supabase_token || secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
           supabase functions deploy create-checkout \
+            --project-ref mtgatdmrpfysqphdgaue \
+            --no-verify-jwt
+
+          supabase functions deploy generate-video \
+            --project-ref mtgatdmrpfysqphdgaue \
+            --no-verify-jwt
+
+          supabase functions deploy publish-social \
             --project-ref mtgatdmrpfysqphdgaue \
             --no-verify-jwt
