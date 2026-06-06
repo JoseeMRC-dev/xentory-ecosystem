@@ -241,11 +241,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // ── Logout ─────────────────────────────────────────────────────────────
   const logout = useCallback(async () => {
-    const sb = await getSupabase();
-    if (sb) await sb.auth.signOut();
+    // Always clear local state first — even if Supabase signOut fails
+    // (expired session, network error) the user is logged out locally.
     setUser(null); setSso(null);
     localStorage.removeItem(SSO_KEY);
     localStorage.removeItem(USER_KEY);
+    try {
+      const sb = await getSupabase();
+      if (sb) await sb.auth.signOut();
+    } catch {
+      // signOut failure is non-fatal — local state is already cleared
+    }
   }, []);
 
   // ── Plan helpers ───────────────────────────────────────────────────────

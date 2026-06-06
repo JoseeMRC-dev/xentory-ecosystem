@@ -332,7 +332,7 @@ export function Navbar() {
                       ))}
                     </div>
                     {/* Logout */}
-                    <div onClick={async () => { await logout(); navigate('/'); setUserMenu(false); }}
+                    <div onClick={() => { logout().catch(() => {}).finally(() => { navigate('/'); setUserMenu(false); }); }}
                       style={{ padding: '0.65rem 1rem', cursor: 'pointer', fontSize: '0.83rem', display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'var(--text2)', transition: 'background 0.12s' }}
                       onMouseEnter={e => (e.currentTarget.style.background = 'var(--card2)')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
@@ -467,7 +467,7 @@ export function Navbar() {
                     </button>
                   )}
                   {/* Logout */}
-                  <button onClick={async () => { await logout(); navigate('/'); setMob(false); }} style={{
+                  <button onClick={() => { logout().catch(() => {}).finally(() => { navigate('/'); setMob(false); }); }} style={{
                     background: 'var(--card2)', border: '1px solid var(--border)',
                     borderRadius: 10, padding: '0.8rem 1rem', cursor: 'pointer', minHeight: 48,
                     color: 'var(--text2)', fontSize: '0.9rem', fontWeight: 500,
