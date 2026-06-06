@@ -100,6 +100,14 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
+  if (!user) return <Navigate to="/login" replace />;
+  if (adminEmail && user.email !== adminEmail) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
 function AppRoutes() {
   const { user } = useAuth();
   return (
@@ -113,7 +121,7 @@ function AppRoutes() {
       <Route path="/register"    element={user ? <Navigate to="/dashboard" replace /> : <Layout hideFooter><AuthPage key="register" defaultTab="register" /></Layout>} />
       <Route path="/dashboard"   element={<ProtectedRoute><Layout><DashboardPage /></Layout></ProtectedRoute>} />
       <Route path="/alerts"      element={<ProtectedRoute><Layout><AlertsPage /></Layout></ProtectedRoute>} />
-      <Route path="/studio"      element={<ProtectedRoute><Layout><StudioPage /></Layout></ProtectedRoute>} />
+      <Route path="/studio"      element={<AdminRoute><Layout><StudioPage /></Layout></AdminRoute>} />
       <Route path="/auth/callback"   element={<AuthCallbackPage />} />
       <Route path="/reset-password"  element={<ResetPasswordPage />} />
       <Route path="/terminos"       element={<Layout><TermsPage /></Layout>} />

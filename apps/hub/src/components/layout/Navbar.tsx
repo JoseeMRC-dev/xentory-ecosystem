@@ -67,12 +67,6 @@ const DashIcon = () => (
     <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
   </svg>
 );
-const StudioIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-    <rect x="2" y="2" width="20" height="20" rx="2"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/>
-    <line x1="2" y1="7" x2="7" y2="7"/><line x1="17" y1="7" x2="22" y2="7"/>
-  </svg>
-);
 const SlidersIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
     <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/>
@@ -311,7 +305,6 @@ export function Navbar() {
                     {[
                       { label: t('nav.dashboard'), icon: <DashIcon />,   to: '/dashboard' },
                       { label: t('nav.myplans'),   icon: <PlanIcon />,   to: '/pricing'   },
-                      { label: lang === 'es' ? 'Content Studio' : 'Content Studio', icon: <StudioIcon />, to: '/studio' },
                     ].map(item => (
                       <div key={item.to} onClick={() => { navigate(item.to); setUserMenu(false); }}
                         style={{ padding: '0.65rem 1rem', cursor: 'pointer', fontSize: '0.83rem', display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'var(--text2)', transition: 'background 0.12s' }}
