@@ -91,7 +91,11 @@ async function handleCreate(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.8, maxOutputTokens: 1024 },
+        generationConfig: {
+          temperature: 0.8,
+          maxOutputTokens: 1024,
+          responseMimeType: 'application/json',
+        },
       }),
     },
   );
@@ -100,10 +104,19 @@ async function handleCreate(
 
   let parsed: { script: string; visual_prompt: string; caption: string; hashtags: string[] };
   try {
-    const m = raw.match(/```json\s*([\s\S]+?)\s*```/);
-    parsed = JSON.parse(m ? m[1] : raw);
+    // Try direct parse first (when responseMimeType forces clean JSON)
+    parsed = JSON.parse(raw);
   } catch {
-    return json({ error: 'Failed to parse Gemini response', raw }, 500, origin);
+    try {
+      // Fallback: extract from code fences
+      const fenced = raw.match(/```(?:json)?\s*([\s\S]+?)\s*```/);
+      parsed = JSON.parse(fenced ? fenced[1] : raw);
+    } catch {
+      // Last resort: find first { ... } block
+      const braces = raw.match(/\{[\s\S]+\}/);
+      if (!braces) return json({ error: 'Failed to parse Gemini response', raw }, 500, origin);
+      parsed = JSON.parse(braces[0]);
+    }
   }
 
   // 2. Start Runway video generation (async task)
