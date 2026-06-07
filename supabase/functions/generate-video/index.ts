@@ -85,7 +85,7 @@ async function handleCreate(
   // 1. Generate script + visual prompt + caption via Gemini
   const prompt = buildScriptPrompt(String(video_type), String(language), Number(duration_sec));
   const gemRes = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${GEMINI_KEY}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -100,19 +100,27 @@ async function handleCreate(
     },
   );
   const gemData = await gemRes.json();
+
+  // Surface Gemini API errors clearly
+  if (gemData.error) {
+    console.error('Gemini API error:', JSON.stringify(gemData.error));
+    return json({ error: 'Gemini API error', detail: gemData.error?.message ?? gemData.error }, 502, origin);
+  }
+
   const raw = gemData.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+  if (!raw) {
+    console.error('Gemini empty response:', JSON.stringify(gemData));
+    return json({ error: 'Gemini returned empty response', detail: gemData }, 502, origin);
+  }
 
   let parsed: { script: string; visual_prompt: string; caption: string; hashtags: string[] };
   try {
-    // Try direct parse first (when responseMimeType forces clean JSON)
     parsed = JSON.parse(raw);
   } catch {
     try {
-      // Fallback: extract from code fences
       const fenced = raw.match(/```(?:json)?\s*([\s\S]+?)\s*```/);
       parsed = JSON.parse(fenced ? fenced[1] : raw);
     } catch {
-      // Last resort: find first { ... } block
       const braces = raw.match(/\{[\s\S]+\}/);
       if (!braces) return json({ error: 'Failed to parse Gemini response', raw }, 500, origin);
       parsed = JSON.parse(braces[0]);
