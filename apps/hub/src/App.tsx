@@ -102,9 +102,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
-  if (!user) return <Navigate to="/login" replace />;
-  if (adminEmail && user.email !== adminEmail) return <Navigate to="/" replace />;
+  const location  = useLocation();
+  const adminEmail = import.meta.env.VITE_ADMIN_EMAIL?.trim().toLowerCase();
+  if (!user) return <Navigate to="/login" state={{ from: location }} replace />;
+  if (adminEmail && user.email.toLowerCase() !== adminEmail) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
