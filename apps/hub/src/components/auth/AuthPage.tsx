@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, type FormEvent } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useLoginProtection } from '../../hooks/useLoginProtection';
 import { TurnstileWidget, useCaptcha } from './TurnstileWidget';
@@ -84,6 +84,8 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
     return () => clearInterval(interval);
   }, [lockInfo.locked, email]);
   const navigate   = useNavigate();
+  const location   = useLocation();
+  const fromPath   = (location.state as { from?: { pathname: string } } | null)?.from?.pathname ?? '/dashboard';
 
   const strength = tab === 'register' ? pwStrength(password) : null;
 
@@ -115,7 +117,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
         try {
           await login(email, password);
           recordSuccess(email); // Clear failure counter on success
-          navigate('/dashboard');
+          navigate(fromPath);
         } catch (loginErr: any) {
           captcha.reset(); // Force re-verification after each failed attempt
           const result = recordFailure(email);
@@ -200,7 +202,7 @@ export function AuthPage({ defaultTab = 'login' }: { defaultTab?: Tab }) {
     try {
       await loginWithGoogle();
       // If mock mode (no redirect), navigate manually
-      navigate('/dashboard');
+      navigate(fromPath);
     } catch (err: any) {
       setError('Error al conectar con Google. Inténtalo de nuevo.');
     } finally {
