@@ -112,9 +112,10 @@ export function StudioPage() {
   const { lang, t: _t } = useLang();
   const t = (es: string, en: string) => lang === 'es' ? es : en;
 
-  const [videos,   setVideos]   = useState<ContentVideo[]>([]);
-  const [accounts, setAccounts] = useState<SocialAccount[]>([]);
-  const [loading,  setLoading]  = useState(true);
+  const [videos,    setVideos]    = useState<ContentVideo[]>([]);
+  const [accounts,  setAccounts]  = useState<SocialAccount[]>([]);
+  const [loading,   setLoading]   = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const [showNewModal,     setShowNewModal]     = useState(false);
   const [showConnectModal, setShowConnectModal] = useState(false);
@@ -125,11 +126,12 @@ export function StudioPage() {
 
   // ── Load data ────────────────────────────────────────────────────
   const loadVideos = useCallback(async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('content_videos')
       .select()
       .order('created_at', { ascending: false })
       .limit(50);
+    if (error) throw error;
     setVideos((data as ContentVideo[]) ?? []);
   }, []);
 
@@ -139,7 +141,9 @@ export function StudioPage() {
   }, []);
 
   useEffect(() => {
-    Promise.all([loadVideos(), loadAccounts()]).finally(() => setLoading(false));
+    Promise.all([loadVideos(), loadAccounts()])
+      .catch((err) => setLoadError(err?.message ?? 'Error loading studio'))
+      .finally(() => setLoading(false));
   }, [loadVideos, loadAccounts]);
 
   // ── Poll generating videos ────────────────────────────────────────
@@ -239,6 +243,10 @@ export function StudioPage() {
         {/* ── Video grid ── */}
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}><Spinner size={28} /></div>
+        ) : loadError ? (
+          <div style={{ padding: '2rem', color: '#b91c1c', background: '#fef2f2', borderRadius: '0.75rem', fontSize: '0.875rem' }}>
+            {t('Error al cargar los vídeos', 'Error loading videos')}: {loadError}
+          </div>
         ) : videos.length === 0 ? (
           <EmptyState onNew={() => setShowNewModal(true)} lang={lang} />
         ) : (
@@ -442,7 +450,10 @@ function NewVideoModal({
         body: JSON.stringify({ action: 'create', video_type: videoType, language, duration_sec: durationSec, title: title.trim() || undefined }),
       });
       const data = await res.json();
-      if (!res.ok || !data.video) throw new Error(data.error ?? 'Failed to start generation');
+      if (!res.ok || !data.video) {
+        const detail = typeof data.detail === 'string' ? `: ${data.detail}` : '';
+        throw new Error((data.error ?? 'Failed to start generation') + detail);
+      }
       onCreated(data.video as ContentVideo);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Unknown error');
