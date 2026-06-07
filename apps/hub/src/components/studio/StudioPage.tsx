@@ -442,7 +442,10 @@ function NewVideoModal({
         body: JSON.stringify({ action: 'create', video_type: videoType, language, duration_sec: durationSec, title: title.trim() || undefined }),
       });
       const data = await res.json();
-      if (!res.ok || !data.video) throw new Error(data.error ?? 'Failed to start generation');
+      if (!res.ok || !data.video) {
+        const detail = typeof data.detail === 'string' ? `: ${data.detail}` : '';
+        throw new Error((data.error ?? 'Failed to start generation') + detail);
+      }
       onCreated(data.video as ContentVideo);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Unknown error');
