@@ -141,9 +141,26 @@ export function StudioPage() {
   }, []);
 
   useEffect(() => {
+    let settled = false;
+    const finish = (err?: string) => {
+      if (settled) return;
+      settled = true;
+      if (err) setLoadError(err);
+      setLoading(false);
+    };
+
+    // Safety timeout — if tables don't exist or network hangs, stop spinner after 8s
+    const timer = setTimeout(
+      () => finish('Tiempo de espera agotado. Aplica la migración 009_video_pipeline.sql en Supabase SQL Editor.'),
+      8000,
+    );
+
     Promise.all([loadVideos(), loadAccounts()])
-      .catch((err) => setLoadError(err?.message ?? 'Error loading studio'))
-      .finally(() => setLoading(false));
+      .catch((err: Error) => finish(err?.message ?? 'Error loading studio'))
+      .then(() => finish())
+      .finally(() => clearTimeout(timer));
+
+    return () => { settled = true; clearTimeout(timer); };
   }, [loadVideos, loadAccounts]);
 
   // ── Poll generating videos ────────────────────────────────────────
