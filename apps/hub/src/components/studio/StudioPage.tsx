@@ -404,7 +404,7 @@ function VideoCard({
         )}
         {video.status === 'failed' && video.error_message && (
           <div style={{ flex: 1, fontSize: '0.72rem', color: 'var(--red)', lineHeight: 1.3 }}>
-            {video.error_message.slice(0, 100)}
+            {video.error_message.slice(0, 200)}
           </div>
         )}
       </div>
@@ -547,6 +547,7 @@ function ConnectAccountModal({
   lang:     string;
 }) {
   const t = (es: string, en: string) => lang === 'es' ? es : en;
+  const { user } = useAuth();
 
   const getAccount = (p: Platform) => accounts.find(a => a.platform === p);
 
@@ -563,10 +564,11 @@ function ConnectAccountModal({
 
   const saveAccount = async (platform: Platform, accountId: string, token: string, name: string, setBusy: (b: boolean) => void, setMsg: (m: string | null) => void) => {
     if (!accountId.trim() || !token.trim()) { setMsg(t('Rellena todos los campos', 'Fill in all fields')); return; }
+    if (!user?.id) { setMsg('No autenticado'); return; }
     setBusy(true); setMsg(null);
     try {
       await supabase.from('social_accounts').upsert(
-        { platform, account_id: accountId.trim(), access_token: token.trim(), account_name: name.trim() || null },
+        { user_id: user.id, platform, account_id: accountId.trim(), access_token: token.trim(), account_name: name.trim() || null },
         { onConflict: 'user_id,platform' },
       );
       await onSaved();
