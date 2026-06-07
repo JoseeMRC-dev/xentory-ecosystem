@@ -5,7 +5,7 @@
  *   create  → call Gemini for script + Runway for video, insert content_videos row
  *   check   → poll Runway task status, update row when done
  *
- * Required secrets: GEMINI_API_KEY, RUNWAY_API_KEY
+ * Required secrets: ANTHROPIC_API_KEY, RUNWAY_API_KEY
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2?target=deno';
@@ -79,41 +79,37 @@ async function handleCreate(
     title,
   } = body as Record<string, string | number>;
 
-  const GEMINI_KEY = Deno.env.get('GEMINI_API_KEY');
-  const RUNWAY_KEY = Deno.env.get('RUNWAY_API_KEY');
+  const ANTHROPIC_KEY = Deno.env.get('ANTHROPIC_API_KEY');
+  const RUNWAY_KEY    = Deno.env.get('RUNWAY_API_KEY');
+  if (!ANTHROPIC_KEY) return json({ error: 'ANTHROPIC_API_KEY secret not configured' }, 500, origin);
+  if (!RUNWAY_KEY)    return json({ error: 'RUNWAY_API_KEY secret not configured' }, 500, origin);
 
-  if (!GEMINI_KEY) return json({ error: 'GEMINI_API_KEY secret not configured in Supabase Edge Function secrets' }, 500, origin);
-  if (!RUNWAY_KEY) return json({ error: 'RUNWAY_API_KEY secret not configured in Supabase Edge Function secrets' }, 500, origin);
-
-  // 1. Generate script + visual prompt + caption via Gemini
+  // 1. Generate script + visual prompt + caption via Claude
   const prompt = buildScriptPrompt(String(video_type), String(language), Number(duration_sec));
-  const gemRes = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.8,
-          maxOutputTokens: 1024,
-          responseMimeType: 'application/json',
-        },
-      }),
+  const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key':         ANTHROPIC_KEY,
+      'anthropic-version': '2023-06-01',
+      'content-type':      'application/json',
     },
-  );
-  const gemData = await gemRes.json();
+    body: JSON.stringify({
+      model:      'claude-haiku-4-5',
+      max_tokens: 1024,
+      messages:   [{ role: 'user', content: prompt }],
+    }),
+  });
+  const claudeData = await claudeRes.json();
 
-  // Surface Gemini API errors clearly
-  if (gemData.error) {
-    console.error('Gemini API error:', JSON.stringify(gemData.error));
-    return json({ error: 'Gemini API error', detail: gemData.error?.message ?? gemData.error }, 502, origin);
+  if (claudeData.error) {
+    console.error('Claude API error:', JSON.stringify(claudeData.error));
+    return json({ error: 'Claude API error', detail: claudeData.error?.message ?? claudeData.error }, 502, origin);
   }
 
-  const raw = gemData.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+  const raw = claudeData.content?.[0]?.text ?? '';
   if (!raw) {
-    console.error('Gemini empty response:', JSON.stringify(gemData));
-    return json({ error: 'Gemini returned empty response', detail: gemData }, 502, origin);
+    console.error('Claude empty response:', JSON.stringify(claudeData));
+    return json({ error: 'Claude returned empty response', detail: claudeData }, 502, origin);
   }
 
   let parsed: { script: string; visual_prompt: string; caption: string; hashtags: string[] };
@@ -125,7 +121,7 @@ async function handleCreate(
       parsed = JSON.parse(fenced ? fenced[1] : raw);
     } catch {
       const braces = raw.match(/\{[\s\S]+\}/);
-      if (!braces) return json({ error: 'Failed to parse Gemini response', raw }, 500, origin);
+      if (!braces) return json({ error: 'Failed to parse Claude response', raw }, 500, origin);
       parsed = JSON.parse(braces[0]);
     }
   }

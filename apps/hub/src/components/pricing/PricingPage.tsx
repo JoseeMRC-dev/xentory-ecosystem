@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useLang } from '../../context/LanguageContext';
@@ -58,6 +58,7 @@ export function PricingPage() {
   const [checkoutSecret, setCheckoutSecret] = useState<string | null>(null);
   // plataformas donde este usuario YA usó el trial (comprobación por user_id)
   const [trialUsed,  setTrialUsed]  = useState<Record<string, boolean>>({});
+  const autoTriggered = useRef(false);
 
   // Restaurar sesión de Supabase desde tokens pasados por la sub-app (Bet/Market)
   useEffect(() => {
@@ -190,6 +191,15 @@ export function PricingPage() {
   const handleBundle = () => {
     startCheckout('bundle', 'elite', yearly ? 'yearly' : 'monthly');
   };
+
+  // Auto-trigger checkout when arriving from a sub-app with ?plan=X&tab=Y
+  useEffect(() => {
+    if (!initialPlan || initialPlan === 'free' || authLoading || !user || autoTriggered.current) return;
+    autoTriggered.current = true;
+    const interval = searchParams.get('interval') ?? 'monthly';
+    const plt: 'market' | 'bets' = initialTab === 'bets' ? 'bets' : 'market';
+    startCheckout(plt, initialPlan, interval);
+  }, [user, authLoading]);
 
   const currentPlan = (plt: 'market' | 'bets') =>
     plt === 'market'
