@@ -19,7 +19,7 @@ function buildTickerHTML(matches: Match[]): string {
     const awayScore = m.awayScore ?? 0;
     const clock     = m.clockDisplay ?? m.minute ? `${m.minute}'` : 'LIVE';
     return `<span
-      ${clone ? 'aria-hidden="true"' : `data-mid="${m.id}"`}
+      data-mid="${m.id}"${clone ? ' aria-hidden="true"' : ''}
       style="display:inline-flex;align-items:center;gap:0.5rem;padding:0 1.8rem;border-right:1px solid var(--border);flex-shrink:0;cursor:pointer;"
     >
       <span style="font-size:0.7rem">${sport?.emoji ?? '🏟️'}</span>
