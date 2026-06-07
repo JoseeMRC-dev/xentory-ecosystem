@@ -79,9 +79,6 @@ async function handleCreate(
     title,
   } = body as Record<string, string | number>;
 
-  const ANTHROPIC_KEY = Deno.env.get('ANTHROPIC_API_KEY')!;
-  const RUNWAY_KEY    = Deno.env.get('RUNWAY_API_KEY')!;
-
   // 1. Generate script + visual prompt + caption via Claude
   const prompt = buildScriptPrompt(String(video_type), String(language), Number(duration_sec));
   const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
@@ -125,7 +122,11 @@ async function handleCreate(
   }
 
   // 2. Start Runway video generation (async task)
-  const runwayRes = await fetch('https://api.dev.runwayml.com/v1/image_to_video', {
+  // promptImage is required by the image_to_video endpoint — use a custom frame via RUNWAY_STARTER_FRAME_URL or the dark finance fallback
+  const starterFrame = Deno.env.get('RUNWAY_STARTER_FRAME_URL')
+    ?? 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=720&h=1280&fit=crop&q=80';
+
+  const runwayRes = await fetch('https://api.runwayml.com/v1/image_to_video', {
     method: 'POST',
     headers: {
       'Authorization':  `Bearer ${RUNWAY_KEY}`,
@@ -133,10 +134,11 @@ async function handleCreate(
       'X-Runway-Version': '2024-11-06',
     },
     body: JSON.stringify({
-      promptText: parsed.visual_prompt,
-      model:      'gen3a_turbo',
-      duration:   10,          // 10 s max per task; Runway supports 5 or 10
-      ratio:      '720:1280',  // vertical 9:16 for TikTok / Reels
+      promptText:  parsed.visual_prompt,
+      promptImage: starterFrame,
+      model:       'gen3a_turbo',
+      duration:    10,
+      ratio:       '720:1280',
     }),
   });
   const runwayData = await runwayRes.json();
@@ -176,7 +178,8 @@ async function handleCheck(
   origin: string | null,
 ) {
   const { video_id } = body as { video_id: string };
-  const RUNWAY_KEY = Deno.env.get('RUNWAY_API_KEY')!;
+  const RUNWAY_KEY = Deno.env.get('RUNWAY_API_KEY');
+  if (!RUNWAY_KEY) return json({ error: 'RUNWAY_API_KEY secret not configured' }, 500, origin);
 
   const { data: video } = await supabase
     .from('content_videos')
@@ -189,7 +192,7 @@ async function handleCheck(
   if (video.status !== 'generating') return json({ video }, 200, origin);
 
   const taskRes = await fetch(
-    `https://api.dev.runwayml.com/v1/tasks/${video.runway_task_id}`,
+    `https://api.runwayml.com/v1/tasks/${video.runway_task_id}`,
     {
       headers: {
         'Authorization':  `Bearer ${RUNWAY_KEY}`,
