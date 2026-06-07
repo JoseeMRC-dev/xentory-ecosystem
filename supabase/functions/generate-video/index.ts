@@ -79,6 +79,11 @@ async function handleCreate(
     title,
   } = body as Record<string, string | number>;
 
+  const ANTHROPIC_KEY = Deno.env.get('ANTHROPIC_API_KEY');
+  const RUNWAY_KEY    = Deno.env.get('RUNWAY_API_KEY');
+  if (!ANTHROPIC_KEY) return json({ error: 'ANTHROPIC_API_KEY secret not configured' }, 500, origin);
+  if (!RUNWAY_KEY)    return json({ error: 'RUNWAY_API_KEY secret not configured' }, 500, origin);
+
   // 1. Generate script + visual prompt + caption via Claude
   const prompt = buildScriptPrompt(String(video_type), String(language), Number(duration_sec));
   const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
