@@ -131,7 +131,7 @@ async function handleCreate(
   const starterFrame = Deno.env.get('RUNWAY_STARTER_FRAME_URL')
     ?? 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=720&h=1280&fit=crop&q=80';
 
-  const runwayRes = await fetch('https://api.runwayml.com/v1/image_to_video', {
+  const runwayRes = await fetch('https://api.dev.runwayml.com/v1/image_to_video', {
     method: 'POST',
     headers: {
       'Authorization':  `Bearer ${RUNWAY_KEY}`,
@@ -149,7 +149,7 @@ async function handleCreate(
   const runwayData = await runwayRes.json();
   if (!runwayData.id) {
     console.error('Runway error:', runwayData);
-    return json({ error: 'Runway task creation failed', detail: runwayData }, 502, origin);
+    return json({ error: 'Runway task creation failed', detail: JSON.stringify(runwayData) }, 502, origin);
   }
 
   // 3. Persist
@@ -197,7 +197,7 @@ async function handleCheck(
   if (video.status !== 'generating') return json({ video }, 200, origin);
 
   const taskRes = await fetch(
-    `https://api.runwayml.com/v1/tasks/${video.runway_task_id}`,
+    `https://api.dev.runwayml.com/v1/tasks/${video.runway_task_id}`,
     {
       headers: {
         'Authorization':  `Bearer ${RUNWAY_KEY}`,
