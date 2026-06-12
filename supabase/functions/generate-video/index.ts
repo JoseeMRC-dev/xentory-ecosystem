@@ -143,7 +143,7 @@ async function handleCreate(
       promptImage: starterFrame,
       model:       'gen3a_turbo',
       duration:    10,
-      ratio:       '720:1280',
+      ratio:       '768:1280',
     }),
   });
   const runwayData = await runwayRes.json();
