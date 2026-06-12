@@ -2,10 +2,10 @@
  * generate-video — Edge Function
  *
  * Actions:
- *   create  → call Gemini for script + Runway for video, insert content_videos row
- *   check   → poll Runway task status, update row when done
+ *   create  → Claude genera el guión, Kling (Replicate) genera el vídeo
+ *   check   → poll Replicate prediction status, actualiza la fila cuando termina
  *
- * Required secrets: ANTHROPIC_API_KEY, RUNWAY_API_KEY
+ * Required secrets: ANTHROPIC_API_KEY, REPLICATE_API_KEY
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2?target=deno';
@@ -19,6 +19,9 @@ const ALLOWED_ORIGINS = [
   'https://xentory-ecosystem-market.vercel.app',
   'https://xentory-ecosystem-bet.vercel.app',
 ];
+
+// Kling 1.6 Pro model on Replicate
+const KLING_MODEL = 'kwaivgi/kling-v1-6-pro';
 
 function corsHeaders(origin: string | null) {
   const allowed = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
@@ -41,7 +44,6 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(origin) });
 
   try {
-    // ── Auth ──────────────────────────────────────────────────────
     const token = req.headers.get('authorization')?.replace('Bearer ', '');
     if (!token) return json({ error: 'Unauthorized' }, 401, origin);
 
@@ -79,12 +81,12 @@ async function handleCreate(
     title,
   } = body as Record<string, string | number>;
 
-  const ANTHROPIC_KEY = Deno.env.get('ANTHROPIC_API_KEY');
-  const RUNWAY_KEY    = Deno.env.get('RUNWAY_API_KEY');
-  if (!ANTHROPIC_KEY) return json({ error: 'ANTHROPIC_API_KEY secret not configured' }, 500, origin);
-  if (!RUNWAY_KEY)    return json({ error: 'RUNWAY_API_KEY secret not configured' }, 500, origin);
+  const ANTHROPIC_KEY  = Deno.env.get('ANTHROPIC_API_KEY');
+  const REPLICATE_KEY  = Deno.env.get('REPLICATE_API_KEY');
+  if (!ANTHROPIC_KEY)  return json({ error: 'ANTHROPIC_API_KEY secret not configured' }, 500, origin);
+  if (!REPLICATE_KEY)  return json({ error: 'REPLICATE_API_KEY secret not configured' }, 500, origin);
 
-  // 1. Generate script + visual prompt + caption via Claude
+  // 1. Generar guión + prompt visual + caption con Claude
   const prompt = buildScriptPrompt(String(video_type), String(language), Number(duration_sec));
   const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -126,47 +128,46 @@ async function handleCreate(
     }
   }
 
-  // 2. Start Runway video generation (async task)
-  // promptImage is required by the image_to_video endpoint — use a custom frame via RUNWAY_STARTER_FRAME_URL or the dark finance fallback
-  const starterFrame = Deno.env.get('RUNWAY_STARTER_FRAME_URL')
-    ?? 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=720&h=1280&fit=crop&q=80';
-
-  const runwayRes = await fetch('https://api.dev.runwayml.com/v1/image_to_video', {
+  // 2. Generar vídeo con Kling 1.6 Pro vía Replicate
+  const klingRes = await fetch(`https://api.replicate.com/v1/models/${KLING_MODEL}/predictions`, {
     method: 'POST',
     headers: {
-      'Authorization':  `Bearer ${RUNWAY_KEY}`,
-      'Content-Type':   'application/json',
-      'X-Runway-Version': '2024-11-06',
+      'Authorization': `Token ${REPLICATE_KEY}`,
+      'Content-Type':  'application/json',
+      'Prefer':        'wait=5',
     },
     body: JSON.stringify({
-      promptText:  parsed.visual_prompt,
-      promptImage: starterFrame,
-      model:       'gen3a_turbo',
-      duration:    10,
-      ratio:       '768:1280',
+      input: {
+        prompt:       parsed.visual_prompt,
+        aspect_ratio: '9:16',
+        duration:     5,
+        cfg_scale:    0.5,
+      },
     }),
   });
-  const runwayData = await runwayRes.json();
-  if (!runwayData.id) {
-    console.error('Runway error:', runwayData);
-    return json({ error: 'Runway task creation failed', detail: JSON.stringify(runwayData) }, 502, origin);
+  const klingData = await klingRes.json();
+
+  if (!klingData.id) {
+    console.error('Kling/Replicate error:', klingData);
+    return json({ error: 'Kling task creation failed', detail: JSON.stringify(klingData) }, 502, origin);
   }
 
-  // 3. Persist
+  // 3. Guardar en BD (reutilizamos runway_task_id para el prediction ID de Replicate)
   const { data: video, error: dbErr } = await supabase
     .from('content_videos')
     .insert({
-      user_id:       userId,
-      title:         title ?? `Video ${new Date().toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US')}`,
+      user_id:        userId,
+      title:          title ?? `Video ${new Date().toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US')}`,
       video_type,
       language,
       duration_sec,
-      script:        parsed.script,
-      visual_prompt: parsed.visual_prompt,
-      caption:       parsed.caption,
-      hashtags:      parsed.hashtags ?? [],
-      runway_task_id: runwayData.id,
-      status:        'generating',
+      script:         parsed.script,
+      visual_prompt:  parsed.visual_prompt,
+      caption:        parsed.caption,
+      hashtags:       parsed.hashtags ?? [],
+      runway_task_id: klingData.id,
+      status:         klingData.status === 'succeeded' ? 'ready' : 'generating',
+      video_url:      klingData.output?.[0] ?? null,
     })
     .select()
     .single();
@@ -183,8 +184,8 @@ async function handleCheck(
   origin: string | null,
 ) {
   const { video_id } = body as { video_id: string };
-  const RUNWAY_KEY = Deno.env.get('RUNWAY_API_KEY');
-  if (!RUNWAY_KEY) return json({ error: 'RUNWAY_API_KEY secret not configured' }, 500, origin);
+  const REPLICATE_KEY = Deno.env.get('REPLICATE_API_KEY');
+  if (!REPLICATE_KEY) return json({ error: 'REPLICATE_API_KEY secret not configured' }, 500, origin);
 
   const { data: video } = await supabase
     .from('content_videos')
@@ -196,24 +197,19 @@ async function handleCheck(
   if (!video) return json({ error: 'Not found' }, 404, origin);
   if (video.status !== 'generating') return json({ video }, 200, origin);
 
-  const taskRes = await fetch(
-    `https://api.dev.runwayml.com/v1/tasks/${video.runway_task_id}`,
-    {
-      headers: {
-        'Authorization':  `Bearer ${RUNWAY_KEY}`,
-        'X-Runway-Version': '2024-11-06',
-      },
-    },
+  const predRes = await fetch(
+    `https://api.replicate.com/v1/predictions/${video.runway_task_id}`,
+    { headers: { 'Authorization': `Token ${REPLICATE_KEY}` } },
   );
-  const task = await taskRes.json();
+  const pred = await predRes.json();
 
   const update: Record<string, unknown> = {};
-  if (task.status === 'SUCCEEDED') {
+  if (pred.status === 'succeeded') {
     update.status    = 'ready';
-    update.video_url = task.output?.[0] ?? null;
-  } else if (task.status === 'FAILED') {
+    update.video_url = pred.output?.[0] ?? null;
+  } else if (pred.status === 'failed' || pred.status === 'canceled') {
     update.status        = 'failed';
-    update.error_message = task.failure ?? 'Video generation failed';
+    update.error_message = pred.error ?? 'Video generation failed';
   }
 
   if (Object.keys(update).length > 0) {
@@ -246,4 +242,3 @@ Return ONLY a valid JSON object with exactly these fields:
 
 Return ONLY the JSON object enclosed in \`\`\`json\`\`\` code fences. No other text.`;
 }
-
