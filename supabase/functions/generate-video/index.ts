@@ -312,10 +312,10 @@ async function handleCheck(
       const videoUrl = resolveOutput(pred.output);
 
       if (!videoUrl) {
-        // Succeeded but no URL yet — log and wait for next poll cycle
-        console.error('Replicate succeeded but output URL is null. Full output:', JSON.stringify(pred.output));
-        update.error_message = `Replicate succeeded but no output URL. Output: ${JSON.stringify(pred.output)}`;
-        update.status = 'failed';
+        // Succeeded but no URL — likely a Replicate billing/quota issue.
+        // Log and leave as 'generating' so the user can retry later.
+        console.error('Replicate succeeded but output is null. Full pred:', JSON.stringify(pred).slice(0, 600));
+        // No update — status stays 'generating', user can press Retry
       } else if (pipeline?.with_narration && pipeline.audio_url) {
         // Combinar vídeo + audio con Creatomate
         const CM_KEY = Deno.env.get('CREATOMATE_API_KEY');
