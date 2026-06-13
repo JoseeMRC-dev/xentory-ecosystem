@@ -344,14 +344,11 @@ function VideoCard({
         cursor: video.video_url ? 'pointer' : 'default',
       }} onClick={video.video_url ? onPreview : undefined}>
         {video.video_url ? (
-          <>
-            <video src={video.video_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted playsInline />
-            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', border: '1px solid rgba(255,255,255,0.3)' }}>
-                <PlayIcon />
-              </div>
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #0a0f1e 0%, #1b4d3e 100%)' }}>
+            <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', border: '1.5px solid rgba(255,255,255,0.35)', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+              <PlayIcon />
             </div>
-          </>
+          </div>
         ) : video.status === 'generating' ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.7rem', color: 'var(--muted)' }}>
             <Spinner size={28} />
@@ -407,6 +404,11 @@ function VideoCard({
 
       {/* Actions */}
       <div style={{ padding: '0 1rem 1rem', display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+        {video.video_url && (
+          <button onClick={onPreview} className="btn btn-sm" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', background: 'var(--card2)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text2)', padding: '0.4rem 0.7rem' }}>
+            <PlayIcon /> {t('Ver', 'Watch')}
+          </button>
+        )}
         {video.status === 'ready' && (
           <>
             <button onClick={onApprove} className="btn btn-sm" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', background: 'rgba(0,200,122,0.12)', color: 'var(--green)', border: '1px solid rgba(0,200,122,0.25)', borderRadius: 8 }}>
@@ -764,7 +766,19 @@ function VideoPreviewModal({ video, onClose, lang }: { video: ContentVideo; onCl
       <Popup title={video.title} onClose={onClose} wide>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {video.video_url && (
-            <video src={video.video_url} controls autoPlay style={{ width: '100%', borderRadius: 12, maxHeight: '55vh', background: '#000' }} />
+            <>
+              <video
+                src={video.video_url}
+                controls playsInline preload="auto"
+                style={{ width: '100%', borderRadius: 12, maxHeight: '55vh', background: '#000' }}
+              />
+              <a
+                href={video.video_url} target="_blank" rel="noopener noreferrer"
+                style={{ fontSize: '0.75rem', color: 'var(--muted)', textAlign: 'center', textDecoration: 'underline', display: 'block' }}
+              >
+                {t('Abrir en nueva pestaña', 'Open in new tab')}
+              </a>
+            </>
           )}
           {video.script && (
             <div>
