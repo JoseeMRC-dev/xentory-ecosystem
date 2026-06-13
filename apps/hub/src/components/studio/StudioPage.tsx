@@ -447,12 +447,13 @@ function NewVideoModal({
 }) {
   const t = (es: string, en: string) => lang === 'es' ? es : en;
 
-  const [videoType,   setVideoType]   = useState<VideoType>('promo');
-  const [language,    setLanguage]    = useState(lang);
-  const [durationSec, setDurationSec] = useState(30);
-  const [title,       setTitle]       = useState('');
-  const [busy,        setBusy]        = useState(false);
-  const [error,       setError]       = useState<string | null>(null);
+  const [videoType,    setVideoType]    = useState<VideoType>('promo');
+  const [language,     setLanguage]     = useState(lang);
+  const [durationSec,  setDurationSec]  = useState(30);
+  const [title,        setTitle]        = useState('');
+  const [withNarration, setWithNarration] = useState(false);
+  const [busy,         setBusy]         = useState(false);
+  const [error,        setError]        = useState<string | null>(null);
 
   const create = async () => {
     setBusy(true);
@@ -464,7 +465,7 @@ function NewVideoModal({
       const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/generate-video`, {
         method:  'POST',
         headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'create', video_type: videoType, language, duration_sec: durationSec, title: title.trim() || undefined }),
+        body: JSON.stringify({ action: 'create', video_type: videoType, language, duration_sec: durationSec, title: title.trim() || undefined, with_narration: withNarration }),
       });
       const data = await res.json();
       if (!res.ok || !data.video) {
@@ -534,15 +535,40 @@ function NewVideoModal({
             />
           </Field>
 
+          {/* Mode */}
+          <Field label={t('Modo', 'Mode')}>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              {[
+                { val: false, emoji: '🎬', es: 'Solo vídeo',    en: 'Video only'      },
+                { val: true,  emoji: '🎙️', es: 'Con narración', en: 'With narration'  },
+              ].map(m => (
+                <button key={String(m.val)} onClick={() => setWithNarration(m.val)} style={{
+                  flex: 1, padding: '0.65rem 0.5rem', borderRadius: 10, border: '2px solid',
+                  borderColor: withNarration === m.val ? 'var(--gold)' : 'var(--border)',
+                  background:  withNarration === m.val ? 'var(--gold-dim)' : 'var(--card2)',
+                  cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600, transition: 'all 0.15s',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.2rem',
+                  color: withNarration === m.val ? 'var(--gold)' : 'var(--text2)',
+                }}>
+                  <span style={{ fontSize: '1.3rem' }}>{m.emoji}</span>
+                  {lang === 'es' ? m.es : m.en}
+                </button>
+              ))}
+            </div>
+          </Field>
+
           {error && (
             <div style={{ fontSize: '0.8rem', color: 'var(--red)', background: 'rgba(240,68,88,0.08)', padding: '0.6rem 0.8rem', borderRadius: 8 }}>
               {error}
             </div>
           )}
 
-          <div style={{ paddingTop: '0.3rem', background: 'rgba(27,77,62,0.06)', borderRadius: 10, padding: '0.8rem', fontSize: '0.75rem', color: 'var(--muted)', lineHeight: 1.5 }}>
-            {t('La IA generará el guión, la descripción visual y el pie de foto. El vídeo puede tardar 2-5 minutos en renderizarse.',
-               'The AI will generate the script, visual description and caption. Video rendering may take 2-5 minutes.')}
+          <div style={{ background: 'rgba(27,77,62,0.06)', borderRadius: 10, padding: '0.8rem', fontSize: '0.75rem', color: 'var(--muted)', lineHeight: 1.5 }}>
+            {withNarration
+              ? t('La IA generará el guión, audio en español con ElevenLabs y vídeo épico con Kling. El proceso puede tardar 5-8 minutos.',
+                  'The AI will generate the script, Spanish audio via ElevenLabs and epic Kling video. The process may take 5-8 minutes.')
+              : t('La IA generará el guión, la descripción visual y el pie de foto. El vídeo puede tardar 2-5 minutos en renderizarse.',
+                  'The AI will generate the script, visual description and caption. Video rendering may take 2-5 minutes.')}
           </div>
 
           <button onClick={create} disabled={busy} className="btn btn-gold" style={{ width: '100%', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.85rem' }}>
