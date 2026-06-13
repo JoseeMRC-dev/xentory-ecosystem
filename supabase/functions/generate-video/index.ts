@@ -10,6 +10,9 @@
  *   ANTHROPIC_API_KEY, REPLICATE_API_KEY
  *   (narración) ELEVENLABS_API_KEY, CREATOMATE_API_KEY
  *   Optional: ELEVENLABS_VOICE_ID (default: voz española multilingual)
+ *   Optional: REPLICATE_MODEL     (default: kwaivgi/kling-v1-6-pro)
+ *             → Copia el valor exacto de tu modelo en replicate.com/models
+ *             → Formato: "owner/model-name"  ej: "klingai/kling-v1.6-pro"
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2?target=deno';
@@ -181,7 +184,8 @@ async function handleCreate(
   }
 
   // 3. Kling 1.6 Pro vía Replicate
-  const klingRes = await fetch(`https://api.replicate.com/v1/models/${KLING_MODEL}/predictions`, {
+  const klingModel = Deno.env.get('REPLICATE_MODEL') ?? KLING_MODEL;
+  const klingRes = await fetch(`https://api.replicate.com/v1/models/${klingModel}/predictions`, {
     method: 'POST',
     headers: {
       'Authorization': `Token ${REPLICATE_KEY}`,
