@@ -147,33 +147,31 @@ export function StudioPage() {
   }, [loadVideos, loadAccounts]);
 
   // ── Poll generating videos ────────────────────────────────────────
-  const checkGenerating = useCallback(async (vids: ContentVideo[]) => {
-    const generating = vids.filter(v => v.status === 'generating');
-    if (!generating.length) return;
-
+  const checkOne = useCallback(async (videoId: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     const token = session?.access_token;
     if (!token) return;
-
-    await Promise.all(generating.map(async (v) => {
-      try {
-        const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/generate-video`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'check', video_id: v.id }),
-        });
-        const { video } = await res.json();
-        if (video && video.status !== v.status) {
-          setVideos(prev => prev.map(p => p.id === video.id ? video : p));
-        }
-      } catch { /* ignore transient errors */ }
-    }));
+    try {
+      const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/generate-video`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'check', video_id: videoId }),
+      });
+      const { video } = await res.json();
+      if (video) setVideos(prev => prev.map(p => p.id === video.id ? video : p));
+    } catch { /* ignore */ }
   }, []);
+
+  const checkGenerating = useCallback(async (vids: ContentVideo[]) => {
+    const generating = vids.filter(v => v.status === 'generating');
+    if (!generating.length) return;
+    await Promise.all(generating.map(v => checkOne(v.id)));
+  }, [checkOne]);
 
   useEffect(() => {
     const hasGenerating = videos.some(v => v.status === 'generating');
     if (hasGenerating && !pollingRef.current) {
-      pollingRef.current = setInterval(() => checkGenerating(videos), 8_000);
+      pollingRef.current = setInterval(() => checkGenerating(videos), 30_000);
     } else if (!hasGenerating && pollingRef.current) {
       clearInterval(pollingRef.current);
       pollingRef.current = null;
@@ -261,6 +259,7 @@ export function StudioPage() {
                 onDelete={() => deleteVideo(v.id)}
                 onPreview={() => setPreviewVideo(v)}
                 onPublish={() => setPublishVideo(v)}
+                onCheck={() => checkOne(v.id)}
               />
             ))}
           </div>
@@ -298,7 +297,7 @@ function EmptyState({ onNew, lang }: { onNew: () => void; lang: string }) {
 
 // ── VIDEO CARD ─────────────────────────────────────────────────────
 function VideoCard({
-  video, lang, onApprove, onReject, onDelete, onPreview, onPublish,
+  video, lang, onApprove, onReject, onDelete, onPreview, onPublish, onCheck,
 }: {
   video: ContentVideo;
   lang: string;
@@ -307,7 +306,10 @@ function VideoCard({
   onDelete:  () => void;
   onPreview: () => void;
   onPublish: () => void;
+  onCheck:   () => void;
 }) {
+  const [checking, setChecking] = useState(false);
+  const handleCheck = async () => { setChecking(true); await onCheck(); setChecking(false); };
   const t  = (es: string, en: string) => lang === 'es' ? es : en;
   const st = STATUS_LABEL[video.status];
   const tp = TYPE_LABEL[video.video_type];
@@ -337,6 +339,14 @@ function VideoCard({
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.7rem', color: 'var(--muted)' }}>
             <Spinner size={28} />
             <span style={{ fontSize: '0.78rem' }}>{t('Generando vídeo…', 'Generating video…')}</span>
+            <button onClick={handleCheck} disabled={checking} style={{
+              fontSize: '0.72rem', padding: '0.3rem 0.8rem', borderRadius: 99,
+              border: '1px solid var(--border2)', background: 'var(--card2)',
+              cursor: checking ? 'default' : 'pointer', color: 'var(--muted)',
+              display: 'flex', alignItems: 'center', gap: '0.3rem',
+            }}>
+              {checking ? <Spinner size={10} /> : '↻'} {t('Actualizar', 'Refresh')}
+            </button>
           </div>
         ) : (
           <div style={{ color: 'var(--border2)', opacity: 0.6 }}><FilmIcon /></div>
