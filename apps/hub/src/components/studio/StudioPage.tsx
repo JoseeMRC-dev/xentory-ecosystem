@@ -164,33 +164,31 @@ export function StudioPage() {
   }, [loadVideos, loadAccounts]);
 
   // ── Poll generating videos ────────────────────────────────────────
-  const checkGenerating = useCallback(async (vids: ContentVideo[]) => {
-    const generating = vids.filter(v => v.status === 'generating');
-    if (!generating.length) return;
-
+  const checkOne = useCallback(async (videoId: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     const token = session?.access_token;
     if (!token) return;
-
-    await Promise.all(generating.map(async (v) => {
-      try {
-        const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/generate-video`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'check', video_id: v.id }),
-        });
-        const { video } = await res.json();
-        if (video && video.status !== v.status) {
-          setVideos(prev => prev.map(p => p.id === video.id ? video : p));
-        }
-      } catch { /* ignore transient errors */ }
-    }));
+    try {
+      const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/generate-video`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'check', video_id: videoId }),
+      });
+      const { video } = await res.json();
+      if (video) setVideos(prev => prev.map(p => p.id === video.id ? video : p));
+    } catch { /* ignore */ }
   }, []);
+
+  const checkGenerating = useCallback(async (vids: ContentVideo[]) => {
+    const generating = vids.filter(v => v.status === 'generating');
+    if (!generating.length) return;
+    await Promise.all(generating.map(v => checkOne(v.id)));
+  }, [checkOne]);
 
   useEffect(() => {
     const hasGenerating = videos.some(v => v.status === 'generating');
     if (hasGenerating && !pollingRef.current) {
-      pollingRef.current = setInterval(() => checkGenerating(videos), 8_000);
+      pollingRef.current = setInterval(() => checkGenerating(videos), 30_000);
     } else if (!hasGenerating && pollingRef.current) {
       clearInterval(pollingRef.current);
       pollingRef.current = null;
@@ -278,6 +276,7 @@ export function StudioPage() {
                 onDelete={() => deleteVideo(v.id)}
                 onPreview={() => setPreviewVideo(v)}
                 onPublish={() => setPublishVideo(v)}
+                onCheck={() => checkOne(v.id)}
               />
             ))}
           </div>
@@ -315,7 +314,7 @@ function EmptyState({ onNew, lang }: { onNew: () => void; lang: string }) {
 
 // ── VIDEO CARD ─────────────────────────────────────────────────────
 function VideoCard({
-  video, lang, onApprove, onReject, onDelete, onPreview, onPublish,
+  video, lang, onApprove, onReject, onDelete, onPreview, onPublish, onCheck,
 }: {
   video: ContentVideo;
   lang: string;
@@ -324,7 +323,10 @@ function VideoCard({
   onDelete:  () => void;
   onPreview: () => void;
   onPublish: () => void;
+  onCheck:   () => void;
 }) {
+  const [checking, setChecking] = useState(false);
+  const handleCheck = async () => { setChecking(true); await onCheck(); setChecking(false); };
   const t  = (es: string, en: string) => lang === 'es' ? es : en;
   const st = STATUS_LABEL[video.status];
   const tp = TYPE_LABEL[video.video_type];
@@ -354,6 +356,14 @@ function VideoCard({
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.7rem', color: 'var(--muted)' }}>
             <Spinner size={28} />
             <span style={{ fontSize: '0.78rem' }}>{t('Generando vídeo…', 'Generating video…')}</span>
+            <button onClick={handleCheck} disabled={checking} style={{
+              fontSize: '0.72rem', padding: '0.3rem 0.8rem', borderRadius: 99,
+              border: '1px solid var(--border2)', background: 'var(--card2)',
+              cursor: checking ? 'default' : 'pointer', color: 'var(--muted)',
+              display: 'flex', alignItems: 'center', gap: '0.3rem',
+            }}>
+              {checking ? <Spinner size={10} /> : '↻'} {t('Actualizar', 'Refresh')}
+            </button>
           </div>
         ) : (
           <div style={{ color: 'var(--border2)', opacity: 0.6 }}><FilmIcon /></div>
@@ -461,6 +471,7 @@ function NewVideoModal({
   const [title,        setTitle]        = useState('');
   const [withNarration, setWithNarration] = useState(false);
   const [voiceId,      setVoiceId]      = useState(VOICES[0].id);
+  const [userBrief,    setUserBrief]    = useState('');
   const [busy,         setBusy]         = useState(false);
   const [error,        setError]        = useState<string | null>(null);
 
@@ -474,7 +485,7 @@ function NewVideoModal({
       const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/generate-video`, {
         method:  'POST',
         headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'create', video_type: videoType, language, duration_sec: durationSec, title: title.trim() || undefined, with_narration: withNarration, voice_id: withNarration ? voiceId : undefined }),
+        body: JSON.stringify({ action: 'create', video_type: videoType, language, duration_sec: durationSec, title: title.trim() || undefined, with_narration: withNarration, voice_id: withNarration ? voiceId : undefined, user_brief: userBrief.trim() || undefined }),
       });
       const data = await res.json();
       if (!res.ok || !data.video) {
@@ -507,6 +518,22 @@ function NewVideoModal({
               placeholder={t('Ej: Xentory — El futuro del análisis', 'E.g. Xentory — The Future of Analysis')}
               style={inputStyle} maxLength={80}
             />
+          </Field>
+
+          {/* User brief */}
+          <Field label={t('Tu idea / Directrices (opcional)', 'Your idea / Direction (optional)')}>
+            <textarea
+              value={userBrief} onChange={e => setUserBrief(e.target.value)}
+              placeholder={t(
+                'Ej: Quiero transmitir confianza y exclusividad. Mostrar datos financieros en movimiento con un estilo muy cinematográfico y oscuro. Enfocado en traders profesionales.',
+                'E.g. I want to convey trust and exclusivity. Show financial data in motion with a very cinematic, dark style. Targeted at professional traders.',
+              )}
+              rows={3} maxLength={500}
+              style={{ ...inputStyle, resize: 'vertical', minHeight: 72, lineHeight: 1.5 }}
+            />
+            <div style={{ fontSize: '0.68rem', color: 'var(--muted)', textAlign: 'right', marginTop: '0.15rem' }}>
+              {userBrief.length}/500
+            </div>
           </Field>
 
           {/* Type */}

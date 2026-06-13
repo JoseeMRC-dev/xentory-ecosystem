@@ -96,6 +96,7 @@ async function handleCreate(
     title,
     with_narration  = false,
     voice_id,
+    user_brief,
   } = body as Record<string, unknown>;
 
   const ANTHROPIC_KEY = Deno.env.get('ANTHROPIC_API_KEY');
@@ -111,7 +112,7 @@ async function handleCreate(
   }
 
   // 1. Claude → guión + prompt visual + caption
-  const prompt = buildScriptPrompt(String(video_type), String(language), Number(duration_sec));
+  const prompt = buildScriptPrompt(String(video_type), String(language), Number(duration_sec), typeof user_brief === 'string' ? user_brief.trim() : '');
   const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -360,7 +361,7 @@ async function handleCheck(
 }
 
 // ── PROMPT BUILDER ────────────────────────────────────────────────
-function buildScriptPrompt(type: string, lang: string, duration: number): string {
+function buildScriptPrompt(type: string, lang: string, duration: number, brief: string): string {
   const desc: Record<string, string> = {
     promo:       'promotional video highlighting Xentory as an AI-powered financial and sports analysis platform',
     signal:      'highlight reel of a recent AI prediction success that builds trust and FOMO',
@@ -369,13 +370,17 @@ function buildScriptPrompt(type: string, lang: string, duration: number): string
   const words = Math.round(duration * 2.5);
   const isEs  = lang === 'es';
 
+  const briefSection = brief
+    ? `\n\nCREATOR DIRECTION (follow this closely — it overrides generic defaults):\n"${brief}"\n`
+    : '';
+
   return `You are a social media video content expert for Xentory, an AI-powered SaaS platform for financial markets and sports predictions.
 
-Create content for a ${duration}-second ${desc[type] ?? desc.promo} in ${isEs ? 'Spanish' : 'English'}.
+Create content for a ${duration}-second ${desc[type] ?? desc.promo} in ${isEs ? 'Spanish' : 'English'}.${briefSection}
 
 Return ONLY a valid JSON object with exactly these fields:
 - "script": voiceover script (${words} words max, punchy hook in first 3 seconds)
-- "visual_prompt": detailed cinematic description for AI video generation — describe visuals, camera movements, color palette, mood (NO text overlays, NO logos). Focus on: glowing data charts, holographic market graphs, dynamic candlestick animations, dark premium background, emerald-green (#1B4D3E) accent lighting, cinematic depth of field
+- "visual_prompt": detailed cinematic description for AI video generation — describe visuals, camera movements, color palette, mood (NO text overlays, NO logos). Focus on: glowing data charts, holographic market graphs, dynamic candlestick animations, dark premium background, emerald-green (#1B4D3E) accent lighting, cinematic depth of field. Incorporate the creator direction if provided.
 - "caption": social media caption with 2-3 emojis (${isEs ? '150 chars max in Spanish' : '150 chars max in English'})
 - "hashtags": array of 8 relevant hashtags WITHOUT the # symbol
 
