@@ -81,6 +81,13 @@ const PlanIcon = () => (
     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
   </svg>
 );
+const FilmIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+    <rect x="2" y="2" width="20" height="20" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/>
+    <line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="17" y1="7" x2="22" y2="7"/>
+    <line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/>
+  </svg>
+);
 const AlertTriangle = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
     <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
@@ -162,10 +169,14 @@ export function Navbar() {
   const isActive = (p: string) => location.pathname === p;
   const isHome   = location.pathname === '/';
 
+  const adminEmail = import.meta.env.VITE_ADMIN_EMAIL?.trim().toLowerCase();
+  const isAdmin    = !!(user && adminEmail && user.email?.toLowerCase() === adminEmail);
+
   const navLinks = [
     ...(!user ? [{ to: '/pricing', label: t('nav.pricing') }] : []),
     { to: '/blog',        label: t('nav.blog') },
     { to: '/metodologia', label: t('nav.methodology') },
+    ...(isAdmin ? [{ to: '/studio', label: 'Studio' }] : []),
   ];
 
   // ── TICKER TOGGLE ──────────────────────────────────────────────
@@ -305,6 +316,7 @@ export function Navbar() {
                     {[
                       { label: t('nav.dashboard'), icon: <DashIcon />,   to: '/dashboard' },
                       { label: t('nav.myplans'),   icon: <PlanIcon />,   to: '/pricing'   },
+                      ...(isAdmin ? [{ label: 'Studio', icon: <FilmIcon />, to: '/studio' }] : []),
                     ].map(item => (
                       <div key={item.to} onClick={() => { navigate(item.to); setUserMenu(false); }}
                         style={{ padding: '0.65rem 1rem', cursor: 'pointer', fontSize: '0.83rem', display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'var(--text2)', transition: 'background 0.12s' }}
@@ -383,6 +395,7 @@ export function Navbar() {
               { to: '/blog',        label: t('nav.blog') },
               { to: '/metodologia', label: t('nav.methodology') },
               ...(!user ? [{ to: '/pricing', label: t('nav.pricing') }] : []),
+              ...(isAdmin ? [{ to: '/studio', label: 'Studio' }] : []),
             ] as { to: string; label: string }[]).map(({ to, label }) => (
               <Link key={to} to={to} onClick={() => setMob(false)} style={{
                 textDecoration: 'none', padding: '0.85rem 0',
