@@ -86,6 +86,7 @@ async function handleCreate(
     duration_sec    = 30,
     title,
     with_narration  = false,
+    voice_id,
   } = body as Record<string, unknown>;
 
   const ANTHROPIC_KEY = Deno.env.get('ANTHROPIC_API_KEY');
@@ -146,7 +147,7 @@ async function handleCreate(
   let audioUrl: string | null = null;
   if (with_narration) {
     const EL_KEY  = Deno.env.get('ELEVENLABS_API_KEY')!;
-    const voiceId = Deno.env.get('ELEVENLABS_VOICE_ID') ?? DEFAULT_VOICE_ID;
+    const voiceId = (typeof voice_id === 'string' && voice_id) ? voice_id : (Deno.env.get('ELEVENLABS_VOICE_ID') ?? DEFAULT_VOICE_ID);
 
     const elRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
       method: 'POST',

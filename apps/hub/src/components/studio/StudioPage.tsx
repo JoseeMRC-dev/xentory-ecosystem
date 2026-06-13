@@ -430,11 +430,20 @@ function NewVideoModal({
 }) {
   const t = (es: string, en: string) => lang === 'es' ? es : en;
 
+  const VOICES = [
+    { id: 'XrExE9yKIg1WjnnlVkGX', es: 'Matilda',   en: 'Matilda',  desc: 'Femenina · cálida',     descEn: 'Female · warm'        },
+    { id: 'onwK4e9ZLuTAKqWW03F9', es: 'Daniel',    en: 'Daniel',   desc: 'Masculina · profesional', descEn: 'Male · professional'  },
+    { id: 'XB0fDUnXU5powFXDhCwa', es: 'Charlotte', en: 'Charlotte',desc: 'Femenina · elegante',    descEn: 'Female · elegant'     },
+    { id: 'TX3LPaxmHKxFdv7VOQHJ', es: 'Liam',      en: 'Liam',     desc: 'Masculina · enérgica',   descEn: 'Male · energetic'     },
+    { id: 'ErXwobaYiN019PkySvjV', es: 'Antoni',    en: 'Antoni',   desc: 'Masculina · suave',      descEn: 'Male · smooth'        },
+  ];
+
   const [videoType,    setVideoType]    = useState<VideoType>('promo');
   const [language,     setLanguage]     = useState(lang);
   const [durationSec,  setDurationSec]  = useState(30);
   const [title,        setTitle]        = useState('');
   const [withNarration, setWithNarration] = useState(false);
+  const [voiceId,      setVoiceId]      = useState(VOICES[0].id);
   const [busy,         setBusy]         = useState(false);
   const [error,        setError]        = useState<string | null>(null);
 
@@ -448,7 +457,7 @@ function NewVideoModal({
       const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/generate-video`, {
         method:  'POST',
         headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'create', video_type: videoType, language, duration_sec: durationSec, title: title.trim() || undefined, with_narration: withNarration }),
+        body: JSON.stringify({ action: 'create', video_type: videoType, language, duration_sec: durationSec, title: title.trim() || undefined, with_narration: withNarration, voice_id: withNarration ? voiceId : undefined }),
       });
       const data = await res.json();
       if (!res.ok || !data.video) {
@@ -539,6 +548,33 @@ function NewVideoModal({
               ))}
             </div>
           </Field>
+
+          {/* Voice selector — only when narration is on */}
+          {withNarration && (
+            <Field label={t('Voz', 'Voice')}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                {VOICES.map(v => (
+                  <button key={v.id} onClick={() => setVoiceId(v.id)} style={{
+                    display: 'flex', alignItems: 'center', gap: '0.7rem',
+                    padding: '0.55rem 0.8rem', borderRadius: 9, border: '1.5px solid',
+                    borderColor: voiceId === v.id ? 'var(--gold)' : 'var(--border)',
+                    background:  voiceId === v.id ? 'var(--gold-dim)' : 'var(--card2)',
+                    cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s',
+                  }}>
+                    <span style={{ fontSize: '1.1rem' }}>{voiceId === v.id ? '🔊' : '🔈'}</span>
+                    <span style={{ flex: 1 }}>
+                      <span style={{ fontSize: '0.82rem', fontWeight: 600, color: voiceId === v.id ? 'var(--gold)' : 'var(--text)' }}>
+                        {lang === 'es' ? v.es : v.en}
+                      </span>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--muted)', marginLeft: '0.4rem' }}>
+                        {lang === 'es' ? v.desc : v.descEn}
+                      </span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </Field>
+          )}
 
           {error && (
             <div style={{ fontSize: '0.8rem', color: 'var(--red)', background: 'rgba(240,68,88,0.08)', padding: '0.6rem 0.8rem', borderRadius: 8 }}>
