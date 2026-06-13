@@ -454,6 +454,7 @@ function NewVideoModal({
   const [title,        setTitle]        = useState('');
   const [withNarration, setWithNarration] = useState(false);
   const [voiceId,      setVoiceId]      = useState(VOICES[0].id);
+  const [userBrief,    setUserBrief]    = useState('');
   const [busy,         setBusy]         = useState(false);
   const [error,        setError]        = useState<string | null>(null);
 
@@ -467,7 +468,7 @@ function NewVideoModal({
       const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/generate-video`, {
         method:  'POST',
         headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'create', video_type: videoType, language, duration_sec: durationSec, title: title.trim() || undefined, with_narration: withNarration, voice_id: withNarration ? voiceId : undefined }),
+        body: JSON.stringify({ action: 'create', video_type: videoType, language, duration_sec: durationSec, title: title.trim() || undefined, with_narration: withNarration, voice_id: withNarration ? voiceId : undefined, user_brief: userBrief.trim() || undefined }),
       });
       const data = await res.json();
       if (!res.ok || !data.video) {
@@ -500,6 +501,22 @@ function NewVideoModal({
               placeholder={t('Ej: Xentory — El futuro del análisis', 'E.g. Xentory — The Future of Analysis')}
               style={inputStyle} maxLength={80}
             />
+          </Field>
+
+          {/* User brief */}
+          <Field label={t('Tu idea / Directrices (opcional)', 'Your idea / Direction (optional)')}>
+            <textarea
+              value={userBrief} onChange={e => setUserBrief(e.target.value)}
+              placeholder={t(
+                'Ej: Quiero transmitir confianza y exclusividad. Mostrar datos financieros en movimiento con un estilo muy cinematográfico y oscuro. Enfocado en traders profesionales.',
+                'E.g. I want to convey trust and exclusivity. Show financial data in motion with a very cinematic, dark style. Targeted at professional traders.',
+              )}
+              rows={3} maxLength={500}
+              style={{ ...inputStyle, resize: 'vertical', minHeight: 72, lineHeight: 1.5 }}
+            />
+            <div style={{ fontSize: '0.68rem', color: 'var(--muted)', textAlign: 'right', marginTop: '0.15rem' }}>
+              {userBrief.length}/500
+            </div>
           </Field>
 
           {/* Type */}
