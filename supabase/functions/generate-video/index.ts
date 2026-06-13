@@ -2,7 +2,7 @@
  * generate-video — Edge Function
  *
  * Actions:
- *   create  → Claude genera guión, Kling genera vídeo
+ *   create  → Claude genera guión, MiniMax genera vídeo
  *             (with_narration: true) → ElevenLabs genera audio, Creatomate combina
  *   check   → poll pipeline status, actualiza la fila cuando termina
  *
@@ -10,9 +10,9 @@
  *   ANTHROPIC_API_KEY, REPLICATE_API_KEY
  *   (narración) ELEVENLABS_API_KEY, CREATOMATE_API_KEY
  *   Optional: ELEVENLABS_VOICE_ID (default: voz española multilingual)
- *   Optional: REPLICATE_MODEL     (default: kwaivgi/kling-v1-6-pro)
+ *   Optional: REPLICATE_MODEL     (default: minimax/video-01)
  *             → Copia el valor exacto de tu modelo en replicate.com/models
- *             → Formato: "owner/model-name"  ej: "klingai/kling-v1.6-pro"
+ *             → Formato: "owner/model-name"
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2?target=deno';
@@ -27,7 +27,7 @@ const ALLOWED_ORIGINS = [
   'https://xentory-ecosystem-bet.vercel.app',
 ];
 
-const KLING_MODEL         = 'kwaivgi/kling-v1-6-pro';
+const DEFAULT_MODEL       = 'minimax/video-01';
 const STORAGE_BUCKET      = 'studio-audio';
 // Voz multilingual de ElevenLabs con buen español (Matilda)
 const DEFAULT_VOICE_ID    = 'XrExE9yKIg1WjnnlVkGX';
@@ -75,6 +75,14 @@ Deno.serve(async (req) => {
     return json({ error: 'Internal error' }, 500, origin);
   }
 });
+
+// Normaliza la salida de Replicate: puede ser string o array
+function resolveOutput(output: unknown): string | null {
+  if (!output) return null;
+  if (typeof output === 'string') return output;
+  if (Array.isArray(output)) return (output[0] as string) ?? null;
+  return null;
+}
 
 // ── CREATE ────────────────────────────────────────────────────────
 async function handleCreate(
@@ -183,9 +191,9 @@ async function handleCreate(
     audioUrl = publicUrl;
   }
 
-  // 3. Kling 1.6 Pro vía Replicate
-  const klingModel = Deno.env.get('REPLICATE_MODEL') ?? KLING_MODEL;
-  const klingRes = await fetch(`https://api.replicate.com/v1/models/${klingModel}/predictions`, {
+  // 3. Vídeo vía Replicate (minimax/video-01 por defecto)
+  const videoModel = Deno.env.get('REPLICATE_MODEL') ?? DEFAULT_MODEL;
+  const videoRes = await fetch(`https://api.replicate.com/v1/models/${videoModel}/predictions`, {
     method: 'POST',
     headers: {
       'Authorization': `Token ${REPLICATE_KEY}`,
@@ -194,18 +202,16 @@ async function handleCreate(
     },
     body: JSON.stringify({
       input: {
-        prompt:       parsed.visual_prompt,
-        aspect_ratio: '9:16',
-        duration:     5,
-        cfg_scale:    0.5,
+        prompt:           parsed.visual_prompt,
+        prompt_optimizer: false,
       },
     }),
   });
-  const klingData = await klingRes.json();
+  const videoData = await videoRes.json();
 
-  if (!klingData.id) {
-    console.error('Kling/Replicate error:', klingData);
-    return json({ error: 'Kling task creation failed', detail: JSON.stringify(klingData) }, 502, origin);
+  if (!videoData.id) {
+    console.error('Replicate error:', videoData);
+    return json({ error: 'Video task creation failed', detail: JSON.stringify(videoData) }, 502, origin);
   }
 
   // Estado del pipeline interno
@@ -226,9 +232,9 @@ async function handleCreate(
       visual_prompt:   parsed.visual_prompt,
       caption:         parsed.caption,
       hashtags:        parsed.hashtags ?? [],
-      runway_task_id:  klingData.id,
-      status:          klingData.status === 'succeeded' ? (with_narration ? 'generating' : 'ready') : 'generating',
-      video_url:       (!with_narration && klingData.status === 'succeeded') ? (klingData.output?.[0] ?? null) : null,
+      runway_task_id:  videoData.id,
+      status:          videoData.status === 'succeeded' ? (with_narration ? 'generating' : 'ready') : 'generating',
+      video_url:       (!with_narration && videoData.status === 'succeeded') ? (resolveOutput(videoData.output)) : null,
       publish_results: pipeline ? { _pipeline: pipeline } : {},
     })
     .select()
@@ -294,7 +300,7 @@ async function handleCheck(
     const pred = await predRes.json();
 
     if (pred.status === 'succeeded') {
-      const klingUrl = pred.output?.[0] ?? null;
+      const klingUrl = resolveOutput(pred.output);
 
       if (pipeline?.with_narration && pipeline.audio_url && klingUrl) {
         // Combinar vídeo + audio con Creatomate
