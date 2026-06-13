@@ -409,7 +409,12 @@ function VideoCard({
             <PlayIcon /> {t('Ver', 'Watch')}
           </button>
         )}
-        {video.status === 'ready' && (
+        {video.status === 'ready' && !video.video_url && (
+          <button onClick={handleCheck} disabled={checking} className="btn btn-sm" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', background: 'rgba(217,119,6,0.1)', color: '#d97706', border: '1px solid rgba(217,119,6,0.25)', borderRadius: 8 }}>
+            {checking ? <Spinner size={11} /> : '↻'} {t('Reintentar', 'Retry')}
+          </button>
+        )}
+        {video.status === 'ready' && video.video_url && (
           <>
             <button onClick={onApprove} className="btn btn-sm" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', background: 'rgba(0,200,122,0.12)', color: 'var(--green)', border: '1px solid rgba(0,200,122,0.25)', borderRadius: 8 }}>
               <CheckIcon /> {t('Aprobar', 'Approve')}

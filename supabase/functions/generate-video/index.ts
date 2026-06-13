@@ -267,7 +267,11 @@ async function handleCheck(
     .single();
 
   if (!video) return json({ error: 'Not found' }, 404, origin);
-  if (video.status !== 'generating') return json({ video }, 200, origin);
+  // Allow re-check if stuck as 'ready' without a video_url (edge case: Replicate returned null output)
+  const isStuckReady = video.status === 'ready' && !video.video_url;
+  if (video.status !== 'generating' && !isStuckReady) return json({ video }, 200, origin);
+  // Treat stuck-ready as generating so the check runs
+  if (isStuckReady) video.status = 'generating';
 
   const pipeline = video.publish_results?._pipeline as {
     with_narration: boolean; stage: string; audio_url: string; creatomate_id?: string;
@@ -302,11 +306,17 @@ async function handleCheck(
       { headers: { 'Authorization': `Token ${REPLICATE_KEY}` } },
     );
     const pred = await predRes.json();
+    console.log('Replicate poll:', pred.status, 'output:', JSON.stringify(pred.output)?.slice(0, 120));
 
     if (pred.status === 'succeeded') {
-      const klingUrl = resolveOutput(pred.output);
+      const videoUrl = resolveOutput(pred.output);
 
-      if (pipeline?.with_narration && pipeline.audio_url && klingUrl) {
+      if (!videoUrl) {
+        // Succeeded but no URL yet — log and wait for next poll cycle
+        console.error('Replicate succeeded but output URL is null. Full output:', JSON.stringify(pred.output));
+        update.error_message = `Replicate succeeded but no output URL. Output: ${JSON.stringify(pred.output)}`;
+        update.status = 'failed';
+      } else if (pipeline?.with_narration && pipeline.audio_url) {
         // Combinar vídeo + audio con Creatomate
         const CM_KEY = Deno.env.get('CREATOMATE_API_KEY');
         if (!CM_KEY) {
@@ -321,7 +331,7 @@ async function handleCheck(
               width:  768,
               height: 1280,
               elements: [
-                { type: 'video', source: klingUrl },
+                { type: 'video', source: videoUrl },
                 { type: 'audio', source: pipeline.audio_url, volume: '80%' },
               ],
             }]),
@@ -332,18 +342,16 @@ async function handleCheck(
             update.status        = 'failed';
             update.error_message = 'Creatomate render creation failed';
           } else {
-            // Actualizar pipeline a la siguiente etapa
             update.publish_results = {
               ...video.publish_results,
               _pipeline: { ...pipeline, stage: 'combining', creatomate_id: render.id },
             };
-            // Mantener status 'generating' hasta que Creatomate termine
           }
         }
       } else {
         // Sin narración — vídeo listo directamente
         update.status    = 'ready';
-        update.video_url = klingUrl;
+        update.video_url = videoUrl;
       }
 
     } else if (pred.status === 'failed' || pred.status === 'canceled') {
