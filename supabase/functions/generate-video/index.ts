@@ -2,10 +2,14 @@
  * generate-video — Edge Function
  *
  * Actions:
- *   create  → Claude genera el guión, Kling (Replicate) genera el vídeo
- *   check   → poll Replicate prediction status, actualiza la fila cuando termina
+ *   create  → Claude genera guión, Kling genera vídeo
+ *             (with_narration: true) → ElevenLabs genera audio, Creatomate combina
+ *   check   → poll pipeline status, actualiza la fila cuando termina
  *
- * Required secrets: ANTHROPIC_API_KEY, REPLICATE_API_KEY
+ * Required secrets:
+ *   ANTHROPIC_API_KEY, REPLICATE_API_KEY
+ *   (narración) ELEVENLABS_API_KEY, CREATOMATE_API_KEY
+ *   Optional: ELEVENLABS_VOICE_ID (default: voz española multilingual)
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2?target=deno';
@@ -20,8 +24,10 @@ const ALLOWED_ORIGINS = [
   'https://xentory-ecosystem-bet.vercel.app',
 ];
 
-// Kling 1.6 Pro model on Replicate
-const KLING_MODEL = 'kwaivgi/kling-v1-6-pro';
+const KLING_MODEL         = 'kwaivgi/kling-v1-6-pro';
+const STORAGE_BUCKET      = 'studio-audio';
+// Voz multilingual de ElevenLabs con buen español (Matilda)
+const DEFAULT_VOICE_ID    = 'XrExE9yKIg1WjnnlVkGX';
 
 function corsHeaders(origin: string | null) {
   const allowed = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
@@ -75,18 +81,26 @@ async function handleCreate(
   origin: string | null,
 ) {
   const {
-    video_type   = 'promo',
-    language     = 'es',
-    duration_sec = 30,
+    video_type      = 'promo',
+    language        = 'es',
+    duration_sec    = 30,
     title,
-  } = body as Record<string, string | number>;
+    with_narration  = false,
+  } = body as Record<string, unknown>;
 
-  const ANTHROPIC_KEY  = Deno.env.get('ANTHROPIC_API_KEY');
-  const REPLICATE_KEY  = Deno.env.get('REPLICATE_API_KEY');
-  if (!ANTHROPIC_KEY)  return json({ error: 'ANTHROPIC_API_KEY secret not configured' }, 500, origin);
-  if (!REPLICATE_KEY)  return json({ error: 'REPLICATE_API_KEY secret not configured' }, 500, origin);
+  const ANTHROPIC_KEY = Deno.env.get('ANTHROPIC_API_KEY');
+  const REPLICATE_KEY = Deno.env.get('REPLICATE_API_KEY');
+  if (!ANTHROPIC_KEY) return json({ error: 'ANTHROPIC_API_KEY secret not configured' }, 500, origin);
+  if (!REPLICATE_KEY) return json({ error: 'REPLICATE_API_KEY secret not configured' }, 500, origin);
 
-  // 1. Generar guión + prompt visual + caption con Claude
+  if (with_narration) {
+    const EL_KEY = Deno.env.get('ELEVENLABS_API_KEY');
+    const CM_KEY = Deno.env.get('CREATOMATE_API_KEY');
+    if (!EL_KEY) return json({ error: 'ELEVENLABS_API_KEY secret not configured' }, 500, origin);
+    if (!CM_KEY) return json({ error: 'CREATOMATE_API_KEY secret not configured' }, 500, origin);
+  }
+
+  // 1. Claude → guión + prompt visual + caption
   const prompt = buildScriptPrompt(String(video_type), String(language), Number(duration_sec));
   const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -128,7 +142,44 @@ async function handleCreate(
     }
   }
 
-  // 2. Generar vídeo con Kling 1.6 Pro vía Replicate
+  // 2. (Narración) ElevenLabs → audio → Supabase Storage
+  let audioUrl: string | null = null;
+  if (with_narration) {
+    const EL_KEY  = Deno.env.get('ELEVENLABS_API_KEY')!;
+    const voiceId = Deno.env.get('ELEVENLABS_VOICE_ID') ?? DEFAULT_VOICE_ID;
+
+    const elRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+      method: 'POST',
+      headers: { 'xi-api-key': EL_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text:      parsed.script,
+        model_id:  'eleven_multilingual_v2',
+        voice_settings: { stability: 0.5, similarity_boost: 0.75 },
+      }),
+    });
+
+    if (!elRes.ok) {
+      const err = await elRes.text();
+      return json({ error: 'ElevenLabs error', detail: err }, 502, origin);
+    }
+
+    const audioBuffer = await elRes.arrayBuffer();
+
+    // Crear bucket si no existe
+    await supabase.storage.createBucket(STORAGE_BUCKET, { public: true }).catch(() => {});
+
+    const audioPath = `${userId}/${Date.now()}.mp3`;
+    const { error: uploadErr } = await supabase.storage
+      .from(STORAGE_BUCKET)
+      .upload(audioPath, audioBuffer, { contentType: 'audio/mpeg' });
+
+    if (uploadErr) return json({ error: 'Audio upload failed', detail: uploadErr.message }, 500, origin);
+
+    const { data: { publicUrl } } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(audioPath);
+    audioUrl = publicUrl;
+  }
+
+  // 3. Kling 1.6 Pro vía Replicate
   const klingRes = await fetch(`https://api.replicate.com/v1/models/${KLING_MODEL}/predictions`, {
     method: 'POST',
     headers: {
@@ -152,22 +203,28 @@ async function handleCreate(
     return json({ error: 'Kling task creation failed', detail: JSON.stringify(klingData) }, 502, origin);
   }
 
-  // 3. Guardar en BD (reutilizamos runway_task_id para el prediction ID de Replicate)
+  // Estado del pipeline interno
+  const pipeline = with_narration
+    ? { with_narration: true, stage: 'kling', audio_url: audioUrl }
+    : null;
+
+  // 4. Guardar en BD
   const { data: video, error: dbErr } = await supabase
     .from('content_videos')
     .insert({
-      user_id:        userId,
-      title:          title ?? `Video ${new Date().toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US')}`,
+      user_id:         userId,
+      title:           title ?? `Video ${new Date().toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US')}`,
       video_type,
       language,
       duration_sec,
-      script:         parsed.script,
-      visual_prompt:  parsed.visual_prompt,
-      caption:        parsed.caption,
-      hashtags:       parsed.hashtags ?? [],
-      runway_task_id: klingData.id,
-      status:         klingData.status === 'succeeded' ? 'ready' : 'generating',
-      video_url:      klingData.output?.[0] ?? null,
+      script:          parsed.script,
+      visual_prompt:   parsed.visual_prompt,
+      caption:         parsed.caption,
+      hashtags:        parsed.hashtags ?? [],
+      runway_task_id:  klingData.id,
+      status:          klingData.status === 'succeeded' ? (with_narration ? 'generating' : 'ready') : 'generating',
+      video_url:       (!with_narration && klingData.status === 'succeeded') ? (klingData.output?.[0] ?? null) : null,
+      publish_results: pipeline ? { _pipeline: pipeline } : {},
     })
     .select()
     .single();
@@ -197,19 +254,87 @@ async function handleCheck(
   if (!video) return json({ error: 'Not found' }, 404, origin);
   if (video.status !== 'generating') return json({ video }, 200, origin);
 
-  const predRes = await fetch(
-    `https://api.replicate.com/v1/predictions/${video.runway_task_id}`,
-    { headers: { 'Authorization': `Token ${REPLICATE_KEY}` } },
-  );
-  const pred = await predRes.json();
+  const pipeline = video.publish_results?._pipeline as {
+    with_narration: boolean; stage: string; audio_url: string; creatomate_id?: string;
+  } | undefined;
 
   const update: Record<string, unknown> = {};
-  if (pred.status === 'succeeded') {
-    update.status    = 'ready';
-    update.video_url = pred.output?.[0] ?? null;
-  } else if (pred.status === 'failed' || pred.status === 'canceled') {
-    update.status        = 'failed';
-    update.error_message = pred.error ?? 'Video generation failed';
+
+  // ── Etapa Creatomate (combinando vídeo + audio) ───────────────────
+  if (pipeline?.stage === 'combining' && pipeline.creatomate_id) {
+    const CM_KEY = Deno.env.get('CREATOMATE_API_KEY');
+    if (!CM_KEY) return json({ error: 'CREATOMATE_API_KEY secret not configured' }, 500, origin);
+
+    const cmRes = await fetch(`https://api.creatomate.com/v1/renders/${pipeline.creatomate_id}`, {
+      headers: { 'Authorization': `Bearer ${CM_KEY}` },
+    });
+    const render = await cmRes.json();
+
+    if (render.status === 'succeeded') {
+      update.status    = 'ready';
+      update.video_url = render.url;
+      // Limpiar pipeline del publish_results
+      update.publish_results = { ...video.publish_results, _pipeline: undefined };
+    } else if (render.status === 'failed') {
+      update.status        = 'failed';
+      update.error_message = render.error ?? 'Creatomate combining failed';
+    }
+
+  // ── Etapa Kling (generando vídeo) ─────────────────────────────────
+  } else {
+    const predRes = await fetch(
+      `https://api.replicate.com/v1/predictions/${video.runway_task_id}`,
+      { headers: { 'Authorization': `Token ${REPLICATE_KEY}` } },
+    );
+    const pred = await predRes.json();
+
+    if (pred.status === 'succeeded') {
+      const klingUrl = pred.output?.[0] ?? null;
+
+      if (pipeline?.with_narration && pipeline.audio_url && klingUrl) {
+        // Combinar vídeo + audio con Creatomate
+        const CM_KEY = Deno.env.get('CREATOMATE_API_KEY');
+        if (!CM_KEY) {
+          update.status        = 'failed';
+          update.error_message = 'CREATOMATE_API_KEY secret not configured';
+        } else {
+          const cmRes = await fetch('https://api.creatomate.com/v1/renders', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${CM_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify([{
+              output_format: 'mp4',
+              width:  768,
+              height: 1280,
+              elements: [
+                { type: 'video', source: klingUrl },
+                { type: 'audio', source: pipeline.audio_url, volume: '80%' },
+              ],
+            }]),
+          });
+          const [render] = await cmRes.json();
+
+          if (!render?.id) {
+            update.status        = 'failed';
+            update.error_message = 'Creatomate render creation failed';
+          } else {
+            // Actualizar pipeline a la siguiente etapa
+            update.publish_results = {
+              ...video.publish_results,
+              _pipeline: { ...pipeline, stage: 'combining', creatomate_id: render.id },
+            };
+            // Mantener status 'generating' hasta que Creatomate termine
+          }
+        }
+      } else {
+        // Sin narración — vídeo listo directamente
+        update.status    = 'ready';
+        update.video_url = klingUrl;
+      }
+
+    } else if (pred.status === 'failed' || pred.status === 'canceled') {
+      update.status        = 'failed';
+      update.error_message = pred.error ?? 'Video generation failed';
+    }
   }
 
   if (Object.keys(update).length > 0) {
