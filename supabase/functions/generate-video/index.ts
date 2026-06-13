@@ -2,7 +2,7 @@
  * generate-video — Edge Function
  *
  * Actions:
- *   create  → Claude genera guión, MiniMax genera vídeo
+ *   create  → Claude genera guión, Kling v3 genera vídeo
  *             (with_narration: true) → ElevenLabs genera audio, Creatomate combina
  *   check   → poll pipeline status, actualiza la fila cuando termina
  *
@@ -10,9 +10,7 @@
  *   ANTHROPIC_API_KEY, REPLICATE_API_KEY
  *   (narración) ELEVENLABS_API_KEY, CREATOMATE_API_KEY
  *   Optional: ELEVENLABS_VOICE_ID (default: voz española multilingual)
- *   Optional: REPLICATE_MODEL     (default: minimax/video-01)
- *             → Copia el valor exacto de tu modelo en replicate.com/models
- *             → Formato: "owner/model-name"
+ *   Optional: REPLICATE_MODEL     (default: kwaivgi/kling-v3-video)
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2?target=deno';
@@ -27,7 +25,7 @@ const ALLOWED_ORIGINS = [
   'https://xentory-ecosystem-bet.vercel.app',
 ];
 
-const DEFAULT_MODEL       = 'minimax/video-01';
+const DEFAULT_MODEL       = 'kwaivgi/kling-v3-video';
 const STORAGE_BUCKET      = 'studio-audio';
 // Voz multilingual de ElevenLabs con buen español (Matilda)
 const DEFAULT_VOICE_ID    = 'XrExE9yKIg1WjnnlVkGX';
@@ -191,8 +189,9 @@ async function handleCreate(
     audioUrl = publicUrl;
   }
 
-  // 3. Vídeo vía Replicate (minimax/video-01 por defecto)
-  const videoModel = Deno.env.get('REPLICATE_MODEL') ?? DEFAULT_MODEL;
+  // 3. Kling v3 vía Replicate — 1080p, 9:16, duración clamped 3-15s
+  const videoModel  = Deno.env.get('REPLICATE_MODEL') ?? DEFAULT_MODEL;
+  const klingSecs   = Math.min(Math.max(Math.round(Number(duration_sec)), 3), 15);
   const videoRes = await fetch(`https://api.replicate.com/v1/models/${videoModel}/predictions`, {
     method: 'POST',
     headers: {
@@ -202,8 +201,12 @@ async function handleCreate(
     },
     body: JSON.stringify({
       input: {
-        prompt:           parsed.visual_prompt,
-        prompt_optimizer: false,
+        prompt:          parsed.visual_prompt,
+        negative_prompt: 'text overlay, logo, watermark, blurry, low quality, distorted faces, deformed',
+        mode:            'pro',
+        aspect_ratio:    '9:16',
+        duration:        klingSecs,
+        generate_audio:  false,
       },
     }),
   });
