@@ -489,11 +489,19 @@ function NewVideoModal({
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
-      const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/generate-video`, {
-        method:  'POST',
-        headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'create', video_type: videoType, language, duration_sec: durationSec, title: title.trim() || undefined, with_narration: withNarration, voice_id: withNarration ? voiceId : undefined, user_brief: userBrief.trim() || undefined }),
-      });
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 75_000); // 75s client timeout
+      let res: Response;
+      try {
+        res = await fetch(`${SUPABASE_FUNCTIONS_URL}/generate-video`, {
+          method:  'POST',
+          headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'create', video_type: videoType, language, duration_sec: durationSec, title: title.trim() || undefined, with_narration: withNarration, voice_id: withNarration ? voiceId : undefined, user_brief: userBrief.trim() || undefined }),
+          signal: ctrl.signal,
+        });
+      } finally {
+        clearTimeout(timer);
+      }
       const data = await res.json();
       if (!res.ok || !data.video) {
         const detail = typeof data.detail === 'string' ? `: ${data.detail}` : '';

@@ -82,6 +82,13 @@ function resolveOutput(output: unknown): string | null {
   return null;
 }
 
+// Fetch con timeout — lanza error si supera ms milisegundos
+function fetchWithTimeout(url: string, opts: RequestInit, ms: number): Promise<Response> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  return fetch(url, { ...opts, signal: ctrl.signal }).finally(() => clearTimeout(timer));
+}
+
 // ── CREATE ────────────────────────────────────────────────────────
 async function handleCreate(
   body: Record<string, unknown>,
@@ -113,7 +120,7 @@ async function handleCreate(
 
   // 1. Claude → guión + prompt visual + caption
   const prompt = buildScriptPrompt(String(video_type), String(language), Number(duration_sec), typeof user_brief === 'string' ? user_brief.trim() : '');
-  const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+  const claudeRes = await fetchWithTimeout('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'x-api-key':         ANTHROPIC_KEY,
@@ -125,7 +132,7 @@ async function handleCreate(
       max_tokens: 1024,
       messages:   [{ role: 'user', content: prompt }],
     }),
-  });
+  }, 25_000);
   const claudeData = await claudeRes.json();
 
   if (claudeData.error) {
@@ -159,7 +166,7 @@ async function handleCreate(
     const EL_KEY  = Deno.env.get('ELEVENLABS_API_KEY')!;
     const voiceId = (typeof voice_id === 'string' && voice_id) ? voice_id : (Deno.env.get('ELEVENLABS_VOICE_ID') ?? DEFAULT_VOICE_ID);
 
-    const elRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+    const elRes = await fetchWithTimeout(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
       method: 'POST',
       headers: { 'xi-api-key': EL_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -167,7 +174,7 @@ async function handleCreate(
         model_id:  'eleven_multilingual_v2',
         voice_settings: { stability: 0.5, similarity_boost: 0.75 },
       }),
-    });
+    }, 30_000);
 
     if (!elRes.ok) {
       const err = await elRes.text();
@@ -193,7 +200,7 @@ async function handleCreate(
   // 3. Kling v3 vía Replicate — 1080p, 9:16, duración clamped 3-15s
   const videoModel  = Deno.env.get('REPLICATE_MODEL') ?? DEFAULT_MODEL;
   const klingSecs   = Math.min(Math.max(Math.round(Number(duration_sec)), 3), 15);
-  const videoRes = await fetch(`https://api.replicate.com/v1/models/${videoModel}/predictions`, {
+  const videoRes = await fetchWithTimeout(`https://api.replicate.com/v1/models/${videoModel}/predictions`, {
     method: 'POST',
     headers: {
       'Authorization': `Token ${REPLICATE_KEY}`,
@@ -210,7 +217,7 @@ async function handleCreate(
         generate_audio:  false,
       },
     }),
-  });
+  }, 20_000);
   const videoData = await videoRes.json();
 
   if (!videoData.id) {
