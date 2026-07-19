@@ -1012,6 +1012,10 @@ export async function fetchGolfLeaderboardDetail(espnEventId: string): Promise<G
     return golfPositionSortKey(a.position) - golfPositionSortKey(b.position);
   });
 
+  // El campo "position" de ESPN suele ir con retraso respecto a la puntuación en vivo
+  // (se actualiza por lotes), así que lo recalculamos a partir del orden ya correcto.
+  assignGolfPositions(players);
+
   return { tournamentName: ev?.name ?? '', currentPeriod, players };
 }
 
@@ -1029,6 +1033,29 @@ function golfPositionSortKey(pos: string): number {
   const n = parseInt(pos.replace(/^T/i, ''), 10);
   if (!isNaN(n)) return n;
   return 100000 + pos.charCodeAt(0); // CUT / WD / DQ… al final, orden alfabético
+}
+
+const GOLF_SPECIAL_STATUS = /^(CUT|WD|DQ|MC|MDF)$/i;
+
+/** Recalcula "1", "T2", "T2"… a partir de la lista ya ordenada por puntuación, respetando empates y estados especiales (CUT/WD/DQ). */
+function assignGolfPositions(players: GolfPlayerEntry[]): void {
+  let rank = 1;
+  let i = 0;
+  while (i < players.length) {
+    if (GOLF_SPECIAL_STATUS.test(players[i].position)) { i++; continue; } // conserva CUT/WD/DQ tal cual
+    if (golfScoreSortKey(players[i].score) >= 100000) { i++; continue; }  // sin puntuación todavía → deja "-"
+
+    let j = i;
+    while (j < players.length && players[j].score === players[i].score && !GOLF_SPECIAL_STATUS.test(players[j].position)) j++;
+    const groupSize = j - i;
+    const label = groupSize > 1 ? `T${rank}` : `${rank}`;
+    for (let k = i; k < j; k++) {
+      players[k].position = label;
+      players[k].isTie = groupSize > 1;
+    }
+    rank += groupSize;
+    i = j;
+  }
 }
 
 /** Jugadores que salen a la misma hora (mismo tee time) que `playerId` en la ronda `period`. */
