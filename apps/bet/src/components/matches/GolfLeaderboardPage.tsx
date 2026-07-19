@@ -289,22 +289,34 @@ export function GolfLeaderboardPage() {
   const [currentPeriod, setCurrentPeriod] = useState(1);
   const [tournamentName, setTournamentName] = useState('');
   const [loading, setLoading]           = useState(true);
+  const [refreshing, setRefreshing]     = useState(false);
   const [error, setError]               = useState('');
   const [selectedId, setSelectedId]     = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadLeaderboard = (silent: boolean) => {
     if (!match?.espnEventId) { setError(t('No se encontró el torneo.', 'Tournament not found.')); setLoading(false); return; }
-    setLoading(true);
-    setError('');
+    if (silent) setRefreshing(true); else { setLoading(true); setError(''); }
     fetchGolfLeaderboardDetail(match.espnEventId)
       .then(res => {
-        if (!res || res.players.length === 0) { setError(t('No hay clasificación disponible todavía.', 'No leaderboard available yet.')); setLoading(false); return; }
+        if (!res || res.players.length === 0) { setError(t('No hay clasificación disponible todavía.', 'No leaderboard available yet.')); return; }
         setPlayers(res.players);
         setCurrentPeriod(res.currentPeriod);
         setTournamentName(res.tournamentName || match.competition.name);
-        setLoading(false);
+        setError('');
       })
-      .catch(() => { setError(t('Error al cargar la clasificación.', 'Error loading leaderboard.')); setLoading(false); });
+      .catch(() => setError(t('Error al cargar la clasificación.', 'Error loading leaderboard.')))
+      .finally(() => { setLoading(false); setRefreshing(false); });
+  };
+
+  useEffect(() => {
+    loadLeaderboard(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [match?.espnEventId]);
+
+  useEffect(() => {
+    if (!match?.espnEventId) return;
+    const id = setInterval(() => loadLeaderboard(true), 60_000);
+    return () => clearInterval(id);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [match?.espnEventId]);
 
@@ -323,10 +335,21 @@ export function GolfLeaderboardPage() {
     <div className="animate-fadeUp" style={{ maxWidth: 900, width: '100%' }}>
       <button onClick={() => navigate('/matches')} className="btn btn-ghost btn-sm" style={{ marginBottom: '1.2rem' }}>← {t('Volver a partidos', 'Back to matches')}</button>
 
-      <div className="glass" style={{ borderRadius: 16, padding: '1.4rem', marginBottom: '1.2rem' }}>
-        <div style={{ fontSize: '0.78rem', color: '#22c55e', marginBottom: '0.3rem' }}>{match.competition.emoji} {match.competition.name}</div>
-        <h2 style={{ fontSize: '1.3rem', marginBottom: '0.3rem' }}>{tournamentName || match.venue || match.competition.name}</h2>
-        {match.venue && <div style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>{match.venue}</div>}
+      <div className="glass" style={{ borderRadius: 16, padding: '1.4rem', marginBottom: '1.2rem', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: '0.78rem', color: '#22c55e', marginBottom: '0.3rem' }}>{match.competition.emoji} {match.competition.name}</div>
+          <h2 style={{ fontSize: '1.3rem', marginBottom: '0.3rem' }}>{tournamentName || match.venue || match.competition.name}</h2>
+          {match.venue && <div style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>{match.venue}</div>}
+        </div>
+        <button
+          onClick={() => loadLeaderboard(true)}
+          disabled={loading || refreshing}
+          className="btn btn-outline btn-sm"
+          style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '0.4rem', opacity: loading || refreshing ? 0.6 : 1 }}
+        >
+          <span className={refreshing ? 'animate-spin' : ''} style={{ display: 'inline-block' }}>↻</span>
+          {t('Actualizar', 'Refresh')}
+        </button>
       </div>
 
       {loading && (
