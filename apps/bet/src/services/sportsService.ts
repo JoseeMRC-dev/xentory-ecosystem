@@ -914,8 +914,8 @@ export async function fetchGolfMatches(): Promise<Match[]> {
   for (const tour of golfTours) {
     let events: any[] = [];
 
-    // Current scoreboard (active tournament)
-    const json = await espnFetch(`/${tour.slug}/scoreboard`);
+    // Current scoreboard (active tournament) — live cache so scores match the leaderboard detail page
+    const json = await espnFetchLive(`/${tour.slug}/scoreboard`);
     events = json?.events ?? [];
 
     // If nothing active, look ahead up to 3 weeks
@@ -933,10 +933,10 @@ export async function fetchGolfMatches(): Promise<Match[]> {
       const status  = mapEspnStatus(ev.status?.type?.state ?? 'pre');
 
       const leaderboard: Match['leaderboard'] = players.slice(0, 10).map((p: any) => ({
-        pos:   p.status?.type?.shortDetail ?? '-',
+        pos:   p.status?.position?.displayName ?? p.status?.type?.shortDetail ?? '-',
         name:  p.athlete?.displayName ?? p.athlete?.shortName ?? 'Player',
         score: p.score ?? 'E',
-        thru:  String(p.thru ?? p.status?.type?.detail ?? '-'),
+        thru:  p.status?.thru != null ? (p.status.thru >= 18 ? 'F' : String(p.status.thru)) : '-',
       }));
 
       const leader = players[0];
