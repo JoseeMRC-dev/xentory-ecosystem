@@ -89,6 +89,13 @@ export interface GolfGroupAnalysisResult {
   generatedAt: string;
 }
 
+export interface GolfPlayerAnalysisResult {
+  today: string;         // cómo va en la ronda de hoy
+  tournament: string;    // cómo va en el torneo general (tendencia, posición)
+  trend: 'up' | 'down' | 'stable';
+  generatedAt: string;
+}
+
 // ── LIVE MATCH STATS ──
 export interface LiveMatchStat {
   label:    string;

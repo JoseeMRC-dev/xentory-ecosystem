@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { fetchGolfLeaderboardDetail, golfPlayingPartners } from '../../services/sportsService';
-import { generateGolfGroupAnalysis } from '../../services/aiService';
+import { generateGolfGroupAnalysis, generateGolfPlayerAnalysis } from '../../services/aiService';
 import { useLang } from '../../context/LanguageContext';
-import type { Match, GolfPlayerEntry, GolfGroupAnalysisResult } from '../../types';
+import type { Match, GolfPlayerEntry, GolfGroupAnalysisResult, GolfPlayerAnalysisResult } from '../../types';
 
 function scoreColor(score: string): string {
   if (!score || score === 'E' || score === '--' || score === '-') return 'var(--text)';
@@ -47,6 +47,51 @@ function RoundHistory({ player, currentPeriod, lang }: { player: GolfPlayerEntry
   );
 }
 
+// ── SECTION HEADING ──
+function SectionHeading({ icon, children }: { icon: string; children: ReactNode }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: '0.4rem',
+      fontSize: '0.7rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em',
+      fontWeight: 700, marginBottom: '0.7rem',
+    }}>
+      <span>{icon}</span>{children}
+    </div>
+  );
+}
+
+// ── TREND BADGE ──
+function TrendBadge({ trend, lang }: { trend: 'up' | 'down' | 'stable'; lang: string }) {
+  const cfg = {
+    up:      { icon: '↗', color: '#00ff88', bg: 'rgba(0,255,136,0.1)', label: lang === 'es' ? 'En racha' : 'Trending up' },
+    down:    { icon: '↘', color: '#ef4444', bg: 'rgba(239,68,68,0.1)', label: lang === 'es' ? 'A la baja' : 'Trending down' },
+    stable:  { icon: '→', color: 'var(--muted)', bg: 'var(--card2)', label: lang === 'es' ? 'Estable' : 'Stable' },
+  }[trend];
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
+      fontSize: '0.72rem', fontWeight: 600, color: cfg.color, background: cfg.bg,
+      padding: '0.25rem 0.6rem', borderRadius: 999,
+    }}>
+      {cfg.icon} {cfg.label}
+    </span>
+  );
+}
+
+// ── INDIVIDUAL ANALYSIS SKELETON ──
+function AnalysisSkeleton() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+      {[1, 2].map(i => (
+        <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+          <div className="animate-pulse" style={{ height: 10, borderRadius: 6, width: '92%', background: 'var(--card2)' }} />
+          <div className="animate-pulse" style={{ height: 10, borderRadius: 6, width: '76%', background: 'var(--card2)' }} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ── PLAYER DETAIL PANEL ──
 function PlayerDetailPanel({
   player, partners, currentPeriod, tournamentName, onClose,
@@ -55,16 +100,26 @@ function PlayerDetailPanel({
 }) {
   const { user } = useAuth();
   const { t, lang } = useLang();
-  const [analysis, setAnalysis]   = useState<GolfGroupAnalysisResult | null>(null);
-  const [loading, setLoading]     = useState(false);
+  const [groupAnalysis, setGroupAnalysis]   = useState<GolfGroupAnalysisResult | null>(null);
+  const [groupLoading, setGroupLoading]     = useState(false);
+  const [playerAnalysis, setPlayerAnalysis] = useState<GolfPlayerAnalysisResult | null>(null);
+  const [playerLoading, setPlayerLoading]   = useState(true);
 
-  useEffect(() => { setAnalysis(null); }, [player.id]);
+  useEffect(() => {
+    setGroupAnalysis(null);
+    setPlayerAnalysis(null);
+    setPlayerLoading(true);
+    generateGolfPlayerAnalysis(tournamentName, currentPeriod, player, user?.plan ?? 'free')
+      .then(setPlayerAnalysis)
+      .finally(() => setPlayerLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [player.id]);
 
-  const runAnalysis = async () => {
-    setLoading(true);
+  const runGroupAnalysis = async () => {
+    setGroupLoading(true);
     const result = await generateGolfGroupAnalysis(tournamentName, currentPeriod, [player, ...partners], user?.plan ?? 'free');
-    setAnalysis(result);
-    setLoading(false);
+    setGroupAnalysis(result);
+    setGroupLoading(false);
   };
 
   useEffect(() => {
@@ -72,6 +127,8 @@ function PlayerDetailPanel({
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
+
+  const initials = player.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
 
   return (
     <div
@@ -87,75 +144,126 @@ function PlayerDetailPanel({
         className="glass"
         onClick={e => e.stopPropagation()}
         style={{
-          borderRadius: 'clamp(14px, 4vw, 18px)', padding: '1.4rem', borderLeft: '3px solid var(--gold)',
-          width: '100%', maxWidth: 520, maxHeight: 'min(88vh, 720px)', overflowY: 'auto',
-          animation: 'slideDown 0.22s ease both',
+          borderRadius: 'clamp(16px, 4vw, 20px)', padding: 0,
+          width: '100%', maxWidth: 540, maxHeight: 'min(90vh, 760px)',
+          display: 'flex', flexDirection: 'column', overflow: 'hidden',
+          animation: 'fadeUp 0.22s ease both',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
         }}
       >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.6rem' }}>
-        <div>
-          <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{player.name}</div>
-          <div style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
-            {t('Posición', 'Position')} <b style={{ color: 'var(--gold)' }}>{player.position}</b> · {t('Total', 'Total')} <b style={{ color: scoreColor(player.score) }}>{player.score}</b>
-            {player.thru !== '-' && ` · ${player.thru === 'F' ? t('Ronda terminada', 'Round finished') : `${t('Hoyo', 'Hole')} ${player.thru}`}`}
+        {/* Header */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '0.9rem', padding: '1.3rem 1.4rem',
+          background: 'linear-gradient(135deg, rgba(201,168,76,0.14), rgba(201,168,76,0.02))',
+          borderBottom: '1px solid var(--border)', flexShrink: 0,
+        }}>
+          <div style={{
+            width: 52, height: 52, borderRadius: '50%', flexShrink: 0,
+            background: 'linear-gradient(135deg, var(--gold), #a8863c)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontWeight: 800, fontSize: '1rem', color: '#1a1200',
+          }}>
+            {initials}
           </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: 700, fontSize: '1.15rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{player.name}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gold)', background: 'rgba(201,168,76,0.12)', padding: '0.15rem 0.5rem', borderRadius: 6 }}>
+                {player.position}
+              </span>
+              <span style={{ fontSize: '0.85rem', fontWeight: 700, color: scoreColor(player.score) }}>{player.score}</span>
+              {player.thru !== '-' && (
+                <span style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>
+                  {player.thru === 'F' ? t('Ronda terminada', 'Round finished') : `${t('Hoyo', 'Hole')} ${player.thru}`}
+                </span>
+              )}
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="btn btn-ghost btn-sm"
+            style={{ width: 32, height: 32, padding: 0, borderRadius: '50%', flexShrink: 0 }}
+          >✕</button>
         </div>
-        <button onClick={onClose} className="btn btn-ghost btn-sm">✕</button>
-      </div>
 
-      <div style={{ fontSize: '0.7rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '1rem', marginBottom: '0.2rem' }}>
-        {t('Golpes por ronda', 'Strokes by round')}
-      </div>
-      <RoundHistory player={player} currentPeriod={currentPeriod} lang={lang} />
-
-      {/* Playing partners box */}
-      <div style={{ marginTop: '1.2rem', padding: '1rem', borderRadius: 12, background: 'var(--card2)', border: '1px solid var(--border)' }}>
-        <div style={{ fontSize: '0.72rem', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.6rem' }}>
-          ⛳ {t('Jugando hoy con', 'Playing today with')}
-        </div>
-        {partners.length === 0 ? (
-          <div style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>
-            {t('Sin información de emparejamiento disponible todavía.', 'No pairing information available yet.')}
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            {partners.map(p => (
-              <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                <span>{p.name}</span>
-                <span style={{ color: 'var(--muted)' }}>{p.position} · <span style={{ color: scoreColor(p.score) }}>{p.score}</span></span>
+        {/* Scrollable body */}
+        <div style={{ padding: '1.3rem 1.4rem', overflowY: 'auto' }}>
+          {/* Individual tournament analysis — auto-generated */}
+          <div style={{ marginBottom: '1.3rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.7rem' }}>
+              <SectionHeading icon="📊">{t('Análisis individual', 'Individual analysis')}</SectionHeading>
+              {!playerLoading && playerAnalysis && <TrendBadge trend={playerAnalysis.trend} lang={lang} />}
+            </div>
+            {playerLoading ? (
+              <AnalysisSkeleton />
+            ) : playerAnalysis && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
+                <div style={{ padding: '0.8rem 0.9rem', borderRadius: 12, background: 'var(--card2)', border: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.3rem' }}>
+                    {t('Hoy', 'Today')}
+                  </div>
+                  <p style={{ fontSize: '0.85rem', lineHeight: 1.55, margin: 0 }}>{playerAnalysis.today}</p>
+                </div>
+                <div style={{ padding: '0.8rem 0.9rem', borderRadius: 12, background: 'var(--card2)', border: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.3rem' }}>
+                    {t('Torneo general', 'Overall tournament')}
+                  </div>
+                  <p style={{ fontSize: '0.85rem', lineHeight: 1.55, margin: 0 }}>{playerAnalysis.tournament}</p>
+                </div>
               </div>
-            ))}
+            )}
           </div>
-        )}
 
-        <button
-          onClick={runAnalysis}
-          disabled={loading || partners.length === 0}
-          className="btn btn-outline btn-sm"
-          style={{ marginTop: '0.9rem', width: '100%', opacity: partners.length === 0 ? 0.5 : 1 }}
-        >
-          {loading ? t('Analizando…', 'Analyzing…') : `🤖 ${t('Analizar este partido con los demás jugadores', 'Analyze this group with the other players')}`}
-        </button>
-      </div>
+          <SectionHeading icon="⛳">{t('Golpes por ronda', 'Strokes by round')}</SectionHeading>
+          <RoundHistory player={player} currentPeriod={currentPeriod} lang={lang} />
 
-      {analysis && (
-        <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
-          <p style={{ fontSize: '0.88rem', lineHeight: 1.6, marginBottom: '0.9rem' }}>{analysis.summary}</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginBottom: '0.9rem' }}>
-            {analysis.playerNotes.map((n, i) => (
-              <div key={i} style={{ padding: '0.6rem 0.8rem', borderRadius: 10, background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)' }}>
-                <div style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '0.2rem' }}>{n.name}</div>
-                <div style={{ fontSize: '0.82rem', color: 'var(--text2)' }}>{n.note}</div>
+          {/* Playing partners box */}
+          <div style={{ marginTop: '1.3rem', padding: '1rem', borderRadius: 14, background: 'var(--card2)', border: '1px solid var(--border)' }}>
+            <SectionHeading icon="👥">{t('Jugando hoy con', 'Playing today with')}</SectionHeading>
+            {partners.length === 0 ? (
+              <div style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>
+                {t('Sin información de emparejamiento disponible todavía.', 'No pairing information available yet.')}
               </div>
-            ))}
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                {partners.map(p => (
+                  <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', padding: '0.3rem 0' }}>
+                    <span>{p.name}</span>
+                    <span style={{ color: 'var(--muted)' }}>{p.position} · <span style={{ color: scoreColor(p.score) }}>{p.score}</span></span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <button
+              onClick={runGroupAnalysis}
+              disabled={groupLoading || partners.length === 0}
+              className="btn btn-outline btn-sm"
+              style={{ marginTop: '0.9rem', width: '100%', opacity: partners.length === 0 ? 0.5 : 1 }}
+            >
+              {groupLoading ? t('Analizando…', 'Analyzing…') : `🤖 ${t('Analizar este partido con los demás jugadores', 'Analyze this group with the other players')}`}
+            </button>
           </div>
-          {analysis.prediction && (
-            <div style={{ padding: '0.8rem 1rem', borderRadius: 10, background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.25)', fontSize: '0.85rem' }}>
-              🎯 {analysis.prediction}
+
+          {groupAnalysis && (
+            <div style={{ marginTop: '1.2rem', paddingTop: '1.2rem', borderTop: '1px solid var(--border)' }}>
+              <p style={{ fontSize: '0.88rem', lineHeight: 1.6, marginBottom: '0.9rem' }}>{groupAnalysis.summary}</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginBottom: '0.9rem' }}>
+                {groupAnalysis.playerNotes.map((n, i) => (
+                  <div key={i} style={{ padding: '0.6rem 0.8rem', borderRadius: 10, background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)' }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '0.2rem' }}>{n.name}</div>
+                    <div style={{ fontSize: '0.82rem', color: 'var(--text2)' }}>{n.note}</div>
+                  </div>
+                ))}
+              </div>
+              {groupAnalysis.prediction && (
+                <div style={{ padding: '0.8rem 1rem', borderRadius: 10, background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.25)', fontSize: '0.85rem' }}>
+                  🎯 {groupAnalysis.prediction}
+                </div>
+              )}
             </div>
           )}
         </div>
-      )}
       </div>
     </div>
   );
