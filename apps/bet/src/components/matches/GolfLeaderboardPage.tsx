@@ -64,14 +64,15 @@ function SectionHeading({ icon, children }: { icon: string; children: ReactNode 
 // ── TREND BADGE ──
 function TrendBadge({ trend, lang }: { trend: 'up' | 'down' | 'stable'; lang: string }) {
   const cfg = {
-    up:      { icon: '↗', color: '#00ff88', bg: 'rgba(0,255,136,0.1)', label: lang === 'es' ? 'En racha' : 'Trending up' },
-    down:    { icon: '↘', color: '#ef4444', bg: 'rgba(239,68,68,0.1)', label: lang === 'es' ? 'A la baja' : 'Trending down' },
-    stable:  { icon: '→', color: 'var(--muted)', bg: 'var(--card2)', label: lang === 'es' ? 'Estable' : 'Stable' },
+    up:      { icon: '↗', color: 'var(--green)', bg: 'var(--green-dim)', border: 'rgba(16,185,129,0.3)', label: lang === 'es' ? 'En racha' : 'Trending up' },
+    down:    { icon: '↘', color: 'var(--red)', bg: 'rgba(153,27,27,0.1)', border: 'rgba(153,27,27,0.3)', label: lang === 'es' ? 'A la baja' : 'Trending down' },
+    stable:  { icon: '→', color: 'var(--muted)', bg: 'var(--card2)', border: 'var(--border)', label: lang === 'es' ? 'Estable' : 'Stable' },
   }[trend];
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
       fontSize: '0.72rem', fontWeight: 600, color: cfg.color, background: cfg.bg,
+      border: `1px solid ${cfg.border}`,
       padding: '0.25rem 0.6rem', borderRadius: 999,
     }}>
       {cfg.icon} {cfg.label}
@@ -182,9 +183,15 @@ function PlayerDetailPanel({
           </div>
           <button
             onClick={onClose}
-            className="btn btn-ghost btn-sm"
-            style={{ width: 32, height: 32, padding: 0, borderRadius: '50%', flexShrink: 0 }}
+            className="player-modal-close"
+            style={{
+              width: 32, height: 32, padding: 0, borderRadius: '50%', flexShrink: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'transparent', border: 'none', color: 'var(--muted)',
+              fontSize: '1rem', cursor: 'pointer', transition: 'background 0.15s, color 0.15s',
+            }}
           >✕</button>
+          <style>{`.player-modal-close:hover { background: var(--gold-dim); color: var(--gold); }`}</style>
         </div>
 
         {/* Scrollable body */}
