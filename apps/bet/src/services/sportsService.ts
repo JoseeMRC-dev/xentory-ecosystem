@@ -1006,12 +1006,24 @@ export async function fetchGolfLeaderboardDetail(espnEventId: string): Promise<G
     })),
   }));
 
-  players.sort((a, b) => golfPositionSortKey(a.position) - golfPositionSortKey(b.position));
+  players.sort((a, b) => {
+    const sa = golfScoreSortKey(a.score), sb = golfScoreSortKey(b.score);
+    if (sa !== sb) return sa - sb;
+    return golfPositionSortKey(a.position) - golfPositionSortKey(b.position);
+  });
 
   return { tournamentName: ev?.name ?? '', currentPeriod, players };
 }
 
-/** Convierte "1", "T6", "CUT", "WD", "-" en una clave numérica para ordenar la clasificación. */
+/** Convierte "-6", "E", "+2", "-" en una clave numérica para ordenar por puntuación (a par). */
+function golfScoreSortKey(score: string): number {
+  if (!score || score === '-' || score === '--') return 100000;
+  if (score.toUpperCase() === 'E') return 0;
+  const n = parseInt(score, 10);
+  return isNaN(n) ? 100000 : n;
+}
+
+/** Convierte "1", "T6", "CUT", "WD", "-" en una clave numérica; usado como desempate de la puntuación. */
 function golfPositionSortKey(pos: string): number {
   if (!pos || pos === '-') return 100000;
   const n = parseInt(pos.replace(/^T/i, ''), 10);
