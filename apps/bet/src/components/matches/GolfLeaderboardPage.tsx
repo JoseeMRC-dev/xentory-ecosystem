@@ -1,4 +1,5 @@
 import { useState, useEffect, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { fetchGolfLeaderboardDetail, golfPlayingPartners } from '../../services/sportsService';
@@ -24,8 +25,8 @@ function RoundHistory({ player, currentPeriod, lang }: { player: GolfPlayerEntry
         return (
           <div key={roundNum} style={{
             borderRadius: 10, padding: '0.55rem 0.4rem', textAlign: 'center',
-            background: isToday ? 'rgba(201,168,76,0.1)' : 'var(--card2)',
-            border: isToday ? '1px solid rgba(201,168,76,0.35)' : '1px solid var(--border)',
+            background: isToday ? 'var(--gold-dim)' : 'var(--card2)',
+            border: isToday ? '1px solid var(--border2)' : '1px solid var(--border)',
           }}>
             <div style={{ fontSize: '0.62rem', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
               {lang === 'es' ? 'Ronda' : 'Round'} {roundNum}{isToday ? ` · ${lang === 'es' ? 'HOY' : 'TODAY'}` : ''}
@@ -130,12 +131,12 @@ function PlayerDetailPanel({
 
   const initials = player.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
 
-  return (
+  return createPortal(
     <div
       onClick={onClose}
       style={{
         position: 'fixed', inset: 0, zIndex: 200,
-        background: 'rgba(5,8,16,0.85)', backdropFilter: 'blur(10px)',
+        background: 'rgba(5,8,16,0.72)', backdropFilter: 'blur(10px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: 'clamp(0.4rem, 4vw, 1rem)',
       }}
@@ -154,21 +155,21 @@ function PlayerDetailPanel({
         {/* Header */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: '0.9rem', padding: '1.3rem 1.4rem',
-          background: 'linear-gradient(135deg, rgba(201,168,76,0.14), rgba(201,168,76,0.02))',
+          background: 'linear-gradient(135deg, var(--gold-dim), transparent)',
           borderBottom: '1px solid var(--border)', flexShrink: 0,
         }}>
           <div style={{
             width: 52, height: 52, borderRadius: '50%', flexShrink: 0,
-            background: 'linear-gradient(135deg, var(--gold), #a8863c)',
+            background: 'var(--accent-primary)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontWeight: 800, fontSize: '1rem', color: '#1a1200',
+            fontWeight: 800, fontSize: '1rem', color: '#F2EDE4',
           }}>
             {initials}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontWeight: 700, fontSize: '1.15rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{player.name}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gold)', background: 'rgba(201,168,76,0.12)', padding: '0.15rem 0.5rem', borderRadius: 6 }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gold)', background: 'var(--gold-dim)', border: '1px solid var(--border2)', padding: '0.15rem 0.5rem', borderRadius: 6 }}>
                 {player.position}
               </span>
               <span style={{ fontSize: '0.85rem', fontWeight: 700, color: scoreColor(player.score) }}>{player.score}</span>
@@ -250,14 +251,14 @@ function PlayerDetailPanel({
               <p style={{ fontSize: '0.88rem', lineHeight: 1.6, marginBottom: '0.9rem' }}>{groupAnalysis.summary}</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginBottom: '0.9rem' }}>
                 {groupAnalysis.playerNotes.map((n, i) => (
-                  <div key={i} style={{ padding: '0.6rem 0.8rem', borderRadius: 10, background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)' }}>
+                  <div key={i} style={{ padding: '0.6rem 0.8rem', borderRadius: 10, background: 'var(--card2)', border: '1px solid var(--border)' }}>
                     <div style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '0.2rem' }}>{n.name}</div>
                     <div style={{ fontSize: '0.82rem', color: 'var(--text2)' }}>{n.note}</div>
                   </div>
                 ))}
               </div>
               {groupAnalysis.prediction && (
-                <div style={{ padding: '0.8rem 1rem', borderRadius: 10, background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.25)', fontSize: '0.85rem' }}>
+                <div style={{ padding: '0.8rem 1rem', borderRadius: 10, background: 'var(--gold-dim)', border: '1px solid var(--border2)', fontSize: '0.85rem' }}>
                   🎯 {groupAnalysis.prediction}
                 </div>
               )}
@@ -265,7 +266,8 @@ function PlayerDetailPanel({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -347,7 +349,7 @@ export function GolfLeaderboardPage() {
                 onClick={() => setSelectedId(selectedId === p.id ? null : p.id)}
                 style={{
                   display: 'flex', alignItems: 'center', padding: '0.6rem 1.2rem', cursor: 'pointer',
-                  background: selectedId === p.id ? 'rgba(201,168,76,0.08)' : i % 2 === 0 ? 'rgba(255,255,255,0.015)' : 'transparent',
+                  background: selectedId === p.id ? 'var(--gold-dim)' : i % 2 === 0 ? 'var(--card2)' : 'transparent',
                   borderTop: '1px solid var(--border)',
                 }}
               >
