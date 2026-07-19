@@ -1006,7 +1006,17 @@ export async function fetchGolfLeaderboardDetail(espnEventId: string): Promise<G
     })),
   }));
 
+  players.sort((a, b) => golfPositionSortKey(a.position) - golfPositionSortKey(b.position));
+
   return { tournamentName: ev?.name ?? '', currentPeriod, players };
+}
+
+/** Convierte "1", "T6", "CUT", "WD", "-" en una clave numérica para ordenar la clasificación. */
+function golfPositionSortKey(pos: string): number {
+  if (!pos || pos === '-') return 100000;
+  const n = parseInt(pos.replace(/^T/i, ''), 10);
+  if (!isNaN(n)) return n;
+  return 100000 + pos.charCodeAt(0); // CUT / WD / DQ… al final, orden alfabético
 }
 
 /** Jugadores que salen a la misma hora (mismo tee time) que `playerId` en la ronda `period`. */

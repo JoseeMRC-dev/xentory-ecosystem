@@ -67,8 +67,31 @@ function PlayerDetailPanel({
     setLoading(false);
   };
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
   return (
-    <div className="glass" style={{ borderRadius: 16, padding: '1.4rem', marginTop: '1.2rem', borderLeft: '3px solid var(--gold)' }}>
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 200,
+        background: 'rgba(5,8,16,0.85)', backdropFilter: 'blur(10px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 'clamp(0.4rem, 4vw, 1rem)',
+      }}
+    >
+      <div
+        className="glass"
+        onClick={e => e.stopPropagation()}
+        style={{
+          borderRadius: 'clamp(14px, 4vw, 18px)', padding: '1.4rem', borderLeft: '3px solid var(--gold)',
+          width: '100%', maxWidth: 520, maxHeight: 'min(88vh, 720px)', overflowY: 'auto',
+          animation: 'slideDown 0.22s ease both',
+        }}
+      >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.6rem' }}>
         <div>
           <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{player.name}</div>
@@ -133,6 +156,7 @@ function PlayerDetailPanel({
           )}
         </div>
       )}
+      </div>
     </div>
   );
 }
