@@ -976,7 +976,7 @@ export async function fetchGolfMatches(): Promise<Match[]> {
 // GOLF — full leaderboard detail (all players, round-by-round scores, tee times)
 // ─────────────────────────────────────────────────────────────────────────────
 export async function fetchGolfLeaderboardDetail(espnEventId: string): Promise<GolfLeaderboardDetail | null> {
-  const json = await espnFetch(`/golf/leaderboard?event=${espnEventId}`);
+  const json = await espnFetchLive(`/golf/leaderboard?event=${espnEventId}`);
   const ev   = json?.events?.[0];
   const comp = ev?.competitions?.[0];
   if (!comp) return null;
