@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './hooks/useAuth';
 import { AppLayout } from './components/layout/AppLayout';
 import { DashboardPage } from './components/dashboard/DashboardPage';
 import { MatchesPage } from './components/matches/MatchesPage';
+import { GolfLeaderboardPage } from './components/matches/GolfLeaderboardPage';
 import { MatchAnalysisPage, AnalysisPage } from './components/analysis/AnalysisPage';
 import { PlansPage } from './components/plans/PlansPage';
 import { TelegramPage, HistoryPage } from './components/telegram/TelegramPage';
@@ -57,6 +58,7 @@ function AppRoutes() {
       } />
       <Route path="/dashboard" element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>} />
       <Route path="/matches" element={<ProtectedRoute><AppLayout><MatchesPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/matches/golf/:id" element={<ProtectedRoute><AppLayout><GolfLeaderboardPage /></AppLayout></ProtectedRoute>} />
       <Route path="/matches/:id" element={<ProtectedRoute><AppLayout><MatchAnalysisPage /></AppLayout></ProtectedRoute>} />
       <Route path="/analysis" element={<ProtectedRoute><AppLayout><AnalysisPage /></AppLayout></ProtectedRoute>} />
       <Route path="/history" element={<ProtectedRoute><AppLayout><HistoryPage /></AppLayout></ProtectedRoute>} />

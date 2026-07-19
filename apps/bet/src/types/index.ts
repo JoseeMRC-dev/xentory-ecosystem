@@ -53,6 +53,42 @@ export interface Match {
   totalPlayers?: number;
 }
 
+// ── GOLF — FULL LEADERBOARD / PLAYER ANALYSIS ──
+export interface GolfRoundScore {
+  round: number;                 // 1-4
+  strokes: number | null;        // null = ronda no jugada todavía
+  toPar: string;                 // "-3", "E", "+2", "-"
+  teeTime?: string;               // ISO
+}
+
+export interface GolfPlayerEntry {
+  id: string;
+  name: string;
+  countryFlag?: string;
+  position: string;              // "T6", "1", "CUT"...
+  isTie: boolean;
+  score: string;                 // total a par, ej. "-6"
+  thru: string;                  // hoyos jugados en la ronda actual, "F" si terminó, "-" si no ha salido
+  teeTime?: string;               // salida de la ronda actual/próxima
+  startHole?: number;
+  movement?: number;             // posiciones ganadas/perdidas
+  statusText?: string;
+  rounds: GolfRoundScore[];
+}
+
+export interface GolfLeaderboardDetail {
+  tournamentName: string;
+  currentPeriod: number;         // ronda en curso (1-4)
+  players: GolfPlayerEntry[];
+}
+
+export interface GolfGroupAnalysisResult {
+  summary: string;
+  playerNotes: Array<{ name: string; note: string }>;
+  prediction: string;
+  generatedAt: string;
+}
+
 // ── LIVE MATCH STATS ──
 export interface LiveMatchStat {
   label:    string;

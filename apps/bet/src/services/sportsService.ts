@@ -1,4 +1,4 @@
-import type { Match, TeamStats, FormMatch, Competition, LiveMatchStats, LiveMatchStat, MatchEvent } from '../types';
+import type { Match, TeamStats, FormMatch, Competition, LiveMatchStats, LiveMatchStat, MatchEvent, GolfLeaderboardDetail, GolfPlayerEntry } from '../types';
 import { SEASON, COMPETITIONS } from '../constants';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -970,6 +970,59 @@ export async function fetchGolfMatches(): Promise<Match[]> {
   }
 
   return results.length > 0 ? results : getMockMatchesBySport('golf');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GOLF — full leaderboard detail (all players, round-by-round scores, tee times)
+// ─────────────────────────────────────────────────────────────────────────────
+export async function fetchGolfLeaderboardDetail(espnEventId: string): Promise<GolfLeaderboardDetail | null> {
+  const json = await espnFetch(`/golf/leaderboard?event=${espnEventId}`);
+  const ev   = json?.events?.[0];
+  const comp = ev?.competitions?.[0];
+  if (!comp) return null;
+
+  const currentPeriod: number = comp.status?.period ?? 1;
+  const competitors: any[] = comp.competitors ?? [];
+
+  const players: GolfPlayerEntry[] = competitors.map((c: any) => ({
+    id: String(c.id ?? c.athlete?.id ?? ''),
+    name: c.athlete?.displayName ?? c.athlete?.shortName ?? 'Player',
+    countryFlag: c.athlete?.flag?.href,
+    position: c.status?.position?.displayName ?? '-',
+    isTie: !!c.status?.position?.isTie,
+    score: c.score?.displayValue ?? 'E',
+    thru: c.status?.thru != null
+      ? (c.status.thru >= 18 ? 'F' : String(c.status.thru))
+      : '-',
+    teeTime: c.status?.teeTime,
+    startHole: c.status?.startHole,
+    movement: typeof c.movement === 'number' ? c.movement : undefined,
+    statusText: c.status?.type?.shortDetail,
+    rounds: (c.linescores ?? []).map((ls: any) => ({
+      round: ls.period,
+      strokes: typeof ls.value === 'number' && ls.value > 0 ? ls.value : null,
+      toPar: ls.displayValue ?? '-',
+      teeTime: ls.teeTime,
+    })),
+  }));
+
+  return { tournamentName: ev?.name ?? '', currentPeriod, players };
+}
+
+/** Jugadores que salen a la misma hora (mismo tee time) que `playerId` en la ronda `period`. */
+export function golfPlayingPartners(
+  players: GolfPlayerEntry[],
+  period: number,
+  playerId: string,
+): GolfPlayerEntry[] {
+  const me = players.find(p => p.id === playerId);
+  const myTee = me?.rounds.find(r => r.round === period)?.teeTime ?? me?.teeTime;
+  if (!myTee) return [];
+  return players.filter(p => {
+    if (p.id === playerId) return false;
+    const tee = p.rounds.find(r => r.round === period)?.teeTime ?? p.teeTime;
+    return tee === myTee;
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

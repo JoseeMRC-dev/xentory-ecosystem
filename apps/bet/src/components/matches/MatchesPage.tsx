@@ -269,6 +269,11 @@ export function MatchesPage() {
   const activeCompetition = searchParams.get('comp') ?? 'all';
   const locale = lang === 'es' ? 'es-ES' : 'en-GB';
 
+  const goToMatch = (match: Match) => navigate(
+    match.sport === 'golf' ? `/matches/golf/${match.id}` : `/matches/${match.id}`,
+    { state: { match } },
+  );
+
   const [allMatches, setAllMatches]   = useState<Match[]>([]);
   const [loading, setLoading]         = useState(true);
   const [query, setQuery]             = useState('');
@@ -405,7 +410,13 @@ export function MatchesPage() {
     if (!byDay[dayKey][compKey]) byDay[dayKey][compKey] = [];
     byDay[dayKey][compKey].push(m);
   });
-  const sortedDays = Object.entries(byDay).sort(([a], [b]) => a.localeCompare(b));
+  // HOY primero, luego futuros en orden cronológico, y por último los días anteriores (más reciente primero)
+  const dayRank = (d: string) => d === todayStr ? 0 : d > todayStr ? 1 : 2;
+  const sortedDays = Object.entries(byDay).sort(([a], [b]) => {
+    const ra = dayRank(a), rb = dayRank(b);
+    if (ra !== rb) return ra - rb;
+    return ra === 2 ? b.localeCompare(a) : a.localeCompare(b);
+  });
 
   // Sort competition groups within a day by league priority
   const sortCompGroups = (entries: [string, Match[]][]) =>
@@ -716,7 +727,7 @@ export function MatchesPage() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
             {visibleMatches.map(match => (
-              <EventCard key={match.id} match={match} query={query} onClick={() => navigate(`/matches/${match.id}`, { state: { match } })} />
+              <EventCard key={match.id} match={match} query={query} onClick={() => goToMatch(match)} />
             ))}
           </div>
         </>
@@ -777,7 +788,7 @@ export function MatchesPage() {
                           )}
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '0.8rem', marginBottom: played.length > 0 ? '1rem' : 0 }}>
                             {pending.map(match => (
-                              <EventCard key={match.id} match={match} query="" onClick={() => navigate(`/matches/${match.id}`, { state: { match } })} />
+                              <EventCard key={match.id} match={match} query="" onClick={() => goToMatch(match)} />
                             ))}
                           </div>
                         </>
@@ -793,7 +804,7 @@ export function MatchesPage() {
                           )}
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '0.8rem', opacity: 0.7 }}>
                             {played.map(match => (
-                              <EventCard key={match.id} match={match} query="" onClick={() => navigate(`/matches/${match.id}`, { state: { match } })} />
+                              <EventCard key={match.id} match={match} query="" onClick={() => goToMatch(match)} />
                             ))}
                           </div>
                         </>

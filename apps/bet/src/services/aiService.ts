@@ -1,4 +1,4 @@
-import type { Match, TeamStats, MatchAnalysis, PredictionMarkets, Plan, LiveMatchStats, LiveAnalysisResult } from '../types';
+import type { Match, TeamStats, MatchAnalysis, PredictionMarkets, Plan, LiveMatchStats, LiveAnalysisResult, GolfPlayerEntry, GolfGroupAnalysisResult } from '../types';
 import { supabase } from '../lib/supabase';
 
 const GEMINI_FLASH = 'gemini-2.0-flash';
@@ -510,6 +510,103 @@ export async function generateLiveAnalysis(
       { market: 'Más de 2.5 goles', pick: score.home + score.away >= 2 ? 'Over 2.5 (activado)' : 'Under 2.5', odds: '1.65', reasoning: 'El ritmo del partido sugiere continuidad ofensiva.', confidence: 58 },
     ];
     result.forecast = `Con ${clock} en el marcador de ${score.home}-${score.away}, el partido puede evolucionar hacia un cierre defensivo o una apertura táctica buscando el gol. Los minutos finales serán decisivos.`;
+  }
+
+  return result;
+}
+
+// ── GOLF — GROUP (PAREJA/TRÍO) ANALYSIS ──────────────────────────────────────
+function buildGolfGroupPrompt(tournamentName: string, round: number, players: GolfPlayerEntry[]): string {
+  const roundStr = (p: GolfPlayerEntry, r: number) => {
+    const rd = p.rounds.find(x => x.round === r);
+    if (!rd || rd.strokes == null) return 'sin empezar';
+    return `${rd.strokes} golpes (${rd.toPar})`;
+  };
+
+  const playersBlock = players.map(p => {
+    const history = p.rounds
+      .filter(r => r.round < round)
+      .map(r => `R${r.round}: ${roundStr(p, r.round)}`)
+      .join(' · ') || 'sin rondas previas';
+    return `== ${p.name.toUpperCase()} ==
+• Posición actual: ${p.position} (${p.score} a par)
+• Ronda de hoy (R${round}): ${roundStr(p, round)}, ${p.thru === 'F' ? 'ronda finalizada' : p.thru === '-' ? 'aún no ha salido' : `hoyo ${p.thru}`}
+• Rondas anteriores: ${history}`;
+  }).join('\n\n');
+
+  return `Eres un analista de golf experto. Analiza el grupo de jugadores que comparten hora de salida hoy en "${tournamentName}" (Ronda ${round}).
+
+REGLAS:
+- Responde EXCLUSIVAMENTE en español, sé específico con nombres y datos
+- Compara el estado de forma de cada jugador dentro del torneo (tendencia ronda a ronda, posición actual)
+- Responde SOLO en JSON puro (sin markdown, sin backticks)
+
+═══ JUGADORES DEL GRUPO ═══
+${playersBlock}
+
+═══ FORMATO DE RESPUESTA (JSON) ═══
+{
+  "summary": "3-4 frases comparando el momento de forma de los jugadores del grupo y cómo llegan a esta ronda",
+  "playerNotes": [
+    { "name": "nombre exacto del jugador", "note": "1-2 frases sobre su tendencia y opciones en la ronda de hoy" }
+  ],
+  "prediction": "1-2 frases indicando qué jugador del grupo tiene más opciones de firmar la mejor tarjeta hoy y por qué"
+}`;
+}
+
+export async function generateGolfGroupAnalysis(
+  tournamentName: string,
+  round: number,
+  players: GolfPlayerEntry[],
+  plan: Plan,
+): Promise<GolfGroupAnalysisResult> {
+  const prompt = buildGolfGroupPrompt(tournamentName, round, players);
+
+  let result: GolfGroupAnalysisResult = {
+    summary: '',
+    playerNotes: [],
+    prediction: '',
+    generatedAt: new Date().toISOString(),
+  };
+
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      const res = await fetch(PROXY_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+        body: JSON.stringify({
+          model: plan === 'pro' || plan === 'elite' ? GEMINI_PRO : GEMINI_FLASH,
+          payload: {
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.5, maxOutputTokens: 900, responseMimeType: 'application/json' },
+          },
+        }),
+      });
+      if (res.ok) {
+        const data   = await res.json();
+        const text   = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+        const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
+        result = {
+          summary:      parsed.summary      ?? '',
+          playerNotes:  parsed.playerNotes  ?? [],
+          prediction:   parsed.prediction   ?? '',
+          generatedAt:  new Date().toISOString(),
+        };
+      }
+    }
+  } catch { /* use fallback */ }
+
+  if (!result.summary) {
+    result.summary = `Grupo de ${players.length} jugadores en la Ronda ${round} de ${tournamentName}. ` +
+      players.map(p => `${p.name} llega en la posición ${p.position} (${p.score})`).join(', ') + '.';
+    result.playerNotes = players.map(p => {
+      const rd = p.rounds.find(r => r.round === round);
+      const status = rd?.strokes != null ? `lleva ${rd.strokes} golpes (${rd.toPar}) hoy` : p.thru === '-' ? 'aún no ha salido a jugar' : 'ronda en curso';
+      return { name: p.name, note: `Posición ${p.position}, ${status}.` };
+    });
+    const best = [...players].sort((a, b) => parseInt(a.score.replace('E', '0')) - parseInt(b.score.replace('E', '0')))[0];
+    result.prediction = best ? `${best.name} parte como favorito del grupo por su posición actual en el torneo (${best.position}).` : '';
   }
 
   return result;
