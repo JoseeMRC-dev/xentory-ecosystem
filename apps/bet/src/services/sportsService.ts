@@ -932,12 +932,34 @@ export async function fetchGolfMatches(): Promise<Match[]> {
       const players: any[] = comp?.competitors ?? [];
       const status  = mapEspnStatus(ev.status?.type?.state ?? 'pre');
 
-      const leaderboard: Match['leaderboard'] = players.slice(0, 10).map((p: any) => ({
-        pos:   p.status?.position?.displayName ?? p.status?.type?.shortDetail ?? '-',
-        name:  p.athlete?.displayName ?? p.athlete?.shortName ?? 'Player',
-        score: p.score ?? 'E',
-        thru:  p.status?.thru != null ? (p.status.thru >= 18 ? 'F' : String(p.status.thru)) : '-',
-      }));
+      // El endpoint /scoreboard NO trae status.position ni status.thru por jugador
+      // (a diferencia de /golf/leaderboard?event=), así que los calculamos aquí:
+      // posición a partir de la puntuación (ya viene ordenada) y "thru" contando
+      // los hoyos con línea de resultado en la ronda en curso.
+      const currentPeriod: number = comp?.status?.period ?? 1;
+      const top = players.slice(0, 10);
+      const leaderboard: Match['leaderboard'] = [];
+      let rank = 1, i = 0;
+      while (i < top.length) {
+        let j = i;
+        while (j < top.length && golfScoreSortKey(top[j].score) === golfScoreSortKey(top[i].score)) j++;
+        const groupSize = j - i;
+        const label = groupSize > 1 ? `T${rank}` : `${rank}`;
+        for (let k = i; k < j; k++) {
+          const p = top[k];
+          const roundEntry = (p.linescores ?? []).find((ls: any) => ls.period === currentPeriod);
+          const holesPlayed = roundEntry ? (roundEntry.linescores ?? []).length : 0;
+          const thru = !roundEntry || holesPlayed === 0 ? '-' : holesPlayed >= 18 ? 'F' : String(holesPlayed);
+          leaderboard.push({
+            pos: label,
+            name: p.athlete?.displayName ?? p.athlete?.shortName ?? 'Player',
+            score: p.score ?? 'E',
+            thru,
+          });
+        }
+        rank += groupSize;
+        i = j;
+      }
 
       const leader = players[0];
       const second = players[1];
