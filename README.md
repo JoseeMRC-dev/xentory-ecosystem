@@ -1,7 +1,7 @@
 # 🌐 Xentory Ecosystem — Monorepo
 
 Plataforma SaaS de análisis financiero y deportivo con IA.
-**Una instalación. Cuatro apps. Un solo comando para arrancar todo.**
+**Una instalación. Tres apps. Un solo comando para arrancar todo.**
 
 ---
 
@@ -10,23 +10,18 @@ Plataforma SaaS de análisis financiero y deportivo con IA.
 ```
 xentory-ecosystem/
 ├── apps/
-│   ├── hub/       → XentoryHub    (portal + SSO + blog)             :4000
-│   ├── market/    → XentoryMarket (cripto + bolsa + forex)          :3000
-│   ├── bet/       → XentoryBet    (apuestas deportivas)             :3001
-│   └── radar-ia/  → Radar IA      (proyecto independiente, sin
-│                    relación de marca con Xentory: noticias de IA
-│                    auto-actualizadas + guías, con Google AdSense)  :4002
+│   ├── hub/       → XentoryHub    (portal + SSO + blog)      :4000
+│   ├── market/    → XentoryMarket (cripto + bolsa + forex)   :3000
+│   └── bet/       → XentoryBet    (apuestas deportivas)      :3001
 ├── packages/
 │   └── shared/    → Tipos y utilidades SSO compartidos
 ├── .env.example   → Variables de entorno unificadas
 └── package.json   → Raíz del monorepo (workspaces)
 ```
 
-> `apps/radar-ia` vive en este repo por comodidad de desarrollo, pero es un **sitio y una marca
-> totalmente independientes**: no muestra branding de Xentory ni enlaza a sus productos, y se
-> despliega como su propio proyecto de Vercel con su propio dominio.
-> Ver [`apps/radar-ia/README.md`](apps/radar-ia/README.md) para la puesta en marcha completa
-> (dominio, AdSense y la sección de noticias auto-actualizadas).
+> **Radar IA**, el sitio de noticias de IA + guías monetizado con AdSense, vivía antes en
+> `apps/radar-ia` de este repo; ahora es un proyecto totalmente independiente en su propio
+> repositorio: https://github.com/JoseeMRC-dev/radarIA
 
 ---
 
@@ -44,37 +39,34 @@ npm install
 cp .env.example .env
 # Edita .env y añade tus API keys (mínimo VITE_GEMINI_API_KEY)
 
-# 4. Arranca las 4 apps a la vez
+# 4. Arranca las 3 apps a la vez
 npm run dev
 ```
 
 > **Nota:** El `.npmrc` incluido en el proyecto configura `legacy-peer-deps=true` automáticamente para evitar errores de compatibilidad entre paquetes.
 
-Las cuatro apps se lanzan en paralelo:
+Las tres apps se lanzan en paralelo:
 
 | App | URL | Descripción |
 |-----|-----|-------------|
 | XentoryHub | http://localhost:4000 | Portal central + SSO + Blog |
 | XentoryMarket | http://localhost:3000 | Análisis financiero con IA |
 | XentoryBet | http://localhost:3001 | Predicciones deportivas (en construcción) |
-| Radar IA *(independiente)* | http://localhost:4002 | Noticias de IA auto-actualizadas + guías, con AdSense |
 
 ---
 
 ## ⚙️ Comandos disponibles
 
 ```bash
-npm run dev            # Arranca las 4 apps a la vez
+npm run dev            # Arranca las 3 apps a la vez
 npm run dev:hub        # Solo XentoryHub
 npm run dev:market     # Solo XentoryMarket
 npm run dev:bet        # Solo XentoryBet
-npm run dev:radar-ia   # Solo Radar IA (noticias + guías + AdSense)
 
-npm run build          # Build de producción de las 4 apps
+npm run build          # Build de producción de las 3 apps
 npm run build:hub      # Build solo de Hub
 npm run build:market   # Build solo de Market
 npm run build:bet      # Build solo de Bet
-npm run build:radar-ia # Build solo de Radar IA
 
 npm run clean          # Elimina node_modules y dist de todo el monorepo
 ```
