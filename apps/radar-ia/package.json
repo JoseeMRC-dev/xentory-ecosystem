@@ -1,9 +1,9 @@
 {
-  "name": "@xentory/blog",
+  "name": "radar-ia",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Xentory Insights — blog estático de IA y productividad, listo para Google AdSense.",
+  "description": "Radar IA — sitio independiente de noticias e IA/productividad, con noticias auto-actualizadas, listo para Google AdSense.",
   "scripts": {
     "build": "node scripts/generate.mjs",
     "dev": "npm run build && node scripts/serve.mjs",

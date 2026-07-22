@@ -10,19 +10,23 @@ Plataforma SaaS de análisis financiero y deportivo con IA.
 ```
 xentory-ecosystem/
 ├── apps/
-│   ├── hub/       → XentoryHub       (portal + SSO + blog)              :4000
-│   ├── market/    → XentoryMarket    (cripto + bolsa + forex)           :3000
-│   ├── bet/       → XentoryBet       (apuestas deportivas)              :3001
-│   └── blog/      → Xentory Insights (blog estático IA/productividad,
-│                     monetizado con Google AdSense)                     :4002
+│   ├── hub/       → XentoryHub    (portal + SSO + blog)             :4000
+│   ├── market/    → XentoryMarket (cripto + bolsa + forex)          :3000
+│   ├── bet/       → XentoryBet    (apuestas deportivas)             :3001
+│   └── radar-ia/  → Radar IA      (proyecto independiente, sin
+│                    relación de marca con Xentory: noticias de IA
+│                    auto-actualizadas + guías, con Google AdSense)  :4002
 ├── packages/
 │   └── shared/    → Tipos y utilidades SSO compartidos
 ├── .env.example   → Variables de entorno unificadas
 └── package.json   → Raíz del monorepo (workspaces)
 ```
 
-> `apps/blog` es un sitio 100% HTML estático (sin SPA) pensado para SEO y AdSense.
-> Ver [`apps/blog/README.md`](apps/blog/README.md) para la checklist completa de puesta en marcha.
+> `apps/radar-ia` vive en este repo por comodidad de desarrollo, pero es un **sitio y una marca
+> totalmente independientes**: no muestra branding de Xentory ni enlaza a sus productos, y se
+> despliega como su propio proyecto de Vercel con su propio dominio.
+> Ver [`apps/radar-ia/README.md`](apps/radar-ia/README.md) para la puesta en marcha completa
+> (dominio, AdSense y la sección de noticias auto-actualizadas).
 
 ---
 
@@ -53,7 +57,7 @@ Las cuatro apps se lanzan en paralelo:
 | XentoryHub | http://localhost:4000 | Portal central + SSO + Blog |
 | XentoryMarket | http://localhost:3000 | Análisis financiero con IA |
 | XentoryBet | http://localhost:3001 | Predicciones deportivas (en construcción) |
-| Xentory Insights | http://localhost:4002 | Blog IA/productividad monetizado con AdSense |
+| Radar IA *(independiente)* | http://localhost:4002 | Noticias de IA auto-actualizadas + guías, con AdSense |
 
 ---
 
@@ -64,13 +68,13 @@ npm run dev            # Arranca las 4 apps a la vez
 npm run dev:hub        # Solo XentoryHub
 npm run dev:market     # Solo XentoryMarket
 npm run dev:bet        # Solo XentoryBet
-npm run dev:blog       # Solo Xentory Insights (blog + AdSense)
+npm run dev:radar-ia   # Solo Radar IA (noticias + guías + AdSense)
 
 npm run build          # Build de producción de las 4 apps
 npm run build:hub      # Build solo de Hub
 npm run build:market   # Build solo de Market
 npm run build:bet      # Build solo de Bet
-npm run build:blog     # Build solo del blog
+npm run build:radar-ia # Build solo de Radar IA
 
 npm run clean          # Elimina node_modules y dist de todo el monorepo
 ```

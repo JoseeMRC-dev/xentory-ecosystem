@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renderPage, adSlot, SITE_NAME, SITE_URL, ADSENSE_CLIENT, ADSENSE_SLOT_TOP, ADSENSE_SLOT_INARTICLE, ADSENSE_SLOT_BOTTOM } from '../templates/layout.mjs';
 import { articles, CATEGORIES, getArticlesByCategory } from '../content/articles.mjs';
+import { fetchAiNews } from '../lib/fetchNews.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -41,6 +42,23 @@ function articleCard(a) {
   </article>`;
 }
 
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function newsItemHtml(item) {
+  let date = '';
+  if (item.pubDate) {
+    const d = new Date(item.pubDate);
+    if (!Number.isNaN(d.getTime())) date = d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+  }
+  return `
+  <li class="news-item">
+    <a href="${item.link}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)}</a>
+    <span class="news-meta">${escapeHtml(item.source || 'Fuente externa')}${date ? ' · ' + date : ''}</span>
+  </li>`;
+}
+
 function relatedArticles(current) {
   const others = articles.filter((a) => a.slug !== current.slug && a.category === current.category);
   const pool = others.length ? others : articles.filter((a) => a.slug !== current.slug);
@@ -48,29 +66,48 @@ function relatedArticles(current) {
 }
 
 // ---------- Home page ----------
-function buildHome() {
+function buildHome(newsItems) {
   const latest = [...articles].sort((a, b) => new Date(b.date) - new Date(a.date));
   const featured = latest.slice(0, 3);
   const rest = latest.slice(3);
+  const homeNews = newsItems.slice(0, 6);
+
+  const newsSection = homeNews.length
+    ? `
+<section class="container news-home">
+  <div class="news-home-header">
+    <h2 class="section-title">Últimas noticias de IA</h2>
+    <a href="/noticias.html" class="btn btn-ghost">Ver todas</a>
+  </div>
+  <ul class="news-list">
+    ${homeNews.map(newsItemHtml).join('\n')}
+  </ul>
+</section>`
+    : '';
 
   const body = `
 <section class="hero">
   <div class="container">
-    <h1>Inteligencia artificial y productividad, explicadas sin humo</h1>
-    <p class="hero-sub">Guías prácticas sobre herramientas de IA, automatización y trabajo remoto, escritas para aplicarse el mismo día que las lees.</p>
-    <a href="#articulos" class="btn btn-primary">Ver artículos</a>
+    <h1>Inteligencia artificial al día: noticias, herramientas y guías prácticas</h1>
+    <p class="hero-sub">Titulares de IA actualizados automáticamente varias veces al día, además de guías escritas para aplicarse el mismo día que las lees.</p>
+    <div class="hero-actions">
+      <a href="/noticias.html" class="btn btn-primary">Ver noticias de hoy</a>
+      <a href="#articulos" class="btn btn-ghost">Ver guías</a>
+    </div>
   </div>
 </section>
 
 ${adSlot({ slotId: ADSENSE_SLOT_TOP, label: 'Publicidad' })}
 
+${newsSection}
+
 <section class="container" id="articulos">
-  <h2 class="section-title">Destacados</h2>
+  <h2 class="section-title">Guías destacadas</h2>
   <div class="card-grid">
     ${featured.map(articleCard).join('\n')}
   </div>
 
-  <h2 class="section-title">Más artículos</h2>
+  <h2 class="section-title">Más guías</h2>
   <div class="card-grid">
     ${rest.map(articleCard).join('\n')}
   </div>
@@ -90,7 +127,7 @@ ${adSlot({ slotId: ADSENSE_SLOT_TOP, label: 'Publicidad' })}
     'index.html',
     renderPage({
       title: SITE_NAME,
-      description: 'Guías prácticas sobre inteligencia artificial, productividad y automatización para profesionales y pequeños negocios.',
+      description: 'Noticias de inteligencia artificial actualizadas al día, además de guías prácticas de IA, productividad y automatización.',
       path: '/',
       bodyHtml: body,
       jsonLdData: {
@@ -98,6 +135,51 @@ ${adSlot({ slotId: ADSENSE_SLOT_TOP, label: 'Publicidad' })}
         '@type': 'WebSite',
         name: SITE_NAME,
         url: SITE_URL,
+      },
+    })
+  );
+}
+
+// ---------- Noticias (auto-actualizadas) ----------
+function buildNoticias(newsItems) {
+  const buildDate = new Date().toISOString();
+  const listHtml = newsItems.length
+    ? newsItems.map(newsItemHtml).join('\n')
+    : '<li class="news-item news-empty">Cargando titulares en directo… si no aparecen, vuelve a cargar la página en unos segundos.</li>';
+
+  const body = `
+<section class="container page-header">
+  <h1>Noticias de IA al día</h1>
+  <p>Titulares recientes sobre inteligencia artificial, recopilados automáticamente desde medios externos. Haz clic en cualquier titular para leer la noticia completa en la fuente original.</p>
+  <p class="news-status" id="live-news-status">${
+    newsItems.length ? 'Última actualización del contenido estático: ' + formatDate(buildDate) : 'Buscando la actualización más reciente…'
+  }</p>
+</section>
+
+${adSlot({ slotId: ADSENSE_SLOT_TOP, label: 'Publicidad' })}
+
+<section class="container">
+  <ul class="news-list" id="live-news-list">
+    ${listHtml}
+  </ul>
+</section>
+
+${adSlot({ slotId: ADSENSE_SLOT_BOTTOM, label: 'Publicidad' })}
+`;
+
+  write(
+    'noticias.html',
+    renderPage({
+      title: 'Noticias de IA al día',
+      description: 'Titulares de actualidad sobre inteligencia artificial, actualizados automáticamente varias veces al día desde medios externos.',
+      path: '/noticias.html',
+      bodyHtml: body,
+      extraHead: '<script src="/js/news.js" defer></script>',
+      jsonLdData: {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'Noticias de IA al día',
+        url: `${SITE_URL}/noticias.html`,
       },
     })
   );
@@ -217,12 +299,13 @@ function buildStaticPages() {
   <h1>Sobre ${SITE_NAME}</h1>
 </section>
 <section class="container prose">
-  <p>${SITE_NAME} nace del equipo detrás del ecosistema Xentory, dedicado a construir herramientas de análisis con inteligencia artificial. Escribimos las guías que nos habría gustado encontrar cuando empezamos a incorporar IA a nuestro propio trabajo diario: prácticas, verificables y sin promesas exageradas.</p>
+  <p>${SITE_NAME} es un medio digital independiente dedicado a seguir de cerca la actualidad de la inteligencia artificial: noticias del día, herramientas nuevas y guías prácticas para aplicarlas en el trabajo diario, sin depender de ninguna otra marca o producto.</p>
   <h2>Nuestro enfoque editorial</h2>
   <ul>
-    <li>Contenido original, escrito y revisado por el equipo editorial, sin publicar texto generado por IA sin revisión humana.</li>
+    <li>Las guías son contenido original, escrito y revisado por el equipo editorial, sin publicar texto generado por IA sin revisión humana.</li>
+    <li>La sección de noticias recopila titulares de medios externos con enlace directo a la fuente original; no reproducimos artículos completos de terceros.</li>
     <li>Explicamos también las limitaciones y riesgos de las herramientas que cubrimos, no solo sus ventajas.</li>
-    <li>Actualizamos los artículos cuando la información queda desactualizada por la rapidez con la que evoluciona este sector.</li>
+    <li>Actualizamos el contenido cuando queda desactualizado por la rapidez con la que evoluciona este sector.</li>
   </ul>
   <h2>Contacto</h2>
   <p>Si detectas un error en algún artículo o quieres proponer un tema, escríbenos desde la <a href="/contacto.html">página de contacto</a>.</p>
@@ -243,7 +326,7 @@ function buildStaticPages() {
 </section>
 <section class="container prose">
   <p>¿Tienes una pregunta, una corrección o una propuesta de colaboración? Escríbenos directamente:</p>
-  <p><a class="btn btn-primary" href="mailto:hola@xentory-insights.example">hola@xentory-insights.example</a></p>
+  <p><a class="btn btn-primary" href="mailto:hola@radar-ia.example">hola@radar-ia.example</a></p>
   <p>Respondemos en un plazo de 2 a 5 días laborables.</p>
 </section>
 `,
@@ -263,7 +346,7 @@ function buildStaticPages() {
 </section>
 <section class="container prose">
   <h2>1. Responsable del sitio</h2>
-  <p>${SITE_NAME} es un blog editorial. Para cualquier consulta sobre esta política, escribe a <a href="mailto:hola@xentory-insights.example">hola@xentory-insights.example</a>.</p>
+  <p>${SITE_NAME} es un blog editorial. Para cualquier consulta sobre esta política, escribe a <a href="mailto:hola@radar-ia.example">hola@radar-ia.example</a>.</p>
 
   <h2>2. Datos que recogemos</h2>
   <p>Este sitio no requiere registro para leer sus contenidos. Podemos recoger datos de navegación de forma anónima o pseudonimizada (páginas visitadas, tiempo de permanencia, tipo de dispositivo) con fines estadísticos y de mejora del contenido.</p>
@@ -359,7 +442,7 @@ function buildStaticPages() {
 
 // ---------- SEO files ----------
 function buildSeoFiles() {
-  const staticPaths = ['/', '/articulos.html', '/sobre-nosotros.html', '/contacto.html', '/privacidad.html', '/cookies.html', '/terminos.html'];
+  const staticPaths = ['/', '/noticias.html', '/articulos.html', '/sobre-nosotros.html', '/contacto.html', '/privacidad.html', '/cookies.html', '/terminos.html'];
   const articlePaths = articles.map((a) => `/articulos/${a.slug}.html`);
   const all = [...staticPaths, ...articlePaths];
 
@@ -382,18 +465,24 @@ Sitemap: ${SITE_URL}/sitemap.xml
   write('ads.txt', `google.com, ${pubId}, DIRECT, f08c47fec0942fa0\n`);
 }
 
-function main() {
+async function main() {
   fs.rmSync(DIST, { recursive: true, force: true });
   fs.mkdirSync(DIST, { recursive: true });
   copyDir(PUBLIC, DIST);
 
-  buildHome();
+  const newsItems = await fetchAiNews({ limit: 12 });
+
+  buildHome(newsItems);
+  buildNoticias(newsItems);
   buildArticlesList();
   buildArticles();
   buildStaticPages();
   buildSeoFiles();
 
-  console.log(`Blog generado en ${DIST} (${articles.length} artículos).`);
+  console.log(`Sitio generado en ${DIST} (${articles.length} artículos, ${newsItems.length} noticias en el build estático).`);
 }
 
-main();
+main().catch((err) => {
+  console.error('Fallo generando el sitio:', err);
+  process.exit(1);
+});

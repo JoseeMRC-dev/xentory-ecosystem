@@ -157,6 +157,12 @@ img { max-width: 100%; display: block; }
   color: var(--text-muted);
   font-size: 1.05rem;
 }
+.hero-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
 
 .btn {
   display: inline-block;
@@ -287,6 +293,50 @@ img { max-width: 100%; display: block; }
 
 .not-found { text-align: center; padding: 80px 0; }
 .not-found h1 { font-size: 4rem; margin: 0; }
+
+/* Noticias */
+.news-home { margin-top: 8px; }
+.news-home-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.news-status {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+.news-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.news-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 4px;
+  border-bottom: 1px solid var(--border);
+}
+.news-item a {
+  color: var(--text);
+  font-weight: 600;
+  font-size: 1rem;
+}
+.news-item a:hover { color: var(--brand); }
+.news-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.news-empty {
+  color: var(--text-muted);
+  font-style: italic;
+  border-bottom: none;
+}
 
 /* Ad slots */
 .ad-slot {

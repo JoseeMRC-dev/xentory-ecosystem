@@ -55,5 +55,5 @@ function serve404(res) {
 }
 
 server.listen(PORT, () => {
-  console.log(`Xentory Insights sirviendo en http://localhost:${PORT}`);
+  console.log(`Radar IA sirviendo en http://localhost:${PORT}`);
 });

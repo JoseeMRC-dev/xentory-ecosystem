@@ -1,6 +1,6 @@
-const SITE_NAME = 'Xentory Insights';
-const SITE_TAGLINE = 'IA, productividad y herramientas digitales explicadas sin humo';
-const SITE_URL = process.env.SITE_URL || 'https://blog.xentory.example';
+const SITE_NAME = 'Radar IA';
+const SITE_TAGLINE = 'Noticias, herramientas y guías de inteligencia artificial, al día';
+const SITE_URL = process.env.SITE_URL || 'https://radar-ia.example';
 const ADSENSE_CLIENT = process.env.ADSENSE_CLIENT_ID || 'ca-pub-0000000000000000';
 const ADSENSE_SLOT_TOP = process.env.ADSENSE_SLOT_TOP || '0000000000';
 const ADSENSE_SLOT_INARTICLE = process.env.ADSENSE_SLOT_INARTICLE || '0000000000';
@@ -8,7 +8,8 @@ const ADSENSE_SLOT_BOTTOM = process.env.ADSENSE_SLOT_BOTTOM || '0000000000';
 
 const NAV_LINKS = [
   { href: '/', label: 'Inicio' },
-  { href: '/articulos.html', label: 'Artículos' },
+  { href: '/noticias.html', label: 'Noticias' },
+  { href: '/articulos.html', label: 'Guías' },
   { href: '/sobre-nosotros.html', label: 'Sobre nosotros' },
   { href: '/contacto.html', label: 'Contacto' },
 ];

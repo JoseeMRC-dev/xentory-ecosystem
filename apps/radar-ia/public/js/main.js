@@ -18,7 +18,7 @@
     });
   }
 
-  var CONSENT_KEY = 'xentory-insights-cookie-consent';
+  var CONSENT_KEY = 'radar-ia-cookie-consent';
 
   function loadAdsense() {
     var client = window.__ADSENSE_CLIENT__;
