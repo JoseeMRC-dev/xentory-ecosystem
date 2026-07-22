@@ -1,7 +1,7 @@
 # 🌐 Xentory Ecosystem — Monorepo
 
 Plataforma SaaS de análisis financiero y deportivo con IA.
-**Una instalación. Tres apps. Un solo comando para arrancar todo.**
+**Una instalación. Cuatro apps. Un solo comando para arrancar todo.**
 
 ---
 
@@ -10,14 +10,19 @@ Plataforma SaaS de análisis financiero y deportivo con IA.
 ```
 xentory-ecosystem/
 ├── apps/
-│   ├── hub/       → XentoryHub    (portal + SSO + blog)      :4000
-│   ├── market/    → XentoryMarket (cripto + bolsa + forex)   :3000
-│   └── bet/       → XentoryBet    (apuestas deportivas)      :3001
+│   ├── hub/       → XentoryHub       (portal + SSO + blog)              :4000
+│   ├── market/    → XentoryMarket    (cripto + bolsa + forex)           :3000
+│   ├── bet/       → XentoryBet       (apuestas deportivas)              :3001
+│   └── blog/      → Xentory Insights (blog estático IA/productividad,
+│                     monetizado con Google AdSense)                     :4002
 ├── packages/
 │   └── shared/    → Tipos y utilidades SSO compartidos
 ├── .env.example   → Variables de entorno unificadas
 └── package.json   → Raíz del monorepo (workspaces)
 ```
+
+> `apps/blog` es un sitio 100% HTML estático (sin SPA) pensado para SEO y AdSense.
+> Ver [`apps/blog/README.md`](apps/blog/README.md) para la checklist completa de puesta en marcha.
 
 ---
 
@@ -35,34 +40,37 @@ npm install
 cp .env.example .env
 # Edita .env y añade tus API keys (mínimo VITE_GEMINI_API_KEY)
 
-# 4. Arranca las 3 apps a la vez
+# 4. Arranca las 4 apps a la vez
 npm run dev
 ```
 
 > **Nota:** El `.npmrc` incluido en el proyecto configura `legacy-peer-deps=true` automáticamente para evitar errores de compatibilidad entre paquetes.
 
-Las tres apps se lanzan en paralelo:
+Las cuatro apps se lanzan en paralelo:
 
 | App | URL | Descripción |
 |-----|-----|-------------|
 | XentoryHub | http://localhost:4000 | Portal central + SSO + Blog |
 | XentoryMarket | http://localhost:3000 | Análisis financiero con IA |
 | XentoryBet | http://localhost:3001 | Predicciones deportivas (en construcción) |
+| Xentory Insights | http://localhost:4002 | Blog IA/productividad monetizado con AdSense |
 
 ---
 
 ## ⚙️ Comandos disponibles
 
 ```bash
-npm run dev            # Arranca las 3 apps a la vez
+npm run dev            # Arranca las 4 apps a la vez
 npm run dev:hub        # Solo XentoryHub
 npm run dev:market     # Solo XentoryMarket
 npm run dev:bet        # Solo XentoryBet
+npm run dev:blog       # Solo Xentory Insights (blog + AdSense)
 
-npm run build          # Build de producción de las 3 apps
+npm run build          # Build de producción de las 4 apps
 npm run build:hub      # Build solo de Hub
 npm run build:market   # Build solo de Market
 npm run build:bet      # Build solo de Bet
+npm run build:blog     # Build solo del blog
 
 npm run clean          # Elimina node_modules y dist de todo el monorepo
 ```

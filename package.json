@@ -8,14 +8,16 @@
     "packages/*"
   ],
   "scripts": {
-    "dev":          "concurrently -n HUB,MARKET,BET -c cyan,yellow,green \"npm run dev --workspace=apps/hub\" \"npm run dev --workspace=apps/market\" \"npm run dev --workspace=apps/bet\"",
+    "dev":          "concurrently -n HUB,MARKET,BET,BLOG -c cyan,yellow,green,magenta \"npm run dev --workspace=apps/hub\" \"npm run dev --workspace=apps/market\" \"npm run dev --workspace=apps/bet\" \"npm run dev --workspace=apps/blog\"",
     "dev:hub":      "npm run dev --workspace=apps/hub",
     "dev:market":   "npm run dev --workspace=apps/market",
     "dev:bet":      "npm run dev --workspace=apps/bet",
-    "build":        "npm run build --workspace=apps/hub && npm run build --workspace=apps/market && npm run build --workspace=apps/bet",
+    "dev:blog":     "npm run dev --workspace=apps/blog",
+    "build":        "npm run build --workspace=apps/hub && npm run build --workspace=apps/market && npm run build --workspace=apps/bet && npm run build --workspace=apps/blog",
     "build:hub":    "npm run build --workspace=apps/hub",
     "build:market": "npm run build --workspace=apps/market",
     "build:bet":    "npm run build --workspace=apps/bet",
+    "build:blog":   "npm run build --workspace=apps/blog",
     "clean":        "npx rimraf apps/*/node_modules apps/*/dist packages/*/node_modules node_modules"
   },
   "devDependencies": {
