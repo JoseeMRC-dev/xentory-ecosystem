@@ -19,6 +19,7 @@ export const PLANS: PlanConfig[] = [
       { label: 'Premium Telegram channel', included: false },
       { label: 'Analysis history', included: false },
       { label: 'Forex assets', included: false },
+      { label: 'Sin publicidad', included: false },
     ],
   },
   {
@@ -38,6 +39,7 @@ export const PLANS: PlanConfig[] = [
       { label: 'Analysis history (30 days)', included: true },
       { label: 'Crypto + Stocks + Forex', included: true },
       { label: 'Automatic Telegram signals', included: true },
+      { label: 'Sin publicidad', included: true, highlight: true },
       { label: 'Priority support', included: false },
     ],
   },
@@ -58,6 +60,7 @@ export const PLANS: PlanConfig[] = [
       { label: 'Weekly PDF reports', included: true },
       { label: 'Priority support 24/7', included: true },
       { label: 'Early access to features', included: true },
+      { label: 'Sin publicidad', included: true, highlight: true },
     ],
   },
 ];
