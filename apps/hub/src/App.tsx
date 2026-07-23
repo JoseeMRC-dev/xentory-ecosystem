@@ -86,8 +86,8 @@ const ADSENSE_CLIENT = 'ca-pub-3599124999488513';
 
 function useHubAdSense() {
   const { user } = useAuth();
+  const isFreeOrLoggedOut = !user || (user.subscriptions?.market === 'free' && user.subscriptions?.bets === 'free');
   useEffect(() => {
-    const isFreeOrLoggedOut = !user || (user.subscriptions?.market === 'free' && user.subscriptions?.bets === 'free');
     if (!isFreeOrLoggedOut) return;
     if (document.getElementById('adsense-js')) return;
     const script = document.createElement('script');
@@ -96,14 +96,33 @@ function useHubAdSense() {
     script.crossOrigin = 'anonymous';
     script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`;
     document.head.appendChild(script);
-  }, [user]);
+  }, [isFreeOrLoggedOut]);
+  return isFreeOrLoggedOut;
+}
+
+function AdBanner() {
+  useEffect(() => {
+    try {
+      ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
+    } catch { /**/ }
+  }, []);
+  return (
+    <ins
+      className="adsbygoogle"
+      style={{ display: 'block' }}
+      data-ad-client={ADSENSE_CLIENT}
+      data-ad-format="auto"
+      data-full-width-responsive="true"
+    />
+  );
 }
 
 function Layout({ children, hideFooter }: { children: React.ReactNode; hideFooter?: boolean }) {
-  useHubAdSense();
+  const showAds = useHubAdSense();
   return (
     <>
       <Navbar />
+      {showAds && <div style={{ paddingTop: 'var(--nav-h)' }}><AdBanner /></div>}
       <main><Suspense fallback={<PageSkeleton />}>{children}</Suspense></main>
       {!hideFooter && <Footer />}
       <BackToTop />
