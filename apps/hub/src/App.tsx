@@ -82,7 +82,25 @@ function PageSkeleton() {
   );
 }
 
+const ADSENSE_CLIENT = 'ca-pub-3599124999488513';
+
+function useHubAdSense() {
+  const { user } = useAuth();
+  useEffect(() => {
+    const isFreeOrLoggedOut = !user || (user.subscriptions?.market === 'free' && user.subscriptions?.bets === 'free');
+    if (!isFreeOrLoggedOut) return;
+    if (document.getElementById('adsense-js')) return;
+    const script = document.createElement('script');
+    script.id = 'adsense-js';
+    script.async = true;
+    script.crossOrigin = 'anonymous';
+    script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`;
+    document.head.appendChild(script);
+  }, [user]);
+}
+
 function Layout({ children, hideFooter }: { children: React.ReactNode; hideFooter?: boolean }) {
+  useHubAdSense();
   return (
     <>
       <Navbar />

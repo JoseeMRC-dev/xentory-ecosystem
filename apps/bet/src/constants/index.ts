@@ -42,6 +42,7 @@ export const PLANS: PlanConfig[] = [
       { label: 'Telegram signals channel',             included: false },
       { label: 'Baloncesto + Tenis + F1 + Golf',     included: false },
       { label: 'Mejor apuesta del día',              included: false },
+      { label: 'Sin publicidad',                     included: false },
     ],
   },
   {
@@ -55,6 +56,7 @@ export const PLANS: PlanConfig[] = [
       { label: 'Mejor apuesta del día',              included: true  },
       { label: 'Cuotas estimadas',                   included: true  },
       { label: 'Historial de predicciones',          included: true  },
+      { label: 'Sin publicidad',                     included: true, highlight: true },
       { label: 'Weekly PDF reports',             included: false },
     ],
   },
@@ -70,6 +72,7 @@ export const PLANS: PlanConfig[] = [
       { label: 'Priority support 24/7',           included: true  },
       { label: 'Acceso anticipado a funciones',      included: true  },
       { label: 'API de señales personal',            included: true  },
+      { label: 'Sin publicidad',                     included: true, highlight: true },
     ],
   },
 ];
